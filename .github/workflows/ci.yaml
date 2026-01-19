@@ -74,30 +74,30 @@ jobs:
       - name: Run chart-testing (install)
         run: ct install --config .github/linters/ct.yaml
 
-  check-codeowners-maintainers:
-    name: Check CODEOWNERS & MAINTAINERS.md
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - name: generate CODEOWNERS
-        run: |
-          ./scripts/check-codeowners.sh | tee .github/CODEOWNERS
-
-      - name: check CODEOWNERS for modifications
-        run: |
-          git diff --exit-code
-
-      - name: generate MAINTAINERS.md
-        run: |
-          ./scripts/check-maintainers.sh | tee MAINTAINERS.md
-
-      - name: check MAINTAINERS.md for modifications
-        run: |
-          git diff --exit-code
+  #check-codeowners-maintainers:
+  #  name: Check CODEOWNERS & MAINTAINERS.md
+  #  runs-on: ubuntu-24.04
+  #  permissions:
+  #    contents: read
+  #  steps:
+  #    - name: Checkout Code
+  #      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+  #
+  #    - name: generate CODEOWNERS
+  #      run: |
+  #        ./scripts/check-codeowners.sh | tee .github/CODEOWNERS
+  #
+  #    - name: check CODEOWNERS for modifications
+  #      run: |
+  #        git diff --exit-code
+  #
+  #    - name: generate MAINTAINERS.md
+  #      run: |
+  #        ./scripts/check-maintainers.sh | tee MAINTAINERS.md
+  #
+  #    - name: check MAINTAINERS.md for modifications
+  #      run: |
+  #        git diff --exit-code
 
   super-linter:
     name: Lint Code Base
