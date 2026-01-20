@@ -21,7 +21,7 @@ Grafana Tempo in MicroService mode
 Add the following repo to use the chart:
 
 ```console
-helm repo add grafana https://grafana.github.io/helm-charts
+helm repo add grafana-community https://grafana-community.github.io/helm-charts
 ```
 
 ## Installing the Chart
@@ -29,7 +29,7 @@ helm repo add grafana https://grafana.github.io/helm-charts
 To install the chart with the release name `my-release`:
 
 ```console
-helm install my-release grafana/tempo-distributed
+helm install my-release grafana-community/tempo-distributed
 ```
 
 Refer to the [Get started with Grafana Tempo using the Helm chart](https://grafana.com/docs/helm-charts/tempo-distributed/next/get-started-helm-charts/) documentation for more details.
