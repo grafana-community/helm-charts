@@ -5,12 +5,9 @@ additional-commands:
 chart-dirs:
   - charts
 chart-repos:
-  - bitnami=https://charts.bitnami.com/bitnami
+  - minio=https://charts.min.io/
   - grafana=https://grafana.github.io/helm-charts
   - prometheus-community=https://prometheus-community.github.io/helm-charts
-excluded-charts:
-  # If not running on GCE, will error: "Failed to get GCE config"
-  - prometheus-to-sd
 github-groups: true
 helm-extra-args: --timeout 600s
 remote: origin
