@@ -9,15 +9,15 @@ cat <<EOF
 ## General maintainers
 
 - Jan-Otto Kröpke (<github@jkroepke.de> / @jkroepke)
-- Sheikh-Abubaker (<sheikhabubaker761@gmail.com> / @Sheikh-Abubaker)
+- Mohammad Abubaker (<sheikhabubaker761@gmail.com> / @Sheikh-Abubaker)
 - Aviv Guiser (<avivguiser@gmail.com> / @KyriosGN0)
 - Quentin Bisson (<quentin@giantswarm.io> / @QuentinBisson)
-- TheRealNoob (<mike1118@live.com> / @TheRealNoob)
+- Michael Timmerman (<mike1118@live.com> / @TheRealNoob)
 
 ## GitHub Workflows & Renovate maintainers
 
 - Jan-Otto Kröpke (<github@jkroepke.de> / @jkroepke)
-- TheRealNoob (<mike1118@live.com> / @TheRealNoob)
+- Michael Timmerman (<mike1118@live.com> / @TheRealNoob)
 
 ## Helm charts maintainers
 EOF

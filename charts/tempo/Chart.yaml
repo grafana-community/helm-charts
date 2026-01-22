@@ -9,5 +9,6 @@ icon: https://raw.githubusercontent.com/grafana/tempo/master/docs/tempo/website/
 sources:
   - https://github.com/grafana/tempo
 maintainers:
-  - name: Sheikh-Abubaker
+  - name: Mohammad Abubaker
     email: sheikhabubaker761@gmail.com
+    url: https://github.com/Sheikh-Abubaker

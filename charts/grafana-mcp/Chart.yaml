@@ -17,14 +17,18 @@ annotations:
     - name: Upstream Project
       url: https://github.com/grafana/mcp-grafana
 maintainers:
-  - name: Sheikh-Abubaker
+  - name: Mohammad Abubaker
     email: sheikhabubaker761@gmail.com
-  - name: jkroepke
+    url: https://github.com/Sheikh-Abubaker
+  - name: Jan-Otto Kröpke
     email: github@jkroepke.de
-  - name: KyriosGN0
+    url: https://github.com/jkroepke
+  - name: Aviv Guiser
     email: avivguiser@gmail.com
-  - name: QuentinBisson
+    url: https://github.com/KyriosGN0
+  - name: Quentin Bisson
     email: quentin.bisson@gmail.com
+    url: https://github.com/QuentinBisson
 type: application
 keywords:
   - monitoring

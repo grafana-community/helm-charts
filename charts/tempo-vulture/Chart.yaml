@@ -9,7 +9,9 @@ icon: https://raw.githubusercontent.com/grafana/tempo/master/docs/tempo/website/
 sources:
   - https://github.com/grafana/tempo
 maintainers:
-  - name: KyriosGN0
+  - name: Aviv Guiser
     email: avivguiser@gmail.com
-  - name: QuentinBisson
+    url: https://github.com/KyriosGN0
+  - name: Quentin Bisson
     email: quentin.bisson@gmail.com
+    url: https://github.com/QuentinBisson
