@@ -8,14 +8,16 @@ cat <<EOF
 
 ## General maintainers
 
-- André Bauer (<monotek23@gmail.com> / @monotek)
 - Jan-Otto Kröpke (<github@jkroepke.de> / @jkroepke)
-- Scott Rigby (<scott@r6by.com> / @scottrigby)
-- Torsten Walter (<mail@torstenwalter.de> / @torstenwalter)
+- Sheikh-Abubaker (<sheikhabubaker761@gmail.com> / @Sheikh-Abubaker)
+- Aviv Guiser (<avivguiser@gmail.com> / @KyriosGN0)
+- Quentin Bisson (<quentin@giantswarm.io> / @QuentinBisson)
+- TheRealNoob (<mike1118@live.com> / @TheRealNoob)
 
 ## GitHub Workflows & Renovate maintainers
 
-- Gabriel Martinez (<kube-prometheus-stack@sisti.pt> / @GMartinez-Sisti)
+- Jan-Otto Kröpke (<github@jkroepke.de> / @jkroepke)
+- TheRealNoob (<mike1118@live.com> / @TheRealNoob)
 
 ## Helm charts maintainers
 EOF

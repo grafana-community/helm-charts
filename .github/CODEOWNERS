@@ -4,7 +4,7 @@
 
 # The repo admins team will be the default owners for everything in the repo.
 # Unless a later match takes precedence, they will be requested for review when someone opens a pull request.
-* @grafana-community/helm-charts-admins
+* @jkroepke @QuentinBisson @Sheikh-Abubaker @KyriosGN0 @TheRealNoob
 
 /charts/grafana/ @jkroepke @QuentinBisson
 /charts/grafana-mcp/ @Sheikh-Abubaker @jkroepke @KyriosGN0 @QuentinBisson
