@@ -7,6 +7,7 @@
 - Aviv Guiser (<avivguiser@gmail.com> / @KyriosGN0)
 - Quentin Bisson (<quentin@giantswarm.io> / @QuentinBisson)
 - Michael Timmerman (<mike1118@live.com> / @TheRealNoob)
+- Ilia Lazebnik (<Ilia.lazebnik@gmail.com / @DrFaust92)
 
 ## GitHub Workflows & Renovate maintainers
 
@@ -41,6 +42,7 @@
 ### tempo-vulture
 
 - Aviv Guiser (<avivguiser@gmail.com> / @KyriosGN0)
+- Mohammad Abubaker (<sheikhabubaker761@gmail.com> / @Sheikh-Abubaker)
 - Quentin Bisson (<quentin.bisson@gmail.com> / @QuentinBisson)
 
 ### tempo
