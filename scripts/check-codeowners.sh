@@ -10,10 +10,10 @@ cat <<EOF
 
 # The repo admins team will be the default owners for everything in the repo.
 # Unless a later match takes precedence, they will be requested for review when someone opens a pull request.
-* @prometheus-community/helm-charts-admins
+* @grafana-community/helm-charts-admins
 
-/.github/workflows/ @prometheus-community/helm-charts-admins @GMartinez-Sisti
-/renovate.json @prometheus-community/helm-charts-admins @GMartinez-Sisti
+/.github/workflows/ @jkroepke @TheRealNoob
+/renovate.json @jkroepke
 
 EOF
 

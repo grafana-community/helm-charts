@@ -17,10 +17,12 @@ annotations:
     - name: Upstream Project
       url: https://github.com/grafana/grafana
 maintainers:
-  - name: jkroepke
+  - name: Jan-Otto Kröpke
     email: github@jkroepke.de
-  - name: QuentinBisson
+    url: https://github.com/jkroepke
+  - name: Quentin Bisson
     email: quentin.bisson@gmail.com
+    url: https://github.com/QuentinBisson
 type: application
 keywords:
   - monitoring

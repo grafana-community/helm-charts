@@ -1,4 +1,4 @@
-# See https://github.com/scottrigby/prometheus-helm-charts/issues/12
+# See https://github.com/prometheus-community/helm-charts/issues/12
 # https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 # https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners#codeowners-syntax
 
@@ -6,9 +6,12 @@
 # Unless a later match takes precedence, they will be requested for review when someone opens a pull request.
 * @grafana-community/helm-charts-admins
 
-/charts/grafana/ @jkroepke @QuentinBisson
-/charts/grafana-mcp/ @Sheikh-Abubaker @jkroepke @KyriosGN0 @QuentinBisson
-/charts/synthetic-monitoring-agent/ @Sheikh-Abubaker @KyriosGN0
+/.github/workflows/ @jkroepke @TheRealNoob
+/renovate.json @jkroepke
+
+/charts/grafana-mcp/ @KyriosGN0 @QuentinBisson @Sheikh-Abubaker @jkroepke
+/charts/grafana/ @QuentinBisson @jkroepke
+/charts/synthetic-monitoring-agent/ @KyriosGN0 @Sheikh-Abubaker
+/charts/tempo-distributed/ @DrFaust92 @QuentinBisson @Sheikh-Abubaker
+/charts/tempo-vulture/ @KyriosGN0 @QuentinBisson @Sheikh-Abubaker
 /charts/tempo/ @Sheikh-Abubaker
-/charts/tempo-distributed/ @DrFaust92 @Sheikh-Abubaker @QuentinBisson
-/charts/tempo-vulture/ @KyriosGN0 @QuentinBisson

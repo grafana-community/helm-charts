@@ -24,7 +24,7 @@ jobs:
       - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         id: app-token
         with:
-          app-id: 1179738
+          app-id: ${{ secrets.APP_RENOVATE_HELPER_APP_ID }}
           private-key: ${{ secrets.APP_RENOVATE_HELPER_PRIVATE_KEY }}
 
       - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0

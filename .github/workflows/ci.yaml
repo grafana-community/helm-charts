@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - name: Set up chart-testing
         uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2.8.0
@@ -69,30 +69,30 @@ jobs:
       - name: Run chart-testing (install)
         run: ct install --config .github/linters/ct.yaml
 
-  #check-codeowners-maintainers:
-  #  name: Check CODEOWNERS & MAINTAINERS.md
-  #  runs-on: ubuntu-24.04
-  #  permissions:
-  #    contents: read
-  #  steps:
-  #    - name: Checkout Code
-  #      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-  #
-  #    - name: generate CODEOWNERS
-  #      run: |
-  #        ./scripts/check-codeowners.sh | tee .github/CODEOWNERS
-  #
-  #    - name: check CODEOWNERS for modifications
-  #      run: |
-  #        git diff --exit-code
-  #
-  #    - name: generate MAINTAINERS.md
-  #      run: |
-  #        ./scripts/check-maintainers.sh | tee MAINTAINERS.md
-  #
-  #    - name: check MAINTAINERS.md for modifications
-  #      run: |
-  #        git diff --exit-code
+  check-codeowners-maintainers:
+    name: Check CODEOWNERS & MAINTAINERS.md
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: generate CODEOWNERS
+        run: |
+          ./scripts/check-codeowners.sh | tee .github/CODEOWNERS
+
+      - name: check CODEOWNERS for modifications
+        run: |
+          git diff --exit-code
+
+      - name: generate MAINTAINERS.md
+        run: |
+          ./scripts/check-maintainers.sh | tee MAINTAINERS.md
+
+      - name: check MAINTAINERS.md for modifications
+        run: |
+          git diff --exit-code
 
   super-linter:
     name: Lint Code Base
@@ -146,7 +146,7 @@ jobs:
       - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         id: app-token
         with:
-          app-id: 1179738
+          app-id: ${{ secrets.APP_RENOVATE_HELPER_APP_ID }}
           private-key: ${{ secrets.APP_RENOVATE_HELPER_PRIVATE_KEY }}
 
       - name: Approve PR
