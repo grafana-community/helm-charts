@@ -421,8 +421,8 @@ alerting:
               # Webhook URL to be filled in
               url: ""
               # We need to escape double curly braces for the tpl function.
-              text: '{{ "`{{ template \"default.message\" . }}`" }}'
-              title: '{{ "`{{ template \"default.title\" . }}`" }}'
+              text: "'{{ `{{` }} template \"default.message\" . {{ `}}` }}'"
+              title: "'{{ `{{` }} template \"default.title\" . {{ `}}` }}'"
 ```
 
 The two possibilities for static alerting resource provisioning are:
