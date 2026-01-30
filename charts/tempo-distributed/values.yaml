@@ -1288,9 +1288,9 @@ rollout_operator:
 traces:
   jaeger:
     grpc:
-      # -- Enable Tempo to ingest Jaeger GRPC traces
+      # -- Enable Tempo to ingest Jaeger gRPC traces
       enabled: false
-      # -- Jaeger GRPC receiver config
+      # -- Jaeger gRPC receiver config
       receiverConfig: {}
     thriftBinary:
       # -- Enable Tempo to ingest Jaeger Thrift Binary traces
@@ -1319,9 +1319,9 @@ traces:
       # -- HTTP receiver advanced config
       receiverConfig: {}
     grpc:
-      # -- Enable Tempo to ingest Open Telemetry GRPC traces
+      # -- Enable Tempo to ingest Open Telemetry gRPC traces
       enabled: false
-      # -- GRPC receiver advanced config
+      # -- gRPC receiver advanced config
       receiverConfig: {}
       # -- Default OTLP gRPC port
       port: 4317

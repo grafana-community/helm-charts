@@ -2,11 +2,19 @@
 
 * Installs the web dashboarding system [Grafana](http://grafana.org/)
 
-## Get Repo Info
+## Chart repository
+
+Add the following repository to use the chart:
 
 ```console
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
 helm repo update
+```
+
+Alternatively, you can use the following OCI command to pull the chart:
+
+```console
+helm template oci://ghcr.io/grafana-community/helm-charts/grafana
 ```
 
 _See [helm repo](https://helm.sh/docs/helm/helm_repo/) for command documentation._

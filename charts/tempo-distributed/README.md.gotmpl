@@ -181,7 +181,7 @@ tempo:
 If you had ingester persistence enabled, you might need to manually change ownership of files in your PV if your CSI doesn't support fsGroup
 
 ### From Chart version >= 0.22.0
-Align Istio GRPC named port syntax. For example,
+Align Istio gRPC named port syntax. For example,
 
 * otlp-grpc               -> grpc-otlp
 * distributor-otlp-grpc   -> grpc-distributor-otlp
@@ -417,9 +417,9 @@ traces:
       # -- HTTP receiver advanced config
       receiverConfig: {}
     grpc:
-      # -- Enable Tempo to ingest Open Telemetry GRPC traces
+      # -- Enable Tempo to ingest Open Telemetry gRPC traces
       enabled: true
-      # -- GRPC receiver advanced config
+      # -- gRPC receiver advanced config
       receiverConfig: {}
       # -- Default OTLP gRPC port
       port: 4317

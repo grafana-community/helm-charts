@@ -181,7 +181,7 @@ tempo:
 If you had ingester persistence enabled, you might need to manually change ownership of files in your PV if your CSI doesn't support fsGroup
 
 ### From Chart version >= 0.22.0
-Align Istio GRPC named port syntax. For example,
+Align Istio gRPC named port syntax. For example,
 
 * otlp-grpc               -> grpc-otlp
 * distributor-otlp-grpc   -> grpc-distributor-otlp
@@ -1046,8 +1046,8 @@ The memcached default args are removed and should be provided manually. The sett
 | tokengenJob.image.tag | string | `nil` | Docker image tag for the tokengenJob image. Overrides `tempo.image.tag` |
 | tokengenJob.initContainers | list | `[]` |  |
 | tokengenJob.storeTokenInSecret | bool | `false` |  |
-| traces.jaeger.grpc.enabled | bool | `false` | Enable Tempo to ingest Jaeger GRPC traces |
-| traces.jaeger.grpc.receiverConfig | object | `{}` | Jaeger GRPC receiver config |
+| traces.jaeger.grpc.enabled | bool | `false` | Enable Tempo to ingest Jaeger gRPC traces |
+| traces.jaeger.grpc.receiverConfig | object | `{}` | Jaeger gRPC receiver config |
 | traces.jaeger.thriftBinary.enabled | bool | `false` | Enable Tempo to ingest Jaeger Thrift Binary traces |
 | traces.jaeger.thriftBinary.receiverConfig | object | `{}` | Jaeger Thrift Binary receiver config |
 | traces.jaeger.thriftCompact.enabled | bool | `false` | Enable Tempo to ingest Jaeger Thrift Compact traces |
@@ -1057,9 +1057,9 @@ The memcached default args are removed and should be provided manually. The sett
 | traces.kafka | object | `{}` | Enable Tempo to ingest traces from Kafka. Reference: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/kafkareceiver |
 | traces.opencensus.enabled | bool | `false` | Enable Tempo to ingest Open Census traces |
 | traces.opencensus.receiverConfig | object | `{}` | Open Census receiver config |
-| traces.otlp.grpc.enabled | bool | `false` | Enable Tempo to ingest Open Telemetry GRPC traces |
+| traces.otlp.grpc.enabled | bool | `false` | Enable Tempo to ingest Open Telemetry gRPC traces |
 | traces.otlp.grpc.port | int | `4317` | Default OTLP gRPC port |
-| traces.otlp.grpc.receiverConfig | object | `{}` | GRPC receiver advanced config |
+| traces.otlp.grpc.receiverConfig | object | `{}` | gRPC receiver advanced config |
 | traces.otlp.http.enabled | bool | `false` | Enable Tempo to ingest Open Telemetry HTTP traces |
 | traces.otlp.http.receiverConfig | object | `{}` | HTTP receiver advanced config |
 | traces.zipkin.enabled | bool | `false` | Enable Tempo to ingest Zipkin traces |
@@ -1216,9 +1216,9 @@ traces:
       # -- HTTP receiver advanced config
       receiverConfig: {}
     grpc:
-      # -- Enable Tempo to ingest Open Telemetry GRPC traces
+      # -- Enable Tempo to ingest Open Telemetry gRPC traces
       enabled: true
-      # -- GRPC receiver advanced config
+      # -- gRPC receiver advanced config
       receiverConfig: {}
       # -- Default OTLP gRPC port
       port: 4317
