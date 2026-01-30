@@ -447,14 +447,14 @@ ingress:
 
 ### Example of extraVolumeMounts and extraVolumes
 
-    grafana.ini:
-      ...
-      unified_alerting:
-        enabled: true
-        ha_peers: {{ .Release.Name }}-headless:9094
-        ha_listen_address: ${POD_IP}:9094
-        ha_advertise_address: ${POD_IP}:9094
-        rule_version_record_limit: "5"
+Configure additional volumes with `extraVolumes` and volume mounts with `extraVolumeMounts`.
+
+Example for `extraVolumeMounts` and corresponding `extraVolumes`:
+
+```yaml
+extraVolumeMounts:
+  - name: plugins
+    mountPath: /var/lib/grafana/plugins
     subPath: configs/grafana/plugins
     readOnly: false
   - name: dashboards
