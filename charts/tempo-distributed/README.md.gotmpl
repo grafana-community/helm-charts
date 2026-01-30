@@ -183,10 +183,10 @@ If you had ingester persistence enabled, you might need to manually change owner
 ### From Chart version >= 0.22.0
 Align Istio GRPC named port syntax. For example,
 
-- otlp-grpc               -> grpc-otlp
-- distributor-otlp-grpc   -> grpc-distributor-otlp
-- jaeger-grpc             -> grpc-jaeger
-- distributor-jaeger-grpc -> grpc-distributor-jaeger
+* otlp-grpc               -> grpc-otlp
+* distributor-otlp-grpc   -> grpc-distributor-otlp
+* jaeger-grpc             -> grpc-jaeger
+* distributor-jaeger-grpc -> grpc-distributor-jaeger
 
 In case you need to rollback, please search the right hand side pattern and replace with left hand side pattern.
 
