@@ -171,12 +171,16 @@ jobs:
       - name: check for PR title format
         if: steps.list-changed.outputs.changed == 'true'
         run: |
-          if [[ "$PR_TITLE" != "[${CHANGED_LIST##*/}] "* ]]; then
-            echo "PR title must start with '[${CHANGED_LIST##*/}] '." >&2
+          CHANGED_LIST="${CHANGED_LIST//\"/}"
+          CHANGED_LIST="${CHANGED_LIST##*/}"
+          
+          if [[ "$PR_TITLE" != "[${CHANGED_LIST}] "* ]]; then
+            echo "PR title must start with '[${CHANGED_LIST}] '." >&2
             exit 1
           fi
         env:
           CHANGED_LIST: ${{ steps.list-changed.outputs.changed_list }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
 
   renovate-auto-merge:
     name: Auto-approve PRs from Renovate
