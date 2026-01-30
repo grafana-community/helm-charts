@@ -5,11 +5,11 @@ MCP server for Grafana.
 ## Source Code
 
 * <https://github.com/grafana/mcp-grafana>
-* <https://github.com/grafana/helm-charts>
+* <https://github.com/grafana-community/helm-charts>
 
 ## Requirements
 
-Kubernetes: `^1.8.0-0`
+Kubernetes: `^1.25.0-0`
 
 ## Chart Repo
 
