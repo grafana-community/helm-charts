@@ -5,7 +5,6 @@
 {{- if .Values.gateway.enabled -}}
 {{- if .Values.gateway.ingress.enabled -}}
 {{ $dict := dict "ctx" . "component" "gateway"  }}
-{{- $ingressSupportsPathType := eq (include "tempo.ingress.supportsPathType" .) "true" -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -21,7 +20,9 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  ingressClassName: {{ .Values.gateway.ingress.ingressClassName }}
+  {{- with .Values.gateway.ingress.ingressClassName }}
+  ingressClassName: {{ . }}
+  {{- end }}
   {{- if .Values.gateway.ingress.tls }}
   tls:
     {{- range .Values.gateway.ingress.tls }}
@@ -41,9 +42,7 @@ spec:
         paths:
           {{- range .paths }}
           - path: {{ .path }}
-            {{- if $ingressSupportsPathType }}
             pathType: {{ .pathType }}
-            {{- end }}
             backend:
               service:
                 name: {{ include "tempo.resourceName" $dict }}
