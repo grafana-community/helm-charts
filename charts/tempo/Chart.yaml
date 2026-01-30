@@ -4,7 +4,6 @@ description: Grafana Tempo Single Binary Mode
 type: application
 version: 1.25.0
 appVersion: 2.9.0
-engine: gotpl
 home: https://grafana.net
 icon: https://raw.githubusercontent.com/grafana/tempo/master/docs/tempo/website/logo_and_name.png
 sources:
