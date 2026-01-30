@@ -1,6 +1,3 @@
-# grafana
-
-The leading tool for querying and visualizing time series and metrics.
 # Grafana Helm Chart
 
 * Installs the web dashboarding system [Grafana](http://grafana.org/)
