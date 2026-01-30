@@ -2,14 +2,22 @@
 
 * Installs the web dashboarding system [Grafana](http://grafana.org/)
 
-## Get Repo Info
+## Chart repository
+
+Add the following repository to use the chart:
 
 ```console
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
 helm repo update
 ```
 
-_See [helm repo](https://helm.sh/docs/helm/helm_repo/) for command documentation._
+Alternatively, you can use the following OCI command to pull the chart:
+
+```console
+helm template oci://ghcr.io/grafana-community/helm-charts/grafana
+```
+
+_See [helm repository](https://helm.sh/docs/helm/helm_repo/) for command documentation._
 
 ## Installing the Chart
 
@@ -525,15 +533,15 @@ dashboards:
 
 ## BASE64 dashboards
 
-Dashboards could be stored on a server that does not return JSON directly and instead of it returns a Base64 encoded file (e.g. Gerrit)
-A new parameter has been added to the url use case so if you specify a b64content value equals to true after the url entry a Base64 decoding is applied before save the file to disk.
+Dashboards could be stored on a server that does not return JSON directly and instead of it returns a base64 encoded file (e.g. Gerrit)
+A new parameter has been added to the URL use case so if you specify a b64content value equals to true after the URL entry a base64 decoding is applied before save the file to disk.
 If this entry is not set or is equals to false not decoding is applied to the file before saving it to disk.
 
 ### Gerrit use case
 
 Gerrit API for download files has the following schema: <https://yourgerritserver/a/{project-name}/branches/{branch-id}/files/{file-id}/content> where {project-name} and
-{file-id} usually has '/' in their values and so they MUST be replaced by %2F so if project-name is user/repo, branch-id is master and file-id is equals to dir1/dir2/dashboard
-the url value is <https://yourgerritserver/a/user%2Frepo/branches/master/files/dir1%2Fdir2%2Fdashboard/content>
+{file-id} usually has '/' in their values and so they MUST be replaced by %2F so if project-name is user/repository, branch-id is master and file-id is equals to dir1/dir2/dashboard
+the URL value is <https://yourgerritserver/a/user%2Frepo/branches/master/files/dir1%2Fdir2%2Fdashboard/content>
 
 ## Sidecar for dashboards
 
@@ -565,7 +573,7 @@ data:
 If the parameter `sidecar.datasources.enabled` is set, an init container is deployed in the grafana
 pod. This container lists all secrets (or configmaps, though not recommended) in the cluster and
 filters out the ones with a label as defined in `sidecar.datasources.label`. The files defined in
-those secrets are written to a folder and accessed by grafana on startup. Using these yaml files,
+those secrets are written to a folder and accessed by grafana on startup. Using these YAML files,
 the data sources in grafana can be imported.
 
 Should you aim for reloading datasources in Grafana each time the config is changed, set `sidecar.datasources.skipReload: false` and adjust `sidecar.datasources.reloadURL` to `http://<svc-name>.<namespace>.svc.cluster.local/api/admin/provisioning/datasources/reload`.
@@ -657,7 +665,7 @@ datasources:
 If the parameter `sidecar.notifiers.enabled` is set, an init container is deployed in the grafana
 pod. This container lists all secrets (or configmaps, though not recommended) in the cluster and
 filters out the ones with a label as defined in `sidecar.notifiers.label`. The files defined in
-those secrets are written to a folder and accessed by grafana on startup. Using these yaml files,
+those secrets are written to a folder and accessed by grafana on startup. Using these YAML files,
 the notification channels in grafana can be imported. The secrets must be created before
 `helm install` so that the notifiers init container can list the secrets.
 

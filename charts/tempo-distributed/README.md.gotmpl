@@ -181,12 +181,12 @@ tempo:
 If you had ingester persistence enabled, you might need to manually change ownership of files in your PV if your CSI doesn't support fsGroup
 
 ### From Chart version >= 0.22.0
-Align Istio GRPC named port syntax. For example,
+Align Istio gRPC named port syntax. For example,
 
-- otlp-grpc               -> grpc-otlp
-- distributor-otlp-grpc   -> grpc-distributor-otlp
-- jaeger-grpc             -> grpc-jaeger
-- distributor-jaeger-grpc -> grpc-distributor-jaeger
+* otlp-grpc               -> grpc-otlp
+* distributor-otlp-grpc   -> grpc-distributor-otlp
+* jaeger-grpc             -> grpc-jaeger
+* distributor-jaeger-grpc -> grpc-distributor-jaeger
 
 In case you need to rollback, please search the right hand side pattern and replace with left hand side pattern.
 
@@ -231,13 +231,13 @@ Uninstall the old release and re-install the new one. There will be no data loss
 Option 2
 Add new selector labels to the existing pods. This option will make your pods also temporarely unavailable, option 1 is faster:
 
-```
+```bash
 kubectl label pod -n <namespace> -l app.kubernetes.io/component=<release-name>-tempo-distributed-<component>,app.kubernetes.io/instance=<instance-name> app.kubernetes.io/component=<component> --overwrite
 ```
 
 Perform a non-cascading deletion of the Deployments and Statefulsets which will keep the pods running:
 
-```
+```bash
 kubectl delete <deployment/statefulset> -n <namespace> -l app.kubernetes.io/component=<release-name>-tempo-distributed-<component>,app.kubernetes.io/instance=<instance-name> --cascade=false
 ```
 
@@ -417,9 +417,9 @@ traces:
       # -- HTTP receiver advanced config
       receiverConfig: {}
     grpc:
-      # -- Enable Tempo to ingest Open Telemetry GRPC traces
+      # -- Enable Tempo to ingest Open Telemetry gRPC traces
       enabled: true
-      # -- GRPC receiver advanced config
+      # -- gRPC receiver advanced config
       receiverConfig: {}
       # -- Default OTLP gRPC port
       port: 4317

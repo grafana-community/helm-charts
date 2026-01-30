@@ -104,4 +104,4 @@ extraObjects:
     type: Opaque
     data:
       # Decodes to 'PLACEHOLDER CERTIFICATE'
-      not-a-real-certificate: UExBQ0VIT0xERVIgQ0VSVElGSUNBVEU=
+      not-a-real-certificate: UExBQ0VIT0xERVIgQ0VSVElGSUNBVEU=  # gitleaks:allow

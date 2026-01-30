@@ -1,2 +1,14 @@
 MD013:
   line_length: 600
+MD060:
+  enabled: false
+MD022:
+  enabled: false
+MD031:
+  enabled: false
+MD032:
+  enabled: false
+MD033:
+  enabled: false
+MD034:
+  enabled: false
