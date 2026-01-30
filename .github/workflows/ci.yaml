@@ -110,15 +110,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MULTI_STATUS: false
-          LINTER_RULES_PATH: .
+          LINTER_RULES_PATH: .github/linters
           GITHUB_ACTIONS_ZIZMOR_CONFIG_FILE: ./.github/zizmor.yml
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_BASH: true
           VALIDATE_BASH_EXEC: true
+          VALIDATE_EDITORCONFIG: true
           VALIDATE_ENV: true
           VALIDATE_GO_RELEASER: true
           VALIDATE_GITHUB_ACTIONS: true
           VALIDATE_GITHUB_ACTIONS_ZIZMOR: true
+          VALIDATE_GITLEAKS: true
           VALIDATE_HTML: true
           VALIDATE_JSON: true
           VALIDATE_NATURAL_LANGUAGE: true
