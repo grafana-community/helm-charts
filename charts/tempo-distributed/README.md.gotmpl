@@ -231,13 +231,13 @@ Uninstall the old release and re-install the new one. There will be no data loss
 Option 2
 Add new selector labels to the existing pods. This option will make your pods also temporarely unavailable, option 1 is faster:
 
-```
+```bash
 kubectl label pod -n <namespace> -l app.kubernetes.io/component=<release-name>-tempo-distributed-<component>,app.kubernetes.io/instance=<instance-name> app.kubernetes.io/component=<component> --overwrite
 ```
 
 Perform a non-cascading deletion of the Deployments and Statefulsets which will keep the pods running:
 
-```
+```bash
 kubectl delete <deployment/statefulset> -n <namespace> -l app.kubernetes.io/component=<release-name>-tempo-distributed-<component>,app.kubernetes.io/instance=<instance-name> --cascade=false
 ```
 
