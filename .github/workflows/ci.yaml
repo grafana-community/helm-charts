@@ -170,7 +170,7 @@ jobs:
 
       - name: check for PR title format
         if: steps.list-changed.outputs.changed == 'true'
-        run: |      
+        run: |
           if [[ "$PR_TITLE" != "[${CHANGED_LIST##*/}] "* ]]; then
             echo "PR title must start with '[${CHANGED_LIST##*/}] '." >&2
             exit 1
