@@ -139,8 +139,6 @@ serviceAccount:
 rbac:
   # -- Specifies whether RBAC manifests should be created
   create: false
-  # -- Specifies whether a PodSecurityPolicy should be created
-  pspEnabled: false
 
 # Configuration for the ingester
 ingester:

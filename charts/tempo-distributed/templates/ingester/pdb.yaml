@@ -1,6 +1,6 @@
 {{- if .Values.podDisruptionBudget -}}
 {{- if gt (int .Values.ingester.replicas) 1 }}
-apiVersion: {{ include "tempo.pdb.apiVersion" . }}
+apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "tempo.resourceName" (dict "ctx" . "component" "ingester") }}

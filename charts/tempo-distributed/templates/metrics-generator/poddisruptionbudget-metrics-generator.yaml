@@ -1,7 +1,7 @@
 {{- if .Values.metricsGenerator.enabled }}
 {{- if and (gt (int .Values.metricsGenerator.replicas) 1) .Values.metricsGenerator.podDisruptionBudget.enabled }}
 {{ $dict := dict "ctx" . "component" "metrics-generator" "memberlist" true }}
-apiVersion: {{ include "tempo.pdb.apiVersion" . }}
+apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "tempo.resourceName" $dict }}
