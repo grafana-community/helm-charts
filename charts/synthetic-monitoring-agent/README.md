@@ -10,7 +10,7 @@ Grafana's Synthetic Monitoring application. The agent provides probe functionali
 
 ## Maintainers
 
-| Name | Email | Url |
+| Name | Email | URL |
 | ---- | ------ | --- |
 | zanhsieh | <zanhsieh@gmail.com> |  |
 | torstenwalter | <mail@torstenwalter.de> |  |

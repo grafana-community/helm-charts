@@ -42,7 +42,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 ## Vulture
 
-Vulture only works with Jaeger gRPC, so make sure 14250 is open on your distributor. You don't need to specify the port in the distributor url.
+Vulture only works with Jaeger gRPC, so make sure 14250 is open on your distributor. You don't need to specify the port in the distributor URL.
 
 Example configuration:
 ```yaml

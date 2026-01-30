@@ -17,7 +17,7 @@ Alternatively, you can use the following OCI command to pull the chart:
 helm template oci://ghcr.io/grafana-community/helm-charts/grafana
 ```
 
-_See [helm repo](https://helm.sh/docs/helm/helm_repo/) for command documentation._
+_See [helm repository](https://helm.sh/docs/helm/helm_repo/) for command documentation._
 
 ## Installing the Chart
 
@@ -139,8 +139,8 @@ This ensures the expressions are preserved for Alertmanager instead of being ren
 | `persistence.finalizers`                  | PersistentVolumeClaim finalizers              | `[ "kubernetes.io/pvc-protection" ]`                    |
 | `persistence.extraPvcLabels`              | Extra labels to apply to a PVC.               | `{}`                                                    |
 | `persistence.subPath`                     | Mount a sub dir of the persistent volume (can be templated) | `nil`                                     |
-| `persistence.inMemory.enabled`            | If persistence is not enabled, whether to mount the local storage in-memory to improve performance | `false`                                                   |
-| `persistence.inMemory.sizeLimit`          | SizeLimit for the in-memory local storage     | `nil`                                                   |
+| `persistence.inMemory.enabled`            | If persistence is not enabled, whether to mount the localStorage in-memory to improve performance | `false`                                                   |
+| `persistence.inMemory.sizeLimit`          | SizeLimit for the in-memory localStorage     | `nil`                                                   |
 | `persistence.disableWarning`              | Hide NOTES warning, useful when persisting to a database | `false`                                       |
 | `initChownData.enabled`                   | If false, don't reset data ownership at startup | true                                                  |
 | `initChownData.image.registry`            | init-chown-data container image registry      | `docker.io`                                               |
@@ -170,7 +170,7 @@ This ensures the expressions are preserved for Alertmanager instead of being ren
 | `alerting`                                | Configure grafana alerting (passed through tpl) | `{}`                                                  |
 | `notifiers`                               | Configure grafana notifiers                   | `{}`                                                    |
 | `dashboardProviders`                      | Configure grafana dashboard providers         | `{}`                                                    |
-| `defaultCurlOptions`                      | Configure default curl short options for all dashboards, the beginning dash is required  | `-skf`       |
+| `defaultCurlOptions`                      | Configure default cURL short options for all dashboards, the beginning dash is required  | `-skf`       |
 | `dashboards`                              | Dashboards to import                          | `{}`                                                    |
 | `dashboardsConfigMaps`                    | ConfigMaps reference that contains dashboards | `{}`                                                    |
 | `grafana.ini`                             | Grafana's primary configuration               | `{}`                                                    |
@@ -201,7 +201,7 @@ This ensures the expressions are preserved for Alertmanager instead of being ren
 | `sidecar.alerts.searchNamespace`     | Namespaces list. If specified, the sidecar will search for alerts config-maps  inside these namespaces. Otherwise the namespace in which the sidecar is running will be used. It's also possible to specify ALL to search in all namespaces. | `nil`                               |
 | `sidecar.alerts.watchMethod`         | Method to use to detect ConfigMap changes. With WATCH the sidecar will do a WATCH requests, with SLEEP it will list all ConfigMaps, then sleep for 60 seconds. | `WATCH` |
 | `sidecar.alerts.resource`            | Should the sidecar looks into secrets, configmaps or both. | `both`                               |
-| `sidecar.alerts.reloadURL`           | Full url of datasource configuration reload API endpoint, to invoke after a config-map change | `"http://localhost:3000/api/admin/provisioning/alerting/reload"` |
+| `sidecar.alerts.reloadURL`           | Full URL of datasource configuration reload API endpoint, to invoke after a config-map change | `"http://localhost:3000/api/admin/provisioning/alerting/reload"` |
 | `sidecar.alerts.skipReload`          | Enabling this omits defining the REQ_URL and REQ_METHOD environment variables | `false` |
 | `sidecar.alerts.initAlerts`          | Set to true to deploy the alerts sidecar as an initContainer. This is needed if skipReload is true, to load any alerts defined at startup time. | `false` |
 | `sidecar.alerts.restartPolicy`        |  Set to `Always` to enable native sidecars. `sidecar.alerts.initAlerts` must be `true` | `""`|
@@ -212,7 +212,7 @@ This ensures the expressions are preserved for Alertmanager instead of being ren
 | `sidecar.dashboards.envValueFrom`         | Environment variables from alternate sources. See the API docs on [EnvVarSource](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#envvarsource-v1-core) for format details. Can be templated | `{}` |
 | `sidecar.dashboards.SCProvider`           | Enables creation of sidecar provider          | `true`                                                  |
 | `sidecar.dashboards.provider.name`        | Unique name of the grafana provider           | `sidecarProvider`                                       |
-| `sidecar.dashboards.provider.orgid`       | Id of the organisation, to which the dashboards should be added | `1`                                   |
+| `sidecar.dashboards.provider.orgid`       | ID of the organisation, to which the dashboards should be added | `1`                                   |
 | `sidecar.dashboards.provider.folder`      | Logical folder in which grafana groups dashboards | `""`                                                |
 | `sidecar.dashboards.provider.folderUid`   | Allows you to specify the static UID for the logical folder above | `""`                                |
 | `sidecar.dashboards.provider.disableDelete` | Activate to avoid the deletion of imported dashboards | `false`                                       |
@@ -220,7 +220,7 @@ This ensures the expressions are preserved for Alertmanager instead of being ren
 | `sidecar.dashboards.provider.type`        | Provider type                                 | `file`                                                  |
 | `sidecar.dashboards.provider.foldersFromFilesStructure`        | Allow Grafana to replicate dashboard structure from filesystem.                                 | `false`                                                  |
 | `sidecar.dashboards.watchMethod`          | Method to use to detect ConfigMap changes. With WATCH the sidecar will do a WATCH requests, with SLEEP it will list all ConfigMaps, then sleep for 60 seconds. | `WATCH` |
-| `sidecar.skipTlsVerify`                   | Set to true to skip tls verification for kube api calls | `nil`                                         |
+| `sidecar.skipTlsVerify`                   | Set to true to skip tls verification for kube API calls | `nil`                                         |
 | `sidecar.dashboards.label`                | Label that config maps with dashboards should have to be added (can be templated) | `grafana_dashboard`                                |
 | `sidecar.dashboards.labelValue`                | Label value that config maps with dashboards should have to be added (can be templated) | `""`                                |
 | `sidecar.dashboards.folder`               | Folder in the pod that should hold the collected dashboards (unless `sidecar.dashboards.defaultFolderName` is set). This path will be mounted. | `/tmp/dashboards`    |
@@ -228,7 +228,7 @@ This ensures the expressions are preserved for Alertmanager instead of being ren
 | `sidecar.dashboards.defaultFolderName`    | The default folder name, it will create a subfolder under the `sidecar.dashboards.folder` and put dashboards in there instead | `nil`                                |
 | `sidecar.dashboards.searchNamespace`      | Namespaces list. If specified, the sidecar will search for dashboards config-maps  inside these namespaces. Otherwise the namespace in which the sidecar is running will be used. It's also possible to specify ALL to search in all namespaces. | `nil`                                |
 | `sidecar.dashboards.script`               | Absolute path to shell script to execute after a configmap got reloaded. | `nil`                                |
-| `sidecar.dashboards.reloadURL`            | Full url of dashboards configuration reload API endpoint, to invoke after a config-map change | `"http://localhost:3000/api/admin/provisioning/dashboards/reload"` |
+| `sidecar.dashboards.reloadURL`            | Full URL of dashboards configuration reload API endpoint, to invoke after a config-map change | `"http://localhost:3000/api/admin/provisioning/dashboards/reload"` |
 | `sidecar.dashboards.skipReload`           | Enabling this omits defining the REQ_USERNAME, REQ_PASSWORD, REQ_URL and REQ_METHOD environment variables | `false` |
 | `sidecar.dashboards.initDashboards`     | Set to true to deploy the dashboards sidecar as an initContainer in addition to a container. This is needed if skipReload is true, to load any dashboards defined at startup time. | `false` |
 | `sidecar.dashboards.restartPolicy`        |  Set to `Always` to enable native sidecars. `sidecar.dashboards.initAlerts` must be `true` | `""`|
@@ -241,7 +241,7 @@ This ensures the expressions are preserved for Alertmanager instead of being ren
 | `sidecar.datasources.searchNamespace`     | Namespaces list. If specified, the sidecar will search for datasources config-maps  inside these namespaces. Otherwise the namespace in which the sidecar is running will be used. It's also possible to specify ALL to search in all namespaces. | `nil`                               |
 | `sidecar.datasources.watchMethod`         | Method to use to detect ConfigMap changes. With WATCH the sidecar will do a WATCH requests, with SLEEP it will list all ConfigMaps, then sleep for 60 seconds. | `WATCH` |
 | `sidecar.datasources.resource`            | Should the sidecar looks into secrets, configmaps or both. | `both`                               |
-| `sidecar.datasources.reloadURL`           | Full url of datasource configuration reload API endpoint, to invoke after a config-map change | `"http://localhost:3000/api/admin/provisioning/datasources/reload"` |
+| `sidecar.datasources.reloadURL`           | Full URL of datasource configuration reload API endpoint, to invoke after a config-map change | `"http://localhost:3000/api/admin/provisioning/datasources/reload"` |
 | `sidecar.datasources.skipReload`          | Enabling this omits defining the REQ_URL and REQ_METHOD environment variables | `false` |
 | `sidecar.datasources.initDatasources`     | Set to true to deploy the datasource sidecar as an initContainer in addition to a container. This is needed if skipReload is true, to load any datasources defined at startup time. | `false` |
 | `sidecar.datasources.restartPolicy`        |  Set to `Always` to enable native sidecars. `sidecar.datasources.initAlerts` must be `true` | `""`|
@@ -252,7 +252,7 @@ This ensures the expressions are preserved for Alertmanager instead of being ren
 | `sidecar.notifiers.searchNamespace`       | Namespaces list. If specified, the sidecar will search for notifiers config-maps (or secrets) inside these namespaces. Otherwise the namespace in which the sidecar is running will be used. It's also possible to specify ALL to search in all namespaces. | `nil`                               |
 | `sidecar.notifiers.watchMethod`           | Method to use to detect ConfigMap changes. With WATCH the sidecar will do a WATCH requests, with SLEEP it will list all ConfigMaps, then sleep for 60 seconds. | `WATCH` |
 | `sidecar.notifiers.resource`              | Should the sidecar looks into secrets, configmaps or both. | `both`                               |
-| `sidecar.notifiers.reloadURL`             | Full url of notifier configuration reload API endpoint, to invoke after a config-map change | `"http://localhost:3000/api/admin/provisioning/notifications/reload"` |
+| `sidecar.notifiers.reloadURL`             | Full URL of notifier configuration reload API endpoint, to invoke after a config-map change | `"http://localhost:3000/api/admin/provisioning/notifications/reload"` |
 | `sidecar.notifiers.skipReload`            | Enabling this omits defining the REQ_URL and REQ_METHOD environment variables | `false` |
 | `sidecar.notifiers.initNotifiers`         | Set to true to deploy the notifier sidecar as an initContainer in addition to a container. This is needed if skipReload is true, to load any notifiers defined at startup time. | `false` |
 | `sidecar.notifiers.restartPolicy`        |  Set to `Always` to enable native sidecars. `sidecar.notifiers.initAlerts` must be `true` | `""`|
@@ -287,11 +287,11 @@ This ensures the expressions are preserved for Alertmanager instead of being ren
 | `downloadDashboards.env`                  | Environment variables to be passed to the `download-dashboards` container | `{}`                        |
 | `downloadDashboards.envFromSecret`        | Name of a Kubernetes secret (must be manually created in the same namespace) containing values to be added to the environment. Can be templated | `""` |
 | `downloadDashboards.resources`            | Resources of `download-dashboards` container  | `{}`                                                    |
-| `downloadDashboardsImage.registry`        | Curl docker image registry                    | `docker.io`                                       |
-| `downloadDashboardsImage.repository`      | Curl docker image repository                  | `curlimages/curl`                                       |
-| `downloadDashboardsImage.tag`             | Curl docker image tag                         | `8.9.1`                                                 |
-| `downloadDashboardsImage.sha`             | Curl docker image sha (optional)              | `""`                                                    |
-| `downloadDashboardsImage.pullPolicy`      | Curl docker image pull policy                 | `IfNotPresent`                                          |
+| `downloadDashboardsImage.registry`        | CURL Docker image registry                    | `docker.io`                                       |
+| `downloadDashboardsImage.repository`      | CURL Docker image repository                  | `curlimages/curl`                                       |
+| `downloadDashboardsImage.tag`             | CURL Docker image tag                         | `8.9.1`                                                 |
+| `downloadDashboardsImage.sha`             | CURL Docker image sha (optional)              | `""`                                                    |
+| `downloadDashboardsImage.pullPolicy`      | CURL Docker image pull policy                 | `IfNotPresent`                                          |
 | `namespaceOverride`                       | Override the deployment namespace             | `""` (`Release.Namespace`)                              |
 | `serviceMonitor.enabled`                  | Use servicemonitor from prometheus operator   | `false`                                                 |
 | `serviceMonitor.namespace`                | Namespace this servicemonitor is installed in |                                                         |
@@ -327,9 +327,9 @@ This ensures the expressions are preserved for Alertmanager instead of being ren
 | `imageRenderer.service.port`               | image-renderer port used by deployment                                             | `8081`                           |
 | `imageRenderer.service.targetPort`         | image-renderer service port used by service                                        | `8081`                           |
 | `imageRenderer.appProtocol`                | Adds the appProtocol field to the service                                          | ``                               |
-| `imageRenderer.grafanaSubPath`             | Grafana sub path to use for image renderer callback url                            | `''`                             |
-| `imageRenderer.serverURL`                  | Remote image renderer url                                                          | `''`                             |
-| `imageRenderer.renderingCallbackURL`       | Callback url for the Grafana image renderer                                        | `''`                             |
+| `imageRenderer.grafanaSubPath`             | Grafana sub path to use for image renderer callback URL                            | `''`                             |
+| `imageRenderer.serverURL`                  | Remote image renderer URL                                                          | `''`                             |
+| `imageRenderer.renderingCallbackURL`       | Callback URL for the Grafana image renderer                                        | `''`                             |
 | `imageRenderer.podPortName`                | name of the image-renderer port on the pod                                         | `http`                           |
 | `imageRenderer.revisionHistoryLimit`       | number of image-renderer replica sets to keep                                      | `10`                             |
 | `imageRenderer.networkPolicy.limitIngress` | Enable a NetworkPolicy to limit inbound traffic from only the created grafana pods | `true`                           |
@@ -443,15 +443,15 @@ dashboards:
 
 ## BASE64 dashboards
 
-Dashboards could be stored on a server that does not return JSON directly and instead of it returns a Base64 encoded file (e.g. Gerrit)
-A new parameter has been added to the url use case so if you specify a b64content value equals to true after the url entry a Base64 decoding is applied before save the file to disk.
+Dashboards could be stored on a server that does not return JSON directly and instead of it returns a base64 encoded file (e.g. Gerrit)
+A new parameter has been added to the URL use case so if you specify a b64content value equals to true after the URL entry a base64 decoding is applied before save the file to disk.
 If this entry is not set or is equals to false not decoding is applied to the file before saving it to disk.
 
 ### Gerrit use case
 
 Gerrit API for download files has the following schema: <https://yourgerritserver/a/{project-name}/branches/{branch-id}/files/{file-id}/content> where {project-name} and
-{file-id} usually has '/' in their values and so they MUST be replaced by %2F so if project-name is user/repo, branch-id is master and file-id is equals to dir1/dir2/dashboard
-the url value is <https://yourgerritserver/a/user%2Frepo/branches/master/files/dir1%2Fdir2%2Fdashboard/content>
+{file-id} usually has '/' in their values and so they MUST be replaced by %2F so if project-name is user/repository, branch-id is master and file-id is equals to dir1/dir2/dashboard
+the URL value is <https://yourgerritserver/a/user%2Frepo/branches/master/files/dir1%2Fdir2%2Fdashboard/content>
 
 ## Sidecar for dashboards
 
@@ -483,7 +483,7 @@ data:
 If the parameter `sidecar.datasources.enabled` is set, an init container is deployed in the grafana
 pod. This container lists all secrets (or configmaps, though not recommended) in the cluster and
 filters out the ones with a label as defined in `sidecar.datasources.label`. The files defined in
-those secrets are written to a folder and accessed by grafana on startup. Using these yaml files,
+those secrets are written to a folder and accessed by grafana on startup. Using these YAML files,
 the data sources in grafana can be imported.
 
 Should you aim for reloading datasources in Grafana each time the config is changed, set `sidecar.datasources.skipReload: false` and adjust `sidecar.datasources.reloadURL` to `http://<svc-name>.<namespace>.svc.cluster.local/api/admin/provisioning/datasources/reload`.
@@ -575,7 +575,7 @@ datasources:
 If the parameter `sidecar.notifiers.enabled` is set, an init container is deployed in the grafana
 pod. This container lists all secrets (or configmaps, though not recommended) in the cluster and
 filters out the ones with a label as defined in `sidecar.notifiers.label`. The files defined in
-those secrets are written to a folder and accessed by grafana on startup. Using these yaml files,
+those secrets are written to a folder and accessed by grafana on startup. Using these YAML files,
 the notification channels in grafana can be imported. The secrets must be created before
 `helm install` so that the notifiers init container can list the secrets.
 
