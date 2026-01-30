@@ -188,7 +188,6 @@ jobs:
     needs:
       - lint-test
       - check-codeowners-maintainers
-      - validate-pr
       - super-linter
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository
