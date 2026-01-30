@@ -1,0 +1,9 @@
+{
+    "filters": {
+        "allowlist": {
+            "allow": [
+                "Url"
+            ]
+        }
+    }
+}
