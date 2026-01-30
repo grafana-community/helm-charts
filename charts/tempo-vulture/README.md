@@ -1,6 +1,6 @@
 # tempo-vulture
 
-![Version: 0.11.0](https://img.shields.io/badge/Version-0.11.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.9.0](https://img.shields.io/badge/AppVersion-2.9.0-informational?style=flat-square)
+![Version: 0.11.1](https://img.shields.io/badge/Version-0.11.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.9.0](https://img.shields.io/badge/AppVersion-2.9.0-informational?style=flat-square)
 
 Grafana Tempo Vulture - A tool to monitor Tempo performance.
 
@@ -8,12 +8,18 @@ Grafana Tempo Vulture - A tool to monitor Tempo performance.
 
 * <https://github.com/grafana/tempo>
 
-## Chart Repo
+## Chart repository
 
-Add the following repo to use the chart:
+Add the following repository to use the chart:
 
 ```console
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
+```
+
+Alternatively, you can use the following OCI command to pull the chart:
+
+```console
+helm template oci://ghcr.io/grafana-community/helm-charts/tempo-vulture
 ```
 
 ## Installing the Chart
@@ -36,7 +42,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 ## Vulture
 
-Vulture only works with Jaeger GRPC, so make sure 14250 is open on your distributor. You don't need to specify the port in the distributor url.
+Vulture only works with Jaeger gRPC, so make sure 14250 is open on your distributor. You don't need to specify the port in the distributor url.
 
 Example configuration:
 ```yaml
@@ -80,6 +86,6 @@ tempoAddress:
 | serviceAccount.create | bool | `true` | Specifies whether a ServiceAccount should be created |
 | serviceAccount.imagePullSecrets | list | `[]` | Image pull secrets for the service account |
 | serviceAccount.name | string | `nil` | The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template |
-| tempoAddress.push | string | `nil` | the url towards your Tempo distributor, e.g. http://distributor |
-| tempoAddress.query | string | `nil` | the url towards your Tempo query-frontend, e.g. http://query-frontend:3200 |
+| tempoAddress.push | string | `nil` | the URL towards your Tempo distributor, e.g. http://distributor |
+| tempoAddress.query | string | `nil` | the URL towards your Tempo query-frontend, e.g. http://query-frontend:3200 |
 | tolerations | list | `[]` | Tolerations for vulture pods |

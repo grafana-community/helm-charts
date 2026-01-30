@@ -79,7 +79,7 @@ podMonitor:
   scrapeTimeout: null
 
 tempoAddress:
-  # -- the url towards your Tempo distributor, e.g. http://distributor
+  # -- the URL towards your Tempo distributor, e.g. http://distributor
   push:
-  # -- the url towards your Tempo query-frontend, e.g. http://query-frontend:3200
+  # -- the URL towards your Tempo query-frontend, e.g. http://query-frontend:3200
   query:
