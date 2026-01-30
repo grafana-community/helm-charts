@@ -1,3 +1,189 @@
 apiVersion: v1
-entries: {}
-generated: "2025-12-19T00:00:00Z"
+entries:
+  grafana:
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/grafana-community/helm-charts
+        - name: Upstream Project
+          url: https://github.com/grafana/grafana
+    apiVersion: v2
+    appVersion: 12.3.1
+    created: "2026-01-30T07:36:59.672590478Z"
+    description: The leading tool for querying and visualizing time series and metrics.
+    digest: 50c8e624bc1c94ad9761bb07f5836e6111b9d2399778b4414f00dbbdf3e1c3c0
+    home: https://grafana.com
+    icon: https://artifacthub.io/image/b4fed1a7-6c8f-4945-b99d-096efa3e4116
+    keywords:
+    - monitoring
+    - metric
+    kubeVersion: ^1.8.0-0
+    maintainers:
+    - email: github@jkroepke.de
+      name: Jan-Otto Kröpke
+      url: https://github.com/jkroepke
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    name: grafana
+    sources:
+    - https://github.com/grafana/grafana
+    - https://github.com/grafana-community/helm-charts
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/grafana-10.6.0/grafana-10.6.0.tgz
+    version: 10.6.0
+  grafana-mcp:
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/grafana-community/helm-charts
+        - name: Upstream Project
+          url: https://github.com/grafana/mcp-grafana
+    apiVersion: v2
+    appVersion: 0.8.2
+    created: "2026-01-30T07:36:59.900911234Z"
+    description: MCP server for Grafana.
+    digest: 1393a5a3784a1516feb99b6f5b60359bc78d3a239749c3419cdd7d1454accb49
+    home: https://grafana.com
+    icon: https://artifacthub.io/image/b4fed1a7-6c8f-4945-b99d-096efa3e4116
+    keywords:
+    - monitoring
+    - mcp
+    kubeVersion: ^1.8.0-0
+    maintainers:
+    - email: sheikhabubaker761@gmail.com
+      name: Mohammad Abubaker
+      url: https://github.com/Sheikh-Abubaker
+    - email: github@jkroepke.de
+      name: Jan-Otto Kröpke
+      url: https://github.com/jkroepke
+    - email: avivguiser@gmail.com
+      name: Aviv Guiser
+      url: https://github.com/KyriosGN0
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    name: grafana-mcp
+    sources:
+    - https://github.com/grafana/mcp-grafana
+    - https://github.com/grafana-community/helm-charts
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/grafana-mcp-0.4.0/grafana-mcp-0.4.0.tgz
+    version: 0.4.0
+  synthetic-monitoring-agent:
+  - apiVersion: v2
+    appVersion: v0.38.3
+    created: "2026-01-30T07:37:00.129283552Z"
+    description: 'Grafana''s Synthetic Monitoring application. The agent provides
+      probe functionality and executes network checks for monitoring remote targets.  >
+      [!NOTE] > Grafana Cloud Synthetic Monitoring does not officially support this
+      chart. > If you are a Grafana Cloud customer and require support, please follow
+      the [recommended installation methods](https://grafana.com/docs/grafana-cloud/testing/synthetic-monitoring/set-up/set-up-private-probes/#deployment-with-kubernetes)
+      listed in the public docs. '
+    digest: 3f2b510cb797ff8e79680f3088a506899a7cadbf4573f9a813b20f67a7c2d2d5
+    home: https://grafana.net
+    icon: https://raw.githubusercontent.com/grafana/grafana/master/public/img/logo_transparent_400x.png
+    maintainers:
+    - email: sheikhabubaker761@gmail.com
+      name: Mohammad Abubaker
+      url: https://github.com/Sheikh-Abubaker
+    - email: avivguiser@gmail.com
+      name: Aviv Guiser
+      url: https://github.com/KyriosGN0
+    name: synthetic-monitoring-agent
+    sources:
+    - https://github.com/grafana/synthetic-monitoring-agent
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/synthetic-monitoring-agent-1.3.0/synthetic-monitoring-agent-1.3.0.tgz
+    version: 1.3.0
+  tempo:
+  - apiVersion: v2
+    appVersion: 2.9.0
+    created: "2026-01-30T07:37:00.399280372Z"
+    description: Grafana Tempo Single Binary Mode
+    digest: 30dad143d2c72b8d7cde4a875605fc2d425d041ec51ea8f39b84f9806837f011
+    home: https://grafana.net
+    icon: https://raw.githubusercontent.com/grafana/tempo/master/docs/tempo/website/logo_and_name.png
+    maintainers:
+    - email: sheikhabubaker761@gmail.com
+      name: Mohammad Abubaker
+      url: https://github.com/Sheikh-Abubaker
+    name: tempo
+    sources:
+    - https://github.com/grafana/tempo
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/tempo-1.25.0/tempo-1.25.0.tgz
+    version: 1.25.0
+  tempo-distributed:
+  - apiVersion: v2
+    appVersion: 2.9.0
+    created: "2026-01-30T07:37:00.630059928Z"
+    dependencies:
+    - alias: minio
+      condition: minio.enabled
+      name: minio
+      repository: https://charts.min.io/
+      version: 4.1.0
+    - alias: grafana-agent-operator
+      condition: metaMonitoring.grafanaAgent.installOperator
+      name: grafana-agent-operator
+      repository: https://grafana.github.io/helm-charts
+      version: 0.5.1
+    - alias: rollout_operator
+      condition: rollout_operator.enabled
+      name: rollout-operator
+      repository: https://grafana.github.io/helm-charts
+      version: 0.40.0
+    description: Grafana Tempo in MicroService mode
+    digest: 426d568188235ac70693f5c98b355ad44868a32a20e5749c806d701d7f5467a9
+    home: https://grafana.com/docs/tempo/latest/
+    icon: https://raw.githubusercontent.com/grafana/tempo/master/docs/tempo/website/logo_and_name.png
+    maintainers:
+    - email: Ilia.lazebnik@gmail.com
+      name: Ilia Lazebnik
+      url: https://github.com/DrFaust92
+    - email: sheikhabubaker761@gmail.com
+      name: Mohammad Abubaker
+      url: https://github.com/Sheikh-Abubaker
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    name: tempo-distributed
+    sources:
+    - https://github.com/grafana/tempo
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/tempo-distributed-1.62.0/tempo-distributed-1.62.0.tgz
+    version: 1.62.0
+  tempo-vulture:
+  - apiVersion: v2
+    appVersion: 2.9.0
+    created: "2026-01-30T07:37:00.894813641Z"
+    description: Grafana Tempo Vulture - A tool to monitor Tempo performance.
+    digest: e8da889a62052ed55864fa277a1f44ed0522edd66553c183b847be4decacfad7
+    home: https://grafana.com/docs/tempo/latest/
+    icon: https://raw.githubusercontent.com/grafana/tempo/master/docs/tempo/website/logo_and_name.png
+    maintainers:
+    - email: avivguiser@gmail.com
+      name: Aviv Guiser
+      url: https://github.com/KyriosGN0
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    - email: sheikhabubaker761@gmail.com
+      name: Mohammad Abubaker
+      url: https://github.com/Sheikh-Abubaker
+    name: tempo-vulture
+    sources:
+    - https://github.com/grafana/tempo
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/tempo-vulture-0.11.0/tempo-vulture-0.11.0.tgz
+    version: 0.11.0
+generated: "2026-01-30T07:37:00.89481818Z"
