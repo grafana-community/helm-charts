@@ -1,13 +1,13 @@
 {
-    "filters": {
-        "comments": true
-        "allowlist": {
-            "allow": [
-                "Url"
-            ]
-        }
-    },
-    "rules": {
-        "terminology": true
+  "filters": {
+    "comments": true,
+    "allowlist": {
+      "allow": [
+        "Url"
+      ]
     }
+  },
+  "rules": {
+    "terminology": true
+  }
 }
