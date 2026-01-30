@@ -60,7 +60,7 @@ Static alerting resources now support Helm templating. This means that alerting 
 
 If you already use template expressions intended for Alertmanager (for example, `{{ "{{" }} $labels.instance {{ "}}" }}`), these must now be escaped to avoid unintended Helm or Go template evaluation. To escape them, wrap the braces with an extra layer like this:
 
-`{{ "{{" }} $labels.instance {{ "}}" }}`
+{{ "`{{ \"{{\" }} $labels.instance {{ \"}}\" }}`" }}
 
 This ensures the expressions are preserved for Alertmanager instead of being rendered by Helm.
 
