@@ -1,4 +1,5 @@
 apiVersion: v2
+# renovate: docker=docker.io/grafana/synthetic-monitoring-agent
 appVersion: v0.38.3
 description: |
   Grafana's Synthetic Monitoring application. The agent provides probe functionality and executes network checks for monitoring remote targets.
