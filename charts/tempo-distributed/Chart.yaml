@@ -3,7 +3,7 @@ name: tempo-distributed
 description: Grafana Tempo in MicroService mode
 type: application
 version: 2.0.0
-appVersion: 2.9.0
+appVersion: 2.10.0
 kubeVersion: "^1.25.0-0"
 engine: gotpl
 home: https://grafana.com/docs/tempo/latest/
