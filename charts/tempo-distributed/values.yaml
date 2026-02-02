@@ -23,13 +23,13 @@ global:
   # -- configures DNS service namespace
   dnsNamespace: 'kube-system'
   # -- Common environment variables to add to all pods directly managed by this chart.
-  # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached, metrics-generator, querier, query-frontend, tokengen
+  # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached-meta, memcached-data, metrics-generator, querier, query-frontend, tokengen
   extraEnv: []
   # -- Common environment variables which come from a ConfigMap or Secret to add to all pods directly managed by this chart.
-  # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached, metrics-generator, querier, query-frontend, tokengen
+  # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached-meta, memcached-data, metrics-generator, querier, query-frontend, tokengen
   extraEnvFrom: []
   # -- Common args to add to all pods directly managed by this chart.
-  # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached, metrics-generator, querier, query-frontend, tokengen
+  # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached-meta, memcached-data, metrics-generator, querier, query-frontend, tokengen
   extraArgs: []
   # -- Global storage class to be used for persisted components
   storageClass: null
@@ -1713,14 +1713,33 @@ server:
 cache:
   caches:
     - memcached:
-        host: '{{ include "tempo.fullname" . }}-memcached'
+        host: '{{ include "tempo.fullname" . }}-memcached-meta'
         service: memcached-client
         consistent_hash: true
         timeout: 500ms
       roles:
         - parquet-footer
-        - bloom
+    - memcached:
+        host: '{{ include "tempo.fullname" . }}-memcached-data'
+        service: memcached-client
+        consistent_hash: true
+        timeout: 500ms
+      roles:
         - frontend-search
+    - memcached:
+        host: '{{ include "tempo.fullname" . }}-memcached-meta'
+        service: memcached-client
+        consistent_hash: true
+        timeout: 500ms
+      roles:
+        - bloom
+    - memcached:
+        host: '{{ include "tempo.fullname" . }}-memcached-data'
+        service: memcached-client
+        consistent_hash: true
+        timeout: 500ms
+      roles:
+        - parquet-page
 
 # To configure a different storage backend instead of local storage:
 # storage:
@@ -1786,11 +1805,12 @@ per_tenant_overrides:
   #     - service-graphs
   #     - span-metrics
 
-# memcached is for all of the Tempo pieces to coordinate with each other.
-# you can use your own self deployed memcached by setting `memcached.enabled` to false and `memcached.host` + `memcached.service`
+# memcached configurations for different cache roles
+# Two separate memcached instances:
+# - memcached-meta: stores bloom and parquet-footer
+# - memcached-data: stores parquet-page and frontend-search
 memcached:
-  # -- Specified whether the memcached cachce should be enabled
-  enabled: true
+  # -- Common image configuration for all memcached instances
   image:
     # -- The Docker registry for the Memcached image. Overrides `global.image.registry`
     registry: null
@@ -1802,81 +1822,166 @@ memcached:
     tag: 1.6.40-alpine
     # -- Memcached Docker image pull policy
     pullPolicy: IfNotPresent
-  host: memcached
-  # Number of replicas for memchached
-  replicas: 1
-  # -- Additional CLI args for memcached
-  extraArgs: []
-  # -- Toleration for memcached pods
-  tolerations: []
-  # -- Environment variables to add to memcached pods
-  extraEnv: []
-  # -- Environment variables from secrets or configmaps to add to memcached pods
-  extraEnvFrom: []
-  # -- Labels for memcached pods
-  podLabels: {}
-  # -- Annotations for memcached pods
-  podAnnotations: {}
-  # -- Resource requests and limits for memcached
-  resources: {}
-  # -- topologySpread for memcached pods. Passed through `tpl` and, thus, to be configured as string
-  # @default -- Defaults to allow skew no more than 1 node per AZ
-  topologySpreadConstraints: |
-    - maxSkew: 1
-      topologyKey: topology.kubernetes.io/zone
-      whenUnsatisfiable: ScheduleAnyway
-      labelSelector:
-        matchLabels:
-          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached") | nindent 6 }}
-  # -- Affinity for memcached pods. Passed through `tpl` and, thus, to be configured as string
-  # @default -- Hard node and soft zone anti-affinity
-  affinity: |
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached") | nindent 10 }}
-          topologyKey: kubernetes.io/hostname
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchLabels:
-                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached") | nindent 12 }}
-            topologyKey: topology.kubernetes.io/zone
-  # -- Pod Disruption Budget configuration
-  podDisruptionBudget:
-    # -- Enable PodDisruptionBudget for memcached
+
+  # memcached-meta: for bloom and parquet-footer caching
+  meta:
+    # -- Specified whether the memcached-meta cache should be enabled
     enabled: true
-  # -- Pod Disruption Budget maxUnavailable
-  maxUnavailable: 1
-  # -- Init containers for the memcached pod
-  initContainers: []
-  # -- Extra volumes for memcached pods
-  extraVolumeMounts: []
-  # -- Extra volumes for memcached statefulSet
-  extraVolumes: []
-  service:
-    # -- Annotations for memcached service
-    annotations: {}
+    host: memcached-meta
+    # Number of replicas for memcached-meta
+    replicas: 1
+    # -- Additional CLI args for memcached-meta
+    extraArgs: []
+    # -- Toleration for memcached-meta pods
+    tolerations: []
+    # -- Environment variables to add to memcached-meta pods
+    extraEnv: []
+    # -- Environment variables from secrets or configmaps to add to memcached-meta pods
+    extraEnvFrom: []
+    # -- Labels for memcached-meta pods
+    podLabels: {}
+    # -- Annotations for memcached-meta pods
+    podAnnotations: {}
+    # -- Resource requests and limits for memcached-meta
+    resources: {}
+    # -- topologySpread for memcached-meta pods. Passed through `tpl` and, thus, to be configured as string
+    # @default -- Defaults to allow skew no more than 1 node per AZ
+    topologySpreadConstraints: |
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-meta") | nindent 6 }}
+    # -- Affinity for memcached-meta pods. Passed through `tpl` and, thus, to be configured as string
+    # @default -- Hard node and soft zone anti-affinity
+    affinity: |
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-meta") | nindent 10 }}
+            topologyKey: kubernetes.io/hostname
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-meta") | nindent 12 }}
+              topologyKey: topology.kubernetes.io/zone
+    # -- Pod Disruption Budget configuration
+    podDisruptionBudget:
+      # -- Enable PodDisruptionBudget for memcached-meta
+      enabled: true
+    # -- Pod Disruption Budget maxUnavailable
+    maxUnavailable: 1
+    # -- Init containers for the memcached-meta pod
+    initContainers: []
+    # -- Extra volumes for memcached-meta pods
+    extraVolumeMounts: []
+    # -- Extra volumes for memcached-meta statefulSet
+    extraVolumes: []
+    service:
+      # -- Annotations for memcached-meta service
+      annotations: {}
 
-  # -- configuration for readiness probe for memcached statefulset
-  readinessProbe:
-    tcpSocket:
-      port: client
-    initialDelaySeconds: 5
-    periodSeconds: 5
-    timeoutSeconds: 3
-    failureThreshold: 6
-    successThreshold: 1
+    # -- configuration for readiness probe for memcached-meta statefulset
+    readinessProbe:
+      tcpSocket:
+        port: client
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 6
+      successThreshold: 1
 
-  # -- configuration for liveness probe for memcached statefulset
-  livenessProbe:
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 6
-    successThreshold: 1
+    # -- configuration for liveness probe for memcached-meta statefulset
+    livenessProbe:
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
+
+  # memcached-data: for parquet-page and frontend-search caching
+  data:
+    # -- Specified whether the memcached-data cache should be enabled
+    enabled: true
+    host: memcached-data
+    # Number of replicas for memcached-data
+    replicas: 1
+    # -- Additional CLI args for memcached-data
+    extraArgs: []
+    # -- Toleration for memcached-data pods
+    tolerations: []
+    # -- Environment variables to add to memcached-data pods
+    extraEnv: []
+    # -- Environment variables from secrets or configmaps to add to memcached-data pods
+    extraEnvFrom: []
+    # -- Labels for memcached-data pods
+    podLabels: {}
+    # -- Annotations for memcached-data pods
+    podAnnotations: {}
+    # -- Resource requests and limits for memcached-data
+    resources: {}
+    # -- topologySpread for memcached-data pods. Passed through `tpl` and, thus, to be configured as string
+    # @default -- Defaults to allow skew no more than 1 node per AZ
+    topologySpreadConstraints: |
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-data") | nindent 6 }}
+    # -- Affinity for memcached-data pods. Passed through `tpl` and, thus, to be configured as string
+    # @default -- Hard node and soft zone anti-affinity
+    affinity: |
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-data") | nindent 10 }}
+            topologyKey: kubernetes.io/hostname
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-data") | nindent 12 }}
+              topologyKey: topology.kubernetes.io/zone
+    # -- Pod Disruption Budget configuration
+    podDisruptionBudget:
+      # -- Enable PodDisruptionBudget for memcached-data
+      enabled: true
+    # -- Pod Disruption Budget maxUnavailable
+    maxUnavailable: 1
+    # -- Init containers for the memcached-data pod
+    initContainers: []
+    # -- Extra volumes for memcached-data pods
+    extraVolumeMounts: []
+    # -- Extra volumes for memcached-data statefulSet
+    extraVolumes: []
+    service:
+      # -- Annotations for memcached-data service
+      annotations: {}
+
+    # -- configuration for readiness probe for memcached-data statefulset
+    readinessProbe:
+      tcpSocket:
+        port: client
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 6
+      successThreshold: 1
+
+    # -- configuration for liveness probe for memcached-data statefulset
+    livenessProbe:
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
 
 memcachedExporter:
   # -- Specifies whether the Memcached Exporter should be enabled

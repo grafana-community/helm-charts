@@ -1,98 +1,101 @@
-{{- if .Values.memcached.enabled }}
-{{ $dict := dict "ctx" . "component" "memcached" }}
+{{- range $name, $config := dict "meta" .Values.memcached.meta "data" .Values.memcached.data }}
+{{- if $config.enabled }}
+{{- $componentName := printf "memcached-%s" $name }}
+{{ $dict := dict "ctx" $ "component" $componentName }}
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "tempo.resourceName" $dict }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "tempo.labels" $dict | nindent 4 }}
-  {{- with .Values.memcached.annotations }}
+  {{- with $config.annotations }}
   annotations:
   {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  replicas: {{ .Values.memcached.replicas }}
-  revisionHistoryLimit: {{ .Values.tempo.revisionHistoryLimit }}
+  replicas: {{ $config.replicas }}
+  revisionHistoryLimit: {{ $.Values.tempo.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
-  serviceName: memcached
+  serviceName: {{ $componentName }}
   template:
     metadata:
-      {{- if or .Values.tempo.podAnnotations .Values.memcached.podAnnotations }}
+      {{- if or $.Values.tempo.podAnnotations $config.podAnnotations }}
       annotations:
-        {{- with .Values.tempo.podAnnotations }}
+        {{- with $.Values.tempo.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- with .Values.memcached.podAnnotations }}
+        {{- with $config.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- end }}
       labels:
         {{- include "tempo.labels" $dict | nindent 8 }}
-        {{- with .Values.tempo.podLabels }}
+        {{- with $.Values.tempo.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- with .Values.memcached.podLabels }}
+        {{- with $config.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      {{- if or (.Values.memcached.priorityClassName) (.Values.global.priorityClassName) }}
-      priorityClassName: {{ default .Values.memcached.priorityClassName .Values.global.priorityClassName }}
+      {{- if or ($config.priorityClassName) ($.Values.global.priorityClassName) }}
+      priorityClassName: {{ default $config.priorityClassName $.Values.global.priorityClassName }}
       {{- end }}
-      serviceAccountName: {{ include "tempo.serviceAccountName" . }}
-      {{- with .Values.tempo.podSecurityContext }}
+      serviceAccountName: {{ include "tempo.serviceAccountName" $ }}
+      {{- with $.Values.tempo.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       enableServiceLinks: false
-      {{- include "tempo.memcachedExporterImagePullSecrets" . | nindent 6 -}}
-      {{- with .Values.memcachedExporter.hostAliases }}
+      {{- include "tempo.memcachedExporterImagePullSecrets" $ | nindent 6 -}}
+      {{- with $.Values.memcachedExporter.hostAliases }}
       hostAliases:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       initContainers:
-        {{- toYaml .Values.memcached.initContainers | nindent 8 }}
+        {{- toYaml $config.initContainers | nindent 8 }}
       containers:
-        - image: {{ include "tempo.imageReference" $dict }}
-          imagePullPolicy: {{ .Values.memcached.image.pullPolicy }}
+        - image: {{ include "tempo.imageReference" (dict "ctx" $ "component" "memcached") }}
+          imagePullPolicy: {{ $.Values.memcached.image.pullPolicy }}
           name: memcached
-          {{- if or .Values.global.extraArgs .Values.memcached.extraArgs }}
+          {{- if or $.Values.global.extraArgs $config.extraArgs }}
           args:
-            {{- with .Values.memcached.extraArgs }}
+            {{- with $config.extraArgs }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- with .Values.global.extraArgs }}
+            {{- with $.Values.global.extraArgs }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
           ports:
             - containerPort: 11211
               name: client
-          {{- if or .Values.global.extraEnv .Values.memcached.extraEnv }}
+          {{- if or $.Values.global.extraEnv $config.extraEnv }}
           env:
-            {{- with .Values.global.extraEnv }}
+            {{- with $.Values.global.extraEnv }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- with .Values.memcached.extraEnv }}
+            {{- with $config.extraEnv }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
-          {{- if or .Values.global.extraEnvFrom .Values.memcached.extraEnvFrom }}
+          {{- if or $.Values.global.extraEnvFrom $config.extraEnvFrom }}
           envFrom:
-            {{- with .Values.global.extraEnvFrom }}
+            {{- with $.Values.global.extraEnvFrom }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- with .Values.memcached.extraEnvFrom }}
+            {{- with $config.extraEnvFrom }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
-          {{- with .Values.memcached.readinessProbe }}
+          {{- with $config.readinessProbe }}
           readinessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.memcached.livenessProbe }}
+          {{- with $config.livenessProbe }}
           livenessProbe:
             exec:
               command:
@@ -101,61 +104,62 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
-            {{- toYaml .Values.memcached.resources | nindent 12 }}
-          {{- with .Values.tempo.securityContext }}
+            {{- toYaml $config.resources | nindent 12 }}
+          {{- with $.Values.tempo.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.memcached.extraVolumeMounts }}
+          {{- with $config.extraVolumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- if .Values.memcachedExporter.enabled }}
+        {{- if $.Values.memcachedExporter.enabled }}
         - args:
             - --memcached.address=localhost:11211
             - --web.listen-address=0.0.0.0:9150
-          {{- with .Values.memcachedExporter.extraArgs }}
+          {{- with $.Values.memcachedExporter.extraArgs }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: {{ include "tempo.imageReference" (dict "ctx" . "component" "memcached-exporter") }}
-          imagePullPolicy: {{ .Values.memcachedExporter.image.pullPolicy }}
+          image: {{ include "tempo.imageReference" (dict "ctx" $ "component" "memcached-exporter") }}
+          imagePullPolicy: {{ $.Values.memcachedExporter.image.pullPolicy }}
           name: exporter
           ports:
             - containerPort: 9150
               name: http-metrics
           resources:
-            {{- toYaml .Values.memcachedExporter.resources | nindent 12 }}
-          {{- with .Values.tempo.securityContext }}
+            {{- toYaml $.Values.memcachedExporter.resources | nindent 12 }}
+          {{- with $.Values.tempo.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.memcached.extraVolumeMounts }}
+          {{- with $config.extraVolumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- end }}
-      {{- if semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version }}
-      {{- with .Values.memcached.topologySpreadConstraints }}
+      {{- if semverCompare ">= 1.19-0" $.Capabilities.KubeVersion.Version }}
+      {{- with $config.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- tpl . $ | nindent 8 }}
       {{- end }}
       {{- end }}
-      {{- with .Values.memcached.affinity }}
+      {{- with $config.affinity }}
       affinity:
         {{- tpl . $ | nindent 8 }}
       {{- end }}
-      {{- with .Values.memcached.nodeSelector }}
+      {{- with $config.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.memcached.tolerations }}
+      {{- with $config.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.memcached.extraVolumes }}
+      {{- with $config.extraVolumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
       {{- end }}
   updateStrategy:
     type: RollingUpdate
-{{- end}}
+{{- end }}
+{{- end }}

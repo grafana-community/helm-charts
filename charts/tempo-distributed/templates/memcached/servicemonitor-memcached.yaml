@@ -1,1 +1,4 @@
-{{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" "memcached") }}
+{{- range $name := list "meta" "data" }}
+{{- $componentName := printf "memcached-%s" $name }}
+{{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" $componentName) }}
+{{- end }}
