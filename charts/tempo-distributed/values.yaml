@@ -1712,6 +1712,8 @@ server:
 # https://grafana.com/docs/tempo/latest/configuration/#cache
 cache:
   caches:
+    {{- if .Values.memcached.split }}
+    # Split configuration: separate caches for metadata and data
     - memcached:
         host: '{{ include "tempo.fullname" . }}-memcached-meta'
         service: memcached-client
@@ -1740,6 +1742,18 @@ cache:
         timeout: 500ms
       roles:
         - parquet-page
+    {{- else }}
+    # Legacy configuration: single memcached instance for all cache types
+    - memcached:
+        host: '{{ include "tempo.fullname" . }}-memcached'
+        service: memcached-client
+        consistent_hash: true
+        timeout: 500ms
+      roles:
+        - parquet-footer
+        - bloom
+        - frontend-search
+    {{- end }}
 
 # To configure a different storage backend instead of local storage:
 # storage:
@@ -1805,11 +1819,16 @@ per_tenant_overrides:
   #     - service-graphs
   #     - span-metrics
 
-# memcached configurations for different cache roles
-# Two separate memcached instances:
-# - memcached-meta: stores bloom and parquet-footer
-# - memcached-data: stores parquet-page and frontend-search
+# memcached is for all of the Tempo pieces to coordinate with each other.
+# you can use your own self deployed memcached by setting `memcached.enabled` to false and `memcached.host` + `memcached.service`
 memcached:
+  # -- Enable splitting memcached into separate instances for metadata (bloom, parquet-footer) and data (parquet-page, frontend-search) caching.
+  # When false (default), uses a single memcached instance for all cache types (backwards compatible).
+  # When true, creates two separate memcached instances: memcached-meta and memcached-data.
+  # WARNING: Enabling this will require restarting components (ingesters, compactors, queriers) and cleanup of the old memcached instance.
+  split: false
+  # -- Specified whether the memcached cache should be enabled (only used when split is false)
+  enabled: true
   # -- Common image configuration for all memcached instances
   image:
     # -- The Docker registry for the Memcached image. Overrides `global.image.registry`
@@ -1823,6 +1842,84 @@ memcached:
     # -- Memcached Docker image pull policy
     pullPolicy: IfNotPresent
 
+  # Legacy single memcached configuration (used when split is false)
+  host: memcached
+  # Number of replicas for memcached
+  replicas: 1
+  # -- Additional CLI args for memcached
+  extraArgs: []
+  # -- Toleration for memcached pods
+  tolerations: []
+  # -- Environment variables to add to memcached pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to memcached pods
+  extraEnvFrom: []
+  # -- Labels for memcached pods
+  podLabels: {}
+  # -- Annotations for memcached pods
+  podAnnotations: {}
+  # -- Annotations for memcached statefulset
+  annotations: {}
+  # -- Resource requests and limits for memcached
+  resources: {}
+  # -- topologySpread for memcached pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more than 1 node per AZ
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached") | nindent 6 }}
+  # -- Affinity for memcached pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Hard node and soft zone anti-affinity
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached") | nindent 10 }}
+          topologyKey: kubernetes.io/hostname
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached") | nindent 12 }}
+            topologyKey: topology.kubernetes.io/zone
+  # -- Pod Disruption Budget configuration
+  podDisruptionBudget:
+    # -- Enable PodDisruptionBudget for memcached
+    enabled: true
+  # -- Pod Disruption Budget maxUnavailable
+  maxUnavailable: 1
+  # -- Init containers for the memcached pod
+  initContainers: []
+  # -- Extra volumes for memcached pods
+  extraVolumeMounts: []
+  # -- Extra volumes for memcached statefulSet
+  extraVolumes: []
+  service:
+    # -- Annotations for memcached service
+    annotations: {}
+  # -- configuration for readiness probe for memcached statefulset
+  readinessProbe:
+    tcpSocket:
+      port: client
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 6
+    successThreshold: 1
+  # -- configuration for liveness probe for memcached statefulset
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
+  # Split memcached configuration (used when split is true)
   # memcached-meta: for bloom and parquet-footer caching
   meta:
     # -- Specified whether the memcached-meta cache should be enabled

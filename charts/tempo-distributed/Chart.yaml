@@ -2,7 +2,7 @@ apiVersion: v2
 name: tempo-distributed
 description: Grafana Tempo in MicroService mode
 type: application
-version: 1.63.1
+version: 1.64.1
 # renovate: docker=docker.io/grafana/tempo
 appVersion: 2.10.0
 engine: gotpl
