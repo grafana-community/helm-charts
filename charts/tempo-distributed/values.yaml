@@ -1631,8 +1631,41 @@ config: |
     grpc_server_max_send_msg_size: {{ .Values.server.grpc_server_max_send_msg_size }}
     http_server_read_timeout: {{ .Values.server.http_server_read_timeout }}
     http_server_write_timeout: {{ .Values.server.http_server_write_timeout }}
+  {{- if .Values.memcached.split }}
+  cache:
+    caches:
+      - memcached:
+          host: '{{ include "tempo.fullname" . }}-memcached-meta'
+          service: memcached-client
+          consistent_hash: true
+          timeout: 500ms
+        roles:
+          - parquet-footer
+      - memcached:
+          host: '{{ include "tempo.fullname" . }}-memcached-data'
+          service: memcached-client
+          consistent_hash: true
+          timeout: 500ms
+        roles:
+          - frontend-search
+      - memcached:
+          host: '{{ include "tempo.fullname" . }}-memcached-meta'
+          service: memcached-client
+          consistent_hash: true
+          timeout: 500ms
+        roles:
+          - bloom
+      - memcached:
+          host: '{{ include "tempo.fullname" . }}-memcached-data'
+          service: memcached-client
+          consistent_hash: true
+          timeout: 500ms
+        roles:
+          - parquet-page
+  {{- else }}
   cache:
   {{- toYaml .Values.cache | nindent 2}}
+  {{- end }}
   storage:
     trace:
       {{- if .Values.storage.trace.block.version }}
@@ -1710,40 +1743,10 @@ server:
 # Use this block to configure caches available throughout the application.
 # Multiple caches can be created and assigned roles which determine how they are used by Tempo.
 # https://grafana.com/docs/tempo/latest/configuration/#cache
+# NOTE: When memcached.split is true, this configuration will be overridden in the config template
+# to use separate memcached-meta and memcached-data instances.
 cache:
   caches:
-    {{- if .Values.memcached.split }}
-    # Split configuration: separate caches for metadata and data
-    - memcached:
-        host: '{{ include "tempo.fullname" . }}-memcached-meta'
-        service: memcached-client
-        consistent_hash: true
-        timeout: 500ms
-      roles:
-        - parquet-footer
-    - memcached:
-        host: '{{ include "tempo.fullname" . }}-memcached-data'
-        service: memcached-client
-        consistent_hash: true
-        timeout: 500ms
-      roles:
-        - frontend-search
-    - memcached:
-        host: '{{ include "tempo.fullname" . }}-memcached-meta'
-        service: memcached-client
-        consistent_hash: true
-        timeout: 500ms
-      roles:
-        - bloom
-    - memcached:
-        host: '{{ include "tempo.fullname" . }}-memcached-data'
-        service: memcached-client
-        consistent_hash: true
-        timeout: 500ms
-      roles:
-        - parquet-page
-    {{- else }}
-    # Legacy configuration: single memcached instance for all cache types
     - memcached:
         host: '{{ include "tempo.fullname" . }}-memcached'
         service: memcached-client
@@ -1753,7 +1756,6 @@ cache:
         - parquet-footer
         - bloom
         - frontend-search
-    {{- end }}
 
 # To configure a different storage backend instead of local storage:
 # storage:
