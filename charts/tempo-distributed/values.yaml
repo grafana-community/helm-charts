@@ -234,6 +234,8 @@ ingester:
   extraVolumeMounts: []
   # -- Extra volumes for ingester deployment
   extraVolumes: []
+  # -- Containers to add to the ingester pods
+  extraContainers: []
   # -- Persistence configuration for ingester
   persistence:
     # -- Enable creating PVCs which is required when using boltdb-shipper
@@ -468,6 +470,8 @@ metricsGenerator:
   extraVolumeMounts: []
   # -- Extra volumes for metrics-generator deployment
   extraVolumes: []
+  # -- Containers to add to the metrics-generator pods
+  extraContainers: []
   persistentVolumeClaimRetentionPolicy:
     # -- Enable Persistent volume retention policy for StatefulSet
     enabled: false
@@ -924,6 +928,8 @@ querier:
   tolerations: []
   # -- Init containers for the querier pod
   initContainers: []
+  # -- Containers to add to the querier pods
+  extraContainers: []
   # -- Extra volumes for querier pods
   extraVolumeMounts: []
   # -- Extra volumes for querier deployment
@@ -1141,6 +1147,8 @@ queryFrontend:
   tolerations: []
   # -- Init containers for the query-frontend pod
   initContainers: []
+  # -- Containers to add to the query-frontend pods
+  extraContainers: []
   # -- Extra volumes for query-frontend pods
   extraVolumeMounts: []
   # -- Extra volumes for query-frontend deployment
@@ -1850,6 +1858,8 @@ memcached:
   maxUnavailable: 1
   # -- Init containers for the memcached pod
   initContainers: []
+  # -- Containers to add to the memcached pods
+  extraContainers: []
   # -- Extra volumes for memcached pods
   extraVolumeMounts: []
   # -- Extra volumes for memcached statefulSet

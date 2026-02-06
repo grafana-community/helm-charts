@@ -1,6 +1,6 @@
 # tempo-distributed
 
-![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.9.0](https://img.shields.io/badge/AppVersion-2.9.0-informational?style=flat-square)
+![Version: 2.1.0](https://img.shields.io/badge/Version-2.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.10.0](https://img.shields.io/badge/AppVersion-2.10.0-informational?style=flat-square)
 
 Grafana Tempo in MicroService mode
 
@@ -616,6 +616,7 @@ The memcached default args are removed and should be provided manually. The sett
 | ingester.config.replication_factor | int | `3` | Number of copies of spans to store in the ingester ring |
 | ingester.config.trace_idle_period | string | `nil` | Amount of time a trace must be idle before flushing it to the wal. |
 | ingester.extraArgs | list | `[]` | Additional CLI args for the ingester |
+| ingester.extraContainers | list | `[]` | Containers to add to the ingester pods |
 | ingester.extraEnv | list | `[]` | Environment variables to add to the ingester pods |
 | ingester.extraEnvFrom | list | `[]` | Environment variables from secrets or configmaps to add to the ingester pods |
 | ingester.extraVolumeMounts | list | `[]` | Extra volumes for ingester pods |
@@ -699,6 +700,7 @@ The memcached default args are removed and should be provided manually. The sett
 | memcached.affinity | string | Hard node and soft zone anti-affinity | Affinity for memcached pods. Passed through `tpl` and, thus, to be configured as string |
 | memcached.enabled | bool | `true` | Specified whether the memcached cachce should be enabled |
 | memcached.extraArgs | list | `[]` | Additional CLI args for memcached |
+| memcached.extraContainers | list | `[]` | Containers to add to the memcached pods |
 | memcached.extraEnv | list | `[]` | Environment variables to add to memcached pods |
 | memcached.extraEnvFrom | list | `[]` | Environment variables from secrets or configmaps to add to memcached pods |
 | memcached.extraVolumeMounts | list | `[]` | Extra volumes for memcached pods |
@@ -775,6 +777,7 @@ The memcached default args are removed and should be provided manually. The sett
 | metricsGenerator.config.traces_storage | object | `{"path":"/var/tempo/traces"}` | Used by the local blocks processor to store a wal for traces. |
 | metricsGenerator.enabled | bool | `false` | Specifies whether a metrics-generator should be deployed |
 | metricsGenerator.extraArgs | list | `[]` | Additional CLI args for the metrics-generator |
+| metricsGenerator.extraContainers | list | `[]` | Containers to add to the metrics-generator pods |
 | metricsGenerator.extraEnv | list | `[]` | Environment variables to add to the metrics-generator pods |
 | metricsGenerator.extraEnvFrom | list | `[]` | Environment variables from secrets or configmaps to add to the metrics-generator pods |
 | metricsGenerator.extraVolumeMounts | list | `[]` | Extra volumes for metrics-generator pods |
@@ -876,6 +879,7 @@ The memcached default args are removed and should be provided manually. The sett
 | querier.config.search.query_timeout | string | `"30s"` | Timeout for search requests |
 | querier.config.trace_by_id.query_timeout | string | `"10s"` | Timeout for trace lookup requests |
 | querier.extraArgs | list | `[]` | Additional CLI args for the querier |
+| querier.extraContainers | list | `[]` | Containers to add to the querier pods |
 | querier.extraEnv | list | `[]` | Environment variables to add to the querier pods |
 | querier.extraEnvFrom | list | `[]` | Environment variables from secrets or configmaps to add to the querier pods |
 | querier.extraVolumeMounts | list | `[]` | Extra volumes for querier pods |
@@ -927,6 +931,7 @@ The memcached default args are removed and should be provided manually. The sett
 | queryFrontend.config.trace_by_id | object | `{"query_shards":50}` | Trace by ID lookup configuration |
 | queryFrontend.config.trace_by_id.query_shards | int | `50` | The number of shards to split a trace by id query into. |
 | queryFrontend.extraArgs | list | `[]` | Additional CLI args for the query-frontend |
+| queryFrontend.extraContainers | list | `[]` | Containers to add to the query-frontend pods |
 | queryFrontend.extraEnv | list | `[]` | Environment variables to add to the query-frontend pods |
 | queryFrontend.extraEnvFrom | list | `[]` | Environment variables from secrets or configmaps to add to the query-frontend pods |
 | queryFrontend.extraVolumeMounts | list | `[]` | Extra volumes for query-frontend pods |
