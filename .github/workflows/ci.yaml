@@ -126,6 +126,7 @@ jobs:
           VALIDATE_RENOVATE: true # does not support newest renovate config
           VALIDATE_SHELL_SHFMT: true
           VALIDATE_XML: true
+
   validate-pr:
     name: Validate PR Metadata
     runs-on: ubuntu-24.04
@@ -228,3 +229,19 @@ jobs:
           gh pr merge ${{ github.event.pull_request.number }} --admin --squash --repo "${{ github.repository }}" --match-head-commit "${{ github.event.pull_request.head.sha }}" --delete-branch
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
+  validate-readme:
+    name: Validate chart README files
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: 'false'
+
+      - name: Check if helm-docs are up to date
+        uses: losisin/helm-docs-github-action@6f957579ac122ecc167bf515fe84e828686c9a15 # v1.7.1
+        with:
+          fail-on-diff: true
