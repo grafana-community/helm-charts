@@ -4,12 +4,6 @@
 
 {{ template "chart.description" . }}
 
-## 📦 Chart Migration
-
-**This chart is being migrated to [grafana-community/helm-charts](https://github.com/grafana-community/helm-charts).**
-
-After January 30th, 2026, updates and support for this chart will be provided in the new repository. Please update your Helm repository configuration to ensure you continue receiving updates.
-
 {{ template "chart.sourcesSection" . }}
 
 {{ template "chart.requirementsSection" . }}
@@ -88,3 +82,5 @@ and [1.5 -> 2.0 upgrade guide](https://grafana.com/docs/tempo/latest/setup/upgra
 Upgrading from pre 0.7.0 will, by default, move your trace storage from `/tmp/tempo/traces` to `/var/tempo/traces`.
 This will cause Tempo to lose trace history. If you would like to retain history just copy the contents from the
 old folder to the new.
+
+{{ template "helm-docs.versionFooter" . }}
