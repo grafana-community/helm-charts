@@ -51,8 +51,8 @@ spec:
   {{- with .Values.service.sessionAffinity }}
   sessionAffinity: {{ . }}
   {{- end }}
-  {{- if .Values.service.trafficDistribution }}
-  trafficDistribution: {{ .Values.service.trafficDistribution }}
+  {{- with .Values.service.trafficDistribution }}
+  trafficDistribution: {{ . }}
   {{- end }}
   ports:
     - name: {{ .Values.service.portName }}
