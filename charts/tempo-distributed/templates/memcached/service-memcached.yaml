@@ -1,3 +1,34 @@
+{{- if .Values.memcached.split }}
+{{- range $name, $config := dict "meta" .Values.memcached.meta "data" .Values.memcached.data }}
+{{- if $config.enabled }}
+{{- $componentName := printf "memcached-%s" $name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tempo.resourceName" (dict "ctx" $ "component" $componentName) }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+  {{- include "tempo.labels" (dict "ctx" $ "component" $componentName) | nindent 4 }}
+  {{- with $config.service.annotations }}
+  annotations:
+    {{- tpl (toYaml . | nindent 4) $ }}
+  {{- end }}
+spec:
+  ipFamilies: {{ $.Values.tempo.service.ipFamilies }}
+  ipFamilyPolicy: {{ $.Values.tempo.service.ipFamilyPolicy }}
+  ports:
+  - name: memcached-client
+    port: 11211
+    targetPort: client
+  - name: http-metrics
+    port: 9150
+    targetPort: http-metrics
+  selector:
+    {{- include "tempo.selectorLabels" (dict "ctx" $ "component" $componentName) | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- else }}
 {{- if .Values.memcached.enabled }}
 apiVersion: v1
 kind: Service
@@ -22,4 +53,5 @@ spec:
     targetPort: http-metrics
   selector:
     {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached") | nindent 4 }}
-{{- end}}
+{{- end }}
+{{- end }}

@@ -1,3 +1,24 @@
+{{- if .Values.memcached.split }}
+{{- range $name, $config := dict "meta" .Values.memcached.meta "data" .Values.memcached.data }}
+{{- if and $config.enabled (gt (int $config.replicas) 1) $config.podDisruptionBudget.enabled }}
+{{- $componentName := printf "memcached-%s" $name }}
+{{ $dict := dict "ctx" $ "component" $componentName }}
+---
+apiVersion: {{ include "tempo.pdb.apiVersion" $ }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "tempo.resourceName" $dict }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "tempo.labels" $dict | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "tempo.selectorLabels" $dict | nindent 6 }}
+  maxUnavailable: {{ $config.maxUnavailable }}
+{{- end }}
+{{- end }}
+{{- else }}
 {{- if and (gt (int .Values.memcached.replicas) 1) .Values.memcached.podDisruptionBudget.enabled }}
 {{ $dict := dict "ctx" . "component" "memcached" }}
 apiVersion: policy/v1
@@ -12,4 +33,5 @@ spec:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
   maxUnavailable: {{ .Values.memcached.maxUnavailable }}
+{{- end }}
 {{- end }}

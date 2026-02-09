@@ -1,1 +1,8 @@
+{{- if .Values.memcached.split }}
+{{- range $name := list "meta" "data" }}
+{{- $componentName := printf "memcached-%s" $name }}
+{{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" $componentName) }}
+{{- end }}
+{{- else }}
 {{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" "memcached") }}
+{{- end }}
