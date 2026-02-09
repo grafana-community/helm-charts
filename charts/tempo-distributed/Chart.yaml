@@ -6,7 +6,6 @@ version: 2.1.1
 # renovate: docker=docker.io/grafana/tempo
 appVersion: 2.10.0
 kubeVersion: "^1.25.0-0"
-engine: gotpl
 home: https://grafana.com/docs/tempo/latest/
 icon: https://raw.githubusercontent.com/grafana/tempo/main/cmd/tempo/app/static/tempo-icon.png
 sources:
