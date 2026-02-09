@@ -1,6 +1,6 @@
 name: Feature request
 description: Suggest an idea for this project
-title: "[name of the chart e.g. prometheus-couchdb-exporter] Issue Title"
+title: "[name of the chart e.g. grafana] Issue Title"
 labels: [enhancement]
 assignees:
   -

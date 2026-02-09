@@ -1,6 +1,6 @@
 name: Bug Report
 description: Create a report to help us improve
-title: "[name of the chart e.g. prometheus-kube-stack] Issue Title"
+title: "[name of the chart e.g. grafana] Issue Title"
 labels: [bug]
 assignees:
   -
@@ -86,7 +86,7 @@ body:
     attributes:
       label: Enter the command that you execute and failing/misfunctioning.
       description: Enter the command as-is as how you executed.
-      placeholder: helm install my-release prometheus-community/name-of-chart --version version --values values.yaml
+      placeholder: helm install my-release grafana-community/name-of-chart --version version --values values.yaml
     validations:
       required: true
 
