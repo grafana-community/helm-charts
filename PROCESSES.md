@@ -23,7 +23,7 @@ maintainers:
   url:    # The URL of the GitHub profile, using the format https://github.com/<username>. Required.
 ```
 
-### Community admins (including repo admins)
+### Community admins (including repository admins)
 
 Chart admins are responsible for managing the repository (for example: housekeeping and adding new chart maintainers).
 They are also the point of contact for existing chart maintainers.

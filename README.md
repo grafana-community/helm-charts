@@ -11,7 +11,7 @@ The code is provided as-is with no warranties.
 [Helm](https://helm.sh) must be installed to use the charts.
 Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
 
-Once Helm is set up properly, add the repo as follows:
+Once Helm is set up properly, add the repository as follows:
 
 ```console
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
@@ -19,7 +19,7 @@ helm repo add grafana-community https://grafana-community.github.io/helm-charts
 
 You can then run `helm search repo grafana-community` to see the charts.
 
-<!-- Keep full URL links to repo files because this README syncs from main to gh-pages.  -->
+<!-- Keep full URL links to repository files because this README syncs from main to gh-pages.  -->
 Chart documentation is available in [grafana directory](https://github.com/grafana-community/helm-charts/blob/main/charts/grafana/README.md).
 
 **OCI artifacts of all Grafana Community Helm charts are available in [ghcr.io](https://github.com/orgs/grafana-community/packages?repo_name=helm-charts).**
