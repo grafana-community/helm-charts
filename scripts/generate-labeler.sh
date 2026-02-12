@@ -11,7 +11,7 @@ policy:
 HEADER
 
 for chart in $(find charts/ -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort); do
-cat <<CHARTS
+  cat <<CHARTS
           - name: "chart/${chart}"
             keys: ["${chart}"]
 CHARTS
