@@ -10,6 +10,21 @@ body:
       value: |
         Thanks for taking the time to fill out this bug report!
 
+  - type: dropdown
+    id: chart-name
+    attributes:
+      label: Which chart?
+      description: Select the chart this feature request is related to.
+      options:
+        - grafana
+        - grafana-mcp
+        - synthetic-monitoring-agent
+        - tempo
+        - tempo-distributed
+        - tempo-vulture
+    validations:
+      required: true
+
   - type: textarea
     id: desc
     attributes:
