@@ -133,9 +133,9 @@ Grafana Tempo Single Binary Mode
 | tempoQuery.tag | string | `nil` |  |
 | tolerations | list | `[]` | Tolerations for pod assignment. See: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ |
 
-## Chart Repo
+## Chart Repository
 
-Add the following repo to use the chart:
+Add the following repository to use the chart:
 
 ```console
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
