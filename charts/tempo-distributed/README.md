@@ -18,9 +18,9 @@ Kubernetes: `^1.25.0-0`
 | https://grafana.github.io/helm-charts | grafana-agent-operator(grafana-agent-operator) | 0.5.2 |
 | https://grafana.github.io/helm-charts | rollout_operator(rollout-operator) | 0.41.0 |
 
-## Chart Repo
+## Chart Repository
 
-Add the following repo to use the chart:
+Add the following repository to use the chart:
 
 ```console
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
@@ -191,7 +191,7 @@ tempo:
 If you had ingester persistence enabled, you might need to manually change ownership of files in your PV if your CSI doesn't support fsGroup
 
 ### From Chart version >= 0.22.0
-Align Istio GRPC named port syntax. For example,
+Align Istio gRPC named port syntax. For example,
 
 - otlp-grpc               -> grpc-otlp
 - distributor-otlp-grpc   -> grpc-distributor-otlp
@@ -257,7 +257,7 @@ Perform a regular Helm upgrade on the existing release. The new Deployment/State
 
 By default all tracing protocols are disabled and you need to specify which protocols to enable for ingestion.
 
-For example to enable Jaeger grpc thrift http and zipkin protocols:
+For example to enable Jaeger gRPC thrift http and zipkin protocols:
 ```yaml
 traces:
   jaeger:
@@ -929,7 +929,7 @@ The memcached default args are removed and should be provided manually. The sett
 | queryFrontend.config.search.max_spans_per_span_set | int | `100` | The maximum allowed value of spans per span set. 0 disables this limit. |
 | queryFrontend.config.search.target_bytes_per_job | int | `104857600` | The target number of bytes for each job to handle when performing a backend search |
 | queryFrontend.config.trace_by_id | object | `{"query_shards":50}` | Trace by ID lookup configuration |
-| queryFrontend.config.trace_by_id.query_shards | int | `50` | The number of shards to split a trace by id query into. |
+| queryFrontend.config.trace_by_id.query_shards | int | `50` | The number of shards to split a trace by ID query into. |
 | queryFrontend.extraArgs | list | `[]` | Additional CLI args for the query-frontend |
 | queryFrontend.extraContainers | list | `[]` | Containers to add to the query-frontend pods |
 | queryFrontend.extraEnv | list | `[]` | Environment variables to add to the query-frontend pods |
@@ -998,7 +998,7 @@ The memcached default args are removed and should be provided manually. The sett
 | server.httpListenPort | int | `3200` | HTTP server listen host |
 | server.http_server_read_timeout | string | `"30s"` | Read timeout for HTTP server |
 | server.http_server_write_timeout | string | `"30s"` | Write timeout for HTTP server |
-| server.logFormat | string | `"logfmt"` | Log format. Can be set to logfmt (default) or json. |
+| server.logFormat | string | `"logfmt"` | Log format. Can be set to logfmt (default) or JSON. |
 | server.logLevel | string | `"info"` | Log level. Can be set to debug, info (default), warn, error |
 | serviceAccount.annotations | object | `{}` | Annotations for the service account |
 | serviceAccount.automountServiceAccountToken | bool | `false` |  |
@@ -1006,8 +1006,8 @@ The memcached default args are removed and should be provided manually. The sett
 | serviceAccount.imagePullSecrets | list | `[]` | Image pull secrets for the service account |
 | serviceAccount.labels | object | `{}` | Labels for the service account |
 | serviceAccount.name | string | `nil` | The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template |
-| storage.admin.backend | string | `"filesystem"` | The supported storage backends are gcs, s3 and azure, as specified in https://grafana.com/docs/enterprise-traces/latest/configure/reference/#admin_client_config |
-| storage.trace.backend | string | `"local"` | The supported storage backends are gcs, s3 and azure, as specified in https://grafana.com/docs/tempo/latest/configuration/#storage |
+| storage.admin.backend | string | `"filesystem"` | The supported storage backends are gcs, s3 and Azure, as specified in https://grafana.com/docs/enterprise-traces/latest/configure/reference/#admin_client_config |
+| storage.trace.backend | string | `"local"` | The supported storage backends are gcs, s3 and Azure, as specified in https://grafana.com/docs/tempo/latest/configuration/#storage |
 | storage.trace.block.dedicated_columns | list | `[]` | Lis with dedicated attribute columns (only for vParquet3 or later) |
 | storage.trace.block.version | string | `nil` | The supported block versions are specified here https://grafana.com/docs/tempo/latest/configuration/parquet/ |
 | storage.trace.blocklist_poll | string | `"5m"` | How often to repoll the backend for new blocks |
@@ -1060,8 +1060,8 @@ The memcached default args are removed and should be provided manually. The sett
 | tokengenJob.image.tag | string | `nil` | Docker image tag for the tokengenJob image. Overrides `tempo.image.tag` |
 | tokengenJob.initContainers | list | `[]` |  |
 | tokengenJob.storeTokenInSecret | bool | `false` |  |
-| traces.jaeger.grpc.enabled | bool | `false` | Enable Tempo to ingest Jaeger GRPC traces |
-| traces.jaeger.grpc.receiverConfig | object | `{}` | Jaeger GRPC receiver config |
+| traces.jaeger.grpc.enabled | bool | `false` | Enable Tempo to ingest Jaeger gRPC traces |
+| traces.jaeger.grpc.receiverConfig | object | `{}` | Jaeger gRPC receiver config |
 | traces.jaeger.thriftBinary.enabled | bool | `false` | Enable Tempo to ingest Jaeger Thrift Binary traces |
 | traces.jaeger.thriftBinary.receiverConfig | object | `{}` | Jaeger Thrift Binary receiver config |
 | traces.jaeger.thriftCompact.enabled | bool | `false` | Enable Tempo to ingest Jaeger Thrift Compact traces |
@@ -1071,9 +1071,9 @@ The memcached default args are removed and should be provided manually. The sett
 | traces.kafka | object | `{}` | Enable Tempo to ingest traces from Kafka. Reference: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/kafkareceiver |
 | traces.opencensus.enabled | bool | `false` | Enable Tempo to ingest Open Census traces |
 | traces.opencensus.receiverConfig | object | `{}` | Open Census receiver config |
-| traces.otlp.grpc.enabled | bool | `false` | Enable Tempo to ingest Open Telemetry GRPC traces |
+| traces.otlp.grpc.enabled | bool | `false` | Enable Tempo to ingest Open Telemetry gRPC traces |
 | traces.otlp.grpc.port | int | `4317` | Default OTLP gRPC port |
-| traces.otlp.grpc.receiverConfig | object | `{}` | GRPC receiver advanced config |
+| traces.otlp.grpc.receiverConfig | object | `{}` | gRPC receiver advanced config |
 | traces.otlp.http.enabled | bool | `false` | Enable Tempo to ingest Open Telemetry HTTP traces |
 | traces.otlp.http.receiverConfig | object | `{}` | HTTP receiver advanced config |
 | traces.zipkin.enabled | bool | `false` | Enable Tempo to ingest Zipkin traces |

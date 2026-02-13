@@ -8,9 +8,9 @@
 
 {{ template "chart.requirementsSection" . }}
 
-## Chart Repo
+## Chart Repository
 
-Add the following repo to use the chart:
+Add the following repository to use the chart:
 
 ```console
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
@@ -183,7 +183,7 @@ tempo:
 If you had ingester persistence enabled, you might need to manually change ownership of files in your PV if your CSI doesn't support fsGroup
 
 ### From Chart version >= 0.22.0
-Align Istio GRPC named port syntax. For example,
+Align Istio gRPC named port syntax. For example,
 
 - otlp-grpc               -> grpc-otlp
 - distributor-otlp-grpc   -> grpc-distributor-otlp
@@ -249,7 +249,7 @@ Perform a regular Helm upgrade on the existing release. The new Deployment/State
 
 By default all tracing protocols are disabled and you need to specify which protocols to enable for ingestion.
 
-For example to enable Jaeger grpc thrift http and zipkin protocols:
+For example to enable Jaeger gRPC thrift http and zipkin protocols:
 ```yaml
 traces:
   jaeger:
