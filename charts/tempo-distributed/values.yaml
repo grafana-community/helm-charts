@@ -295,7 +295,7 @@ ingester:
     annotations: {}
   # -- Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
     grpc: null
   # -- EXPERIMENTAL Feature, disabled by default
   zoneAwareReplication:
@@ -532,7 +532,7 @@ metricsGenerator:
     annotations: {}
   # -- Adds the appProtocol field to the metricsGenerator service. This allows metricsGenerator to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
     grpc: null
 
 # Configuration for the distributor
@@ -685,7 +685,7 @@ distributor:
       stale_duration: 15m0s
   # -- Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
     grpc: null
 
 # Configuration for the compactor
@@ -936,7 +936,7 @@ querier:
   extraVolumes: []
   config:
     frontend_worker:
-      # -- grpc client configuration
+      # -- gRPC client configuration
       grpc_client_config: {}
     trace_by_id:
       # -- Timeout for trace lookup requests
@@ -952,7 +952,7 @@ querier:
     annotations: {}
   # -- Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
     grpc: null
 
 # Configuration for the query-frontend
@@ -1056,7 +1056,7 @@ queryFrontend:
     port: 16686
     # -- http Metrics port of the query-frontend service
     httpMetricsPort: 3200
-    # -- grpc Port of the query-frontend service
+    # -- gRPC Port of the query-frontend service
     grpcPort: 9095
     # -- Annotations for queryFrontend service
     annotations: {}
@@ -1155,7 +1155,7 @@ queryFrontend:
   extraVolumes: []
   # -- Adds the appProtocol field to the queryFrontend service. This allows queryFrontend to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
     grpc: null
   mcp_server:
     # -- Enables Tempo MCP Server
