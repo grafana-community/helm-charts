@@ -1,6 +1,6 @@
 apiVersion: v2
 name: grafana
-version: 11.1.4
+version: 11.1.5
 # renovate: docker=docker.io/grafana/grafana
 appVersion: 12.3.3
 kubeVersion: "^1.25.0-0"
