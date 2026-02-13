@@ -295,7 +295,7 @@ ingester:
     annotations: {}
   # -- Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
     grpc: null
   # -- EXPERIMENTAL Feature, disabled by default
   zoneAwareReplication:
@@ -532,7 +532,7 @@ metricsGenerator:
     annotations: {}
   # -- Adds the appProtocol field to the metricsGenerator service. This allows metricsGenerator to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
     grpc: null
 
 # Configuration for the distributor
@@ -685,7 +685,7 @@ distributor:
       stale_duration: 15m0s
   # -- Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
     grpc: null
 
 # Configuration for the compactor
@@ -936,7 +936,7 @@ querier:
   extraVolumes: []
   config:
     frontend_worker:
-      # -- grpc client configuration
+      # -- gRPC client configuration
       grpc_client_config: {}
     trace_by_id:
       # -- Timeout for trace lookup requests
@@ -952,7 +952,7 @@ querier:
     annotations: {}
   # -- Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
     grpc: null
 
 # Configuration for the query-frontend
@@ -1006,7 +1006,7 @@ queryFrontend:
       max_spans_per_span_set: 100
     # -- Trace by ID lookup configuration
     trace_by_id:
-      # -- The number of shards to split a trace by id query into.
+      # -- The number of shards to split a trace by ID query into.
       query_shards: 50
     metrics:
       # -- The number of concurrent jobs to execute when querying the backend.
@@ -1056,7 +1056,7 @@ queryFrontend:
     port: 16686
     # -- http Metrics port of the query-frontend service
     httpMetricsPort: 3200
-    # -- grpc Port of the query-frontend service
+    # -- gRPC Port of the query-frontend service
     grpcPort: 9095
     # -- Annotations for queryFrontend service
     annotations: {}
@@ -1155,7 +1155,7 @@ queryFrontend:
   extraVolumes: []
   # -- Adds the appProtocol field to the queryFrontend service. This allows queryFrontend to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
     grpc: null
   mcp_server:
     # -- Enables Tempo MCP Server
@@ -1294,9 +1294,9 @@ rollout_operator:
 traces:
   jaeger:
     grpc:
-      # -- Enable Tempo to ingest Jaeger GRPC traces
+      # -- Enable Tempo to ingest Jaeger gRPC traces
       enabled: false
-      # -- Jaeger GRPC receiver config
+      # -- Jaeger gRPC receiver config
       receiverConfig: {}
     thriftBinary:
       # -- Enable Tempo to ingest Jaeger Thrift Binary traces
@@ -1325,9 +1325,9 @@ traces:
       # -- HTTP receiver advanced config
       receiverConfig: {}
     grpc:
-      # -- Enable Tempo to ingest Open Telemetry GRPC traces
+      # -- Enable Tempo to ingest Open Telemetry gRPC traces
       enabled: false
-      # -- GRPC receiver advanced config
+      # -- gRPC receiver advanced config
       receiverConfig: {}
       # -- Default OTLP gRPC port
       port: 4317
@@ -1702,7 +1702,7 @@ server:
   httpListenPort: 3200
   # -- Log level. Can be set to debug, info (default), warn, error
   logLevel: info
-  # -- Log format. Can be set to logfmt (default) or json.
+  # -- Log format. Can be set to logfmt (default) or JSON.
   logFormat: logfmt
   # -- Max gRPC message size that can be received
   grpc_server_max_recv_msg_size: 4194304
@@ -1744,7 +1744,7 @@ storage:
       version: null
       # -- Lis with dedicated attribute columns (only for vParquet3 or later)
       dedicated_columns: []
-    # -- The supported storage backends are gcs, s3 and azure, as specified in https://grafana.com/docs/tempo/latest/configuration/#storage
+    # -- The supported storage backends are gcs, s3 and Azure, as specified in https://grafana.com/docs/tempo/latest/configuration/#storage
     backend: local
     # The worker pool is used primarily when finding traces by id, but is also used by others.
     pool:
@@ -1774,7 +1774,7 @@ storage:
 
   # Settings for the Admin client storage backend and buckets. Only valid is enterprise.enabled is true
   admin:
-    # -- The supported storage backends are gcs, s3 and azure, as specified in https://grafana.com/docs/enterprise-traces/latest/configure/reference/#admin_client_config
+    # -- The supported storage backends are gcs, s3 and Azure, as specified in https://grafana.com/docs/enterprise-traces/latest/configure/reference/#admin_client_config
     backend: filesystem
 
 # -- The standard overrides configuration section. This can include a `defaults` object for applying to all tenants (not to be confused with the `global` property of the same name, which overrides `max_byte_per_trace` for all tenants). For an example on how to enable the metrics generator using the `overrides` object, see the 'Activate metrics generator' section below. Refer to [Standard overrides](https://grafana.com/docs/tempo/latest/configuration/#standard-overrides) for more details.

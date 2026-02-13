@@ -1,6 +1,6 @@
 # tempo-distributed
 
-![Version: 2.1.1](https://img.shields.io/badge/Version-2.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.10.0](https://img.shields.io/badge/AppVersion-2.10.0-informational?style=flat-square)
+![Version: 2.1.2](https://img.shields.io/badge/Version-2.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.10.0](https://img.shields.io/badge/AppVersion-2.10.0-informational?style=flat-square)
 
 Grafana Tempo in MicroService mode
 
@@ -18,9 +18,9 @@ Kubernetes: `^1.25.0-0`
 | https://grafana.github.io/helm-charts | grafana-agent-operator(grafana-agent-operator) | 0.5.2 |
 | https://grafana.github.io/helm-charts | rollout_operator(rollout-operator) | 0.41.0 |
 
-## Chart Repo
+## Chart Repository
 
-Add the following repo to use the chart:
+Add the following repository to use the chart:
 
 ```console
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
@@ -191,7 +191,7 @@ tempo:
 If you had ingester persistence enabled, you might need to manually change ownership of files in your PV if your CSI doesn't support fsGroup
 
 ### From Chart version >= 0.22.0
-Align Istio GRPC named port syntax. For example,
+Align Istio gRPC named port syntax. For example,
 
 - otlp-grpc               -> grpc-otlp
 - distributor-otlp-grpc   -> grpc-distributor-otlp
@@ -257,7 +257,7 @@ Perform a regular Helm upgrade on the existing release. The new Deployment/State
 
 By default all tracing protocols are disabled and you need to specify which protocols to enable for ingestion.
 
-For example to enable Jaeger grpc thrift http and zipkin protocols:
+For example to enable Jaeger gRPC thrift http and zipkin protocols:
 ```yaml
 traces:
   jaeger:
@@ -376,7 +376,7 @@ The memcached default args are removed and should be provided manually. The sett
 | distributor.affinity | string | Hard node and soft zone anti-affinity | Affinity for distributor pods. Passed through `tpl` and, thus, to be configured as string |
 | distributor.annotations | object | `{}` | Annotations for distributor deployment |
 | distributor.appProtocol | object | `{"grpc":null}` | Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection. |
-| distributor.appProtocol.grpc | string | `nil` | Set the optional grpc service protocol. Ex: "grpc", "http2" or "https" |
+| distributor.appProtocol.grpc | string | `nil` | Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https" |
 | distributor.autoscaling.behavior | object | `{}` | Autoscaling behavior configuration for the distributor |
 | distributor.autoscaling.enabled | bool | `false` | Enable autoscaling for the distributor |
 | distributor.autoscaling.maxReplicas | int | `3` | Maximum autoscaling replicas for the distributor |
@@ -601,7 +601,7 @@ The memcached default args are removed and should be provided manually. The sett
 | ingester.affinity | string | Soft node and soft zone anti-affinity | Affinity for ingester pods. Passed through `tpl` and, thus, to be configured as string |
 | ingester.annotations | object | `{}` | Annotations for the ingester StatefulSet |
 | ingester.appProtocol | object | `{"grpc":null}` | Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection. |
-| ingester.appProtocol.grpc | string | `nil` | Set the optional grpc service protocol. Ex: "grpc", "http2" or "https" |
+| ingester.appProtocol.grpc | string | `nil` | Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https" |
 | ingester.autoscaling.behavior | object | `{}` | Autoscaling behavior configuration for the ingester |
 | ingester.autoscaling.enabled | bool | `false` | Enable autoscaling for the ingester. WARNING: Autoscaling ingesters can result in lost data. Only do this if you know what you're doing. |
 | ingester.autoscaling.maxReplicas | int | `3` | Maximum autoscaling replicas for the ingester |
@@ -768,7 +768,7 @@ The memcached default args are removed and should be provided manually. The sett
 | metricsGenerator.affinity | string | Hard node and soft zone anti-affinity | Affinity for metrics-generator pods. Passed through `tpl` and, thus, to be configured as string |
 | metricsGenerator.annotations | object | `{}` | Annotations for the metrics-generator StatefulSet |
 | metricsGenerator.appProtocol | object | `{"grpc":null}` | Adds the appProtocol field to the metricsGenerator service. This allows metricsGenerator to work with istio protocol selection. |
-| metricsGenerator.appProtocol.grpc | string | `nil` | Set the optional grpc service protocol. Ex: "grpc", "http2" or "https" |
+| metricsGenerator.appProtocol.grpc | string | `nil` | Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https" |
 | metricsGenerator.config | object | `{"metrics_ingestion_time_range_slack":"30s","processor":{"service_graphs":{"dimensions":[],"histogram_buckets":[0.1,0.2,0.4,0.8,1.6,3.2,6.4,12.8],"max_items":10000,"wait":"10s","workers":10},"span_metrics":{"dimensions":[],"histogram_buckets":[0.002,0.004,0.008,0.016,0.032,0.064,0.128,0.256,0.512,1.02,2.05,4.1]}},"registry":{"collection_interval":"15s","external_labels":{},"stale_duration":"15m"},"storage":{"path":"/var/tempo/wal","remote_write":[],"remote_write_add_org_id_header":true,"remote_write_flush_deadline":"1m","wal":null},"traces_storage":{"path":"/var/tempo/traces"}}` | More information on configuration: https://grafana.com/docs/tempo/latest/configuration/#metrics-generator |
 | metricsGenerator.config.processor.service_graphs | object | `{"dimensions":[],"histogram_buckets":[0.1,0.2,0.4,0.8,1.6,3.2,6.4,12.8],"max_items":10000,"wait":"10s","workers":10}` | For processors to be enabled and generate metrics, pass the names of the processors to `overrides.defaults.metrics_generator.processors` value like `[service-graphs, span-metrics]`. |
 | metricsGenerator.config.processor.service_graphs.dimensions | list | `[]` | The resource and span attributes to be added to the service graph metrics, if present. |
@@ -867,14 +867,14 @@ The memcached default args are removed and should be provided manually. The sett
 | querier.affinity | string | Hard node and soft zone anti-affinity | Affinity for querier pods. Passed through `tpl` and, thus, to be configured as string |
 | querier.annotations | object | `{}` | Annotations for querier deployment |
 | querier.appProtocol | object | `{"grpc":null}` | Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection. |
-| querier.appProtocol.grpc | string | `nil` | Set the optional grpc service protocol. Ex: "grpc", "http2" or "https" |
+| querier.appProtocol.grpc | string | `nil` | Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https" |
 | querier.autoscaling.behavior | object | `{}` | Autoscaling behavior configuration for the querier |
 | querier.autoscaling.enabled | bool | `false` | Enable autoscaling for the querier |
 | querier.autoscaling.maxReplicas | int | `3` | Maximum autoscaling replicas for the querier |
 | querier.autoscaling.minReplicas | int | `1` | Minimum autoscaling replicas for the querier |
 | querier.autoscaling.targetCPUUtilizationPercentage | int | `60` | Target CPU utilisation percentage for the querier |
 | querier.autoscaling.targetMemoryUtilizationPercentage | string | `nil` | Target memory utilisation percentage for the querier |
-| querier.config.frontend_worker.grpc_client_config | object | `{}` | grpc client configuration |
+| querier.config.frontend_worker.grpc_client_config | object | `{}` | gRPC client configuration |
 | querier.config.max_concurrent_queries | int | `20` | This value controls the overall number of simultaneous subqueries that the querier will service at once. It does not distinguish between the types of queries. |
 | querier.config.search.query_timeout | string | `"30s"` | Timeout for search requests |
 | querier.config.trace_by_id.query_timeout | string | `"10s"` | Timeout for trace lookup requests |
@@ -909,7 +909,7 @@ The memcached default args are removed and should be provided manually. The sett
 | queryFrontend.affinity | string | Hard node and soft zone anti-affinity | Affinity for query-frontend pods. Passed through `tpl` and, thus, to be configured as string |
 | queryFrontend.annotations | object | `{}` | Annotations for the query-frontend Deployment |
 | queryFrontend.appProtocol | object | `{"grpc":null}` | Adds the appProtocol field to the queryFrontend service. This allows queryFrontend to work with istio protocol selection. |
-| queryFrontend.appProtocol.grpc | string | `nil` | Set the optional grpc service protocol. Ex: "grpc", "http2" or "https" |
+| queryFrontend.appProtocol.grpc | string | `nil` | Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https" |
 | queryFrontend.autoscaling.behavior | object | `{}` | Autoscaling behavior configuration for the query-frontend |
 | queryFrontend.autoscaling.enabled | bool | `false` | Enable autoscaling for the query-frontend |
 | queryFrontend.autoscaling.maxReplicas | int | `3` | Maximum autoscaling replicas for the query-frontend |
@@ -929,7 +929,7 @@ The memcached default args are removed and should be provided manually. The sett
 | queryFrontend.config.search.max_spans_per_span_set | int | `100` | The maximum allowed value of spans per span set. 0 disables this limit. |
 | queryFrontend.config.search.target_bytes_per_job | int | `104857600` | The target number of bytes for each job to handle when performing a backend search |
 | queryFrontend.config.trace_by_id | object | `{"query_shards":50}` | Trace by ID lookup configuration |
-| queryFrontend.config.trace_by_id.query_shards | int | `50` | The number of shards to split a trace by id query into. |
+| queryFrontend.config.trace_by_id.query_shards | int | `50` | The number of shards to split a trace by ID query into. |
 | queryFrontend.extraArgs | list | `[]` | Additional CLI args for the query-frontend |
 | queryFrontend.extraContainers | list | `[]` | Containers to add to the query-frontend pods |
 | queryFrontend.extraEnv | list | `[]` | Environment variables to add to the query-frontend pods |
@@ -970,7 +970,7 @@ The memcached default args are removed and should be provided manually. The sett
 | queryFrontend.replicas | int | `1` | Number of replicas for the query-frontend |
 | queryFrontend.resources | object | `{}` | Resource requests and limits for the query-frontend |
 | queryFrontend.service.annotations | object | `{}` | Annotations for queryFrontend service |
-| queryFrontend.service.grpcPort | int | `9095` | grpc Port of the query-frontend service |
+| queryFrontend.service.grpcPort | int | `9095` | gRPC Port of the query-frontend service |
 | queryFrontend.service.httpMetricsPort | int | `3200` | http Metrics port of the query-frontend service |
 | queryFrontend.service.labels | object | `{}` | Labels for queryFrontend service |
 | queryFrontend.service.loadBalancerIP | string | `""` | If type is LoadBalancer you can assign the IP to the LoadBalancer |
@@ -998,7 +998,7 @@ The memcached default args are removed and should be provided manually. The sett
 | server.httpListenPort | int | `3200` | HTTP server listen host |
 | server.http_server_read_timeout | string | `"30s"` | Read timeout for HTTP server |
 | server.http_server_write_timeout | string | `"30s"` | Write timeout for HTTP server |
-| server.logFormat | string | `"logfmt"` | Log format. Can be set to logfmt (default) or json. |
+| server.logFormat | string | `"logfmt"` | Log format. Can be set to logfmt (default) or JSON. |
 | server.logLevel | string | `"info"` | Log level. Can be set to debug, info (default), warn, error |
 | serviceAccount.annotations | object | `{}` | Annotations for the service account |
 | serviceAccount.automountServiceAccountToken | bool | `false` |  |
@@ -1006,8 +1006,8 @@ The memcached default args are removed and should be provided manually. The sett
 | serviceAccount.imagePullSecrets | list | `[]` | Image pull secrets for the service account |
 | serviceAccount.labels | object | `{}` | Labels for the service account |
 | serviceAccount.name | string | `nil` | The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template |
-| storage.admin.backend | string | `"filesystem"` | The supported storage backends are gcs, s3 and azure, as specified in https://grafana.com/docs/enterprise-traces/latest/configure/reference/#admin_client_config |
-| storage.trace.backend | string | `"local"` | The supported storage backends are gcs, s3 and azure, as specified in https://grafana.com/docs/tempo/latest/configuration/#storage |
+| storage.admin.backend | string | `"filesystem"` | The supported storage backends are gcs, s3 and Azure, as specified in https://grafana.com/docs/enterprise-traces/latest/configure/reference/#admin_client_config |
+| storage.trace.backend | string | `"local"` | The supported storage backends are gcs, s3 and Azure, as specified in https://grafana.com/docs/tempo/latest/configuration/#storage |
 | storage.trace.block.dedicated_columns | list | `[]` | Lis with dedicated attribute columns (only for vParquet3 or later) |
 | storage.trace.block.version | string | `nil` | The supported block versions are specified here https://grafana.com/docs/tempo/latest/configuration/parquet/ |
 | storage.trace.blocklist_poll | string | `"5m"` | How often to repoll the backend for new blocks |
@@ -1060,8 +1060,8 @@ The memcached default args are removed and should be provided manually. The sett
 | tokengenJob.image.tag | string | `nil` | Docker image tag for the tokengenJob image. Overrides `tempo.image.tag` |
 | tokengenJob.initContainers | list | `[]` |  |
 | tokengenJob.storeTokenInSecret | bool | `false` |  |
-| traces.jaeger.grpc.enabled | bool | `false` | Enable Tempo to ingest Jaeger GRPC traces |
-| traces.jaeger.grpc.receiverConfig | object | `{}` | Jaeger GRPC receiver config |
+| traces.jaeger.grpc.enabled | bool | `false` | Enable Tempo to ingest Jaeger gRPC traces |
+| traces.jaeger.grpc.receiverConfig | object | `{}` | Jaeger gRPC receiver config |
 | traces.jaeger.thriftBinary.enabled | bool | `false` | Enable Tempo to ingest Jaeger Thrift Binary traces |
 | traces.jaeger.thriftBinary.receiverConfig | object | `{}` | Jaeger Thrift Binary receiver config |
 | traces.jaeger.thriftCompact.enabled | bool | `false` | Enable Tempo to ingest Jaeger Thrift Compact traces |
@@ -1071,9 +1071,9 @@ The memcached default args are removed and should be provided manually. The sett
 | traces.kafka | object | `{}` | Enable Tempo to ingest traces from Kafka. Reference: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/kafkareceiver |
 | traces.opencensus.enabled | bool | `false` | Enable Tempo to ingest Open Census traces |
 | traces.opencensus.receiverConfig | object | `{}` | Open Census receiver config |
-| traces.otlp.grpc.enabled | bool | `false` | Enable Tempo to ingest Open Telemetry GRPC traces |
+| traces.otlp.grpc.enabled | bool | `false` | Enable Tempo to ingest Open Telemetry gRPC traces |
 | traces.otlp.grpc.port | int | `4317` | Default OTLP gRPC port |
-| traces.otlp.grpc.receiverConfig | object | `{}` | GRPC receiver advanced config |
+| traces.otlp.grpc.receiverConfig | object | `{}` | gRPC receiver advanced config |
 | traces.otlp.http.enabled | bool | `false` | Enable Tempo to ingest Open Telemetry HTTP traces |
 | traces.otlp.http.receiverConfig | object | `{}` | HTTP receiver advanced config |
 | traces.zipkin.enabled | bool | `false` | Enable Tempo to ingest Zipkin traces |

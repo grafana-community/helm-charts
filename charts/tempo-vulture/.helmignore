@@ -21,3 +21,7 @@
 .idea/
 *.tmproj
 .vscode/
+# Helm plugin tooling
+ci/
+tests/
+*.gotmpl

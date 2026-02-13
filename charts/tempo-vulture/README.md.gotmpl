@@ -8,9 +8,9 @@
 
 {{ template "chart.requirementsSection" . }}
 
-## Chart Repo
+## Chart Repository
 
-Add the following repo to use the chart:
+Add the following repository to use the chart:
 
 ```console
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
@@ -36,7 +36,7 @@ The command removes all the Kubernetes components associated with the chart and 
 
 ## Vulture
 
-Vulture only works with Jaeger GRPC, so make sure 14250 is open on your distributor. You don't need to specify the port in the distributor url.
+Vulture only works with Jaeger gRPC, so make sure 14250 is open on your distributor. You don't need to specify the port in the distributor URL.
 
 Example configuration:
 ```yaml
