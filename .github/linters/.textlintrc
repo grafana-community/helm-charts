@@ -3,7 +3,8 @@
     "comments": true,
     "allowlist": {
       "allow": [
-        "e-mail"
+        "e-mail",
+        "Url"
       ]
     }
   },
