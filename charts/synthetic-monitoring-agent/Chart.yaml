@@ -20,4 +20,4 @@ name: synthetic-monitoring-agent
 sources:
   - https://github.com/grafana/synthetic-monitoring-agent
 type: application
-version: 1.4.2
+version: 1.4.3
