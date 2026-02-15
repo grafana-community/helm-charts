@@ -97,6 +97,29 @@ jobs:
         run: |
           git diff --exit-code
 
+      - name: generate advanced-issue-labeler.yml
+        run: |
+          ./scripts/generate-labeler.sh | tee .github/advanced-issue-labeler.yml
+
+      - name: check advanced-issue-labeler.yml for modifications
+        run: |
+          git diff --exit-code
+
+      - name: check issue template chart dropdowns
+        run: |
+          EXPECTED=$(find charts/ -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
+          for template in .github/ISSUE_TEMPLATE/*.yml; do
+            ACTUAL=$(yq -r '.body[] | select(.id == "chart-name") | .attributes.options[]' "$template" 2>/dev/null | sort)
+            if [[ -z "$ACTUAL" ]]; then
+              continue
+            fi
+            if [[ "$EXPECTED" != "$ACTUAL" ]]; then
+              echo "ERROR: Chart dropdown in $template is out of sync with charts/ directory." >&2
+              diff <(echo "$EXPECTED") <(echo "$ACTUAL")
+              exit 1
+            fi
+          done
+
   super-linter:
     name: Lint Code Base
     runs-on: ubuntu-24.04

@@ -32,11 +32,18 @@ body:
     validations:
       required: true
 
-  - type: input
+  - type: dropdown
     id: chart-name
     attributes:
       label: Which chart?
-      description: Enter the name of the chart where you encountered this bug.
+      description: Select the chart this bug is related to.
+      options:
+        - grafana
+        - grafana-mcp
+        - synthetic-monitoring-agent
+        - tempo
+        - tempo-distributed
+        - tempo-vulture
     validations:
       required: true
 
