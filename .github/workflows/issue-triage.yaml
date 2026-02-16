@@ -46,6 +46,11 @@ jobs:
         uses: redhat-plumbers-in-action/advanced-issue-labeler@b80ae64e3e156e9c111b075bfa04b295d54e8e2e # v3.2.4
         with:
           issue-form: ${{ steps.issue-parser.outputs.jsonString }}
+          template: >-
+            ${{
+              contains(github.event.issue.labels.*.name, 'bug')
+              && 'bug_report.yml' || 'feature_request.yml'
+            }}
           section: chart-name
           config-path: .github/advanced-issue-labeler.yml
           token: ${{ github.token }}

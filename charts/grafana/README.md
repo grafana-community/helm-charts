@@ -243,14 +243,15 @@ The minimum required Kubernetes version is now 1.25. All references to deprecate
 | livenessProbe.initialDelaySeconds | int | `60` |  |
 | livenessProbe.timeoutSeconds | int | `30` |  |
 | namespaceOverride | string | `""` |  |
-| networkPolicy.allowExternal | bool | `true` |  |
-| networkPolicy.egress.blockDNSResolution | bool | `false` |  |
-| networkPolicy.egress.enabled | bool | `false` |  |
-| networkPolicy.egress.ports | list | `[]` |  |
-| networkPolicy.egress.to | list | `[]` |  |
-| networkPolicy.enabled | bool | `false` |  |
-| networkPolicy.explicitNamespacesSelector | object | `{}` |  |
-| networkPolicy.ingress | bool | `true` |  |
+| networkPolicy.allowExternal | bool | `true` | networkPolicy.ingress When true enables the creation an ingress network policy |
+| networkPolicy.egress.blockDNSResolution | bool | `false` | networkPolicy.egress.blockDNSResolution When enabled, DNS resolution will be blocked for all pods in the grafana namespace. |
+| networkPolicy.egress.enabled | bool | `false` | networkPolicy.egress.enabled When enabled, an egress network policy will be created allowing grafana to connect to external data sources from kubernetes cluster. |
+| networkPolicy.egress.ports | list | `[]` | networkPolicy.egress.ports Add individual ports to be allowed by the egress |
+| networkPolicy.egress.to | list | `[]` | networkPolicy.egress.to Allow egress traffic to specific destinations |
+| networkPolicy.enabled | bool | `false` | networkPolicy.enabled Enable creation of NetworkPolicy resources. Only Ingress traffic is filtered for now. |
+| networkPolicy.explicitIpBlocks | list | `[]` | networkPolicy.explicitIpBlocks List of CIDR blocks allowed as ingress sources. Each entry must be a valid CIDR notation string (e.g. 10.0.0.0/8). When defined, the specified CIDR ranges are added to the ingress `from` rules using `ipBlock` entries and complement the other configured ingress sources. </br>  Example:  ``` explicitIpBlocks:   - 35.191.0.0/16   - 130.211.0.0/22 ```  |
+| networkPolicy.explicitNamespacesSelector | object | `{}` | networkPolicy.explicitNamespacesSelector A Kubernetes LabelSelector to explicitly select namespaces from which traffic could be allowed If explicitNamespacesSelector is missing or set to {}, only client Pods that are in the networkPolicy's namespace and that match other criteria, the ones that have the good label, can reach the grafana. But sometimes, we want the grafana to be accessible to clients from other namespaces, in this case, we can use this LabelSelector to select these namespaces, note that the networkPolicy's namespace should also be explicitly added. </br>  Example:  ``` explicitNamespacesSelector:   matchLabels:     role: frontend   matchExpressions:    - {key: role, operator: In, values: [frontend]} ``` |
+| networkPolicy.ingress | bool | `true` | networkPolicy.allowExternal Don't require client label for connections The Policy model to apply. When set to false, only pods with the correct client label will have network access to  grafana port defined. When true, grafana will accept connections from any source (with the correct destination port).  |
 | nodeSelector | object | `{}` |  |
 | notifiers | object | `{}` |  |
 | persistence.accessModes[0] | string | `"ReadWriteOnce"` |  |
