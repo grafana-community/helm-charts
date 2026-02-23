@@ -1,0 +1,23 @@
+{{- if .Values.vpa.enabled }}
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: {{ .Values.vpa.target.name }}-vpa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  targetRef:
+    apiVersion: {{ .Values.vpa.target.apiVersion }}
+    kind: {{ .Values.vpa.target.kind }}
+    name: {{ .Values.vpa.target.name }}
+  updatePolicy:
+    updateMode: {{ .Values.vpa.updateMode | default "Off" | quote }}
+  resourcePolicy:
+    containerPolicies:
+      - containerName: {{ .Values.vpa.container.name }}
+        controlledResources:
+          - cpu
+          - memory
+{{- end }}
