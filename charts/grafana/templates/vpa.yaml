@@ -1,4 +1,9 @@
 {{- if .Values.vpa.enabled }}
+
+{{- $vpa := .Values.vpa | default dict }}
+{{- $target := $vpa.target | default dict }}
+{{- $container := $vpa.container | default dict }}
+
 apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
@@ -8,15 +13,16 @@ metadata:
     {{- include "grafana.labels" . | nindent 4 }}
 spec:
   targetRef:
-    apiVersion: {{ default "apps/v1" .Values.vpa.target.apiVersion | quote }}
-    kind: {{ default "Deployment" .Values.vpa.target.kind | quote }}
-    name: {{ default (include "grafana.fullname" .) .Values.vpa.target.name | quote }}
+    apiVersion: {{ default "apps/v1" $target.apiVersion | quote }}
+    kind: {{ default "Deployment" $target.kind | quote }}
+    name: {{ default (include "grafana.fullname" .) $target.name | quote }}
   updatePolicy:
-    updateMode: {{ default "Off" .Values.vpa.updateMode | quote }}
+    updateMode: {{ default "Off" $vpa.updateMode | quote }}
   resourcePolicy:
     containerPolicies:
-      - containerName: {{ default "grafana" .Values.vpa.container.name | quote }}
+      - containerName: {{ default "grafana" $container.name | quote }}
         controlledResources:
           - cpu
           - memory
+
 {{- end }}

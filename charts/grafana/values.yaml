@@ -1705,4 +1705,4 @@ extraObjects: []
 assertNoLeakedSecrets: true
 
 vpa:
-  enabled: false
+  enabled: true
