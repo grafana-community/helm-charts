@@ -188,6 +188,10 @@ ingester:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the ingester pods
   extraEnvFrom: []
+  # -- Liveness probe for ingester pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for ingester pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
   # -- Resource requests and limits for the ingester
   resources: {}
   # -- Grace period to allow the ingester to shutdown before it is killed. Especially for the ingestor,
@@ -604,6 +608,10 @@ distributor:
   initContainers: []
   # -- Containers to add to the distributor pod
   extraContainers: []
+  # -- Liveness probe for distributor pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for distributor pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
   # -- Resource requests and limits for the distributor
   resources: {}
   # -- Grace period to allow the distributor to shutdown before it is killed
@@ -781,6 +789,10 @@ compactor:
   initContainers: []
   # -- Containers to add to the compactor pod
   extraContainers: []
+  # -- Liveness probe for compactor pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for compactor pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
   # -- Resource requests and limits for the compactor
   resources: {}
   # -- Grace period to allow the compactor to shutdown before it is killed
@@ -880,6 +892,10 @@ querier:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the querier pods
   extraEnvFrom: []
+  # -- Liveness probe for querier pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for querier pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
   # -- Resource requests and limits for the querier
   resources: {}
   # -- Grace period to allow the querier to shutdown before it is killed
@@ -1104,6 +1120,10 @@ queryFrontend:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the query-frontend pods
   extraEnvFrom: []
+  # -- Liveness probe for query-frontend pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for query-frontend pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
   # -- Resource requests and limits for the query-frontend
   resources: {}
   # -- Grace period to allow the query-frontend to shutdown before it is killed
