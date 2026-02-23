@@ -34,8 +34,8 @@ rbac:
   #   verbs: []
 serviceAccount:
   create: true
-  name:
-  nameTest:
+  name: ""
+  nameTest: ""
   ## ServiceAccount labels.
   labels: {}
   ## Service account annotations. Can be templated.
