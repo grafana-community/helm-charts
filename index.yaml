@@ -21226,6 +21226,45 @@ entries:
         - name: Upstream Project
           url: https://github.com/grafana/mcp-grafana
     apiVersion: v2
+    appVersion: 0.11.2
+    created: "2026-02-25T15:13:23.872016902Z"
+    description: MCP server for Grafana.
+    digest: 7647d5057abd54b7773ec80dfd9354b6c83de990c8d7eb99ab028b43c481c8e2
+    home: https://grafana.com
+    icon: https://artifacthub.io/image/b4fed1a7-6c8f-4945-b99d-096efa3e4116
+    keywords:
+    - monitoring
+    - mcp
+    kubeVersion: ^1.25.0-0
+    maintainers:
+    - email: sheikhabubaker761@gmail.com
+      name: Mohammad Abubaker
+      url: https://github.com/Sheikh-Abubaker
+    - email: github@jkroepke.de
+      name: Jan-Otto Kröpke
+      url: https://github.com/jkroepke
+    - email: avivguiser@gmail.com
+      name: Aviv Guiser
+      url: https://github.com/KyriosGN0
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    name: grafana-mcp
+    sources:
+    - https://github.com/grafana/mcp-grafana
+    - https://github.com/grafana-community/helm-charts
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/grafana-mcp-0.7.3/grafana-mcp-0.7.3.tgz
+    version: 0.7.3
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/grafana-community/helm-charts
+        - name: Upstream Project
+          url: https://github.com/grafana/mcp-grafana
+    apiVersion: v2
     appVersion: 0.11.1
     created: "2026-02-24T20:05:43.04420711Z"
     description: MCP server for Grafana.
@@ -21796,6 +21835,32 @@ entries:
     - https://github.com/grafana-community/helm-charts/releases/download/grafana-mcp-0.1.0/grafana-mcp-0.1.0.tgz
     version: 0.1.0
   synthetic-monitoring-agent:
+  - apiVersion: v2
+    appVersion: v0.53.0
+    created: "2026-02-25T15:13:24.081123143Z"
+    description: 'Grafana''s Synthetic Monitoring application. The agent provides
+      probe functionality and executes network checks for monitoring remote targets.  >
+      [!NOTE] > Grafana Cloud Synthetic Monitoring does not officially support this
+      chart. > If you are a Grafana Cloud customer and require support, please follow
+      the [recommended installation methods](https://grafana.com/docs/grafana-cloud/testing/synthetic-monitoring/set-up/set-up-private-probes/#deployment-with-kubernetes)
+      listed in the public docs. '
+    digest: 937be28fbd1e29f43cde682c6c8241c06b867b2d8d5c63fcda7a4f355efa9ef2
+    home: https://grafana.net
+    icon: https://raw.githubusercontent.com/grafana/grafana/master/public/img/logo_transparent_400x.png
+    maintainers:
+    - email: sheikhabubaker761@gmail.com
+      name: Mohammad Abubaker
+      url: https://github.com/Sheikh-Abubaker
+    - email: avivguiser@gmail.com
+      name: Aviv Guiser
+      url: https://github.com/KyriosGN0
+    name: synthetic-monitoring-agent
+    sources:
+    - https://github.com/grafana/synthetic-monitoring-agent
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/synthetic-monitoring-agent-1.6.0/synthetic-monitoring-agent-1.6.0.tgz
+    version: 1.6.0
   - apiVersion: v2
     appVersion: v0.52.1
     created: "2026-02-22T07:17:22.848017963Z"
@@ -37511,4 +37576,4 @@ entries:
     urls:
     - https://github.com/grafana-community/helm-charts/releases/download/tempo-vulture-0.1.0/tempo-vulture-0.1.0.tgz
     version: 0.1.0
-generated: "2026-02-25T05:55:46.243234321Z"
+generated: "2026-02-25T15:13:24.082779581Z"
