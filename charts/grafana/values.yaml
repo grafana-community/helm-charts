@@ -1711,7 +1711,7 @@ assertNoLeakedSecrets: true
 # InPlaceOrRecreate: In Recreate mode, VPA actively manages Pod resources by evicting Pods when their current resource requests differ significantly from recommendations. When a Pod is evicted, the workload controller (managing a Deployment, StatefulSet, etc) creates a replacement Pod, and the VPA admission controller applies the updated resource requests to the new Pod.
 # Auto (deprecated): The Auto update mode is deprecated since VPA version 1.4.0. Use Recreate for eviction-based updates, or InPlaceOrRecreate for in-place updates with eviction fallback.
 verticalPodAutoscaler:
-  enabled: true
+  enabled: false
   updateMode: "Off"
   controlledResources:
     cpu: true
