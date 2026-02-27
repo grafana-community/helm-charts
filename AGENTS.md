@@ -16,18 +16,10 @@ Each chart follows standard Helm structure (`Chart.yaml`, `values.yaml`, `templa
 
 ### helm-unittests
 
-Pull Requests against this repository require that all charts which implement helm-unittests(https://github.com/norwoodj/helm-docs) must pass all of their unittests.  This can be done via a single command run from the repository root:
+Pull Requests against this repository require that all charts which implement helm-unittests(https://github.com/helm-unittest/helm-unittest) must pass all of their unittests.  This can be done via a single command run from the repository root:
 
 ```bash
 make helm-unittest
-```
-
-### helm-docs
-
-Pull Requests against this repository require that all charts which implement helm-docs(https://github.com/norwoodj/helm-docs) must re-generate their README.md files after modifying `values.yaml` or `README.gotmpl`.  This can be done via a single command run from the repository root:
-
-```bash
-make helm-docs
 ```
 
 ## Contributing Conventions

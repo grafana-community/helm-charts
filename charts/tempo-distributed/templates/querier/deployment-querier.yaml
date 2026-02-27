@@ -101,11 +101,11 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.tempo.livenessProbe }}
+          {{- with or .Values.querier.livenessProbe .Values.tempo.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.tempo.readinessProbe }}
+          {{- with or .Values.querier.readinessProbe .Values.tempo.readinessProbe }}
           readinessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}

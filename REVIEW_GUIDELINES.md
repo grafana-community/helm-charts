@@ -13,8 +13,8 @@ For the review and merge process, see [PROCESSES.md](./PROCESSES.md).
 ## Versioning
 
 - [ ] Chart `version` in `Chart.yaml` is bumped
-- [ ] Version follows [semver](https://semver.org/) (`MAJOR.MINOR.PATCH`)
-- [ ] Breaking (backwards-incompatible) changes bump the **MAJOR** version and include an "Upgrading" section in the chart README
+- [ ] Version follows [SemVer](https://semver.org/) (`MAJOR.MINOR.PATCH`)
+- [ ] Breaking (backwards-incompatible) changes bump the **MAJOR** version and include a `### X.0.0` subsection under the chart readme's `## Upgrading` heading
 
 ## Chart.yaml
 
@@ -24,7 +24,7 @@ Required fields:
 |-------|-------------|
 | `apiVersion` | `v2` |
 | `name` | Matches the chart directory name |
-| `version` | Valid semver, bumped from previous release |
+| `version` | Valid SemVer, bumped from previous release |
 | `appVersion` | Tracks the upstream application version |
 | `description` | Short, meaningful summary |
 | `kubeVersion` | Set appropriately (e.g. `^1.25.0-0`) |
@@ -40,7 +40,6 @@ Optional but encouraged:
 - [ ] Container images are configurable via values file
 - [ ] `resources` are **not** set by default (left for the user to configure)
 - [ ] Features that require cluster resources (persistence, ingress, autoscaling) are **disabled** by default
-- [ ] For Charts leveraging [helm-docs](https://github.com/norwoodj/helm-docs), Values file comments are prefixed with `# --` so that it can distinguish between documentation and examples
 
 ## Labels & Selectors
 
@@ -49,7 +48,6 @@ Optional but encouraged:
 
 ## Documentation
 
-- [ ] Chart README is auto-generated via [helm-docs](https://github.com/norwoodj/helm-docs)
 - [ ] `templates/NOTES.txt` provides accurate post-install instructions when needed
 
 ## Testing

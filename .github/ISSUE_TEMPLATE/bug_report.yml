@@ -1,5 +1,5 @@
-name: Bug Report
-description: Create a report to help us improve
+name: Chart Bug Report
+description: Report a bug in a Helm chart
 title: "[name of the chart e.g. grafana] Issue Title"
 labels: [bug]
 assignees:
@@ -9,6 +9,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report! Please be cautious with the sensitive information/logs while filing the issue.
+
   - type: textarea
     id: desc
     attributes:
@@ -24,6 +25,7 @@ body:
       placeholder: Copy paste the entire output of the above
     validations:
       required: true
+
   - type: input
     id: kubectl-version
     attributes:
@@ -84,7 +86,7 @@ body:
     attributes:
       label: Enter the changed values of values.yaml?
       description: Please enter only values which differ from the defaults. Enter `NONE` if nothing's changed.
-      placeholder: 'key: value'
+      placeholder: "key: value"
     validations:
       required: false
 

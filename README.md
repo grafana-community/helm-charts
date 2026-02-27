@@ -4,6 +4,8 @@
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/grafana)](https://artifacthub.io/packages/search?repo=grafana)
 [![Release Charts](https://github.com/grafana-community/helm-charts/actions/workflows/release.yaml/badge.svg)](https://github.com/grafana-community/helm-charts/actions/workflows/release.yaml)
 
+<!-- Keep full URL links to repository files because this README syncs from main to gh-pages.  -->
+
 The code is provided as-is with no warranties.
 
 ## Usage
@@ -11,18 +13,26 @@ The code is provided as-is with no warranties.
 [Helm](https://helm.sh) must be installed to use the charts.
 Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
 
-Once Helm is set up properly, add the repository as follows:
+### OCI Registry
+
+OCI registries are preferred in Helm as they implement unified storage,
+distribution, and improved security.
+
+All Grafana Community Helm charts are available as [OCI artifacts on ghcr.io](https://github.com/orgs/grafana-community/packages?repo_name=helm-charts).
+
+```console
+helm install RELEASE-NAME oci://ghcr.io/grafana-community/helm-charts/<chart-name>
+```
+
+### HTTP Registry
+
+Alternatively we also support legacy HTTP Registry format.
 
 ```console
 helm repo add grafana-community https://grafana-community.github.io/helm-charts
+helm repo update
+helm install RELEASE-NAME grafana-community/<chart-name>
 ```
-
-You can then run `helm search repo grafana-community` to see the charts.
-
-<!-- Keep full URL links to repository files because this README syncs from main to gh-pages.  -->
-Chart documentation is available in [grafana directory](https://github.com/grafana-community/helm-charts/blob/main/charts/grafana/README.md).
-
-**OCI artifacts of all Grafana Community Helm charts are available in [ghcr.io](https://github.com/orgs/grafana-community/packages?repo_name=helm-charts).**
 
 ## Helm Provenance and Integrity
 

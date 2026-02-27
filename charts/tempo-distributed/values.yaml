@@ -188,6 +188,10 @@ ingester:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the ingester pods
   extraEnvFrom: []
+  # -- Liveness probe for ingester pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for ingester pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
   # -- Resource requests and limits for the ingester
   resources: {}
   # -- Grace period to allow the ingester to shutdown before it is killed. Especially for the ingestor,
@@ -295,7 +299,7 @@ ingester:
     annotations: {}
   # -- Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "grpc", "http2" or "https"
     grpc: null
   # -- EXPERIMENTAL Feature, disabled by default
   zoneAwareReplication:
@@ -532,7 +536,7 @@ metricsGenerator:
     annotations: {}
   # -- Adds the appProtocol field to the metricsGenerator service. This allows metricsGenerator to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "grpc", "http2" or "https"
     grpc: null
 
 # Configuration for the distributor
@@ -604,6 +608,10 @@ distributor:
   initContainers: []
   # -- Containers to add to the distributor pod
   extraContainers: []
+  # -- Liveness probe for distributor pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for distributor pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
   # -- Resource requests and limits for the distributor
   resources: {}
   # -- Grace period to allow the distributor to shutdown before it is killed
@@ -685,7 +693,7 @@ distributor:
       stale_duration: 15m0s
   # -- Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "grpc", "http2" or "https"
     grpc: null
 
 # Configuration for the compactor
@@ -781,6 +789,10 @@ compactor:
   initContainers: []
   # -- Containers to add to the compactor pod
   extraContainers: []
+  # -- Liveness probe for compactor pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for compactor pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
   # -- Resource requests and limits for the compactor
   resources: {}
   # -- Grace period to allow the compactor to shutdown before it is killed
@@ -880,6 +892,10 @@ querier:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the querier pods
   extraEnvFrom: []
+  # -- Liveness probe for querier pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for querier pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
   # -- Resource requests and limits for the querier
   resources: {}
   # -- Grace period to allow the querier to shutdown before it is killed
@@ -952,7 +968,7 @@ querier:
     annotations: {}
   # -- Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "grpc", "http2" or "https"
     grpc: null
 
 # Configuration for the query-frontend
@@ -1104,6 +1120,10 @@ queryFrontend:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the query-frontend pods
   extraEnvFrom: []
+  # -- Liveness probe for query-frontend pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for query-frontend pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
   # -- Resource requests and limits for the query-frontend
   resources: {}
   # -- Grace period to allow the query-frontend to shutdown before it is killed
@@ -1155,7 +1175,7 @@ queryFrontend:
   extraVolumes: []
   # -- Adds the appProtocol field to the queryFrontend service. This allows queryFrontend to work with istio protocol selection.
   appProtocol:
-    # -- Set the optional gRPC service protocol. Ex: "gRPC", "http2" or "https"
+    # -- Set the optional gRPC service protocol. Ex: "grpc", "http2" or "https"
     grpc: null
   mcp_server:
     # -- Enables Tempo MCP Server
@@ -1702,7 +1722,7 @@ server:
   httpListenPort: 3200
   # -- Log level. Can be set to debug, info (default), warn, error
   logLevel: info
-  # -- Log format. Can be set to logfmt (default) or JSON.
+  # -- Log format. Can be set to logfmt (default) or json.
   logFormat: logfmt
   # -- Max gRPC message size that can be received
   grpc_server_max_recv_msg_size: 4194304
@@ -1744,7 +1764,7 @@ storage:
       version: null
       # -- Lis with dedicated attribute columns (only for vParquet3 or later)
       dedicated_columns: []
-    # -- The supported storage backends are gcs, s3 and Azure, as specified in https://grafana.com/docs/tempo/latest/configuration/#storage
+    # -- The supported storage backends are gcs, s3 and azure, as specified in https://grafana.com/docs/tempo/latest/configuration/#storage
     backend: local
     # The worker pool is used primarily when finding traces by id, but is also used by others.
     pool:
@@ -1774,7 +1794,7 @@ storage:
 
   # Settings for the Admin client storage backend and buckets. Only valid is enterprise.enabled is true
   admin:
-    # -- The supported storage backends are gcs, s3 and Azure, as specified in https://grafana.com/docs/enterprise-traces/latest/configure/reference/#admin_client_config
+    # -- The supported storage backends are gcs, s3 and azure, as specified in https://grafana.com/docs/enterprise-traces/latest/configure/reference/#admin_client_config
     backend: filesystem
 
 # -- The standard overrides configuration section. This can include a `defaults` object for applying to all tenants (not to be confused with the `global` property of the same name, which overrides `max_byte_per_trace` for all tenants). For an example on how to enable the metrics generator using the `overrides` object, see the 'Activate metrics generator' section below. Refer to [Standard overrides](https://grafana.com/docs/tempo/latest/configuration/#standard-overrides) for more details.
@@ -2426,7 +2446,7 @@ enterprise:
     # -- Grafana Enterprise Traces container image repository. Note: for Grafana Tempo use the value 'image.repository'
     repository: grafana/enterprise-traces
     # -- Grafana Enterprise Traces container image tag. Note: for Grafana Tempo use the value 'image.tag'
-    tag: v2.8.6
+    tag: v2.8.7
     # Note: pullPolicy and optional pullSecrets are set in toplevel 'image' section, not here
 
 # In order to use Grafana Enterprise Traces features, you will need to provide the contents of your Grafana Enterprise Traces
