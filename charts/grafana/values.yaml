@@ -1514,6 +1514,8 @@ imageRenderer:
   hostAliases: []
   # image-renderer deployment priority class
   priorityClassName: ''
+  # Path to the healthcheck endpoint. On Image Renderer v5.0.0 or newer, this is '/healthz'. Older versions use '/'.
+  healthcheckPath: '/healthz'
   service:
     # Enable the image-renderer service
     enabled: true
