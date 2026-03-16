@@ -1,6 +1,6 @@
 # loki
 
-Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+Helm chart for Grafana Loki supporting monolithic, simple scalable, and microservices modes.
 
 ## Source Code
 
