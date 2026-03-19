@@ -162,8 +162,33 @@ spec:
           emptyDir: {}
         - name: data
           {{- if .Values.bloomBuilder.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ include "loki.bloomBuilderPVCName" . }}
+          ephemeral:
+            volumeClaimTemplate:
+              metadata:
+                {{- with .Values.bloomBuilder.persistence.annotations }}
+                annotations:
+                  {{- toYaml . | nindent 18 }}
+                {{- end }}
+                {{- with .Values.bloomBuilder.persistence.labels }}
+                labels:
+                  {{- toYaml . | nindent 18 }}
+                {{- end }}
+              spec:
+                accessModes:
+                  {{- toYaml .Values.bloomBuilder.persistence.accessModes | nindent 18 }}
+                {{- with .Values.bloomBuilder.persistence.storageClass }}
+                storageClassName: {{ if (eq "-" .) }}""{{ else }}{{ . }}{{ end }}
+                {{- end }}
+                {{- with .Values.bloomBuilder.persistence.volumeAttributesClassName }}
+                volumeAttributesClassName: {{ . }}
+                {{- end }}
+                resources:
+                  requests:
+                    storage: {{ .Values.bloomBuilder.persistence.size | quote }}
+                {{- with .Values.bloomBuilder.persistence.selector }}
+                selector:
+                  {{- toYaml . | nindent 18 }}
+                {{- end }}
           {{- else }}
           {{- toYaml .Values.bloomBuilder.persistence.dataVolumeParameters | nindent 10 }}
           {{- end }}

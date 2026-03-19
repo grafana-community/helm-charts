@@ -3159,30 +3159,27 @@ bloomBuilder:
   # -- Volumes to add to the bloom-builder pods
   extraVolumes: []
   persistence:
-    # -- Enable persistent storage for the bloom-builder `data` volume.
+    # -- Enable generic ephemeral volume-backed storage for the bloom-builder `data` volume.
     enabled: false
-    # -- Name of an existing PersistentVolumeClaim to mount when persistence is enabled.
-    # If empty, the chart creates a PVC for the bloom-builder.
-    existingClaim: null
-    # -- Set access modes on the PersistentVolumeClaim.
+    # -- Set access modes on the generated volumeClaimTemplate.
     accessModes:
       - ReadWriteOnce
-    # -- Size of persistent disk.
+    # -- Size of the generated volumeClaimTemplate.
     size: 10Gi
-    # -- Storage class to be used.
+    # -- Storage class to be used for the generated volumeClaimTemplate.
     # If defined, storageClassName: <storageClass>.
     # If set to "-", storageClassName: "", which disables dynamic provisioning.
     # If empty or set to null, no storageClassName spec is set, choosing the default provisioner.
     storageClass: null
-    # -- Volume attributes class name to be used.
+    # -- Volume attributes class name to be used for the generated volumeClaimTemplate.
     # If empty or set to null, no volumeAttributesClassName spec is set.
     # Requires Kubernetes 1.31
     volumeAttributesClassName: null
-    # -- Selector for persistent disk.
+    # -- Selector for the generated volumeClaimTemplate.
     selector: null
-    # -- Annotations for the generated PVC.
+    # -- Annotations for the generated volumeClaimTemplate.
     annotations: {}
-    # -- Labels for the generated PVC.
+    # -- Labels for the generated volumeClaimTemplate.
     labels: {}
     # -- Parameters used for the `data` volume when persistence is disabled.
     dataVolumeParameters:
