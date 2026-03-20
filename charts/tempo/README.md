@@ -46,6 +46,10 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### From Chart versions < 2.0.0
+* Breaking Change *
+The minimum required Kubernetes version is now 1.25. All references to deprecated APIs have been removed.
+
 ### From Chart versions < 1.22.0
 * Breaking Change *
 Please be aware that we've updated the Tempo version to 2.8, which includes some breaking changes
@@ -69,7 +73,7 @@ We recommend reviewing the [release notes](https://grafana.com/docs/tempo/latest
 
 ### From Chart versions < 1.12.0
 
-Upgrading to chart 1.12.0 will set the memberlist cluster_label config option. During rollout your cluster will temporarilly be split into two memberlist clusters until all components are rolled out.
+Upgrading to chart 1.12.0 will set the memberlist cluster_label config option. During rollout your cluster will temporarily be split into two memberlist clusters until all components are rolled out.
 This will interrupt reads and writes. This config option is set to prevent cross talk between Tempo and other memberlist clusters.
 
 ### From Chart versions < 1.2.0
