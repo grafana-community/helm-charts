@@ -1267,10 +1267,14 @@ singleBinary:
     type: "ClusterIP"
     # -- trafficDistribution single binary Service
     trafficDistribution: ""
-    # -- Session affinity for binary Service
+    # -- Session affinity for single binary Service
     sessionAffinity: ""
-    # -- Session affinity config for binary Service
+    # -- Session affinity config for single binary Service
     sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the single binary service. This allows single binary to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Comma-separated list of Loki modules to load for the single binary
   targetModule: "all"
   # -- Labels for single binary service
