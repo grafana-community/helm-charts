@@ -27,6 +27,9 @@ spec:
     {{- tpl ( . | toYaml) $ctx | nindent 4 }}
   {{- end }}
   serviceAccountName: {{ include "loki.serviceAccountName" . }}
+  {{- if (kindIs "bool" (coalesce $component.automountServiceAccountToken .Values.defaults.automountServiceAccountToken)) }}
+  automountServiceAccountToken: {{ (coalesce $component.automountServiceAccountToken .Values.defaults.automountServiceAccountToken) }}
+  {{- end }}
   {{- with .Values.imagePullSecrets }}
   imagePullSecrets:
     {{- toYaml . | nindent 4 }}
