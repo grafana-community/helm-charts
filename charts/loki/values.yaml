@@ -127,6 +127,9 @@ config:
 # -- Extra Loki configuration to be merged with the generated config. Passed through tpl, so it can be templated with the same context as the rest of the config.
 extraConfig: ""
 
+# -- Provides a reloadable runtime configuration file for some specific configuration. Only Used if newConfig is enabled.
+runtimeConfig: {}
+
 ######################################################################################################################
 #
 # Base Loki Configs including kubernetes configurations and configurations for Loki itself,
