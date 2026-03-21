@@ -1024,8 +1024,12 @@ gateway:
     annotations: {}
     # -- Labels for gateway service
     labels: {}
-    # -- trafficDistribution for gateway service
+    # -- trafficDistribution for gateway Service
     trafficDistribution: ""
+    # -- Session affinity for gateway Service
+    sessionAffinity: ""
+    # -- Session affinity config for gateway Service
+    sessionAffinityConfig: {}
   # Gateway ingress configuration
   ingress:
     # -- Specifies whether an ingress for the gateway should be created
@@ -1263,6 +1267,10 @@ singleBinary:
     type: "ClusterIP"
     # -- trafficDistribution single binary Service
     trafficDistribution: ""
+    # -- Session affinity for binary Service
+    sessionAffinity: ""
+    # -- Session affinity config for binary Service
+    sessionAffinityConfig: {}
   # -- Comma-separated list of Loki modules to load for the single binary
   targetModule: "all"
   # -- Labels for single binary service
@@ -1397,8 +1405,16 @@ write:
     labels: {}
     # -- Service Type for write Service
     type: "ClusterIP"
-    # -- trafficDistribution for write service
+    # -- trafficDistribution for write Service
     trafficDistribution: ""
+    # -- Session affinity for write Service
+    sessionAffinity: ""
+    # -- Session affinity config for write Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the write service. This allows write to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Comma-separated list of Loki modules to load for the write
   targetModule: "write"
   # -- Additional CLI args for the write
@@ -1539,8 +1555,16 @@ read:
     labels: {}
     # -- Service Type for read Service
     type: ClusterIP
-    # -- trafficDistribution for read service
+    # -- trafficDistribution for read Service
     trafficDistribution: ""
+    # -- Session affinity for read Service
+    sessionAffinity: ""
+    # -- Session affinity config for read Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the read service. This allows read to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Comma-separated list of Loki modules to load for the read
   targetModule: "read"
   # -- Whether or not to use the 2 target type simple scalable mode (read, write) or the
@@ -1678,6 +1702,14 @@ backend:
     type: ClusterIP
     # -- trafficDistribution for backend Service
     trafficDistribution: ""
+    # -- Session affinity for backend Service
+    sessionAffinity: ""
+    # -- Session affinity config for backend Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the backend service. This allows backend to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Comma-separated list of Loki modules to load for the backend
   targetModule: "backend"
   # -- Additional CLI args for the backend
@@ -1837,8 +1869,12 @@ ingester:
     labels: {}
     # -- Service Type for ingester Service
     type: "ClusterIP"
-    # -- trafficDistribution for ingester service
+    # -- trafficDistribution for ingester Service
     trafficDistribution: ""
+    # -- Session affinity for ingester Service
+    sessionAffinity: ""
+    # -- Session affinity config for ingester Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2071,8 +2107,12 @@ distributor:
     labels: {}
     # -- Service Type for distributor Service
     type: "ClusterIP"
-    # -- trafficDistribution for distributor service
+    # -- trafficDistribution for distributor Service
     trafficDistribution: ""
+    # -- Session affinity for distributor Service
+    sessionAffinity: ""
+    # -- Session affinity config for distributor Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2195,8 +2235,12 @@ querier:
     labels: {}
     # -- Service Type for querier Service
     type: "ClusterIP"
-    # -- trafficDistribution for querier service
+    # -- trafficDistribution for querier Service
     trafficDistribution: ""
+    # -- Session affinity for querier Service
+    sessionAffinity: ""
+    # -- Session affinity config for querier Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2330,8 +2374,12 @@ queryFrontend:
     labels: {}
     # -- Service Type for query-frontend Service
     type: "ClusterIP"
-    # -- trafficDistribution for query-frontend service
+    # -- trafficDistribution for query-frontend Service
     trafficDistribution: ""
+    # -- Session affinity for query-frontend Service
+    sessionAffinity: ""
+    # -- Session affinity config for query-frontend Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the query-frontend service. This allows query-frontend to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2430,8 +2478,12 @@ queryScheduler:
     labels: {}
     # -- Service Type for query-scheduler Service
     type: "ClusterIP"
-    # -- trafficDistribution for query-scheduler service
+    # -- trafficDistribution for query-scheduler Service
     trafficDistribution: ""
+    # -- Session affinity for query-scheduler Service
+    sessionAffinity: ""
+    # -- Session affinity config for query-scheduler Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the query-scheduler service. This allows query-scheduler to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2525,8 +2577,12 @@ indexGateway:
     labels: {}
     # -- Service Type for index-gateway Service
     type: "ClusterIP"
-    # -- trafficDistribution for index-gateway service
+    # -- trafficDistribution for index-gateway Service
     trafficDistribution: ""
+    # -- Session affinity for index-gateway Service
+    sessionAffinity: ""
+    # -- Session affinity config for index-gateway Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the index-gateway service. This allows index-gateway to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2669,8 +2725,12 @@ compactor:
     labels: {}
     # -- Service Type for compactor Service
     type: "ClusterIP"
-    # -- trafficDistribution for compactor service
+    # -- trafficDistribution for compactor Service
     trafficDistribution: ""
+    # -- Session affinity for compactor Service
+    sessionAffinity: ""
+    # -- Session affinity config for compactor Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the compactor service. This allows compactor to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2803,8 +2863,12 @@ bloomGateway:
     labels: {}
     # -- Service Type for bloom-gateway Service
     type: "ClusterIP"
-    # -- trafficDistribution for bloom-gateway service
+    # -- trafficDistribution for bloom-gateway Service
     trafficDistribution: ""
+    # -- Session affinity for bloom-gateway Service
+    sessionAffinity: ""
+    # -- Session affinity config for bloom-gateway Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the bloom-gateway service. This allows bloom-gateway to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2937,8 +3001,12 @@ bloomPlanner:
     labels: {}
     # -- Service Type for bloom-planner Service
     type: "ClusterIP"
-    # -- trafficDistribution for bloom-planner service
+    # -- trafficDistribution for bloom-planner Service
     trafficDistribution: ""
+    # -- Session affinity for bloom-planner Service
+    sessionAffinity: ""
+    # -- Session affinity config for bloom-planner Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the bloom-planner service. This allows bloom-planner to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -3086,8 +3154,12 @@ bloomBuilder:
     labels: {}
     # -- Service Type for bloom-builder Service
     type: "ClusterIP"
-    # -- trafficDistribution for bloom-builder service
+    # -- trafficDistribution for bloom-builder Service
     trafficDistribution: ""
+    # -- Session affinity for bloom-builder Service
+    sessionAffinity: ""
+    # -- Session affinity config for bloom-builder Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the bloom-builder service. This allows bloom-builder to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -3333,8 +3405,12 @@ ruler:
     labels: {}
     # -- Service Type for ruler Service
     type: "ClusterIP"
-    # -- trafficDistribution for ruler service
+    # -- trafficDistribution for ruler Service
     trafficDistribution: ""
+    # -- Session affinity for ruler Service
+    sessionAffinity: ""
+    # -- Session affinity config for ruler Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the ruler service. This allows ruler to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -3516,8 +3592,12 @@ overridesExporter:
     labels: {}
     # -- Service Type for overrides-exporter Service
     type: "ClusterIP"
-    # -- trafficDistribution for overrides-exporter service
+    # -- trafficDistribution for overrides-exporter Service
     trafficDistribution: ""
+    # -- Session affinity for overrides-exporter Service
+    sessionAffinity: ""
+    # -- Session affinity config for overrides-exporter Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the overrides-exporter service. This allows overrides-exporter to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -4382,8 +4462,12 @@ tableManager:
     labels: {}
     # -- Service Type for table-manager Service
     type: "ClusterIP"
-    # -- trafficDistribution for table-manager service
+    # -- trafficDistribution for table-manager Service
     trafficDistribution: ""
+    # -- Session affinity for table-manager Service
+    sessionAffinity: ""
+    # -- Session affinity config for table-manager Service
+    sessionAffinityConfig: {}
     # -- Adds the appProtocol field to the table-manager service. This allows table-manager to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
