@@ -1,6 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "properties": {
+    "newConfig": {
+      "type": "boolean"
+    },
+    "config": {
+      "type": "object",
+      "description": "The configuration for the Loki chart. This should be a valid YAML configuration for Loki."
+    },
+    "extraConfig": {
+      "type": "string",
+      "description": "The templated configuration for the Loki chart. This should be a valid YAML configuration for Loki."
+    },
     "loki": {
       "type": "object",
       "properties": {
