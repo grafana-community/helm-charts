@@ -124,6 +124,21 @@
         }
       }
     },
+    "newConfig": {
+      "type": "boolean"
+    },
+    "config": {
+      "type": "object",
+      "description": "The configuration for the Loki chart. This should be a valid YAML configuration for Loki."
+    },
+    "extraConfig": {
+      "type": "string",
+      "description": "The templated configuration for the Loki chart. This should be a valid YAML configuration for Loki."
+    },
+    "runtimeConfig": {
+      "type": "object",
+      "description": "Provides a reloadable runtime configuration file for some specific configuration. Only Used if newConfig is enabled."
+    },
     "loki": {
       "type": "object",
       "properties": {
