@@ -161,36 +161,36 @@ spec:
         - name: temp
           emptyDir: {}
         - name: data
-          {{- if .Values.bloomBuilder.persistence.enabled }}
+          {{- if .Values.bloomBuilder.ephemeralVolume.enabled }}
           ephemeral:
             volumeClaimTemplate:
               metadata:
-                {{- with .Values.bloomBuilder.persistence.annotations }}
+                {{- with .Values.bloomBuilder.ephemeralVolume.annotations }}
                 annotations:
                   {{- toYaml . | nindent 18 }}
                 {{- end }}
-                {{- with .Values.bloomBuilder.persistence.labels }}
+                {{- with .Values.bloomBuilder.ephemeralVolume.labels }}
                 labels:
                   {{- toYaml . | nindent 18 }}
                 {{- end }}
               spec:
                 accessModes:
-                  {{- toYaml .Values.bloomBuilder.persistence.accessModes | nindent 18 }}
-                {{- with .Values.bloomBuilder.persistence.storageClass }}
+                  {{- toYaml .Values.bloomBuilder.ephemeralVolume.accessModes | nindent 18 }}
+                {{- with .Values.bloomBuilder.ephemeralVolume.storageClass }}
                 storageClassName: {{ if (eq "-" .) }}""{{ else }}{{ . }}{{ end }}
                 {{- end }}
-                {{- with .Values.bloomBuilder.persistence.volumeAttributesClassName }}
+                {{- with .Values.bloomBuilder.ephemeralVolume.volumeAttributesClassName }}
                 volumeAttributesClassName: {{ . }}
                 {{- end }}
                 resources:
                   requests:
-                    storage: {{ .Values.bloomBuilder.persistence.size | quote }}
-                {{- with .Values.bloomBuilder.persistence.selector }}
+                    storage: {{ .Values.bloomBuilder.ephemeralVolume.size | quote }}
+                {{- with .Values.bloomBuilder.ephemeralVolume.selector }}
                 selector:
                   {{- toYaml . | nindent 18 }}
                 {{- end }}
           {{- else }}
-          {{- toYaml .Values.bloomBuilder.persistence.dataVolumeParameters | nindent 10 }}
+          {{- toYaml .Values.bloomBuilder.ephemeralVolume.dataVolumeParameters | nindent 10 }}
           {{- end }}
         {{- with (concat .Values.global.extraVolumes .Values.bloomBuilder.extraVolumes) | uniq }}
         {{- toYaml . | nindent 8 }}

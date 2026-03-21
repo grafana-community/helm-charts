@@ -3158,7 +3158,7 @@ bloomBuilder:
   extraVolumeMounts: []
   # -- Volumes to add to the bloom-builder pods
   extraVolumes: []
-  persistence:
+  ephemeralVolume:
     # -- Enable generic ephemeral volume-backed storage for the bloom-builder `data` volume.
     enabled: false
     # -- Set access modes on the generated volumeClaimTemplate.
