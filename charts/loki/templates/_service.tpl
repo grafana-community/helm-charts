@@ -21,11 +21,11 @@ metadata:
   labels:
     {{- include "loki.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ $target | quote }}
-    {{- with (mergeOverwrite .Values.defaults.service.labels ($component.serviceLabels | default dict) $component.service.labels) }}
+    {{- with (mergeOverwrite (dict) .Values.defaults.service.labels ($component.serviceLabels | default dict) $component.service.labels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   annotations:
-    {{- with (mergeOverwrite .Values.loki.serviceAnnotations .Values.defaults.service.annotations ($component.serviceAnnotations | default dict) $component.service.annotations) }}
+    {{- with (mergeOverwrite (dict) .Values.loki.serviceAnnotations .Values.defaults.service.annotations ($component.serviceAnnotations | default dict) $component.service.annotations) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
@@ -78,11 +78,11 @@ metadata:
     app.kubernetes.io/component: {{ $target | quote }}
     prometheus.io/service-monitor: "false"
     variant: headless
-    {{- with (mergeOverwrite .Values.defaults.service.labels ($component.serviceLabels | default dict) $component.service.labels) }}
+    {{- with (mergeOverwrite (dict) .Values.defaults.service.labels ($component.serviceLabels | default dict) $component.service.labels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   annotations:
-    {{- with (mergeOverwrite .Values.loki.serviceAnnotations .Values.defaults.service.annotations ($component.serviceAnnotations | default dict) $component.service.annotations) }}
+    {{- with (mergeOverwrite (dict) .Values.loki.serviceAnnotations .Values.defaults.service.annotations ($component.serviceAnnotations | default dict) $component.service.annotations) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
