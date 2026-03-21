@@ -184,6 +184,14 @@ defaults:
   nodeSelector: {}
   # -- Tolerations for loki pods
   tolerations: []
+  service:
+    # -- Common annotations for all services
+    annotations: {}
+    # -- Common labels for all services
+    labels: {}
+    # -- trafficDistribution for services
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
+    trafficDistribution: ""
 
 ######################################################################################################################
 #
@@ -1086,8 +1094,12 @@ gateway:
     annotations: {}
     # -- Labels for gateway service
     labels: {}
-    # -- trafficDistribution for gateway service
+    # -- trafficDistribution for gateway Service
     trafficDistribution: ""
+    # -- Session affinity for gateway Service
+    sessionAffinity: ""
+    # -- Session affinity config for gateway Service
+    sessionAffinityConfig: {}
   # Gateway ingress configuration
   ingress:
     # -- Specifies whether an ingress for the gateway should be created
@@ -1325,6 +1337,14 @@ singleBinary:
     type: "ClusterIP"
     # -- trafficDistribution single binary Service
     trafficDistribution: ""
+    # -- Session affinity for single binary Service
+    sessionAffinity: ""
+    # -- Session affinity config for single binary Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the single binary service. This allows single binary to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Comma-separated list of Loki modules to load for the single binary
   targetModule: "all"
   # -- Labels for single binary service
@@ -1459,8 +1479,16 @@ write:
     labels: {}
     # -- Service Type for write Service
     type: "ClusterIP"
-    # -- trafficDistribution for write service
+    # -- trafficDistribution for write Service
     trafficDistribution: ""
+    # -- Session affinity for write Service
+    sessionAffinity: ""
+    # -- Session affinity config for write Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the write service. This allows write to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Comma-separated list of Loki modules to load for the write
   targetModule: "write"
   # -- Additional CLI args for the write
@@ -1601,8 +1629,16 @@ read:
     labels: {}
     # -- Service Type for read Service
     type: ClusterIP
-    # -- trafficDistribution for read service
+    # -- trafficDistribution for read Service
     trafficDistribution: ""
+    # -- Session affinity for read Service
+    sessionAffinity: ""
+    # -- Session affinity config for read Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the read service. This allows read to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Comma-separated list of Loki modules to load for the read
   targetModule: "read"
   # -- Whether or not to use the 2 target type simple scalable mode (read, write) or the
@@ -1740,6 +1776,14 @@ backend:
     type: ClusterIP
     # -- trafficDistribution for backend Service
     trafficDistribution: ""
+    # -- Session affinity for backend Service
+    sessionAffinity: ""
+    # -- Session affinity config for backend Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the backend service. This allows backend to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Comma-separated list of Loki modules to load for the backend
   targetModule: "backend"
   # -- Additional CLI args for the backend
@@ -1884,11 +1928,31 @@ ingester:
   podAnnotations: {}
   # -- The name of the PriorityClass for ingester pods
   # -- Labels for ingester service
+  # @deprecated -- This option is deprecated in favor of `ingester.service.labels`
   serviceLabels: {}
   # -- Annotations for ingester service
+  # @deprecated -- This option is deprecated in favor of `ingester.service.annotations`
   serviceAnnotations: {}
   # -- Service type for ingester service
+  # @deprecated -- This option is deprecated in favor of `ingester.service.type`
   serviceType: "ClusterIP"
+  service:
+    # -- Annotations for ingester Service
+    annotations: {}
+    # -- Additional labels for ingester Service
+    labels: {}
+    # -- Service Type for ingester Service
+    type: "ClusterIP"
+    # -- trafficDistribution for ingester Service
+    trafficDistribution: ""
+    # -- Session affinity for ingester Service
+    sessionAffinity: ""
+    # -- Session affinity config for ingester Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the ingester
   extraArgs: []
   # -- Environment variables to add to the ingester pods
@@ -1984,8 +2048,10 @@ ingester:
     whenDeleted: Retain
     whenScaled: Retain
   # -- Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection.
+  # @deprecated -- This option is deprecated in favor of `ingester.service.appProtocol`
   appProtocol:
     # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # @deprecated -- This option is deprecated in favor of `ingester.service.appProtocol.grpc`
     grpc: ""
   # -- trafficDistribution for ingester service
   trafficDistribution: ""
@@ -2100,11 +2166,31 @@ distributor:
   # -- Annotations for distributor pods
   podAnnotations: {}
   # -- Labels for distributor service
+  # @deprecated -- This option is deprecated in favor of `ingester.service.labels`
   serviceLabels: {}
   # -- Annotations for distributor service
+  # @deprecated -- This option is deprecated in favor of `ingester.service.annotations`
   serviceAnnotations: {}
   # -- Service type for distributor service
-  serviceType: ClusterIP
+  # @deprecated -- This option is deprecated in favor of `ingester.service.type`
+  serviceType: "ClusterIP"
+  service:
+    # -- Annotations for distributor Service
+    annotations: {}
+    # -- Additional labels for distributor Service
+    labels: {}
+    # -- Service Type for distributor Service
+    type: "ClusterIP"
+    # -- trafficDistribution for distributor Service
+    trafficDistribution: ""
+    # -- Session affinity for distributor Service
+    sessionAffinity: ""
+    # -- Session affinity config for distributor Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the distributor
   extraArgs: []
   # -- Environment variables to add to the distributor pods
@@ -2147,8 +2233,10 @@ distributor:
   # -- Tolerations for distributor pods
   tolerations: []
   # -- Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection.
+  # @deprecated -- This option is deprecated in favor of `distributor.service.appProtocol`
   appProtocol:
     # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # @deprecated -- This option is deprecated in favor of `distributor.service.appProtocol.grpc`
     grpc: ""
   # -- trafficDistribution for distributor service
   trafficDistribution: ""
@@ -2206,11 +2294,31 @@ querier:
   # -- Annotations for querier pods
   podAnnotations: {}
   # -- Labels for querier service
+  # @deprecated -- This option is deprecated in favor of `querier.service.labels`
   serviceLabels: {}
   # -- Annotations for querier service
+  # @deprecated -- This option is deprecated in favor of `querier.service.annotations`
   serviceAnnotations: {}
-  # -- Service Type for querier service
+  # -- Service type for querier service
+  # @deprecated -- This option is deprecated in favor of `querier.service.type`
   serviceType: "ClusterIP"
+  service:
+    # -- Annotations for querier Service
+    annotations: {}
+    # -- Additional labels for querier Service
+    labels: {}
+    # -- Service Type for querier Service
+    type: "ClusterIP"
+    # -- trafficDistribution for querier Service
+    trafficDistribution: ""
+    # -- Session affinity for querier Service
+    sessionAffinity: ""
+    # -- Session affinity config for querier Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the querier
   extraArgs: []
   # -- Environment variables to add to the querier pods
@@ -2264,8 +2372,10 @@ querier:
   # -- DNSConfig for querier pods
   dnsConfig: {}
   # -- Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.
+  # @deprecated -- This option is deprecated in favor of `querier.service.appProtocol`
   appProtocol:
     # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # @deprecated -- This option is deprecated in favor of `querier.service.appProtocol.grpc`
     grpc: ""
   # -- trafficDistribution for querier service
   trafficDistribution: ""
@@ -2323,11 +2433,31 @@ queryFrontend:
   # -- Annotations for query-frontend pods
   podAnnotations: {}
   # -- Labels for query-frontend service
+  # @deprecated -- This option is deprecated in favor of `queryFrontend.service.labels`
   serviceLabels: {}
   # -- Annotations for query-frontend service
+  # @deprecated -- This option is deprecated in favor of `queryFrontend.service.annotations`
   serviceAnnotations: {}
-  # -- Service Type for query-frontend service
-  serviceType: ClusterIP
+  # -- Service type for query-frontend service
+  # @deprecated -- This option is deprecated in favor of `queryFrontend.service.type`
+  serviceType: "ClusterIP"
+  service:
+    # -- Annotations for query-frontend Service
+    annotations: {}
+    # -- Additional labels for query-frontend Service
+    labels: {}
+    # -- Service Type for query-frontend Service
+    type: "ClusterIP"
+    # -- trafficDistribution for query-frontend Service
+    trafficDistribution: ""
+    # -- Session affinity for query-frontend Service
+    sessionAffinity: ""
+    # -- Session affinity config for query-frontend Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the query-frontend service. This allows query-frontend to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the query-frontend
   extraArgs: []
   # -- Environment variables to add to the query-frontend pods
@@ -2368,8 +2498,10 @@ queryFrontend:
   # -- Tolerations for query-frontend pods
   tolerations: []
   # -- Adds the appProtocol field to the queryFrontend service. This allows queryFrontend to work with istio protocol selection.
+  # @deprecated -- This option is deprecated in favor of `queryFrontend.service.appProtocol`
   appProtocol:
     # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+    # @deprecated -- This option is deprecated in favor of `queryFrontend.service.appProtocol.grpc`
     grpc: ""
   # -- Enable load balancer port for query-frontend
   loadBalancer:
@@ -2405,9 +2537,31 @@ queryScheduler:
   # -- Annotations for query-scheduler pods
   podAnnotations: {}
   # -- Labels for query-scheduler service
+  # @deprecated -- This option is deprecated in favor of `queryScheduler.service.labels`
   serviceLabels: {}
   # -- Annotations for query-scheduler service
+  # @deprecated -- This option is deprecated in favor of `queryScheduler.service.annotations`
   serviceAnnotations: {}
+  # -- Service type for query-scheduler service
+  # @deprecated -- This option is deprecated in favor of `queryScheduler.service.type`
+  serviceType: "ClusterIP"
+  service:
+    # -- Annotations for query-scheduler Service
+    annotations: {}
+    # -- Additional labels for query-scheduler Service
+    labels: {}
+    # -- Service Type for query-scheduler Service
+    type: "ClusterIP"
+    # -- trafficDistribution for query-scheduler Service
+    trafficDistribution: ""
+    # -- Session affinity for query-scheduler Service
+    sessionAffinity: ""
+    # -- Session affinity config for query-scheduler Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the query-scheduler service. This allows query-scheduler to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the query-scheduler
   extraArgs: []
   # -- Environment variables to add to the query-scheduler pods
@@ -2448,6 +2602,7 @@ queryScheduler:
   # -- Tolerations for query-scheduler pods
   tolerations: []
   # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+  # @deprecated -- This option is deprecated in favor of `queryScheduler.service.appProtocol`
   appProtocol:
     grpc: ""
   # -- trafficDistribution for query-scheduler service
@@ -2481,11 +2636,31 @@ indexGateway:
   # -- Annotations for index-gateway pods
   podAnnotations: {}
   # -- Labels for index-gateway service
+  # @deprecated -- This option is deprecated in favor of `indexGateway.service.labels`
   serviceLabels: {}
   # -- Annotations for index-gateway service
+  # @deprecated -- This option is deprecated in favor of `indexGateway.service.annotations`
   serviceAnnotations: {}
   # -- Service type for index-gateway service
+  # @deprecated -- This option is deprecated in favor of `indexGateway.service.type`
   serviceType: "ClusterIP"
+  service:
+    # -- Annotations for index-gateway Service
+    annotations: {}
+    # -- Additional labels for index-gateway Service
+    labels: {}
+    # -- Service Type for index-gateway Service
+    type: "ClusterIP"
+    # -- trafficDistribution for index-gateway Service
+    trafficDistribution: ""
+    # -- Session affinity for index-gateway Service
+    sessionAffinity: ""
+    # -- Session affinity config for index-gateway Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the index-gateway service. This allows index-gateway to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the index-gateway
   extraArgs: []
   # -- Environment variables to add to the index-gateway pods
@@ -2556,6 +2731,7 @@ indexGateway:
     whenDeleted: Retain
     whenScaled: Retain
   # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+  # @deprecated -- This option is deprecated in favor of `indexGateway.service.appProtocol`
   appProtocol:
     grpc: ""
   # -- trafficDistribution for index-gateway service
@@ -2608,11 +2784,31 @@ compactor:
               app.kubernetes.io/instance: '{{ .Release.Name }}'
           topologyKey: kubernetes.io/hostname
   # -- Labels for compactor service
+  # @deprecated -- This option is deprecated in favor of `compactor.service.labels`
   serviceLabels: {}
   # -- Annotations for compactor service
+  # @deprecated -- This option is deprecated in favor of `compactor.service.annotations`
   serviceAnnotations: {}
   # -- Service type for compactor service
+  # @deprecated -- This option is deprecated in favor of `compactor.service.type`
   serviceType: "ClusterIP"
+  service:
+    # -- Annotations for compactor Service
+    annotations: {}
+    # -- Additional labels for compactor Service
+    labels: {}
+    # -- Service Type for compactor Service
+    type: "ClusterIP"
+    # -- trafficDistribution for compactor Service
+    trafficDistribution: ""
+    # -- Session affinity for compactor Service
+    sessionAffinity: ""
+    # -- Session affinity config for compactor Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the compactor service. This allows compactor to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the compactor
   extraArgs: []
   # -- Environment variables to add to the compactor pods
@@ -2642,6 +2838,7 @@ compactor:
   # -- Tolerations for compactor pods
   tolerations: []
   # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+  # @deprecated -- This option is deprecated in favor of `compactor.service.appProtocol`
   appProtocol:
     grpc: ""
   persistence:
@@ -2728,9 +2925,28 @@ bloomGateway:
               app.kubernetes.io/instance: '{{ .Release.Name }}'
           topologyKey: kubernetes.io/hostname
   # -- Labels for bloom-gateway service
+  # @deprecated -- This option is deprecated in favor of `bloomGateway.service.labels`
   serviceLabels: {}
   # -- Annotations for bloom-gateway service
+  # @deprecated -- This option is deprecated in favor of `bloomGateway.service.annotations`
   serviceAnnotations: {}
+  service:
+    # -- Annotations for bloom-gateway Service
+    annotations: {}
+    # -- Additional labels for bloom-gateway Service
+    labels: {}
+    # -- Service Type for bloom-gateway Service
+    type: "ClusterIP"
+    # -- trafficDistribution for bloom-gateway Service
+    trafficDistribution: ""
+    # -- Session affinity for bloom-gateway Service
+    sessionAffinity: ""
+    # -- Session affinity config for bloom-gateway Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the bloom-gateway service. This allows bloom-gateway to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the bloom-gateway
   extraArgs: []
   # -- Environment variables to add to the bloom-gateway pods
@@ -2760,6 +2976,7 @@ bloomGateway:
   # -- Tolerations for bloom-gateway pods
   tolerations: []
   # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+  # @deprecated -- This option is deprecated in favor of `bloomGateway.service.appProtocol`
   appProtocol:
     grpc: ""
   persistence:
@@ -2846,9 +3063,28 @@ bloomPlanner:
               app.kubernetes.io/instance: '{{ .Release.Name }}'
           topologyKey: kubernetes.io/hostname
   # -- Labels for bloom-planner service
+  # @deprecated -- This option is deprecated in favor of `bloomPlanner.service.labels`
   serviceLabels: {}
   # -- Annotations for bloom-planner service
+  # @deprecated -- This option is deprecated in favor of `bloomPlanner.service.annotations`
   serviceAnnotations: {}
+  service:
+    # -- Annotations for bloom-planner Service
+    annotations: {}
+    # -- Additional labels for bloom-planner Service
+    labels: {}
+    # -- Service Type for bloom-planner Service
+    type: "ClusterIP"
+    # -- trafficDistribution for bloom-planner Service
+    trafficDistribution: ""
+    # -- Session affinity for bloom-planner Service
+    sessionAffinity: ""
+    # -- Session affinity config for bloom-planner Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the bloom-planner service. This allows bloom-planner to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the bloom-planner
   extraArgs: []
   # -- Environment variables to add to the bloom-planner pods
@@ -2878,6 +3114,7 @@ bloomPlanner:
   # -- Tolerations for bloom-planner pods
   tolerations: []
   # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+  # @deprecated -- This option is deprecated in favor of `bloomPlanner.service.appProtocol`
   appProtocol:
     grpc: ""
   persistence:
@@ -2979,9 +3216,28 @@ bloomBuilder:
   # -- Annotations for bloom-builder pods
   podAnnotations: {}
   # -- Labels for bloom-builder service
+  # @deprecated -- This option is deprecated in favor of `bloomBuilder.service.labels`
   serviceLabels: {}
   # -- Annotations for bloom-builder service
+  # @deprecated -- This option is deprecated in favor of `bloomBuilder.service.annotations`
   serviceAnnotations: {}
+  service:
+    # -- Annotations for bloom-builder Service
+    annotations: {}
+    # -- Additional labels for bloom-builder Service
+    labels: {}
+    # -- Service Type for bloom-builder Service
+    type: "ClusterIP"
+    # -- trafficDistribution for bloom-builder Service
+    trafficDistribution: ""
+    # -- Session affinity for bloom-builder Service
+    sessionAffinity: ""
+    # -- Session affinity config for bloom-builder Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the bloom-builder service. This allows bloom-builder to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the bloom-builder
   extraArgs: []
   # -- Environment variables to add to the bloom-builder pods
@@ -3019,6 +3275,7 @@ bloomBuilder:
   # -- Tolerations for bloom-builder pods
   tolerations: []
   # -- Adds the appProtocol field to the queryFrontend service. This allows bloomBuilder to work with istio protocol selection.
+  # @deprecated -- This option is deprecated in favor of `bloomBuilder.service.appProtocol`
   appProtocol:
     # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
     grpc: ""
@@ -3094,10 +3351,6 @@ patternIngester:
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: null
-  # -- Labels for pattern ingester service
-  serviceLabels: {}
-  # -- Annotations for pattern ingester service
-  serviceAnnotations: {}
   # -- Additional CLI args for the pattern ingester
   extraArgs: []
   # -- Environment variables to add to the pattern ingester pods
@@ -3214,9 +3467,28 @@ ruler:
   # -- Annotations for ruler pods
   podAnnotations: {}
   # -- Labels for ruler service
+  # @deprecated -- This option is deprecated in favor of `ruler.service.labels`
   serviceLabels: {}
   # -- Annotations for ruler service
+  # @deprecated -- This option is deprecated in favor of `ruler.service.annotations`
   serviceAnnotations: {}
+  service:
+    # -- Annotations for ruler Service
+    annotations: {}
+    # -- Additional labels for ruler Service
+    labels: {}
+    # -- Service Type for ruler Service
+    type: "ClusterIP"
+    # -- trafficDistribution for ruler Service
+    trafficDistribution: ""
+    # -- Session affinity for ruler Service
+    sessionAffinity: ""
+    # -- Session affinity config for ruler Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the ruler service. This allows ruler to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the ruler
   extraArgs: []
   # -- Environment variables to add to the ruler pods
@@ -3281,6 +3553,7 @@ ruler:
     # -- Labels for ruler PVCs
     labels: {}
   # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+  # @deprecated -- This option is deprecated in favor of `ruler.service.appProtocol`
   appProtocol:
     grpc: ""
   # -- Directories containing rules files. If used, you must also configure `loki.rulerConfig.storage` to use local storage.
@@ -3381,9 +3654,28 @@ overridesExporter:
   # -- Annotations for overrides-exporter pods
   podAnnotations: {}
   # -- Labels for overrides-exporter service
+  # @deprecated -- This option is deprecated in favor of `overridesExporter.service.labels`
   serviceLabels: {}
   # -- Annotations for overrides-exporter service
+  # @deprecated -- This option is deprecated in favor of `overridesExporter.service.annotations`
   serviceAnnotations: {}
+  service:
+    # -- Annotations for overrides-exporter Service
+    annotations: {}
+    # -- Additional labels for overrides-exporter Service
+    labels: {}
+    # -- Service Type for overrides-exporter Service
+    type: "ClusterIP"
+    # -- trafficDistribution for overrides-exporter Service
+    trafficDistribution: ""
+    # -- Session affinity for overrides-exporter Service
+    sessionAffinity: ""
+    # -- Session affinity config for overrides-exporter Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the overrides-exporter service. This allows overrides-exporter to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the overrides-exporter
   extraArgs: []
   # -- Environment variables to add to the overrides-exporter pods
@@ -3424,6 +3716,7 @@ overridesExporter:
   # -- Tolerations for overrides-exporter pods
   tolerations: []
   # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+  # @deprecated -- This option is deprecated in favor of `overridesExporter.service.appProtocol`
   appProtocol:
     grpc: ""
 
@@ -4241,6 +4534,18 @@ tableManager:
     annotations: {}
     # -- Additional labels for table-manager Service
     labels: {}
+    # -- Service Type for table-manager Service
+    type: "ClusterIP"
+    # -- trafficDistribution for table-manager Service
+    trafficDistribution: ""
+    # -- Session affinity for table-manager Service
+    sessionAffinity: ""
+    # -- Session affinity config for table-manager Service
+    sessionAffinityConfig: {}
+    # -- Adds the appProtocol field to the table-manager service. This allows table-manager to work with istio protocol selection.
+    appProtocol:
+      # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
   # -- Additional CLI args for the table-manager
   extraArgs: []
   # -- Environment variables to add to the table-manager pods
