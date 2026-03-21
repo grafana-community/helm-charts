@@ -59,6 +59,62 @@ imagePullSecrets: []
 deploymentMode: SimpleScalable
 # -- Labels to be added to resources
 commonLabels: {}
+
+######################################################################################################################
+#
+# Defaults applied to all loki configurations
+# Current supported scope: bloom-builder
+#
+######################################################################################################################
+defaults:
+  # -- DNSConfig for loki pods
+  dnsConfig: {}
+  # -- hostAliases for loki pods
+  hostAliases: []
+  #  - ip: 1.2.3.4
+  #    hostnames:
+  #      - domain.tld
+  # -- Use the host's user namespace for loki pods
+  hostUsers: nil
+  # -- The name of the PriorityClass for loki pods
+  priorityClassName: null
+  # -- The SecurityContext for loki pods
+  podSecurityContext:
+    fsGroup: 101
+    runAsGroup: 101
+    runAsNonRoot: true
+    runAsUser: 101
+  # -- Grace period to allow the gateway to shutdown before it is killed
+  terminationGracePeriodSeconds: 30
+  # -- Command to execute instead of defined in Docker image
+  command: null
+  # -- Common additional CLI arguments for loki pods
+  extraArgs: []
+  # -- Common environment variables to add to all pods directly managed by this chart.
+  extraEnv: []
+  # -- Common source of environment injections to add to all pods directly managed by this chart.
+  # For example to inject values from a Secret, use:
+  # extraEnvFrom:
+  #   - secretRef:
+  #       name: mysecret
+  extraEnvFrom: []
+  # -- Common volumes to add to all pods directly managed by this chart.
+  extraVolumes: []
+  # -- Common mount points to add to all pods directly managed by this chart.
+  extraVolumeMounts: []
+  # -- The SecurityContext for Loki containers for loki pods
+  containerSecurityContext: {}
+  # -- Configures the liveness probe for loki pods
+  livenessProbe: {}
+  # -- Configures the readiness probe for loki pods
+  readinessProbe: {}
+  # -- Configures the startup probe for loki pods
+  startupProbe: {}
+  # -- Node selector for loki pods
+  nodeSelector: {}
+  # -- Tolerations for loki pods
+  tolerations: []
+
 ######################################################################################################################
 #
 # Base Loki Configs including kubernetes configurations and configurations for Loki itself,
@@ -2925,9 +2981,6 @@ bloomBuilder:
     annotations: {}
     # -- Labels for the generated volumeClaimTemplate.
     labels: {}
-    # -- Parameters used for the `data` volume when persistence is disabled.
-    dataVolumeParameters:
-      emptyDir: {}
 
 # -- Configuration for the pattern ingester
 patternIngester:
