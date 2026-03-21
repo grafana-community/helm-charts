@@ -20,7 +20,7 @@ spec:
       partition: 0
   serviceName: {{ include "loki.patternIngesterFullname" . }}-headless
   revisionHistoryLimit: {{ .Values.loki.revisionHistoryLimit }}
-  {{- if and (semverCompare ">= 1.23-0" (include "loki.kubeVersion" .)) (.Values.patternIngester.persistence.enableStatefulSetAutoDeletePVC)  }}
+  {{- if and (.Values.patternIngester.persistence.enableStatefulSetAutoDeletePVC)  }}
   persistentVolumeClaimRetentionPolicy:
     whenDeleted: {{ .Values.patternIngester.persistence.whenDeleted }}
     whenScaled: {{ .Values.patternIngester.persistence.whenScaled }}
@@ -115,10 +115,6 @@ spec:
               mountPath: /etc/loki/runtime-config
             - name: data
               mountPath: /var/loki
-            {{- if .Values.enterprise.enabled }}
-            - name: license
-              mountPath: /etc/loki/license
-            {{- end }}
             {{- with (concat .Values.global.extraVolumeMounts .Values.patternIngester.extraVolumeMounts) | uniq }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -153,15 +149,6 @@ spec:
         - name: runtime-config
           configMap:
             name: {{ template "loki.name" . }}-runtime
-        {{- if .Values.enterprise.enabled }}
-        - name: license
-          secret:
-          {{- if .Values.enterprise.useExternalLicense }}
-            secretName: {{ .Values.enterprise.externalLicenseName }}
-          {{- else }}
-            secretName: enterprise-logs-license
-          {{- end }}
-        {{- end }}
         {{- if not .Values.patternIngester.persistence.enabled }}
         - name: data
           emptyDir: {}
