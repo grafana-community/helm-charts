@@ -61,7 +61,7 @@ spec:
           image: {{ include "loki.gatewayImage" . }}
           imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
           ports:
-            - name: http-metrics
+            - name: http
               containerPort: {{ .Values.gateway.containerPort }}
               protocol: TCP
           {{- with .Values.gateway.extraEnv }}
@@ -106,6 +106,49 @@ spec:
             {{- end }}
           resources:
             {{- toYaml .Values.gateway.resources | nindent 12 }}
+      {{- if .Values.accessLogExporter.enabled }}
+        - name: exporter
+          {{- $dict := dict "service" .Values.accessLogExporter.image "global" .Values.global }}
+          image: {{ include "loki.baseImage" $dict }}
+          imagePullPolicy: {{ .Values.accessLogExporter.image.pullPolicy }}
+          ports:
+            - containerPort: 4040
+              name: http-metrics
+            - containerPort: 8514
+              name: syslog
+          args:
+            - --nginx.scrape-url
+            - http://127.0.0.1:{{ .Values.gateway.containerPort }}/stub_status
+            - --preset
+            - loki
+            {{- with .Values.accessLogExporter.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.accessLogExporter.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.accessLogExporter.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.accessLogExporter.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.accessLogExporter.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.accessLogExporter.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /config.yaml
+              subPath: access-log-exporter.yaml
+      {{- end }}
         {{- if .Values.gateway.extraContainers }}
         {{- toYaml .Values.gateway.extraContainers | nindent 8}}
         {{- end }}
