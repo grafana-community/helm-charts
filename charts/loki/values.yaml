@@ -2,7 +2,7 @@
 # This is useful when using `helm template`, because then helm will use the client version of kubectl as the Kubernetes version,
 # which may or may not match your cluster's server version. Example: 'v1.24.4'. Set to null to use the version that helm
 # devises.
-kubeVersionOverride: null
+kubeVersionOverride: ""
 
 global:
   # -- Overrides the Docker registry globally for all images (standard format)
@@ -38,13 +38,13 @@ global:
   # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraVolumeMounts: []
 # -- Overrides the chart's name
-nameOverride: null
+nameOverride: ""
 # -- Overrides the chart's computed fullname
-fullnameOverride: null
+fullnameOverride: ""
 # -- Overrides the chart's namespace
-namespaceOverride: null
+namespaceOverride: ""
 # -- Overrides the chart's cluster label
-clusterLabelOverride: null
+clusterLabelOverride: ""
 # -- Image pull secrets for Docker images
 imagePullSecrets: []
 # -- Deployment mode lets you specify how to deploy Loki.
@@ -75,9 +75,9 @@ defaults:
   #    hostnames:
   #      - domain.tld
   # -- Use the host's user namespace for loki pods
-  hostUsers: nil
+  hostUsers: null
   # -- The name of the PriorityClass for loki pods
-  priorityClassName: null
+  priorityClassName: ""
   # -- The SecurityContext for loki pods
   podSecurityContext:
     fsGroup: 101
