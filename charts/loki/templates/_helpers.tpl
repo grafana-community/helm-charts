@@ -10,7 +10,7 @@ See https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#sy
 Expand the name of the chart.
 */}}
 {{- define "loki.name" -}}
-{{- $name := ternary "enterprise-logs" "loki" .Values.enterprise.enabled }}
+{{- $name := .Chart.Name }}
 {{- if .Values.nameOverride }}
 {{- $name = (tpl .Values.nameOverride $) }}
 {{- end }}
@@ -195,18 +195,10 @@ Docker image name for Loki
 {{- end -}}
 
 {{/*
-Docker image name for enterprise logs
-*/}}
-{{- define "loki.enterpriseImage" -}}
-{{- $dict := dict "service" .Values.enterprise.image "global" .Values.global "defaultVersion" .Values.enterprise.version -}}
-{{- include "loki.baseImage" $dict -}}
-{{- end -}}
-
-{{/*
 Docker image name
 */}}
 {{- define "loki.image" -}}
-{{- if .Values.enterprise.enabled -}}{{- include "loki.enterpriseImage" . -}}{{- else -}}{{- include "loki.lokiImage" . -}}{{- end -}}
+{{- include "loki.lokiImage" . -}}
 {{- end -}}
 
 {{/*
@@ -418,85 +410,6 @@ ruler:
 {{- end }}
 {{- end }}
 
-{{/* Enterprise Logs Admin API storage config */}}
-{{- define "enterprise-logs.adminAPIStorageConfig" }}
-storage:
-  {{- if .Values.loki.storage.use_thanos_objstore }}
-  backend: {{ .Values.loki.storage.object_store.type }}
-    {{- include "loki.thanosStorageConfig" (dict "ctx" . "bucketName" .Values.loki.storage.bucketNames.admin) | nindent 2 }}
-  {{- else if .Values.minio.enabled }}
-  backend: "s3"
-  s3:
-    bucket_name: admin
-  {{- else if eq .Values.loki.storage.type "s3" -}}
-  {{- with .Values.loki.storage.s3 }}
-  backend: "s3"
-  s3:
-    bucket_name: {{ $.Values.loki.storage.bucketNames.admin }}
-  {{- end -}}
-  {{- else if eq .Values.loki.storage.type "gcs" -}}
-  {{- with .Values.loki.storage.gcs }}
-  backend: "gcs"
-  gcs:
-    bucket_name: {{ $.Values.loki.storage.bucketNames.admin }}
-  {{- end -}}
-  {{- else if eq .Values.loki.storage.type "azure" -}}
-  {{- with .Values.loki.storage.azure }}
-  backend: "azure"
-  azure:
-    account_name: {{ .accountName }}
-    {{- with .accountKey }}
-    account_key: {{ . }}
-    {{- end }}
-    {{- with .connectionString }}
-    connection_string: {{ . }}
-    {{- end }}
-    container_name: {{ $.Values.loki.storage.bucketNames.admin }}
-    {{- with .endpointSuffix }}
-    endpoint_suffix: {{ . }}
-    {{- end }}
-  {{- end -}}
-  {{- else if eq .Values.loki.storage.type "swift" -}}
-  {{- with .Values.loki.storage.swift }}
-  backend: "swift"
-  swift:
-    {{- with .auth_version }}
-    auth_version: {{ . }}
-    {{- end }}
-    auth_url: {{ .auth_url }}
-    {{- with .internal }}
-    internal: {{ . }}
-    {{- end }}
-    username: {{ .username }}
-    user_domain_name: {{ .user_domain_name }}
-    {{- with .user_domain_id }}
-    user_domain_id: {{ . }}
-    {{- end }}
-    {{- with .user_id }}
-    user_id: {{ . }}
-    {{- end }}
-    password: {{ .password }}
-    {{- with .domain_id }}
-    domain_id: {{ . }}
-    {{- end }}
-    domain_name: {{ .domain_name }}
-    project_id: {{ .project_id }}
-    project_name: {{ .project_name }}
-    project_domain_id: {{ .project_domain_id }}
-    project_domain_name: {{ .project_domain_name }}
-    region_name: {{ .region_name }}
-    container_name: {{ .container_name }}
-    max_retries: {{ .max_retries | default 3 }}
-    connect_timeout: {{ .connect_timeout | default "10s" }}
-    request_timeout: {{ .request_timeout | default "5s" }}
-  {{- end -}}
-  {{- else }}
-  backend: "filesystem"
-  filesystem:
-    dir: {{ .Values.loki.storage.filesystem.admin_api_directory }}
-  {{- end -}}
-{{- end }}
-
 {{/*
 Calculate the config from structured and unstructured text input
 */}}
@@ -547,40 +460,6 @@ Memcached Exporter Docker image
 {{/* Allow KubeVersion to be overridden. */}}
 {{- define "loki.kubeVersion" -}}
   {{- default .Capabilities.KubeVersion.Version .Values.kubeVersionOverride -}}
-{{- end -}}
-
-{{/*
-Return the appropriate apiVersion for ingress.
-*/}}
-{{- define "loki.ingress.apiVersion" -}}
-  {{- if and (.Capabilities.APIVersions.Has "networking.k8s.io/v1") (semverCompare ">= 1.19-0" (include "loki.kubeVersion" .)) -}}
-      {{- print "networking.k8s.io/v1" -}}
-  {{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" -}}
-    {{- print "networking.k8s.io/v1beta1" -}}
-  {{- else -}}
-    {{- print "extensions/v1beta1" -}}
-  {{- end -}}
-{{- end -}}
-
-{{/*
-Return if ingress is stable.
-*/}}
-{{- define "loki.ingress.isStable" -}}
-  {{- eq (include "loki.ingress.apiVersion" .) "networking.k8s.io/v1" -}}
-{{- end -}}
-
-{{/*
-Return if ingress supports ingressClassName.
-*/}}
-{{- define "loki.ingress.supportsIngressClassName" -}}
-  {{- or (eq (include "loki.ingress.isStable" .) "true") (and (eq (include "loki.ingress.apiVersion" .) "networking.k8s.io/v1beta1") (semverCompare ">= 1.18-0" (include "loki.kubeVersion" .))) -}}
-{{- end -}}
-
-{{/*
-Return if ingress supports pathType.
-*/}}
-{{- define "loki.ingress.supportsPathType" -}}
-  {{- or (eq (include "loki.ingress.isStable" .) "true") (and (eq (include "loki.ingress.apiVersion" .) "networking.k8s.io/v1beta1") (semverCompare ">= 1.18-0" (include "loki.kubeVersion" .))) -}}
 {{- end -}}
 
 {{/*
@@ -656,23 +535,14 @@ Params:
   paths = list of url paths to allow ingress for
 */}}
 {{- define "loki.ingress.servicePath" -}}
-{{- $ingressApiIsStable := eq (include "loki.ingress.isStable" .ctx) "true" -}}
-{{- $ingressSupportsPathType := eq (include "loki.ingress.supportsPathType" .ctx) "true" -}}
 {{- range .paths }}
 - path: {{ . }}
-  {{- if $ingressSupportsPathType }}
   pathType: Prefix
-  {{- end }}
   backend:
-    {{- if $ingressApiIsStable }}
     service:
       name: {{ $.serviceName }}
       port:
         number: {{ $.ctx.Values.loki.server.http_listen_port }}
-    {{- else }}
-    serviceName: {{ $.serviceName }}
-    servicePort: {{ $.ctx.Values.loki.server.http_listen_port }}
-    {{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -717,27 +587,6 @@ Create the service endpoint including port for MinIO.
 {{/* Determine the public endpoint for the Loki cluster */}}
 {{- define "loki.address" -}}
 {{- printf "http://%s" (include "loki.host" . ) -}}
-{{- end -}}
-
-{{/* Name of the cluster */}}
-{{- define "loki.clusterName" -}}
-{{- $name := .Values.enterprise.cluster_name | default .Release.Name }}
-{{- printf "%s" $name -}}
-{{- end -}}
-
-{{/* Name of kubernetes secret to persist GEL admin token to */}}
-{{- define "enterprise-logs.adminTokenSecret" }}
-{{- .Values.enterprise.adminToken.secret | default (printf "%s-admin-token" (include "loki.name" . )) -}}
-{{- end -}}
-
-{{/* Prefix for provisioned secrets created for each provisioned tenant */}}
-{{- define "enterprise-logs.provisionedSecretPrefix" }}
-{{- .Values.enterprise.provisioner.provisionedSecretPrefix | default (printf "%s-provisioned" (include "loki.name" . )) -}}
-{{- end -}}
-
-{{/* Name of kubernetes secret to persist canary credentials in */}}
-{{- define "enterprise-logs.selfMonitoringTenantSecret" }}
-{{- .Values.enterprise.canarySecret | default (printf "%s-%s" (include "enterprise-logs.provisionedSecretPrefix" . ) .Values.monitoring.selfMonitoring.tenant.name) -}}
 {{- end -}}
 
 {{/* Snippet for the nginx file used by gateway */}}
@@ -1052,23 +901,6 @@ http {
       proxy_pass       {{ $ingesterUrl }}$request_uri;
     }
 
-    {{- if and .Values.enterprise.enabled .Values.enterprise.adminApi.enabled }}
-    # Admin API
-    location ^~ /admin/api/ {
-      {{- with .Values.gateway.nginxConfig.locationSnippet }}
-      {{- tpl . $ | nindent 6 }}
-      {{- end }}
-      proxy_pass       {{ $backendUrl }}$request_uri;
-    }
-    location = /admin/api {
-      {{- with .Values.gateway.nginxConfig.locationSnippet }}
-      {{- tpl . $ | nindent 6 }}
-      {{- end }}
-      internal;        # to suppress 301
-    }
-    {{- end }}
-
-
     # QueryFrontend, Querier
     location = /api/prom/tail {
       proxy_set_header Upgrade $http_upgrade;
@@ -1122,12 +954,10 @@ http {
 
 {{/* Configure enableServiceLinks in pod */}}
 {{- define "loki.enableServiceLinks" -}}
-{{- if semverCompare ">=1.13-0" (include "loki.kubeVersion" .) -}}
 {{- if or (.Values.loki.enableServiceLinks) (ne .Values.loki.enableServiceLinks false) -}}
 enableServiceLinks: true
 {{- else -}}
 enableServiceLinks: false
-{{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -1218,16 +1048,6 @@ enableServiceLinks: false
 checksum/config: {{ include "loki.configMapOrSecretContentHash" (dict "ctx" . "name" "/config.yaml") }}
 {{- end -}}
 
-{{/*
-Return the appropriate apiVersion for PodDisruptionBudget.
-*/}}
-{{- define "loki.pdb.apiVersion" -}}
-  {{- if and (.Capabilities.APIVersions.Has "policy/v1") (semverCompare ">=1.21-0" (include "loki.kubeVersion" .)) -}}
-    {{- print "policy/v1" -}}
-  {{- else -}}
-    {{- print "policy/v1beta1" -}}
-  {{- end -}}
-{{- end -}}
 
 {{/*
 Return the object store type for use with the test schema.
@@ -1244,13 +1064,7 @@ Return the object store type for use with the test schema.
 Return the appropriate apiVersion for HorizontalPodAutoscaler.
 */}}
 {{- define "loki.hpa.apiVersion" -}}
-  {{- if and (.Capabilities.APIVersions.Has "autoscaling/v2") (semverCompare ">= 1.19-0" (include "loki.kubeVersion" .)) -}}
-      {{- print "autoscaling/v2" -}}
-  {{- else if .Capabilities.APIVersions.Has "autoscaling/v2beta2" -}}
-    {{- print "autoscaling/v2beta2" -}}
-  {{- else -}}
-    {{- print "autoscaling/v2beta1" -}}
-  {{- end -}}
+  {{- print "autoscaling/v2" -}}
 {{- end -}}
 
 {{/*
@@ -1286,9 +1100,5 @@ storage_prefix: {{ .storage_prefix }}
 Pod security context
 */}}
 {{- define "loki.podSecurityContext" -}}
-{{- if semverCompare ">=1.23-0" $.Capabilities.KubeVersion.GitVersion }}
 {{- toYaml .Values.loki.podSecurityContext }}
-{{- else }}
-{{- toYaml (omit .Values.loki.podSecurityContext "fsGroupChangePolicy")  }}
-{{- end }}
 {{- end -}}
