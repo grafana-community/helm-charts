@@ -57,9 +57,9 @@ spec:
             - -labelname={{ .labelname }}
             - -labelvalue=$(POD_NAME)
             {{- if $.Values.loki.auth_enabled }}
-            - -user={{ $.Values.monitoring.selfMonitoring.tenant.name }}
-            - -tenant-id={{ $.Values.monitoring.selfMonitoring.tenant.name }}
-            - -pass={{ $.Values.monitoring.selfMonitoring.tenant.password }}
+            - -user={{ $.Values.monitoring.selfMonitoring.tenant.name | default $.Values.lokiCanary.tenant.name }}
+            - -tenant-id={{ $.Values.monitoring.selfMonitoring.tenant.name | default $.Values.lokiCanary.tenant.name }}
+            - -pass={{ $.Values.monitoring.selfMonitoring.tenant.password | default $.Values.lokiCanary.tenant.name }}
             {{- end }}
             {{- if .push }}
             - -push=true
