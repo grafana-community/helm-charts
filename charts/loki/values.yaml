@@ -3180,6 +3180,11 @@ bloomBuilder:
   appProtocol:
     # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
     grpc: ""
+  # -- Update strategy for bloom-builder deployment
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
 
 # -- Configuration for the pattern ingester
 patternIngester:
