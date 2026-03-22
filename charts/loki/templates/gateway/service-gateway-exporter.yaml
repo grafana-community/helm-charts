@@ -1,4 +1,4 @@
-{{- if and .Values.gateway.enabled .Values.accessLogExporter.enabled }}
+{{- if and .Values.gateway.enabled .Values.gateway.metrics.enabled }}
 apiVersion: v1
 kind: Service
 metadata:

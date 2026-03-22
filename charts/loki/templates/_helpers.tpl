@@ -618,7 +618,7 @@ http {
   default_type application/octet-stream;
   log_format   {{ .Values.gateway.nginxConfig.logFormat }}
 
-  {{- if .Values.accessLogExporter.enabled }}
+  {{- if .Values.gateway.metrics.enabled }}
   # Exclude specific requests from logging
   map $request_uri $track {
     default 1;

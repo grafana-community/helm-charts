@@ -9,7 +9,7 @@ metadata:
 data:
   nginx.conf: |
     {{- tpl .Values.gateway.nginxConfig.file . | nindent 4 }}
-  {{- if .Values.accessLogExporter.enabled }}
+  {{- if .Values.gateway.metrics.enabled }}
   access-log-exporter.yaml: |
     presets:
       loki:

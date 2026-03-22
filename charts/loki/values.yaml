@@ -1127,48 +1127,48 @@ gateway:
     file: |
       {{- include "loki.nginxFile" . -}}
 
-accessLogExporter:
-  # -- Whether gateway metrics should be exported
-  enabled: true
-  image:
-    repository: "ghcr.io/jkroepke/access-log-exporter"
-    tag: "0.3.7"
-    pullPolicy: IfNotPresent
-  resources:
-    requests: {}
-    limits: {}
-  # -- The SecurityContext for memcached exporter containers
-  containerSecurityContext:
-    allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop: ["all"]
-    privileged: false
-    runAsNonRoot: true
-    runAsUser: 65532
-    runAsGroup: 65532
-  # -- Extra args to add to the exporter container.
-  extraArgs: []
-  # -- Liveness probe for memcached exporter
-  livenessProbe:
-    httpGet:
-      path: /health
-      port: http-metrics
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 3
-  # -- Readiness probe for memcached exporter
-  readinessProbe:
-    httpGet:
-      path: /health
-      port: http-metrics
-    initialDelaySeconds: 5
-    periodSeconds: 5
-    timeoutSeconds: 3
-    failureThreshold: 3
-  # -- Startup probe for memcached exporter
-  startupProbe: {}
+  metrics:
+    # -- Whether gateway metrics should be exported
+    enabled: true
+    image:
+      repository: "ghcr.io/jkroepke/access-log-exporter"
+      tag: "0.3.7"
+      pullPolicy: IfNotPresent
+    resources:
+      requests: {}
+      limits: {}
+    # -- The SecurityContext for memcached exporter containers
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: ["all"]
+      privileged: false
+      runAsNonRoot: true
+      runAsUser: 65532
+      runAsGroup: 65532
+    # -- Extra args to add to the exporter container.
+    extraArgs: []
+    # -- Liveness probe for memcached exporter
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: http-metrics
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    # -- Readiness probe for memcached exporter
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: http-metrics
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+    # -- Startup probe for memcached exporter
+    startupProbe: {}
 
 # -- Ingress configuration Use either this ingress or the gateway, but not both at once.
 # If you enable this, make sure to disable the gateway.

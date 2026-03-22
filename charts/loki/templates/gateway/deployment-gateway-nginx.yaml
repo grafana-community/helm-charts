@@ -106,11 +106,11 @@ spec:
             {{- end }}
           resources:
             {{- toYaml .Values.gateway.resources | nindent 12 }}
-      {{- if .Values.accessLogExporter.enabled }}
+      {{- if .Values.gateway.metrics.enabled }}
         - name: exporter
-          {{- $dict := dict "service" .Values.accessLogExporter.image "global" .Values.global }}
+          {{- $dict := dict "service" .Values.gateway.metrics.image "global" .Values.global }}
           image: {{ include "loki.baseImage" $dict }}
-          imagePullPolicy: {{ .Values.accessLogExporter.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.gateway.metrics.image.pullPolicy }}
           ports:
             - containerPort: 4040
               name: http-metrics
@@ -121,26 +121,26 @@ spec:
             - http://127.0.0.1:{{ .Values.gateway.containerPort }}/stub_status
             - --preset
             - loki
-            {{- with .Values.accessLogExporter.extraArgs }}
+            {{- with .Values.gateway.metrics.extraArgs }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.accessLogExporter.resources }}
+          {{- with .Values.gateway.metrics.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.accessLogExporter.containerSecurityContext }}
+          {{- with .Values.gateway.metrics.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.accessLogExporter.readinessProbe }}
+          {{- with .Values.gateway.metrics.readinessProbe }}
           readinessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.accessLogExporter.livenessProbe }}
+          {{- with .Values.gateway.metrics.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.accessLogExporter.startupProbe }}
+          {{- with .Values.gateway.metrics.startupProbe }}
           startupProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
