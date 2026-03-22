@@ -2261,6 +2261,8 @@ gateway:
     serverSnippet: ''
     # -- Allows appending custom configuration to the http block
     httpSnippet: ''
+    # -- Whether ssl should be appended to the listen directive of the server block or not.
+    ssl: false
     # -- Allows overriding the DNS resolver address nginx will use
     resolver: ''
     # -- Config file contents for Nginx. Passed through the `tpl` function to allow templating
@@ -2311,7 +2313,7 @@ gateway:
         {{- end }}
 
         server {
-          listen             8080;
+          listen             8080 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
 
           {{- if .Values.streamOverHTTPEnabled }}
           http2 on;
@@ -2389,7 +2391,7 @@ gateway:
         {{- if .Values.traces.otlp.grpc.enabled }}
         # OTLP gRPC
         server {
-          listen               {{ .Values.traces.otlp.grpc.port }} http2;
+          listen               {{ .Values.traces.otlp.grpc.port }} http2 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
 
           {{- if .Values.gateway.basicAuth.enabled }}
           auth_basic           "Tempo";
