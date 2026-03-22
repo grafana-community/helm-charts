@@ -4279,18 +4279,8 @@ monitoring:
       grafana_dashboard: "1"
   # -- Recording rules for monitoring Loki, required for some dashboards
   rules:
-    # -- If enabled, create PrometheusRule resource with Loki recording rules
+    # -- If enabled, create PrometheusRule resources with Loki recording rules
     enabled: false
-    # -- Include alerting rules
-    alerting: true
-    # -- Specify which individual alerts should be disabled
-    # -- Instead of turning off each alert one by one, set the .monitoring.rules.alerting value to false instead.
-    # -- If you disable all the alerts and keep .monitoring.rules.alerting set to true, the chart will fail to render.
-    #
-    # -- DEPRECATED: use monitoring.rules.configs.*.enabled instead
-    disabled: {}
-    #  LokiRequestErrors: true
-    #  LokiRequestPanics: true
 
     configs:
       LokiRequestErrors:
@@ -4370,16 +4360,6 @@ monitoring:
     scheme: http
     # -- ServiceMonitor will use these tlsConfig settings to make the health check requests
     tlsConfig: null
-    # -- DEPRECATED If defined, will create a MetricsInstance for the Grafana Agent Operator.
-    metricsInstance:
-      # -- If enabled, MetricsInstance resources for Grafana Agent Operator are created
-      enabled: true
-      # -- MetricsInstance annotations
-      annotations: {}
-      # -- Additional MetricsInstance labels
-      labels: {}
-      # -- If defined a MetricsInstance will be created to remote write metrics.
-      remoteWrite: null
 
 # -- DEPRECATED Configuration for the table-manager. The table-manager is only necessary when using a deprecated
 # index type such as Cassandra, Bigtable, or DynamoDB, it has not been necessary since loki introduced self-
