@@ -12,6 +12,35 @@ All charts live under `charts/` with a subfolder for each chart.  The subfolder 
 
 Each chart follows standard Helm structure (`Chart.yaml`, `values.yaml`, `templates/`). Some charts will organize components into subdirectories (e.g., `templates/compactor/`, `templates/ingester/`).
 
+## Helm Chart Design
+
+Charts should be written idiomatically and favor the conventions that Helm users encounter daily. Templates must be readable by anyone familiar with the Helm language without needing to trace complex call chains.
+
+### Named templates
+
+Named templates in `_helpers.tpl` should prefer receiving the standard `.` (dot) context. Typical helpers — chart name, fullname, labels, selectors, service account name, namespace override — all work with dot and should stay that way.
+
+For multi-component charts, passing a two-key dict is an accepted workaround since Helm templates only take one argument:
+
+```yaml
+{{- include "tempo.labels" (dict "ctx" . "component" "compactor") }}
+```
+
+Dicts with three or more keys, optional keyword arguments, and chained dict dispatches are not acceptable.
+
+### Anti-patterns
+
+Do not introduce these patterns into new or existing charts:
+
+- **Function-style templates with many parameters** — named templates that accept dicts with 3+ keys to simulate function signatures (e.g., `dict "ctx" $ "component" .component "rolloutZoneName" .zone "suffix" .suffix`).
+- **Render-then-parse** — templates that re-render other templates and parse the output (`include ... | fromYaml`) to inspect rendered resources at render time.
+- **Double-dispatch dict chains** — template A builds a dict and passes it to template B, which builds another dict for template C.
+- **Full resources inside helpers** — embedding complete Kubernetes resource manifests inside a named template. Helpers should produce YAML fragments (labels, annotations, env blocks), not entire resources. The exception is shared library patterns in `lib/` directories, which are designed to emit full resources.
+
+### Scope
+
+These conventions apply to all new and incoming charts. Existing charts should be refactored toward compliance over time.
+
 ## pre-commit testing
 
 ### helm-unittests
