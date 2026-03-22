@@ -5054,6 +5054,43 @@ monitoring:
     # -- Labels for the dashboards ConfigMap
     labels:
       grafana_dashboard: "1"
+    multiCluster:
+      # -- Enable multi-cluster support for the dashboards.
+      enabled: false
+
+    # -- Timezone for the default dashboards
+    defaultDashboardsTimezone: utc
+
+    # -- Editable flag for the default dashboards
+    defaultDashboardsEditable: true
+
+    # -- Default interval for Grafana dashboards
+    defaultDashboardsInterval: 1m
+
+    grafanaOperator:
+      # -- If enabled, GrafanaOperator resources for Grafana Operator are created to deploy the dashboards.
+      enabled: false
+
+      # -- How frequently the operator should resync resources (in duration format)
+      resyncPeriod: 10m
+
+      # -- Which folder contains all dashboards in Grafana
+      ## This folder will be created on the Root level
+      ## Only one of 'folder', 'folderUID' or 'folderRef' can be set
+      ##
+      folder: General
+
+      # -- Which UID of the target folder contains all dashboards in Grafana
+      ## This allows you to use subfolder hierarchy
+      ## Only one of 'folder', 'folderUID' or 'folderRef' can be set
+      ##
+      folderUID: null
+
+      # -- Which GrafanaFolder reference contains all dashboards in Grafana
+      ## This allows you to use subfolder hierarchy.
+      ## Only one of 'folder', 'folderUID' or 'folderRef' can be set
+      ##
+      folderRef: null
   # -- Recording rules for monitoring Loki, required for some dashboards
   rules:
     # -- If enabled, create PrometheusRule resources with Loki recording rules
@@ -5111,6 +5148,8 @@ monitoring:
     #       expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job, route)
     #     - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
     #       expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)
+
+    additionalAggregationLabels: []
   # -- ServiceMonitor configuration
   serviceMonitor:
     # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
