@@ -414,7 +414,32 @@ ruler:
 Calculate the config from structured and unstructured text input
 */}}
 {{- define "loki.calculatedConfig" -}}
-{{ tpl (mergeOverwrite (tpl .Values.loki.config . | fromYaml) .Values.loki.structuredConfig | toYaml) . }}
+{{- if .Values.newConfig }}
+{{- tpl (mergeOverwrite ((include "loki.newConfig" .) | fromYaml) (tpl .Values.extraConfig . | fromYaml) | toYaml) $ }}
+{{- else }}
+{{- tpl (mergeOverwrite (tpl .Values.loki.config . | fromYaml) .Values.loki.structuredConfig | toYaml) . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Calculate the config from structured and unstructured text input
+*/}}
+{{- define "loki.newConfig" -}}
+{{ $config := .Values.config }}
+{{- if .Values.chunksCache.enabled }}
+{{- $config = mergeOverwrite (dict "chunk_store_config" (dict "chunk_cache_config" (dict "memcached_client" (dict "addresses" (printf "dnssrvnoa+_memcached-client._tcp.%s.%s.svc.%s" (include "loki.resourceName" (dict "ctx" $ "component" "chunks-cache" "suffix" $.Values.chunksCache.suffix)) (include "loki.namespace" $) .Values.global.clusterDomain))))) $config }}
+  {{- if .Values.chunksCache.l2.enabled }}
+  {{- $config = mergeOverwrite (dict "chunk_store_config" (dict "l2_chunk_cache_handoff" "345600s")) $config }}
+  {{- $config = mergeOverwrite (dict "chunk_store_config" (dict "chunk_cache_config_l2" (dict "memcached_client" (dict "addresses" (printf "dnssrvnoa+_memcached-client._tcp.%s.%s.svc.%s" (include "loki.resourceName" (dict "ctx" $ "component" "chunks-cache" "suffix" $.Values.chunksCache.l2.suffix)) (include "loki.namespace" $) .Values.global.clusterDomain))))) $config }}
+  {{- end }}
+{{- end }}
+
+{{- if .Values.resultsCache.enabled }}
+{{- $config = mergeOverwrite (dict "query_range" (dict "cache_results" true)) $config }}
+{{- $config = mergeOverwrite (dict "query_range" (dict "results_cache" (dict "cache" (dict "memcached_client" (dict "addresses" (printf "dnssrvnoa+_memcached-client._tcp.%s.%s.svc.%s" (include "loki.resourceName" (dict "ctx" $ "component" "results-cache")) (include "loki.namespace" $) .Values.global.clusterDomain)))))) $config }}
+
+{{- end }}
+{{- tpl (toYaml $config) $ }}
 {{- end }}
 
 {{/*

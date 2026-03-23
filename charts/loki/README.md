@@ -52,4 +52,8 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ---
 
+## Usage
+
+See [Usage](./USAGE.md) for more information on how to use Loki.
+
 ## Upgrading
