@@ -22185,6 +22185,50 @@ entries:
   loki:
   - apiVersion: v2
     appVersion: 3.6.7
+    created: "2026-03-23T10:33:26.189765026Z"
+    dependencies:
+    - alias: minio
+      condition: minio.enabled
+      name: minio
+      repository: https://charts.min.io/
+      version: 5.4.0
+    - alias: grafana-agent-operator
+      condition: monitoring.selfMonitoring.grafanaAgent.installOperator
+      name: grafana-agent-operator
+      repository: https://grafana.github.io/helm-charts
+      version: 0.5.2
+    - alias: rollout_operator
+      condition: rollout_operator.enabled
+      name: rollout-operator
+      repository: https://grafana.github.io/helm-charts
+      version: 0.45.0
+    description: Helm chart for Grafana Loki supporting monolithic, simple scalable,
+      and microservices modes.
+    digest: aa221edf9d25d0f92774f9978a70dc831e8bac12695e202652ba7ba7dc834e30
+    home: https://grafana-community.github.io/helm-charts
+    icon: https://grafana.com/docs/loki/latest/logo_and_name.png
+    kubeVersion: '>=1.25.0-0'
+    maintainers:
+    - email: mike1118@live.com
+      name: Michael Timmerman
+      url: https://github.com/TheRealNoob
+    - email: github@jkroepke.de
+      name: Jan-Otto Kröpke
+      url: https://github.com/jkroepke
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    name: loki
+    sources:
+    - https://github.com/grafana/loki
+    - https://grafana.com/oss/loki/
+    - https://grafana.com/docs/loki/latest/
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/loki-8.1.3/loki-8.1.3.tgz
+    version: 8.1.3
+  - apiVersion: v2
+    appVersion: 3.6.7
     created: "2026-03-22T14:06:55.864017837Z"
     dependencies:
     - alias: minio
@@ -22534,7 +22578,7 @@ entries:
     version: 6.56.0
   - apiVersion: v2
     appVersion: 3.6.7
-    created: '2026-03-11T22:00:42.681460223Z'
+    created: "2026-03-11T22:00:42.681460223Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22551,7 +22595,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.43.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: f0026f251da5b49cea636a24143dbbadf15b39f51fc4639c9e0d08a4bc975ee3
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22569,7 +22614,7 @@ entries:
     version: 6.55.0
   - apiVersion: v2
     appVersion: 3.6.7
-    created: '2026-03-10T23:50:15.762875418Z'
+    created: "2026-03-10T23:50:15.762875418Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22586,7 +22631,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.43.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: fb6ec082ec8963f083fcf63b63a3000f8992c49f842f38072fd033aab297d27b
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22604,7 +22650,7 @@ entries:
     version: 6.54.0
   - apiVersion: v2
     appVersion: 3.6.5
-    created: '2026-02-10T15:03:16.763057836Z'
+    created: "2026-02-10T15:03:16.763057836Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22621,7 +22667,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.41.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 3a9dfcbbc5cca62c1a908793e9ae3efd4ce7efc99248233a728dc70abad948ce
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22639,7 +22686,7 @@ entries:
     version: 6.53.0
   - apiVersion: v2
     appVersion: 3.6.4
-    created: '2026-02-05T15:36:05.898891746Z'
+    created: "2026-02-05T15:36:05.898891746Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22656,7 +22703,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.40.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: b8385a5479bde84a2ba0bb6c7ea56f0fdc5ba1a338814937123a9d063139b077
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22674,7 +22722,7 @@ entries:
     version: 6.52.0
   - apiVersion: v2
     appVersion: 3.6.4
-    created: '2026-01-21T21:33:44.63074004Z'
+    created: "2026-01-21T21:33:44.63074004Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22691,7 +22739,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.40.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 5e4d992d44d05b1b9a3420a1d63ad45d5085b3232f8b02282d5517a98315aa32
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22709,7 +22758,7 @@ entries:
     version: 6.51.0
   - apiVersion: v2
     appVersion: 3.6.3
-    created: '2026-01-21T20:15:20.366377288Z'
+    created: "2026-01-21T20:15:20.366377288Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22726,7 +22775,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.40.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: da9dc0a3fa04536895ce75e49f3557e4158da1f1d1d95a37f84ac6c73e3bf3ab
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22744,7 +22794,7 @@ entries:
     version: 6.50.0
   - apiVersion: v2
     appVersion: 3.6.3
-    created: '2025-12-12T21:42:56.208772807Z'
+    created: "2025-12-12T21:42:56.208772807Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22761,7 +22811,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.38.2
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 96db7244b1257000e99b800cc92fdc0702f5805d0de9db237d962b07b24d2cea
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22779,7 +22830,7 @@ entries:
     version: 6.49.0
   - apiVersion: v2
     appVersion: 3.6.2
-    created: '2025-12-09T17:46:40.88024062Z'
+    created: "2025-12-09T17:46:40.88024062Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22796,7 +22847,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.37.1
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: e5ee74bbf4163ec7e430d25972ab7e6b526a79feca96c28915e21e66443c5ad0
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22814,7 +22866,7 @@ entries:
     version: 6.48.0
   - apiVersion: v2
     appVersion: 3.5.7
-    created: '2025-11-05T01:52:29.731911984Z'
+    created: "2025-11-05T01:52:29.731911984Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22831,7 +22883,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.33.2
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 2af8565acc86f64e7c5a6bb415bddf80fa51b2931ba060b370ddf31310e2da70
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22849,7 +22902,7 @@ entries:
     version: 6.46.0
   - apiVersion: v2
     appVersion: 3.5.7
-    created: '2025-10-31T21:17:44.894800851Z'
+    created: "2025-10-31T21:17:44.894800851Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22866,7 +22919,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.33.2
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: b5ade786025e937d888c3075a0c66aed65e0f255cbde71e5cf6d96159a799c96
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22884,7 +22938,7 @@ entries:
     version: 6.45.2
   - apiVersion: v2
     appVersion: 3.5.7
-    created: '2025-10-30T23:11:37.150205386Z'
+    created: "2025-10-30T23:11:37.150205386Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22901,7 +22955,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.33.2
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 08ba193d05e4872bb91c715875d7ed3450883536cb504e32ac179a25c71746bc
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22919,7 +22974,7 @@ entries:
     version: 6.45.1
   - apiVersion: v2
     appVersion: 3.5.7
-    created: '2025-10-30T21:21:56.722030577Z'
+    created: "2025-10-30T21:21:56.722030577Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22936,7 +22991,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.33.2
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: b172d1ed8af383cbeb310bffdab27ebaefbd775b10e35b4307d1f2e7836e5812
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22954,7 +23010,7 @@ entries:
     version: 6.45.0
   - apiVersion: v2
     appVersion: 3.5.7
-    created: '2025-10-23T19:08:27.436251182Z'
+    created: "2025-10-23T19:08:27.436251182Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22971,7 +23027,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.33.2
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: d3c75364b79c13727672e49642962a6ce28cb8ab1c69889f3c377e48c79e037a
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -22989,7 +23046,7 @@ entries:
     version: 6.44.0
   - apiVersion: v2
     appVersion: 3.5.5
-    created: '2025-10-15T19:51:08.680699224Z'
+    created: "2025-10-15T19:51:08.680699224Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23006,7 +23063,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.33.2
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: bd687bc1e6d04cb089f60f4213bc2fb25f2cb5a3bab8f257df1255e227f6723a
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23024,7 +23082,7 @@ entries:
     version: 6.43.0
   - apiVersion: v2
     appVersion: 3.5.5
-    created: '2025-10-02T19:45:43.9679759Z'
+    created: "2025-10-02T19:45:43.9679759Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23041,7 +23099,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.33.2
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: c311bc2fccf816f63334c46902984f4e6959038ec1a1ac4c055b937595d0de61
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23059,7 +23118,7 @@ entries:
     version: 6.42.0
   - apiVersion: v2
     appVersion: 3.5.5
-    created: '2025-09-25T20:12:33.906456262Z'
+    created: "2025-09-25T20:12:33.906456262Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23076,7 +23135,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.33.1
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 27aa43d3a2792b79d94920feedf6a661ec7a17dedfb3bbd23d6e8e54b4c2d187
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23094,7 +23154,7 @@ entries:
     version: 6.41.1
   - apiVersion: v2
     appVersion: 3.5.3
-    created: '2025-09-24T20:32:30.886602322Z'
+    created: "2025-09-24T20:32:30.886602322Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23111,7 +23171,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.32.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: e361d7d543906605ff9ebfee8df15d4019df2ae90e451b1b6056c21eaee2a8ab
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23129,7 +23190,7 @@ entries:
     version: 6.41.0
   - apiVersion: v2
     appVersion: 3.5.3
-    created: '2025-09-09T20:53:38.654419418Z'
+    created: "2025-09-09T20:53:38.654419418Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23146,7 +23207,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.32.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: f423c9c02bec6a49be268fdb6bd60a0f706b3a0568b44d4a91bd14ab74b116a9
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23164,7 +23226,7 @@ entries:
     version: 6.40.0
   - apiVersion: v2
     appVersion: 3.5.3
-    created: '2025-09-04T14:28:57.277370794Z'
+    created: "2025-09-04T14:28:57.277370794Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23181,7 +23243,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.32.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 77dd433e17833d7d473727568638098e03ecc8d94c05f6d4fb02c824c2cbbcd1
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23199,7 +23262,7 @@ entries:
     version: 6.39.0
   - apiVersion: v2
     appVersion: 3.5.3
-    created: '2025-08-27T22:33:42.5020119Z'
+    created: "2025-08-27T22:33:42.5020119Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23216,7 +23279,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.32.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: bb5df998eb5bb4700c774ed12f843862fd511dd18f4285e91ba5ad0a3fc7a878
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23234,7 +23298,7 @@ entries:
     version: 6.38.0
   - apiVersion: v2
     appVersion: 3.5.3
-    created: '2025-08-21T15:36:58.410778531Z'
+    created: "2025-08-21T15:36:58.410778531Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23251,7 +23315,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.30.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: c0bc497cc4b08350207b87892529c4309d3147e8f81f0ed5fa9e201d6cec8f50
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23269,7 +23334,7 @@ entries:
     version: 6.37.0
   - apiVersion: v2
     appVersion: 3.5.3
-    created: '2025-08-15T13:36:52.369138282Z'
+    created: "2025-08-15T13:36:52.369138282Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23286,7 +23351,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.30.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: bca784ebb74b1c31c8a1150716708eeb9c32ec3a89dd4d63304ef21da4c68bce
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23304,7 +23370,7 @@ entries:
     version: 6.36.1
   - apiVersion: v2
     appVersion: 3.5.3
-    created: '2025-08-14T16:53:51.108962085Z'
+    created: "2025-08-14T16:53:51.108962085Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23321,7 +23387,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.30.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 1d4564f9d02582081fcbe0750b33c95e979be2b3e21c74665553e6dd7bbf930b
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23339,7 +23406,7 @@ entries:
     version: 6.36.0
   - apiVersion: v2
     appVersion: 3.5.3
-    created: '2025-08-06T20:57:01.430910362Z'
+    created: "2025-08-06T20:57:01.430910362Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23356,7 +23423,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.30.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: c8e5256c7a3dc32ef3aa994d8d5f41b010c2637c7a33f431d5c41d45dce31c29
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23374,7 +23442,7 @@ entries:
     version: 6.35.1
   - apiVersion: v2
     appVersion: 3.5.3
-    created: '2025-08-05T21:11:17.66813911Z'
+    created: "2025-08-05T21:11:17.66813911Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23391,7 +23459,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.30.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: fc64613ad9e01a07d6f82e81ba1c19d1abf3579f452a3c226e092acc63bbb1f1
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23409,7 +23478,7 @@ entries:
     version: 6.35.0
   - apiVersion: v2
     appVersion: 3.5.3
-    created: '2025-07-29T19:55:11.261783261Z'
+    created: "2025-07-29T19:55:11.261783261Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23426,7 +23495,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.30.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 058d1b4d8a40fca87295879665530632deaf8e5afba20dd890045560e62dcec3
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23444,7 +23514,7 @@ entries:
     version: 6.34.0
   - apiVersion: v2
     appVersion: 3.5.2
-    created: '2025-07-23T20:18:12.220643615Z'
+    created: "2025-07-23T20:18:12.220643615Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23461,7 +23531,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.30.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: e1d6877c3ac9eebe88672ece2111dce59e7297886e919972e48a618cd33bde46
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23479,7 +23550,7 @@ entries:
     version: 6.33.0
   - apiVersion: v2
     appVersion: 3.5.2
-    created: '2025-07-15T22:12:38.538162745Z'
+    created: "2025-07-15T22:12:38.538162745Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23496,7 +23567,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.30.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 9d05730c952929d261895dcdfcdd9f4a9610e9c6b9819e04e3cbc9d42edc7231
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23514,7 +23586,7 @@ entries:
     version: 6.32.0
   - apiVersion: v2
     appVersion: 3.5.0
-    created: '2025-07-08T22:43:25.105890801Z'
+    created: "2025-07-08T22:43:25.105890801Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23531,7 +23603,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.30.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: d59e734520bced7248d96f386e5254ffa0f1835499fe175531ff79fc165c3ef4
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23549,7 +23622,7 @@ entries:
     version: 6.31.0
   - apiVersion: v2
     appVersion: 3.5.0
-    created: '2025-05-28T09:34:34.051239599Z'
+    created: "2025-05-28T09:34:34.051239599Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23566,7 +23639,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.28.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: c2345323909da71dc08467098b78a677b5d1a8cf376dc16640e90a76d96b6359
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23584,7 +23658,7 @@ entries:
     version: 6.30.1
   - apiVersion: v2
     appVersion: 3.5.0
-    created: '2025-05-21T20:38:41.555819224Z'
+    created: "2025-05-21T20:38:41.555819224Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23601,7 +23675,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.28.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: eb3704121db66c3cb91535724d03fa472d3ec4102be8bf77ebadf554c70962af
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23619,7 +23694,7 @@ entries:
     version: 6.30.0
   - apiVersion: v2
     appVersion: 3.4.2
-    created: '2025-03-26T21:27:02.880968232Z'
+    created: "2025-03-26T21:27:02.880968232Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23636,7 +23711,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.24.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: 882102769cad2ecead90d30c1e940446ebb397f9b7057947e9b1fed571c97397
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23654,7 +23730,7 @@ entries:
     version: 6.29.0
   - apiVersion: v2
     appVersion: 3.4.2
-    created: '2025-03-10T20:07:49.614403367Z'
+    created: "2025-03-10T20:07:49.614403367Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23671,7 +23747,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.24.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting monolithic, simple scalable, and microservices modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      monolithic, simple scalable, and microservices modes.
     digest: b63a2dc23cdf1d3ec503fc53837bacb83265da32de8f41cfddc8d9ac3f8c1c75
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23689,7 +23766,7 @@ entries:
     version: 6.28.0
   - apiVersion: v2
     appVersion: 3.4.2
-    created: '2025-02-14T22:42:57.610049659Z'
+    created: "2025-02-14T22:42:57.610049659Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23706,7 +23783,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.23.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 7aca6e41a40872345e36e2495a9960216bcc2be7680aa526ba531ecb38f593ff
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23724,7 +23802,7 @@ entries:
     version: 6.27.0
   - apiVersion: v2
     appVersion: 3.4.0
-    created: '2025-02-12T12:04:19.902029747Z'
+    created: "2025-02-12T12:04:19.902029747Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23741,7 +23819,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.23.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: b048688fc88704c222f372557281fbebb3314df719c1a045b19fdf2276905ea5
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23759,7 +23838,7 @@ entries:
     version: 6.26.0
   - apiVersion: v2
     appVersion: 3.3.2
-    created: '2025-02-05T11:30:24.370196575Z'
+    created: "2025-02-05T11:30:24.370196575Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23776,7 +23855,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.23.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 4065716a436de3050da6e7a133dbe29dc935e092ef325d49adc4e6b0192eed90
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23794,7 +23874,7 @@ entries:
     version: 6.25.1
   - apiVersion: v2
     appVersion: 3.3.2
-    created: '2025-01-17T20:26:32.003744331Z'
+    created: "2025-01-17T20:26:32.003744331Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23811,7 +23891,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.22.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 5cb8e900580a0d291207f9a4f83cc101ab15c38c3292024da44392596daa64ad
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23829,7 +23910,7 @@ entries:
     version: 6.25.0
   - apiVersion: v2
     appVersion: 3.3.2
-    created: '2025-01-16T21:18:05.164371917Z'
+    created: "2025-01-16T21:18:05.164371917Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23846,7 +23927,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.22.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: f887bb3f9493f3ec12160277b38c9fc840783c8adcd3f8aaaff092ef3230dd07
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23864,7 +23946,7 @@ entries:
     version: 6.24.1
   - apiVersion: v2
     appVersion: 3.3.2
-    created: '2024-12-19T00:10:16.194556182Z'
+    created: "2024-12-19T00:10:16.194556182Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23881,7 +23963,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.21.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: a0c5ce3ce659ad3f940b9bdeeef49624fb14a5e4eec840814d76f2edaae3c886
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23899,7 +23982,7 @@ entries:
     version: 6.24.0
   - apiVersion: v2
     appVersion: k232
-    created: '2024-12-10T21:14:18.930135872Z'
+    created: "2024-12-10T21:14:18.930135872Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23916,7 +23999,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.20.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: feafed292e5f6e155d53a861f8bbc1f084342c702a545457928d012fc311eaae
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23934,7 +24018,7 @@ entries:
     version: 6.24.0-weekly.232
   - apiVersion: v2
     appVersion: 3.3.1
-    created: '2024-12-05T21:46:11.921596059Z'
+    created: "2024-12-05T21:46:11.921596059Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23951,7 +24035,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.20.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 02703abff161070557826655d6ca6ab8970f28e9fd48fa61797dd3331a0d6c2f
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -23969,7 +24054,7 @@ entries:
     version: 6.23.0
   - apiVersion: v2
     appVersion: k231
-    created: '2024-12-05T17:48:35.940264581Z'
+    created: "2024-12-05T17:48:35.940264581Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -23986,7 +24071,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.20.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: da01eeb9f47fe0b8cd88a965ed8c3f0423985ce72e5a072b34ac9ac9c95457b3
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24004,7 +24090,7 @@ entries:
     version: 6.23.0-weekly.231
   - apiVersion: v2
     appVersion: 3.3.0
-    created: '2024-11-27T21:18:20.099048921Z'
+    created: "2024-11-27T21:18:20.099048921Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24021,7 +24107,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.20.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: d379972c7bd41a875e6570ef35eb6c942181c39177c813917a7ae44effe084f2
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24039,7 +24126,7 @@ entries:
     version: 6.22.0
   - apiVersion: v2
     appVersion: k230
-    created: '2024-11-27T20:54:35.013626181Z'
+    created: "2024-11-27T20:54:35.013626181Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24056,7 +24143,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.19.1
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: d0860126f57df39b4828d34ad6cf067c85b2372af4f2b87c9d53b4a85961b468
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24074,7 +24162,7 @@ entries:
     version: 6.22.0-weekly.230
   - apiVersion: v2
     appVersion: 3.3.0
-    created: '2024-11-20T17:06:55.049437135Z'
+    created: "2024-11-20T17:06:55.049437135Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24091,7 +24179,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.19.1
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: f91a51a8fecd93ad928a9a46ae2c0e1b1abf66443f88ac0d106964417cbbc8d1
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24109,7 +24198,7 @@ entries:
     version: 6.21.0
   - apiVersion: v2
     appVersion: 3.2.0
-    created: '2024-11-19T16:17:47.104737737Z'
+    created: "2024-11-19T16:17:47.104737737Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24126,7 +24215,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.19.1
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 0a1f49bdcaab1e01442d2f0fb4ff5b09e3c435f56fb8d1b5b51bdd51ba4756b7
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24144,7 +24234,7 @@ entries:
     version: 6.20.0
   - apiVersion: v2
     appVersion: k229
-    created: '2024-11-19T16:18:43.330439696Z'
+    created: "2024-11-19T16:18:43.330439696Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24161,7 +24251,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.19.1
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 01fe5f1952b664bd958137e2a181ccd20de5a3d4ea21b13fc0bc0996644c9827
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24179,7 +24270,7 @@ entries:
     version: 6.20.0-weekly.229
   - apiVersion: v2
     appVersion: 3.2.0
-    created: '2024-11-07T16:24:36.564847299Z'
+    created: "2024-11-07T16:24:36.564847299Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24196,7 +24287,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: db4013cbf3e6b84e986dc3571e08c958e0c13ad9f282b187299ecf15a014b816
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24214,7 +24306,7 @@ entries:
     version: 6.19.0
   - apiVersion: v2
     appVersion: k227
-    created: '2024-11-07T18:01:55.895616601Z'
+    created: "2024-11-07T18:01:55.895616601Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24231,7 +24323,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 4ef783f3784157f246e5abe1adedeb526ff30753ed9111424c1e00348a10f08b
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24249,7 +24342,7 @@ entries:
     version: 6.19.0-weekly.227
   - apiVersion: v2
     appVersion: 3.2.0
-    created: '2024-10-16T21:21:30.390348508Z'
+    created: "2024-10-16T21:21:30.390348508Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24266,7 +24359,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: a8a78d5bff8dec4b84943297cd816f3ec25ed1f891d5e40e86331eca09d67d43
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24284,7 +24378,7 @@ entries:
     version: 6.18.0
   - apiVersion: v2
     appVersion: 3.1.1
-    created: '2024-09-30T11:50:20.516717565Z'
+    created: "2024-09-30T11:50:20.516717565Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24301,7 +24395,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 3736cc857db923f15cfd6774b73082c35f7d8acc0ef8cf2e1ad5696cabf8644e
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24319,7 +24414,7 @@ entries:
     version: 6.16.0
   - apiVersion: v2
     appVersion: 3.1.1
-    created: '2024-09-26T22:35:45.083570586Z'
+    created: "2024-09-26T22:35:45.083570586Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24336,7 +24431,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes
     digest: dbe5ecb39a23090eaef8f995b23d75e769739c515bb761ab661c751d65e42a9a
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24354,7 +24450,7 @@ entries:
     version: 6.15.0
   - apiVersion: v2
     appVersion: 3.1.1
-    created: '2024-09-03T15:41:25.386955515Z'
+    created: "2024-09-03T15:41:25.386955515Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24371,7 +24467,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 2fbfe815f5fbba217973f0bd3e6cc0efab5b4a58ec610431d90b50f29c648753
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24389,7 +24486,7 @@ entries:
     version: 6.12.0
   - apiVersion: v2
     appVersion: 3.1.1
-    created: '2024-09-02T05:57:44.821371461Z'
+    created: "2024-09-02T05:57:44.821371461Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24406,7 +24503,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 6ffd33d6229405304cd2e272fea1a576d2206d935c2cfe43729ce9d7e053e1cb
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24424,7 +24522,7 @@ entries:
     version: 6.11.0
   - apiVersion: v2
     appVersion: 3.1.1
-    created: '2024-08-29T12:32:47.776500522Z'
+    created: "2024-08-29T12:32:47.776500522Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24441,7 +24539,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: b7b68c39fd7c24bde2ca77f2674bdb9102a61b3da5fae41af7fc2e0db35dce95
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24459,7 +24558,7 @@ entries:
     version: 6.10.2
   - apiVersion: v2
     appVersion: 3.1.1
-    created: '2024-08-28T00:09:03.929701467Z'
+    created: "2024-08-28T00:09:03.929701467Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24476,7 +24575,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 8e75d45d6a1b57c3eb95e4907bfc0615587a217c753f108efda216eb6f3ef18a
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24494,7 +24594,7 @@ entries:
     version: 6.10.1
   - apiVersion: v2
     appVersion: 3.1.1
-    created: '2024-08-09T10:39:56.413486628Z'
+    created: "2024-08-09T10:39:56.413486628Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24511,7 +24611,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: c0839c87b41fa619070becca485b6e1dd47e72fe4ef84d43139f58b09eda1dcb
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24529,7 +24630,7 @@ entries:
     version: 6.10.0
   - apiVersion: v2
     appVersion: 3.1.0
-    created: '2024-08-07T13:12:08.026759691Z'
+    created: "2024-08-07T13:12:08.026759691Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24546,7 +24647,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 8a034a163e4a52a0910b8f2e9eebf31b3f8bd96a4ff8ecaa35746ec920f46ad3
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24564,7 +24666,7 @@ entries:
     version: 6.9.0
   - apiVersion: v2
     appVersion: 3.1.0
-    created: '2024-08-05T21:00:40.732736892Z'
+    created: "2024-08-05T21:00:40.732736892Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24581,7 +24683,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 63ea6c011efafc0aac0e6f399bd26367ed43443e38f1d3f4e39c30680e406dd6
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24599,7 +24702,7 @@ entries:
     version: 6.8.0
   - apiVersion: v2
     appVersion: 3.1.0
-    created: '2024-08-05T10:47:29.334013568Z'
+    created: "2024-08-05T10:47:29.334013568Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24616,7 +24719,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: fd91d6b6b2e697349cbb499aba2c6608f51e7a418fb8ef9d978783a4ccc92ed0
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24634,7 +24738,7 @@ entries:
     version: 6.7.4
   - apiVersion: v2
     appVersion: 3.1.0
-    created: '2024-07-24T17:36:08.711231291Z'
+    created: "2024-07-24T17:36:08.711231291Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24651,7 +24755,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 8b0945ee1792cf218c98b8511c370a1b43cf9eb9b56f4a31dedfde9f36e4bf40
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24669,7 +24774,7 @@ entries:
     version: 6.7.3
   - apiVersion: v2
     appVersion: 3.1.0
-    created: '2024-07-23T19:48:35.0280211Z'
+    created: "2024-07-23T19:48:35.0280211Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24686,7 +24791,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 565a9acc90dbcdda35319880e5aa8dbf74e1a93cfdb304261f9fb7429dea6591
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24704,7 +24810,7 @@ entries:
     version: 6.7.2
   - apiVersion: v2
     appVersion: 3.1.0
-    created: '2024-07-16T22:01:51.249554681Z'
+    created: "2024-07-16T22:01:51.249554681Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24721,7 +24827,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 5216b25d8a3d2d2e969309b54c5cd295dbe16085f47ed275664d9201666d680a
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24739,7 +24846,7 @@ entries:
     version: 6.7.1
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-07-16T16:21:09.916563764Z'
+    created: "2024-07-16T16:21:09.916563764Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24756,7 +24863,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: b82e25118a20dd83bd140c811b60c1f175a8c8ef66f22de29f02757fc234a04c
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24774,7 +24882,7 @@ entries:
     version: 6.7.0
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-07-11T13:20:01.54259559Z'
+    created: "2024-07-11T13:20:01.54259559Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24791,7 +24899,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 80dcab269a1992b29a6a8b9d50501eeb27c449f037374c3457eee1931ac52094
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24809,7 +24918,7 @@ entries:
     version: 6.6.6
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-07-03T21:01:07.373720658Z'
+    created: "2024-07-03T21:01:07.373720658Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24826,7 +24935,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: a93f5681a9fd678162d5799fbbe15424f858723cecec2362e2a9e32a35d281bd
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24844,7 +24954,7 @@ entries:
     version: 6.6.5
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-06-24T12:37:06.042577623Z'
+    created: "2024-06-24T12:37:06.042577623Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24861,7 +24971,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: d6759e0e24ac0ac89817ff64cb517c3433da2295811d0e0e3b64766aacc62370
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24879,7 +24990,7 @@ entries:
     version: 6.6.4
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-06-06T17:23:33.173411401Z'
+    created: "2024-06-06T17:23:33.173411401Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24896,7 +25007,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: a57207a79c08057bbdf5cbd073f33698ee6133ed6adbaec5b3a4b81dfba8dc22
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24914,7 +25026,7 @@ entries:
     version: 6.6.3
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-05-28T18:36:37.204567806Z'
+    created: "2024-05-28T18:36:37.204567806Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24931,7 +25043,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 667c1b4288ba51df8795a6066aea19061fb4615a92797ad2789a1d36d706cad1
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24949,7 +25062,7 @@ entries:
     version: 6.6.2
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-05-24T13:10:16.442783235Z'
+    created: "2024-05-24T13:10:16.442783235Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -24966,7 +25079,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: c02634e2250095d21d03d589c05e15df0184a017725de6e87200fccfea585cfd
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -24984,7 +25098,7 @@ entries:
     version: 6.6.1
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-05-23T20:26:59.281476892Z'
+    created: "2024-05-23T20:26:59.281476892Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25001,7 +25115,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 3c6de10f8793a13da969f59d93bdfac1ba409d1c6b5f443baa8eb543cb29caf0
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -25019,7 +25134,7 @@ entries:
     version: 6.6.0
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-05-10T15:17:30.098659479Z'
+    created: "2024-05-10T15:17:30.098659479Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25036,7 +25151,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: e1a0c1277baaf93a2c795de9f90d68ae37ccc0f198553c6e05a892c301a0529b
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -25054,7 +25170,7 @@ entries:
     version: 6.5.2
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-05-08T15:13:05.648753295Z'
+    created: "2024-05-08T15:13:05.648753295Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25071,7 +25187,8 @@ entries:
       name: rollout-operator
       repository: https://grafana.github.io/helm-charts
       version: 0.13.0
-    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting both simple, scalable and distributed modes.
+    description: Helm chart for Grafana Loki and Grafana Enterprise Logs supporting
+      both simple, scalable and distributed modes.
     digest: 7baa3eb01903557e35d4b1b0562972a2298eaf8bf82d28bfb3e956ee75389167
     home: https://grafana.github.io/helm-charts
     icon: https://grafana.com/docs/loki/latest/logo_and_name.png
@@ -25089,7 +25206,7 @@ entries:
     version: 6.5.1
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-05-03T07:24:51.514291039Z'
+    created: "2024-05-03T07:24:51.514291039Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25124,7 +25241,7 @@ entries:
     version: 6.5.0
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-30T15:31:27.015736087Z'
+    created: "2024-04-30T15:31:27.015736087Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25159,7 +25276,7 @@ entries:
     version: 6.4.2
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-30T12:10:22.562964367Z'
+    created: "2024-04-30T12:10:22.562964367Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25194,7 +25311,7 @@ entries:
     version: 6.4.1
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-30T09:34:45.051121805Z'
+    created: "2024-04-30T09:34:45.051121805Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25229,7 +25346,7 @@ entries:
     version: 6.4.0
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-22T17:25:25.660121321Z'
+    created: "2024-04-22T17:25:25.660121321Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25264,7 +25381,7 @@ entries:
     version: 6.3.4
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-20T15:33:18.905196997Z'
+    created: "2024-04-20T15:33:18.905196997Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25299,7 +25416,7 @@ entries:
     version: 6.3.3
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-19T16:25:54.138056039Z'
+    created: "2024-04-19T16:25:54.138056039Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25334,7 +25451,7 @@ entries:
     version: 6.3.2
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-19T15:48:26.267507197Z'
+    created: "2024-04-19T15:48:26.267507197Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25369,7 +25486,7 @@ entries:
     version: 6.3.1
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-19T15:20:05.581624878Z'
+    created: "2024-04-19T15:20:05.581624878Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25404,7 +25521,7 @@ entries:
     version: 6.3.0
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-19T14:44:29.82559522Z'
+    created: "2024-04-19T14:44:29.82559522Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25439,7 +25556,7 @@ entries:
     version: 6.2.5
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-19T10:05:56.450974453Z'
+    created: "2024-04-19T10:05:56.450974453Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25474,7 +25591,7 @@ entries:
     version: 6.2.4
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-19T08:03:58.422479196Z'
+    created: "2024-04-19T08:03:58.422479196Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25509,7 +25626,7 @@ entries:
     version: 6.2.3
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-19T07:42:53.06663402Z'
+    created: "2024-04-19T07:42:53.06663402Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25544,7 +25661,7 @@ entries:
     version: 6.2.2
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-18T12:51:57.578972077Z'
+    created: "2024-04-18T12:51:57.578972077Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25579,7 +25696,7 @@ entries:
     version: 6.2.1
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-11T12:59:11.247190966Z'
+    created: "2024-04-11T12:59:11.247190966Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25614,7 +25731,7 @@ entries:
     version: 6.2.0
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-09T22:36:51.277647763Z'
+    created: "2024-04-09T22:36:51.277647763Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25649,7 +25766,7 @@ entries:
     version: 6.1.0
   - apiVersion: v2
     appVersion: 3.0.0
-    created: '2024-04-08T20:11:36.737159133Z'
+    created: "2024-04-08T20:11:36.737159133Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25684,7 +25801,7 @@ entries:
     version: 6.0.0
   - apiVersion: v2
     appVersion: 2.9.6
-    created: '2024-05-06T15:44:56.051808063Z'
+    created: "2024-05-06T15:44:56.051808063Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25715,7 +25832,7 @@ entries:
     version: 5.48.0
   - apiVersion: v2
     appVersion: 2.9.6
-    created: '2024-03-28T11:08:43.057529077Z'
+    created: "2024-03-28T11:08:43.057529077Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25745,7 +25862,7 @@ entries:
     version: 5.47.2
   - apiVersion: v2
     appVersion: 2.9.6
-    created: '2024-03-22T14:59:23.47346884Z'
+    created: "2024-03-22T14:59:23.47346884Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25775,7 +25892,7 @@ entries:
     version: 5.47.1
   - apiVersion: v2
     appVersion: 2.9.6
-    created: '2024-03-22T09:22:05.031209546Z'
+    created: "2024-03-22T09:22:05.031209546Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25805,7 +25922,7 @@ entries:
     version: 5.47.0
   - apiVersion: v2
     appVersion: 2.9.5
-    created: '2024-03-20T19:05:30.907839104Z'
+    created: "2024-03-20T19:05:30.907839104Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25835,7 +25952,7 @@ entries:
     version: 5.46.0
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-03-19T10:22:01.808349327Z'
+    created: "2024-03-19T10:22:01.808349327Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25865,7 +25982,7 @@ entries:
     version: 5.45.0
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-03-18T16:23:32.819207725Z'
+    created: "2024-03-18T16:23:32.819207725Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25895,7 +26012,7 @@ entries:
     version: 5.44.4
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-03-18T15:00:48.297360205Z'
+    created: "2024-03-18T15:00:48.297360205Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25925,7 +26042,7 @@ entries:
     version: 5.44.3
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-03-18T14:35:56.414612334Z'
+    created: "2024-03-18T14:35:56.414612334Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25955,7 +26072,7 @@ entries:
     version: 5.44.2
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-03-15T14:46:59.260489149Z'
+    created: "2024-03-15T14:46:59.260489149Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -25985,7 +26102,7 @@ entries:
     version: 5.44.1
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-03-15T14:03:55.500307806Z'
+    created: "2024-03-15T14:03:55.500307806Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26015,7 +26132,7 @@ entries:
     version: 5.44.0
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-03-14T17:11:32.700679232Z'
+    created: "2024-03-14T17:11:32.700679232Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26045,7 +26162,7 @@ entries:
     version: 5.43.7
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-03-07T14:27:47.793481645Z'
+    created: "2024-03-07T14:27:47.793481645Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26075,7 +26192,7 @@ entries:
     version: 5.43.6
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-03-05T16:47:10.835737248Z'
+    created: "2024-03-05T16:47:10.835737248Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26105,7 +26222,7 @@ entries:
     version: 5.43.5
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-03-04T16:19:42.27570584Z'
+    created: "2024-03-04T16:19:42.27570584Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26135,7 +26252,7 @@ entries:
     version: 5.43.4
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-02-22T09:08:24.819833312Z'
+    created: "2024-02-22T09:08:24.819833312Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26165,7 +26282,7 @@ entries:
     version: 5.43.3
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-02-19T09:46:06.363433783Z'
+    created: "2024-02-19T09:46:06.363433783Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26195,7 +26312,7 @@ entries:
     version: 5.43.2
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-02-15T15:23:49.505966387Z'
+    created: "2024-02-15T15:23:49.505966387Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26225,7 +26342,7 @@ entries:
     version: 5.43.1
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-02-14T14:42:56.10347908Z'
+    created: "2024-02-14T14:42:56.10347908Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26255,7 +26372,7 @@ entries:
     version: 5.43.0
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-02-14T13:25:35.041442303Z'
+    created: "2024-02-14T13:25:35.041442303Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26285,7 +26402,7 @@ entries:
     version: 5.42.3
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-02-02T10:09:03.069847767Z'
+    created: "2024-02-02T10:09:03.069847767Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26315,7 +26432,7 @@ entries:
     version: 5.42.2
   - apiVersion: v2
     appVersion: 2.9.4
-    created: '2024-01-31T09:22:13.207723562Z'
+    created: "2024-01-31T09:22:13.207723562Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26345,7 +26462,7 @@ entries:
     version: 5.42.1
   - apiVersion: v2
     appVersion: 2.9.3
-    created: '2024-01-27T16:43:35.721773801Z'
+    created: "2024-01-27T16:43:35.721773801Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26375,7 +26492,7 @@ entries:
     version: 5.42.0
   - apiVersion: v2
     appVersion: 2.9.3
-    created: '2024-01-22T17:35:38.669524108Z'
+    created: "2024-01-22T17:35:38.669524108Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26405,7 +26522,7 @@ entries:
     version: 5.41.8
   - apiVersion: v2
     appVersion: 2.9.3
-    created: '2024-01-17T09:00:28.609271279Z'
+    created: "2024-01-17T09:00:28.609271279Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26435,7 +26552,7 @@ entries:
     version: 5.41.7
   - apiVersion: v2
     appVersion: 2.9.3
-    created: '2024-01-12T14:44:21.909631431Z'
+    created: "2024-01-12T14:44:21.909631431Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26465,7 +26582,7 @@ entries:
     version: 5.41.6
   - apiVersion: v2
     appVersion: 2.9.3
-    created: '2024-01-10T09:20:39.099997965Z'
+    created: "2024-01-10T09:20:39.099997965Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26495,7 +26612,7 @@ entries:
     version: 5.41.5
   - apiVersion: v2
     appVersion: 2.9.3
-    created: '2023-12-15T16:44:27.35413834Z'
+    created: "2023-12-15T16:44:27.35413834Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26525,7 +26642,7 @@ entries:
     version: 5.41.4
   - apiVersion: v2
     appVersion: 2.9.3
-    created: '2023-12-15T15:31:43.688900323Z'
+    created: "2023-12-15T15:31:43.688900323Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26555,7 +26672,7 @@ entries:
     version: 5.41.3
   - apiVersion: v2
     appVersion: 2.9.3
-    created: '2023-12-13T10:52:57.432912855Z'
+    created: "2023-12-13T10:52:57.432912855Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26585,7 +26702,7 @@ entries:
     version: 5.41.2
   - apiVersion: v2
     appVersion: 2.9.3
-    created: '2023-12-12T15:58:54.208866344Z'
+    created: "2023-12-12T15:58:54.208866344Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26615,7 +26732,7 @@ entries:
     version: 5.41.1
   - apiVersion: v2
     appVersion: 2.9.3
-    created: '2023-12-12T09:53:54.03598206Z'
+    created: "2023-12-12T09:53:54.03598206Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26645,7 +26762,7 @@ entries:
     version: 5.41.0
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-12-08T16:45:15.947747877Z'
+    created: "2023-12-08T16:45:15.947747877Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26675,7 +26792,7 @@ entries:
     version: 5.40.1
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-11-29T10:26:12.416883995Z'
+    created: "2023-11-29T10:26:12.416883995Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26705,7 +26822,7 @@ entries:
     version: 5.39.0
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-11-22T16:45:28.374168626Z'
+    created: "2023-11-22T16:45:28.374168626Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26735,7 +26852,7 @@ entries:
     version: 5.38.0
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-11-21T15:25:42.927811934Z'
+    created: "2023-11-21T15:25:42.927811934Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26765,7 +26882,7 @@ entries:
     version: 5.37.0
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-11-04T05:07:07.179075752Z'
+    created: "2023-11-04T05:07:07.179075752Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26795,7 +26912,7 @@ entries:
     version: 5.36.3
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-11-03T15:11:03.728795744Z'
+    created: "2023-11-03T15:11:03.728795744Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26825,7 +26942,7 @@ entries:
     version: 5.36.2
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-11-01T11:23:01.91209132Z'
+    created: "2023-11-01T11:23:01.91209132Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26855,7 +26972,7 @@ entries:
     version: 5.36.1
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-10-27T14:52:21.476955096Z'
+    created: "2023-10-27T14:52:21.476955096Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26885,7 +27002,7 @@ entries:
     version: 5.36.0
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-10-19T08:50:21.150069565Z'
+    created: "2023-10-19T08:50:21.150069565Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26915,7 +27032,7 @@ entries:
     version: 5.35.0
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-10-18T15:20:26.839915863Z'
+    created: "2023-10-18T15:20:26.839915863Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26945,7 +27062,7 @@ entries:
     version: 5.34.0
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-10-18T10:12:12.19915261Z'
+    created: "2023-10-18T10:12:12.19915261Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -26975,7 +27092,7 @@ entries:
     version: 5.33.0
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-10-17T17:28:38.739263344Z'
+    created: "2023-10-17T17:28:38.739263344Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27005,7 +27122,7 @@ entries:
     version: 5.32.0
   - apiVersion: v2
     appVersion: 2.9.2
-    created: '2023-10-16T14:34:45.127300144Z'
+    created: "2023-10-16T14:34:45.127300144Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27035,7 +27152,7 @@ entries:
     version: 5.31.0
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-10-13T10:13:39.819425497Z'
+    created: "2023-10-13T10:13:39.819425497Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27065,7 +27182,7 @@ entries:
     version: 5.30.0
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-10-12T08:21:43.057675471Z'
+    created: "2023-10-12T08:21:43.057675471Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27095,7 +27212,7 @@ entries:
     version: 5.29.0
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-10-11T08:42:23.050478589Z'
+    created: "2023-10-11T08:42:23.050478589Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27125,7 +27242,7 @@ entries:
     version: 5.28.0
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-10-09T09:10:19.778155009Z'
+    created: "2023-10-09T09:10:19.778155009Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27155,7 +27272,7 @@ entries:
     version: 5.27.0
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-10-05T11:37:35.577709142Z'
+    created: "2023-10-05T11:37:35.577709142Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27185,7 +27302,7 @@ entries:
     version: 5.26.0
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-10-05T11:38:23.244099392Z'
+    created: "2023-10-05T11:38:23.244099392Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27215,7 +27332,7 @@ entries:
     version: 5.25.0
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-10-04T15:17:52.420691858Z'
+    created: "2023-10-04T15:17:52.420691858Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27245,7 +27362,7 @@ entries:
     version: 5.24.0
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-09-27T16:48:27.704239854Z'
+    created: "2023-09-27T16:48:27.704239854Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27275,7 +27392,7 @@ entries:
     version: 5.23.1
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-09-21T16:27:02.352768759Z'
+    created: "2023-09-21T16:27:02.352768759Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27305,7 +27422,7 @@ entries:
     version: 5.23.0
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-09-21T15:45:19.51438547Z'
+    created: "2023-09-21T15:45:19.51438547Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27335,7 +27452,7 @@ entries:
     version: 5.22.2
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-09-21T13:21:05.462974387Z'
+    created: "2023-09-21T13:21:05.462974387Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27365,7 +27482,7 @@ entries:
     version: 5.22.1
   - apiVersion: v2
     appVersion: 2.9.1
-    created: '2023-09-14T19:56:25.498230191Z'
+    created: "2023-09-14T19:56:25.498230191Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27395,7 +27512,7 @@ entries:
     version: 5.22.0
   - apiVersion: v2
     appVersion: 2.9.0
-    created: '2023-09-14T12:45:03.697847623Z'
+    created: "2023-09-14T12:45:03.697847623Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27425,7 +27542,7 @@ entries:
     version: 5.21.0
   - apiVersion: v2
     appVersion: 2.9.0
-    created: '2023-09-08T15:23:58.409920106Z'
+    created: "2023-09-08T15:23:58.409920106Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27455,7 +27572,7 @@ entries:
     version: 5.20.0
   - apiVersion: v2
     appVersion: 2.9.0
-    created: '2023-09-07T15:46:42.213365072Z'
+    created: "2023-09-07T15:46:42.213365072Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27485,7 +27602,7 @@ entries:
     version: 5.19.0
   - apiVersion: v2
     appVersion: 2.9.0
-    created: '2023-09-07T09:40:42.076841847Z'
+    created: "2023-09-07T09:40:42.076841847Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27515,7 +27632,7 @@ entries:
     version: 5.18.1
   - apiVersion: v2
     appVersion: 2.9.0
-    created: '2023-09-06T16:57:14.627220885Z'
+    created: "2023-09-06T16:57:14.627220885Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27545,7 +27662,7 @@ entries:
     version: 5.18.0
   - apiVersion: v2
     appVersion: 2.9.0
-    created: '2023-09-06T15:35:00.482439299Z'
+    created: "2023-09-06T15:35:00.482439299Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27575,7 +27692,7 @@ entries:
     version: 5.17.0
   - apiVersion: v2
     appVersion: 2.8.4
-    created: '2023-08-23T14:27:42.231393325Z'
+    created: "2023-08-23T14:27:42.231393325Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27605,7 +27722,7 @@ entries:
     version: 5.15.0
   - apiVersion: v2
     appVersion: 2.8.4
-    created: '2023-08-18T08:49:20.458377741Z'
+    created: "2023-08-18T08:49:20.458377741Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27635,7 +27752,7 @@ entries:
     version: 5.14.1
   - apiVersion: v2
     appVersion: 2.8.4
-    created: '2023-08-18T07:53:27.876906688Z'
+    created: "2023-08-18T07:53:27.876906688Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27665,7 +27782,7 @@ entries:
     version: 5.14.0
   - apiVersion: v2
     appVersion: 2.8.4
-    created: '2023-08-16T13:27:21.94850815Z'
+    created: "2023-08-16T13:27:21.94850815Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27695,7 +27812,7 @@ entries:
     version: 5.13.0
   - apiVersion: v2
     appVersion: 2.8.4
-    created: '2023-08-16T09:57:25.449523005Z'
+    created: "2023-08-16T09:57:25.449523005Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27725,7 +27842,7 @@ entries:
     version: 5.12.0
   - apiVersion: v2
     appVersion: 2.8.4
-    created: '2023-08-14T07:33:20.289575671Z'
+    created: "2023-08-14T07:33:20.289575671Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27755,7 +27872,7 @@ entries:
     version: 5.11.0
   - apiVersion: v2
     appVersion: 2.8.3
-    created: '2023-08-04T06:53:33.890501606Z'
+    created: "2023-08-04T06:53:33.890501606Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27785,7 +27902,7 @@ entries:
     version: 5.10.0
   - apiVersion: v2
     appVersion: 2.8.3
-    created: '2023-07-26T09:03:56.010689378Z'
+    created: "2023-07-26T09:03:56.010689378Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27815,7 +27932,7 @@ entries:
     version: 5.9.2
   - apiVersion: v2
     appVersion: 2.8.3
-    created: '2023-07-25T11:52:38.875075772Z'
+    created: "2023-07-25T11:52:38.875075772Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27845,7 +27962,7 @@ entries:
     version: 5.9.1
   - apiVersion: v2
     appVersion: 2.8.3
-    created: '2023-07-24T08:12:20.702051251Z'
+    created: "2023-07-24T08:12:20.702051251Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27875,7 +27992,7 @@ entries:
     version: 5.9.0
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-07-21T10:44:41.917795149Z'
+    created: "2023-07-21T10:44:41.917795149Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27905,7 +28022,7 @@ entries:
     version: 5.8.11
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-07-21T10:07:13.277547257Z'
+    created: "2023-07-21T10:07:13.277547257Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27935,7 +28052,7 @@ entries:
     version: 5.8.10
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-07-05T09:07:51.873524238Z'
+    created: "2023-07-05T09:07:51.873524238Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27965,7 +28082,7 @@ entries:
     version: 5.8.9
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-30T06:54:30.535929741Z'
+    created: "2023-06-30T06:54:30.535929741Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -27995,7 +28112,7 @@ entries:
     version: 5.8.8
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-29T09:12:06.047819337Z'
+    created: "2023-06-29T09:12:06.047819337Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28025,7 +28142,7 @@ entries:
     version: 5.8.7
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-28T14:35:39.103825857Z'
+    created: "2023-06-28T14:35:39.103825857Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28055,7 +28172,7 @@ entries:
     version: 5.8.6
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-28T12:29:03.023811065Z'
+    created: "2023-06-28T12:29:03.023811065Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28085,7 +28202,7 @@ entries:
     version: 5.8.5
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-23T09:10:32.159973648Z'
+    created: "2023-06-23T09:10:32.159973648Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28115,7 +28232,7 @@ entries:
     version: 5.8.4
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-23T07:49:41.895257921Z'
+    created: "2023-06-23T07:49:41.895257921Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28145,7 +28262,7 @@ entries:
     version: 5.8.3
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-20T15:07:22.045603875Z'
+    created: "2023-06-20T15:07:22.045603875Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28175,7 +28292,7 @@ entries:
     version: 5.8.2
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-20T12:11:44.311424999Z'
+    created: "2023-06-20T12:11:44.311424999Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28205,7 +28322,7 @@ entries:
     version: 5.8.1
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-14T07:44:12.068719874Z'
+    created: "2023-06-14T07:44:12.068719874Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28235,7 +28352,7 @@ entries:
     version: 5.8.0
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-13T10:31:08.607348587Z'
+    created: "2023-06-13T10:31:08.607348587Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28265,7 +28382,7 @@ entries:
     version: 5.7.1
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-08T09:32:38.22074057Z'
+    created: "2023-06-08T09:32:38.22074057Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28295,7 +28412,7 @@ entries:
     version: 5.6.4
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-07T13:39:29.434010436Z'
+    created: "2023-06-07T13:39:29.434010436Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28325,7 +28442,7 @@ entries:
     version: 5.6.3
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-06T12:47:40.575232699Z'
+    created: "2023-06-06T12:47:40.575232699Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28355,7 +28472,7 @@ entries:
     version: 5.6.2
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-02T08:04:53.709164701Z'
+    created: "2023-06-02T08:04:53.709164701Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28385,7 +28502,7 @@ entries:
     version: 5.6.1
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-06-01T13:16:35.576126784Z'
+    created: "2023-06-01T13:16:35.576126784Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28415,7 +28532,7 @@ entries:
     version: 5.6.0
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-31T08:15:25.911977996Z'
+    created: "2023-05-31T08:15:25.911977996Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28445,7 +28562,7 @@ entries:
     version: 5.5.12
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-30T09:17:27.032335499Z'
+    created: "2023-05-30T09:17:27.032335499Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28475,7 +28592,7 @@ entries:
     version: 5.5.11
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-26T17:03:47.302500764Z'
+    created: "2023-05-26T17:03:47.302500764Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28505,7 +28622,7 @@ entries:
     version: 5.5.10
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-26T16:20:55.878671382Z'
+    created: "2023-05-26T16:20:55.878671382Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28535,7 +28652,7 @@ entries:
     version: 5.5.9
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-26T14:54:41.102957353Z'
+    created: "2023-05-26T14:54:41.102957353Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28565,7 +28682,7 @@ entries:
     version: 5.5.8
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-26T08:06:49.974259503Z'
+    created: "2023-05-26T08:06:49.974259503Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28595,7 +28712,7 @@ entries:
     version: 5.5.7
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-25T14:37:28.499702771Z'
+    created: "2023-05-25T14:37:28.499702771Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28625,7 +28742,7 @@ entries:
     version: 5.5.6
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-25T08:10:34.704689777Z'
+    created: "2023-05-25T08:10:34.704689777Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28655,7 +28772,7 @@ entries:
     version: 5.5.5
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-24T07:26:41.405385609Z'
+    created: "2023-05-24T07:26:41.405385609Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28685,7 +28802,7 @@ entries:
     version: 5.5.4
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-22T05:58:14.279324565Z'
+    created: "2023-05-22T05:58:14.279324565Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28715,7 +28832,7 @@ entries:
     version: 5.5.3
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-17T12:39:01.484644828Z'
+    created: "2023-05-17T12:39:01.484644828Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28745,7 +28862,7 @@ entries:
     version: 5.5.2
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-12T07:40:13.508993085Z'
+    created: "2023-05-12T07:40:13.508993085Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28775,7 +28892,7 @@ entries:
     version: 5.5.1
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-03T14:22:40.611085605Z'
+    created: "2023-05-03T14:22:40.611085605Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28805,7 +28922,7 @@ entries:
     version: 5.5.0
   - apiVersion: v2
     appVersion: 2.8.2
-    created: '2023-05-03T11:31:30.758993809Z'
+    created: "2023-05-03T11:31:30.758993809Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28835,7 +28952,7 @@ entries:
     version: 5.4.0
   - apiVersion: v2
     appVersion: 2.8.1
-    created: '2023-04-28T12:01:31.141834319Z'
+    created: "2023-04-28T12:01:31.141834319Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28865,7 +28982,7 @@ entries:
     version: 5.3.1
   - apiVersion: v2
     appVersion: 2.8.0
-    created: '2023-04-27T16:46:05.21850804Z'
+    created: "2023-04-27T16:46:05.21850804Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28895,7 +29012,7 @@ entries:
     version: 5.3.0
   - apiVersion: v2
     appVersion: 2.8.0
-    created: '2023-04-20T08:13:50.587521795Z'
+    created: "2023-04-20T08:13:50.587521795Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28925,7 +29042,7 @@ entries:
     version: 5.2.0
   - apiVersion: v2
     appVersion: 2.8.0
-    created: '2023-04-17T23:01:05.180494228Z'
+    created: "2023-04-17T23:01:05.180494228Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28955,7 +29072,7 @@ entries:
     version: 5.1.0
   - apiVersion: v2
     appVersion: 2.8.0
-    created: '2023-04-03T22:48:59.316869903Z'
+    created: "2023-04-03T22:48:59.316869903Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -28985,7 +29102,7 @@ entries:
     version: 5.0.0
   - apiVersion: v2
     appVersion: 2.7.5
-    created: '2023-03-30T11:47:06.840168959Z'
+    created: "2023-03-30T11:47:06.840168959Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29015,7 +29132,7 @@ entries:
     version: 4.10.0
   - apiVersion: v2
     appVersion: 2.7.5
-    created: '2023-03-29T08:06:50.029205656Z'
+    created: "2023-03-29T08:06:50.029205656Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29045,7 +29162,7 @@ entries:
     version: 4.9.0
   - apiVersion: v2
     appVersion: 2.7.3
-    created: '2023-02-28T19:27:28.864286461Z'
+    created: "2023-02-28T19:27:28.864286461Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29075,7 +29192,7 @@ entries:
     version: 4.8.0
   - apiVersion: v2
     appVersion: 2.7.3
-    created: '2023-02-24T14:09:27.830376106Z'
+    created: "2023-02-24T14:09:27.830376106Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29105,7 +29222,7 @@ entries:
     version: 4.7.0
   - apiVersion: v2
     appVersion: 2.7.3
-    created: '2023-02-24T10:47:09.726875647Z'
+    created: "2023-02-24T10:47:09.726875647Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29135,7 +29252,7 @@ entries:
     version: 4.6.2
   - apiVersion: v2
     appVersion: 2.7.3
-    created: '2023-02-13T11:22:01.435890804Z'
+    created: "2023-02-13T11:22:01.435890804Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29165,7 +29282,7 @@ entries:
     version: 4.6.1
   - apiVersion: v2
     appVersion: 2.7.3
-    created: '2023-02-08T15:44:10.325518498Z'
+    created: "2023-02-08T15:44:10.325518498Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29195,7 +29312,7 @@ entries:
     version: 4.6.0
   - apiVersion: v2
     appVersion: 2.7.2
-    created: '2023-02-07T20:03:42.976574573Z'
+    created: "2023-02-07T20:03:42.976574573Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29225,7 +29342,7 @@ entries:
     version: 4.5.1
   - apiVersion: v2
     appVersion: 2.7.2
-    created: '2023-02-06T17:27:13.775022298Z'
+    created: "2023-02-06T17:27:13.775022298Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29255,7 +29372,7 @@ entries:
     version: 4.5.0
   - apiVersion: v2
     appVersion: 2.7.2
-    created: '2023-01-27T21:21:12.895283432Z'
+    created: "2023-01-27T21:21:12.895283432Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29285,7 +29402,7 @@ entries:
     version: 4.4.2
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2023-01-25T18:42:38.458247173Z'
+    created: "2023-01-25T18:42:38.458247173Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29315,7 +29432,7 @@ entries:
     version: 4.4.1
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2023-01-19T07:01:02.068030327Z'
+    created: "2023-01-19T07:01:02.068030327Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29345,7 +29462,7 @@ entries:
     version: 4.4.0
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2023-01-18T21:49:07.268087012Z'
+    created: "2023-01-18T21:49:07.268087012Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29375,7 +29492,7 @@ entries:
     version: 4.3.0
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2023-01-18T21:23:04.020282782Z'
+    created: "2023-01-18T21:23:04.020282782Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29405,7 +29522,7 @@ entries:
     version: 4.2.0
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2023-01-18T17:25:38.514655861Z'
+    created: "2023-01-18T17:25:38.514655861Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29435,7 +29552,7 @@ entries:
     version: 4.1.0
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2023-01-17T23:36:11.191137495Z'
+    created: "2023-01-17T23:36:11.191137495Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29465,7 +29582,7 @@ entries:
     version: 4.0.0
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2023-01-11T22:44:24.89859436Z'
+    created: "2023-01-11T22:44:24.89859436Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29495,7 +29612,7 @@ entries:
     version: 3.10.0
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2023-01-11T18:37:03.56984603Z'
+    created: "2023-01-11T18:37:03.56984603Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29525,7 +29642,7 @@ entries:
     version: 3.9.0
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2023-01-11T12:04:20.64119875Z'
+    created: "2023-01-11T12:04:20.64119875Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29555,7 +29672,7 @@ entries:
     version: 3.8.2
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2023-01-04T19:47:37.730513622Z'
+    created: "2023-01-04T19:47:37.730513622Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29584,7 +29701,7 @@ entries:
     version: 3.8.1
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2022-12-14T18:23:02.672201629Z'
+    created: "2022-12-14T18:23:02.672201629Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29613,7 +29730,7 @@ entries:
     version: 3.8.0
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2022-12-13T17:03:27.921085349Z'
+    created: "2022-12-13T17:03:27.921085349Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29642,7 +29759,7 @@ entries:
     version: 3.7.0
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2022-12-08T16:48:54.207268909Z'
+    created: "2022-12-08T16:48:54.207268909Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29671,7 +29788,7 @@ entries:
     version: 3.6.1
   - apiVersion: v2
     appVersion: 2.7.0
-    created: '2022-12-02T21:44:15.18101064Z'
+    created: "2022-12-02T21:44:15.18101064Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29700,7 +29817,7 @@ entries:
     version: 3.6.0
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-11-30T10:42:27.192709986Z'
+    created: "2022-11-30T10:42:27.192709986Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29729,7 +29846,7 @@ entries:
     version: 3.5.0
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-11-29T12:36:23.232765144Z'
+    created: "2022-11-29T12:36:23.232765144Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29758,7 +29875,7 @@ entries:
     version: 3.4.3
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-11-22T18:20:50.361273297Z'
+    created: "2022-11-22T18:20:50.361273297Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29787,7 +29904,7 @@ entries:
     version: 3.4.2
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-11-22T15:53:36.300000163Z'
+    created: "2022-11-22T15:53:36.300000163Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29816,7 +29933,7 @@ entries:
     version: 3.4.1
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-11-22T14:03:57.086306398Z'
+    created: "2022-11-22T14:03:57.086306398Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29845,7 +29962,7 @@ entries:
     version: 3.4.0
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-11-10T14:10:58.924723924Z'
+    created: "2022-11-10T14:10:58.924723924Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29874,7 +29991,7 @@ entries:
     version: 3.3.4
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-11-10T10:45:46.037068927Z'
+    created: "2022-11-10T10:45:46.037068927Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29903,7 +30020,7 @@ entries:
     version: 3.3.3
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-11-07T16:01:48.524077766Z'
+    created: "2022-11-07T16:01:48.524077766Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29932,7 +30049,7 @@ entries:
     version: 3.3.2
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-10-31T14:47:16.414953969Z'
+    created: "2022-10-31T14:47:16.414953969Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29961,7 +30078,7 @@ entries:
     version: 3.3.1
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-10-25T16:01:46.120242372Z'
+    created: "2022-10-25T16:01:46.120242372Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -29990,7 +30107,7 @@ entries:
     version: 3.3.0
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-10-21T10:19:24.162150484Z'
+    created: "2022-10-21T10:19:24.162150484Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30019,7 +30136,7 @@ entries:
     version: 3.2.2
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-10-05T16:33:50.348749433Z'
+    created: "2022-10-05T16:33:50.348749433Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30048,7 +30165,7 @@ entries:
     version: 3.2.1
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-26T12:10:20.366534311Z'
+    created: "2022-09-26T12:10:20.366534311Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30077,7 +30194,7 @@ entries:
     version: 3.2.0
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-21T16:04:05.768446116Z'
+    created: "2022-09-21T16:04:05.768446116Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30106,7 +30223,7 @@ entries:
     version: 3.1.0
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-21T15:23:19.253155149Z'
+    created: "2022-09-21T15:23:19.253155149Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30135,7 +30252,7 @@ entries:
     version: 3.0.9
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-20T22:46:10.210627487Z'
+    created: "2022-09-20T22:46:10.210627487Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30164,7 +30281,7 @@ entries:
     version: 3.0.8
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-16T15:56:09.287438513Z'
+    created: "2022-09-16T15:56:09.287438513Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30193,7 +30310,7 @@ entries:
     version: 3.0.7
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-15T15:14:35.26056915Z'
+    created: "2022-09-15T15:14:35.26056915Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30222,7 +30339,7 @@ entries:
     version: 3.0.6
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-15T13:32:58.04268607Z'
+    created: "2022-09-15T13:32:58.04268607Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30251,7 +30368,7 @@ entries:
     version: 3.0.5
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-14T22:51:44.620634123Z'
+    created: "2022-09-14T22:51:44.620634123Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30280,7 +30397,7 @@ entries:
     version: 3.0.4
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-09T17:00:48.658511719Z'
+    created: "2022-09-09T17:00:48.658511719Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30309,7 +30426,7 @@ entries:
     version: 3.0.3
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-09T06:48:35.000000000Z'
+    created: "2022-09-09T06:48:35Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30338,7 +30455,7 @@ entries:
     version: 3.0.2
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-07T15:32:07.83216845Z'
+    created: "2022-09-07T15:32:07.83216845Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30367,7 +30484,7 @@ entries:
     version: 3.0.1
   - apiVersion: v2
     appVersion: 2.6.1
-    created: '2022-09-02T20:14:21.523890509Z'
+    created: "2022-09-02T20:14:21.523890509Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -30396,7 +30513,7 @@ entries:
     version: 3.0.0
   - apiVersion: v1
     appVersion: v2.6.1
-    created: '2022-08-30T12:39:14.740993297Z'
+    created: "2022-08-30T12:39:14.740993297Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: c56f7a2c5f62e2f7c9d11b11011aee3fec7bf7b0119e7678258ddc5aadfc31e0
     home: https://grafana.com/loki
@@ -30413,7 +30530,7 @@ entries:
     version: 2.16.0
   - apiVersion: v1
     appVersion: v2.6.1
-    created: '2022-08-28T14:27:26.632763457Z'
+    created: "2022-08-28T14:27:26.632763457Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 42239eaee49e2d4a9ec681d5c6da0280d4090400931f4f78e205aa6de50b7fd8
     home: https://grafana.com/loki
@@ -30430,7 +30547,7 @@ entries:
     version: 2.15.2
   - apiVersion: v1
     appVersion: v2.6.1
-    created: '2022-08-27T22:40:06.85847503Z'
+    created: "2022-08-27T22:40:06.85847503Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 0ea12d19c3a98ca4e979fb60c39eaf56da02b02fef79c3d3026c371c596fadae
     home: https://grafana.com/loki
@@ -30447,7 +30564,7 @@ entries:
     version: 2.15.1
   - apiVersion: v1
     appVersion: v2.6.1
-    created: '2022-08-12T22:38:54.742796055Z'
+    created: "2022-08-12T22:38:54.742796055Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 77c9782db3e7ec6c22605379703d74ae35b5d350da6e084abbae2c7b1b3a15bc
     home: https://grafana.com/loki
@@ -30464,7 +30581,7 @@ entries:
     version: 2.14.1
   - apiVersion: v1
     appVersion: v2.6.1
-    created: '2022-08-11T12:43:53.703789535Z'
+    created: "2022-08-11T12:43:53.703789535Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 23d91c139a499bd3093ee49d016b53342d1298f51b79d006abdc778293c6e9c1
     home: https://grafana.com/loki
@@ -30481,7 +30598,7 @@ entries:
     version: 2.14.0
   - apiVersion: v1
     appVersion: v2.6.1
-    created: '2022-07-27T15:52:46.965559203Z'
+    created: "2022-07-27T15:52:46.965559203Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 297c11057854ca480a25365490081f1bee414e47d71e8a6e535011ed7c1d4d17
     home: https://grafana.com/loki
@@ -30498,7 +30615,7 @@ entries:
     version: 2.13.3
   - apiVersion: v1
     appVersion: v2.6.1
-    created: '2022-07-18T10:58:24.404021943Z'
+    created: "2022-07-18T10:58:24.404021943Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 71bd94494a0bf9eb140b58d7fccf36fc184b8516da825802e56730a84a3d27dc
     home: https://grafana.com/loki
@@ -30515,7 +30632,7 @@ entries:
     version: 2.13.2
   - apiVersion: v1
     appVersion: v2.6.0
-    created: '2022-07-10T00:48:39.557503979Z'
+    created: "2022-07-10T00:48:39.557503979Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: c46d494a5620bbe8528fb2f617670facef9d2fc68a93af4cc944d727962ce684
     home: https://grafana.com/loki
@@ -30532,7 +30649,7 @@ entries:
     version: 2.13.1
   - apiVersion: v1
     appVersion: v2.6.0
-    created: '2022-07-08T14:10:59.724411284Z'
+    created: "2022-07-08T14:10:59.724411284Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: a50bba5f66ea1e996ba4bd1b8969bca0c825556352ba18e4f4e3cc9aa8104838
     home: https://grafana.com/loki
@@ -30549,7 +30666,7 @@ entries:
     version: 2.13.0
   - apiVersion: v1
     appVersion: v2.5.0
-    created: '2022-06-18T12:13:04.294560123Z'
+    created: "2022-06-18T12:13:04.294560123Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 09ed0af254050ce2b3cb6feda3c91611303ad5fc8ab99d59281eaa82a1ba0ee9
     home: https://grafana.com/loki
@@ -30566,7 +30683,7 @@ entries:
     version: 2.12.2
   - apiVersion: v1
     appVersion: v2.5.0
-    created: '2022-06-14T00:57:58.160985815Z'
+    created: "2022-06-14T00:57:58.160985815Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 9c07cd686292b3933f6fb3362f71d58ef2efa934f31337d1c850ec35cc2701a7
     home: https://grafana.com/loki
@@ -30583,7 +30700,7 @@ entries:
     version: 2.12.1
   - apiVersion: v1
     appVersion: v2.5.0
-    created: '2022-06-01T17:58:12.303915806Z'
+    created: "2022-06-01T17:58:12.303915806Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 33d9c2e4efc32d7f399e335e69b286871961b9a3c536de203b78758f66ac11e6
     home: https://grafana.com/loki
@@ -30600,7 +30717,7 @@ entries:
     version: 2.12.0
   - apiVersion: v1
     appVersion: v2.5.0
-    created: '2022-04-20T23:13:15.324687399Z'
+    created: "2022-04-20T23:13:15.324687399Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: e2fcf56fd50568593e7aac0780894f6b5b6943108799c4171cf8f7760ad3969a
     home: https://grafana.com/loki
@@ -30617,7 +30734,7 @@ entries:
     version: 2.11.1
   - apiVersion: v1
     appVersion: v2.5.0
-    created: '2022-04-08T15:33:04.189371224Z'
+    created: "2022-04-08T15:33:04.189371224Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 92a95b85593929e056267f5c2da487934b89568bcf9a4f8fd5782f6aa18d9318
     home: https://grafana.com/loki
@@ -30634,7 +30751,7 @@ entries:
     version: 2.11.0
   - apiVersion: v1
     appVersion: v2.4.2
-    created: '2022-04-04T17:40:28.492641922Z'
+    created: "2022-04-04T17:40:28.492641922Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 8ef8424d185531484bc231073f8c1c8ee4cd81bb708208d5c822d7f211a66df9
     home: https://grafana.com/loki
@@ -30651,7 +30768,7 @@ entries:
     version: 2.10.3
   - apiVersion: v1
     appVersion: v2.4.2
-    created: '2022-03-26T08:12:41.373784013Z'
+    created: "2022-03-26T08:12:41.373784013Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 97323c83948b3c4935df6cde71d6840a229d8371152273386a3713b7ad603bac
     home: https://grafana.com/loki
@@ -30668,7 +30785,7 @@ entries:
     version: 2.10.2
   - apiVersion: v1
     appVersion: v2.4.2
-    created: '2022-02-19T02:39:58.82038418Z'
+    created: "2022-02-19T02:39:58.82038418Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 0d44d18c4a7caf62c24dcb0077dd2f713ffb3dbcf373fad9df7c65bcb84ac651
     home: https://grafana.com/loki
@@ -30685,7 +30802,7 @@ entries:
     version: 2.10.1
   - apiVersion: v1
     appVersion: v2.4.2
-    created: '2022-02-18T01:37:52.792231885Z'
+    created: "2022-02-18T01:37:52.792231885Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: acce59648e5105da3ec9bda9b8209b3991f08f8d4b94ca39e4cc84f12e678f87
     home: https://grafana.com/loki
@@ -30702,7 +30819,7 @@ entries:
     version: 2.10.0
   - apiVersion: v1
     appVersion: v2.4.2
-    created: '2022-02-17T19:08:17.070598671Z'
+    created: "2022-02-17T19:08:17.070598671Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: acff7e251a265e165cb588a458a7ce9f195fc768a0110f1911410f7b8ebf666b
     home: https://grafana.com/loki
@@ -30719,7 +30836,7 @@ entries:
     version: 2.9.2
   - apiVersion: v1
     appVersion: v2.4.2
-    created: '2022-01-20T21:15:05.448910885Z'
+    created: "2022-01-20T21:15:05.448910885Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 084d55d45a04c23098f25a14a7a6664da42a8ec942c6155402a3acc1c2cd3538
     home: https://grafana.com/loki
@@ -30736,7 +30853,7 @@ entries:
     version: 2.9.1
   - apiVersion: v1
     appVersion: v2.4.2
-    created: '2022-01-12T18:07:39.255623444Z'
+    created: "2022-01-12T18:07:39.255623444Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 9db390bda10cca3441ebdb7ba07da74bd8164cd14a187bb64317135c9bedf8a6
     home: https://grafana.com/loki
@@ -30753,7 +30870,7 @@ entries:
     version: 2.9.0
   - apiVersion: v1
     appVersion: v2.4.1
-    created: '2022-01-12T14:39:25.489520104Z'
+    created: "2022-01-12T14:39:25.489520104Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 6afadd8faeef41b0ad7fb4febb064b8debaa298deaa62a1ecdd4cae83ef50932
     home: https://grafana.com/loki
@@ -30770,7 +30887,7 @@ entries:
     version: 2.8.6
   - apiVersion: v1
     appVersion: v2.4.1
-    created: '2022-01-07T06:46:44.973402354Z'
+    created: "2022-01-07T06:46:44.973402354Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 5180aa6a5f02cf90c12caedfa61f58cfc3a5451ba942e7f833faaabdc9fd75c4
     home: https://grafana.com/loki
@@ -30787,7 +30904,7 @@ entries:
     version: 2.8.5
   - apiVersion: v1
     appVersion: v2.4.1
-    created: '2021-12-18T01:42:19.244615171Z'
+    created: "2021-12-18T01:42:19.244615171Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 04bf683e12c581d88f4ca4a4d9f8b2be2c8aae525ce5c8e34e18243b4e78d935
     home: https://grafana.com/loki
@@ -30804,7 +30921,7 @@ entries:
     version: 2.8.4
   - apiVersion: v1
     appVersion: v2.4.1
-    created: '2021-12-16T14:00:24.292840576Z'
+    created: "2021-12-16T14:00:24.292840576Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 0beabcecea71d024503486b8c7da4e82affee9c714685925576d41103ae037c4
     home: https://grafana.com/loki
@@ -30821,7 +30938,7 @@ entries:
     version: 2.8.3
   - apiVersion: v1
     appVersion: v2.4.1
-    created: '2021-12-15T17:50:19.673371242Z'
+    created: "2021-12-15T17:50:19.673371242Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 35b2bd18b686023c53839800374f516ba2138b50bb8fe34b54ceda189876f025
     home: https://grafana.com/loki
@@ -30838,7 +30955,7 @@ entries:
     version: 2.8.2
   - apiVersion: v1
     appVersion: v2.4.1
-    created: '2021-11-08T13:32:17.019974445Z'
+    created: "2021-11-08T13:32:17.019974445Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 94c9f9adf0a7edbc7efe37d04bfc8d4777ec2c857879b320fc4cb07e7116425a
     home: https://grafana.com/loki
@@ -30855,7 +30972,7 @@ entries:
     version: 2.8.1
   - apiVersion: v1
     appVersion: v2.4.0
-    created: '2021-11-05T22:40:38.686236759Z'
+    created: "2021-11-05T22:40:38.686236759Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: dc2f3f0258424451dd474161228fe26712f8f3ff3051dcce9390041236130277
     home: https://grafana.com/loki
@@ -30872,7 +30989,7 @@ entries:
     version: 2.8.0
   - apiVersion: v1
     appVersion: v2.3.0
-    created: '2021-10-28T07:50:55.804974569Z'
+    created: "2021-10-28T07:50:55.804974569Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 4b74fe21d7ab49c51af3350f277020ccfb89178cc4c6b2495de4c87f19580278
     home: https://grafana.com/loki
@@ -30889,7 +31006,7 @@ entries:
     version: 2.7.0
   - apiVersion: v1
     appVersion: v2.3.0
-    created: '2021-08-06T16:53:02.475655455Z'
+    created: "2021-08-06T16:53:02.475655455Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: b4ef9ed74aedd594653e7ee4ce705621d3078f29997ca7faf3d0d2d6c6d2e01e
     home: https://grafana.com/loki
@@ -30906,7 +31023,7 @@ entries:
     version: 2.6.0
   - apiVersion: v1
     appVersion: v2.2.1
-    created: '2021-07-14T18:11:05.824897574Z'
+    created: "2021-07-14T18:11:05.824897574Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: eb1717139bb4a179320a8e541fa175a66eb8d7c81d3825e45fb8c2eccec78b4c
     home: https://grafana.com/loki
@@ -30923,7 +31040,7 @@ entries:
     version: 2.5.3
   - apiVersion: v1
     appVersion: v2.2.1
-    created: '2021-06-28T18:07:24.327212929Z'
+    created: "2021-06-28T18:07:24.327212929Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 676e09460e334c13ba4fb0155dfac2116d1bd8902ce1fa9ceeb550f658807b46
     home: https://grafana.com/loki
@@ -30940,7 +31057,7 @@ entries:
     version: 2.5.2
   - apiVersion: v1
     appVersion: v2.2.0
-    created: '2021-06-22T19:27:42.545572672Z'
+    created: "2021-06-22T19:27:42.545572672Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: b539f3dbde2ce70fcadfda2324b1fe35fc89536e6f443d77aad09c859b290bc5
     home: https://grafana.com/loki
@@ -30957,7 +31074,7 @@ entries:
     version: 2.5.1
   - apiVersion: v1
     appVersion: v2.2.0
-    created: '2021-03-11T16:04:17.471827182Z'
+    created: "2021-03-11T16:04:17.471827182Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 5f1d8c8fc418d49aeb83a04597b3236667719e46c97690f4158ea1e6b17b3650
     home: https://grafana.com/loki
@@ -30974,7 +31091,7 @@ entries:
     version: 2.5.0
   - apiVersion: v1
     appVersion: v2.2.0
-    created: '2021-03-11T15:24:44.000000000Z'
+    created: "2021-03-11T15:24:44Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: a5ca68d4c58d6ba20c4eb3eae5347abea6f39a0cb9f9c323d1b1f36cb8b16034
     home: https://grafana.com/loki
@@ -30991,7 +31108,7 @@ entries:
     version: 2.4.0
   - apiVersion: v1
     appVersion: v2.1.0
-    created: '2020-12-24T15:07:11.496419444Z'
+    created: "2020-12-24T15:07:11.496419444Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 4192eed75ac69e20c9215d611df422ae0bb808fd71bb00daa7787dbcc2b6dd85
     home: https://grafana.com/loki
@@ -31008,7 +31125,7 @@ entries:
     version: 2.3.0
   - apiVersion: v1
     appVersion: v2.0.0
-    created: '2020-12-09T22:40:49.130228963Z'
+    created: "2020-12-09T22:40:49.130228963Z"
     description: 'Loki: like Prometheus, but for logs.'
     digest: dd7967a96cf473e3f759f534e8ce7c935f12c965b45b57efcf7cada312769bfe
     home: https://grafana.com/loki
@@ -31025,7 +31142,7 @@ entries:
     version: 2.2.0
   - apiVersion: v1
     appVersion: v2.0.0
-    created: '2020-12-09T10:53:57.064718831+01:00'
+    created: "2020-12-09T10:53:57.064718831+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: f6d65ca15f96d9090325be6259c9b91e739a35af600fd20c6fd6ce90e50e508a
     home: https://grafana.com/loki
@@ -31042,7 +31159,7 @@ entries:
     version: 2.1.0
   - apiVersion: v1
     appVersion: v2.0.0
-    created: '2020-12-09T10:53:57.063818917+01:00'
+    created: "2020-12-09T10:53:57.063818917+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 2950b122f0e29d77722957b7eb4c855098bf78dd679ce7f809833b4c60b0f672
     home: https://grafana.com/loki
@@ -31059,7 +31176,7 @@ entries:
     version: 2.0.2
   - apiVersion: v1
     appVersion: v2.0.0
-    created: '2020-12-09T10:53:57.062837264+01:00'
+    created: "2020-12-09T10:53:57.062837264+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 19d7f76c7c7e8395947af51bafeb19d4fa004b64e0b320c5e725a1bf08d0c5de
     home: https://grafana.com/loki
@@ -31076,7 +31193,7 @@ entries:
     version: 2.0.1
   - apiVersion: v1
     appVersion: v2.0.0
-    created: '2020-12-09T10:53:57.061356251+01:00'
+    created: "2020-12-09T10:53:57.061356251+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: aa6170325acabfd6f75d5813cdf3e3fb2b362b5e255e5ac5cb5d41d0dbf6248b
     home: https://grafana.com/loki
@@ -31093,7 +31210,7 @@ entries:
     version: 2.0.0
   - apiVersion: v1
     appVersion: v1.6.0
-    created: '2020-12-09T10:53:57.050134556+01:00'
+    created: "2020-12-09T10:53:57.050134556+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: a588edce816d0278a173d416cfba0aacb98d6d7cf8888fe1f2d708a06be500bd
     home: https://grafana.com/loki
@@ -31110,7 +31227,7 @@ entries:
     version: 0.31.1
   - apiVersion: v1
     appVersion: v1.6.0
-    created: '2020-12-09T10:53:57.049337328+01:00'
+    created: "2020-12-09T10:53:57.049337328+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 43d89a097be7ed1756e348c563edc993ebc08134720589f712d4a9fa7afa3e3e
     home: https://grafana.com/loki
@@ -31127,7 +31244,7 @@ entries:
     version: 0.31.0
   - apiVersion: v1
     appVersion: v1.5.0
-    created: '2020-12-09T10:53:57.048534944+01:00'
+    created: "2020-12-09T10:53:57.048534944+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 2c99eabdd810b79fca1395ec5d264acf3a6b2f383549aa4c9a4baa6b88041d7f
     home: https://grafana.com/loki
@@ -31144,7 +31261,7 @@ entries:
     version: 0.30.2
   - apiVersion: v1
     appVersion: v1.5.0
-    created: '2020-12-09T10:53:57.047680216+01:00'
+    created: "2020-12-09T10:53:57.047680216+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 59d41a25c45ead6b26900b943d7d742f4699b845e32f77d509c79e75ca29a60f
     home: https://grafana.com/loki
@@ -31161,7 +31278,7 @@ entries:
     version: 0.30.1
   - apiVersion: v1
     appVersion: v1.5.0
-    created: '2020-12-09T10:53:57.046890621+01:00'
+    created: "2020-12-09T10:53:57.046890621+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 336c2413bb9958a10d814e96c124aacfb22833a30f523136880382cd05750eaa
     home: https://grafana.com/loki
@@ -31178,7 +31295,7 @@ entries:
     version: 0.30.0
   - apiVersion: v1
     appVersion: v1.5.0
-    created: '2020-12-09T10:53:57.046100624+01:00'
+    created: "2020-12-09T10:53:57.046100624+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: cc02b32af0a15af6551e3a3a52fe14a5041c1ce9a5525183e4ba629aae090f07
     home: https://grafana.com/loki
@@ -31195,7 +31312,7 @@ entries:
     version: 0.29.1
   - apiVersion: v1
     appVersion: v1.5.0
-    created: '2020-12-09T10:53:57.045328076+01:00'
+    created: "2020-12-09T10:53:57.045328076+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 714ee1f1bb1a23616804b0e727160af20d59909de4d2fdc3a9e63167ea78d12a
     home: https://grafana.com/loki
@@ -31212,7 +31329,7 @@ entries:
     version: 0.29.0
   - apiVersion: v1
     appVersion: v1.4.1
-    created: '2020-12-09T10:53:57.044558587+01:00'
+    created: "2020-12-09T10:53:57.044558587+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: c365e7a3c3dfed42e19aa6b7d03290d1a47650ba5dc9c9d55a3bd90387dd2b4a
     home: https://grafana.com/loki
@@ -31229,7 +31346,7 @@ entries:
     version: 0.28.1
   - apiVersion: v1
     appVersion: v1.4.1
-    created: '2020-12-09T10:53:57.043764697+01:00'
+    created: "2020-12-09T10:53:57.043764697+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: d7d843971904ba19d1eaa25416406b49fd708c3d13ecfc1ae35900c1014b3b56
     home: https://grafana.com/loki
@@ -31246,7 +31363,7 @@ entries:
     version: 0.28.0
   - apiVersion: v1
     appVersion: v1.4.2
-    created: '2020-12-09T10:53:57.042978262+01:00'
+    created: "2020-12-09T10:53:57.042978262+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: b2c06d2bb4fa7c6c6854ecbc30eac9f202bcd265f4e40765c57e131371a9774d
     home: https://grafana.com/loki
@@ -31263,7 +31380,7 @@ entries:
     version: 0.27.0
   - apiVersion: v1
     appVersion: v1.4.1
-    created: '2020-12-09T10:53:57.041487737+01:00'
+    created: "2020-12-09T10:53:57.041487737+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: fc5f60d8628bf4508f1345a18afd8cb76e4b77fbbf66820c4cad7f56ed863a87
     home: https://grafana.com/loki
@@ -31280,7 +31397,7 @@ entries:
     version: 0.26.1
   - apiVersion: v1
     appVersion: v1.4.0
-    created: '2020-12-09T10:53:57.040704368+01:00'
+    created: "2020-12-09T10:53:57.040704368+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 4f4f0b27ef01e5ecae3795ce3c20b3bad28f1246de867ed57a6934e12f77cfd1
     home: https://grafana.com/loki
@@ -31297,7 +31414,7 @@ entries:
     version: 0.26.0
   - apiVersion: v1
     appVersion: v1.3.0
-    created: '2020-12-09T10:53:57.039848205+01:00'
+    created: "2020-12-09T10:53:57.039848205+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: b75dcebee5beb4fe7e5cff46909e1aab640c4c20c97b41e457ccc50455335b7c
     home: https://grafana.com/loki
@@ -31314,7 +31431,7 @@ entries:
     version: 0.25.3
   - apiVersion: v1
     appVersion: v1.3.0
-    created: '2020-12-09T10:53:57.039060462+01:00'
+    created: "2020-12-09T10:53:57.039060462+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: d69307b1c68fe6eb62e08cd7bd4ece5ac9f370e95c889cf417cdc3cda80de6bd
     home: https://grafana.com/loki
@@ -31331,7 +31448,7 @@ entries:
     version: 0.25.2
   - apiVersion: v1
     appVersion: v1.3.0
-    created: '2020-12-09T10:53:57.038268349+01:00'
+    created: "2020-12-09T10:53:57.038268349+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: dd2dff55d8d3f340a50f958a81b599040a052eb6bdcc82128d13158e7d3c98d2
     home: https://grafana.com/loki
@@ -31348,7 +31465,7 @@ entries:
     version: 0.25.1
   - apiVersion: v1
     appVersion: v1.3.0
-    created: '2020-12-09T10:53:57.037494262+01:00'
+    created: "2020-12-09T10:53:57.037494262+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 7adf6652a3295dd4928c1026fdc251a7dbcfacbcbf9c09d6f168ab670a6fd737
     home: https://grafana.com/loki
@@ -31365,7 +31482,7 @@ entries:
     version: 0.25.0
   - apiVersion: v1
     appVersion: v1.3.0
-    created: '2020-12-09T10:53:57.036662312+01:00'
+    created: "2020-12-09T10:53:57.036662312+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 582e409efba17aa9728903275bf6da7a78a4200e41524f25133ab1342fc4b181
     home: https://grafana.com/loki
@@ -31382,7 +31499,7 @@ entries:
     version: 0.24.0
   - apiVersion: v1
     appVersion: v1.3.0
-    created: '2020-12-09T10:53:57.035875286+01:00'
+    created: "2020-12-09T10:53:57.035875286+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: ef43f6cce4ef6ffafbf4cd67a216583d07257cdfbe24711b12431be91a0aeb10
     home: https://grafana.com/loki
@@ -31399,7 +31516,7 @@ entries:
     version: 0.23.0
   - apiVersion: v1
     appVersion: v1.2.0
-    created: '2020-12-09T10:53:57.035118506+01:00'
+    created: "2020-12-09T10:53:57.035118506+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: efadee3149bdd7460deb8993f3f6a92a0bb8487518db24d0a4dac210ea527ddf
     home: https://grafana.com/loki
@@ -31416,7 +31533,7 @@ entries:
     version: 0.22.0
   - apiVersion: v1
     appVersion: v1.2.0
-    created: '2020-12-09T10:53:57.034320142+01:00'
+    created: "2020-12-09T10:53:57.034320142+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: ac2c152c1b9d2c9b7f928ec657d48bd16b1be9a684a734ae7d0f9fd43d23e742
     home: https://grafana.com/loki
@@ -31433,7 +31550,7 @@ entries:
     version: 0.21.0
   - apiVersion: v1
     appVersion: v1.1.0
-    created: '2020-12-09T10:53:57.033570902+01:00'
+    created: "2020-12-09T10:53:57.033570902+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 715156352d6f7c5def6f43b87cd7620d1d880ce4c68bdd007f2f77d3035f3853
     home: https://grafana.com/loki
@@ -31450,7 +31567,7 @@ entries:
     version: 0.20.0
   - apiVersion: v1
     appVersion: v1.0.0
-    created: '2020-12-09T10:53:57.032230393+01:00'
+    created: "2020-12-09T10:53:57.032230393+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 9c7119c53e589f0de958ca1233bb4ef84784576904ccb59a945c1d1f4f88972a
     home: https://grafana.com/loki
@@ -31467,7 +31584,7 @@ entries:
     version: 0.19.0
   - apiVersion: v1
     appVersion: v1.0.0
-    created: '2020-12-09T10:53:57.031428404+01:00'
+    created: "2020-12-09T10:53:57.031428404+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: e0b214696cb8ca268b0d43b75ecb01f3d435ead62eb5940eb9352e24ccec039a
     home: https://grafana.com/loki
@@ -31484,7 +31601,7 @@ entries:
     version: 0.18.0
   - apiVersion: v1
     appVersion: v0.4.0
-    created: '2020-12-09T10:53:57.030698924+01:00'
+    created: "2020-12-09T10:53:57.030698924+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 0f2bc3fec9d28ed432a6061054677b47a9f9e89ea2efc7b889d7900addfee855
     home: https://grafana.com/loki
@@ -31501,7 +31618,7 @@ entries:
     version: 0.17.2
   - apiVersion: v1
     appVersion: v0.4.0
-    created: '2020-12-09T10:53:57.029944637+01:00'
+    created: "2020-12-09T10:53:57.029944637+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: af89a6f9acb458ecb467ddd4a6a80833dd3ff24fde50f737d1aea7beafaabb48
     home: https://grafana.com/loki
@@ -31518,7 +31635,7 @@ entries:
     version: 0.17.1
   - apiVersion: v1
     appVersion: v0.4.0
-    created: '2020-12-09T10:53:57.029209589+01:00'
+    created: "2020-12-09T10:53:57.029209589+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: cfc41f6853f637eab5cf0e67a4dd06fa3d22dade912cecd32d94e313313cd34b
     home: https://grafana.com/loki
@@ -31535,7 +31652,7 @@ entries:
     version: 0.17.0
   - apiVersion: v1
     appVersion: v0.3.0
-    created: '2020-12-09T10:53:57.028464338+01:00'
+    created: "2020-12-09T10:53:57.028464338+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: fd388538fb806848b03642eff2da460f0448a3dcf1fe01b94411ddc248f3eef5
     home: https://grafana.com/loki
@@ -31552,7 +31669,7 @@ entries:
     version: 0.16.1
   - apiVersion: v1
     appVersion: v0.3.0
-    created: '2020-12-09T10:53:57.027690914+01:00'
+    created: "2020-12-09T10:53:57.027690914+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: fd56e1788368e97fff96a14ce26a7b169d682ac1650583630d1dbc32aba8ab40
     home: https://grafana.com/loki
@@ -31569,7 +31686,7 @@ entries:
     version: 0.16.0
   - apiVersion: v1
     appVersion: v0.3.0
-    created: '2020-12-09T10:53:57.026956423+01:00'
+    created: "2020-12-09T10:53:57.026956423+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 01a156bcddab8314d8372cb87c2e2a505ca3d2ab1bd23816f7505ec52b202eef
     home: https://grafana.com/loki
@@ -31586,7 +31703,7 @@ entries:
     version: 0.15.0
   - apiVersion: v1
     appVersion: v0.3.0
-    created: '2020-12-09T10:53:57.026235342+01:00'
+    created: "2020-12-09T10:53:57.026235342+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 790ca32058c22b46e6d2d1edc51504a09142ac4542cf95285c41258830aca1cb
     home: https://grafana.com/loki
@@ -31603,7 +31720,7 @@ entries:
     version: 0.14.3
   - apiVersion: v1
     appVersion: v0.3.0
-    created: '2020-12-09T10:53:57.025527991+01:00'
+    created: "2020-12-09T10:53:57.025527991+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 55c635da882aa47bd698f01b5aae63919b179077b7ef625351a8dcdb6ea1789f
     home: https://grafana.com/loki
@@ -31620,7 +31737,7 @@ entries:
     version: 0.14.2
   - apiVersion: v1
     appVersion: v0.3.0
-    created: '2020-12-09T10:53:57.024830276+01:00'
+    created: "2020-12-09T10:53:57.024830276+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 3c012a357e89c4f92226363fcadc47c6b58bdfc88642cbf50986151d01c5eeda
     home: https://grafana.com/loki
@@ -31637,7 +31754,7 @@ entries:
     version: 0.14.1
   - apiVersion: v1
     appVersion: v0.3.0
-    created: '2020-12-09T10:53:57.02406784+01:00'
+    created: "2020-12-09T10:53:57.02406784+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 4f6cd92592300d66f971c77bbbd720effc277cf4bc8a516071495c534af8fc67
     home: https://grafana.com/loki
@@ -31654,7 +31771,7 @@ entries:
     version: 0.14.0
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.023169829+01:00'
+    created: "2020-12-09T10:53:57.023169829+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 862f323d594b99e2b44087aa4cfe38534aa233b8eb4a7ecea78ac9a424a9b6b8
     home: https://grafana.com/loki
@@ -31671,7 +31788,7 @@ entries:
     version: 0.13.0
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.021855336+01:00'
+    created: "2020-12-09T10:53:57.021855336+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 75e91e15b8a5f320723a3edc6c975b1640a4937217302ecc739c88f45011f1e2
     home: https://grafana.com/loki
@@ -31688,7 +31805,7 @@ entries:
     version: 0.12.0
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.021112101+01:00'
+    created: "2020-12-09T10:53:57.021112101+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: fa450059b175c8ab218e3226f13444ba3f4e5216fab86ae50239b0d533e33020
     home: https://grafana.com/loki
@@ -31705,7 +31822,7 @@ entries:
     version: 0.11.0
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.020386651+01:00'
+    created: "2020-12-09T10:53:57.020386651+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 083bc0828ef6cd02601fd24ee3e4e70413ddef39eab29859ec2e52f3a8f11405
     home: https://grafana.com/loki
@@ -31722,7 +31839,7 @@ entries:
     version: 0.10.0
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.060494579+01:00'
+    created: "2020-12-09T10:53:57.060494579+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: ab57523ec80bfadb2c95cb55b88272ae74111d8a93a00ab22c034aa0d3afb6bf
     home: https://grafana.com/loki
@@ -31739,7 +31856,7 @@ entries:
     version: 0.9.2
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.059819316+01:00'
+    created: "2020-12-09T10:53:57.059819316+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 37e60a0d115ed20183f376eabb07e7b52280a7b7a676d6883a5afb9faf2dcb09
     home: https://grafana.com/loki
@@ -31756,7 +31873,7 @@ entries:
     version: 0.9.1
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.05916232+01:00'
+    created: "2020-12-09T10:53:57.05916232+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 096ad9077373e1f2be65e4a99a2e917a048c16eb32e9d7607c04a9629a3bdaf9
     home: https://grafana.com/loki
@@ -31773,7 +31890,7 @@ entries:
     version: 0.9.0
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.058521536+01:00'
+    created: "2020-12-09T10:53:57.058521536+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 47405b00f7c0fa7317b42a3a4d54187449c32713823c7e69103aa535acedc7ad
     home: https://grafana.com/loki
@@ -31790,7 +31907,7 @@ entries:
     version: 0.8.5
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.05789617+01:00'
+    created: "2020-12-09T10:53:57.05789617+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: c2db1b9385b3eedab947350e7f05a0d1ff55926b8e9eee9eea08e92f823fe8f9
     home: https://grafana.com/loki
@@ -31807,7 +31924,7 @@ entries:
     version: 0.8.4
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.057256387+01:00'
+    created: "2020-12-09T10:53:57.057256387+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 324ce9ebb8c3148d440bd8216760e558ed4b63309e759f7ae65493ef897d6df1
     home: https://grafana.com/loki
@@ -31824,7 +31941,7 @@ entries:
     version: 0.8.3
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.056621519+01:00'
+    created: "2020-12-09T10:53:57.056621519+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 1a9c09b6e49fc7ab0deddf0ee2210f4c91c3cc40ae66d090d0ca4d5998a2c2cc
     home: https://grafana.com/loki
@@ -31841,7 +31958,7 @@ entries:
     version: 0.8.2
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.055990408+01:00'
+    created: "2020-12-09T10:53:57.055990408+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: e716194272835e3c069d5232a70924390568fa589a1a05fab03e9cfbee8730b3
     home: https://grafana.com/loki
@@ -31858,7 +31975,7 @@ entries:
     version: 0.8.1
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.055350702+01:00'
+    created: "2020-12-09T10:53:57.055350702+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 1b4a6c327668e312d6b61626c3bd48eaa5139e60804d06afebc6a351cba97ff3
     home: https://grafana.com/loki
@@ -31875,7 +31992,7 @@ entries:
     version: 0.8.0
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.054754813+01:00'
+    created: "2020-12-09T10:53:57.054754813+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 007b886263b9f7c004960c5477558d7d0f7567e8b4805191281e81b3e0a87343
     home: https://grafana.com/loki
@@ -31892,7 +32009,7 @@ entries:
     version: 0.7.2
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.05416818+01:00'
+    created: "2020-12-09T10:53:57.05416818+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: ec3eb0a7b46900195444e3dda3af8853e1cc5af88736ecb5484e517918468be0
     home: https://grafana.com/loki
@@ -31909,7 +32026,7 @@ entries:
     version: 0.7.1
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.053582693+01:00'
+    created: "2020-12-09T10:53:57.053582693+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 7aaf0194556a224debd2ecb7572fa432c54ce1beff357d99dd6e55f772fe561f
     home: https://grafana.com/loki
@@ -31926,7 +32043,7 @@ entries:
     version: 0.7.0
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.052986771+01:00'
+    created: "2020-12-09T10:53:57.052986771+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 485999e0808701bb5e890a75b056b97365e24e6953b88f8cac58d32497beea10
     home: https://grafana.com/loki
@@ -31943,7 +32060,7 @@ entries:
     version: 0.6.0
   - apiVersion: v1
     appVersion: 0.0.1
-    created: '2020-12-09T10:53:57.052238102+01:00'
+    created: "2020-12-09T10:53:57.052238102+01:00"
     description: 'Loki: like Prometheus, but for logs.'
     digest: 888563cc143746ae8216f5e96c11a3209f666b97d5dd9b7878b1f6b37dbb6db0
     home: https://grafana.com/loki
@@ -48197,4 +48314,4 @@ entries:
     urls:
     - https://github.com/grafana-community/helm-charts/releases/download/tempo-vulture-0.1.0/tempo-vulture-0.1.0.tgz
     version: 0.1.0
-generated: "2026-03-22T14:06:55.865314201Z"
+generated: "2026-03-23T10:33:26.1917125Z"
