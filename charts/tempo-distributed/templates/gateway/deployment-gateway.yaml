@@ -104,7 +104,7 @@ spec:
               mountPath: /tmp
             - name: docker-entrypoint-d-override
               mountPath: /docker-entrypoint.d
-             {{- if .Values.gateway.nginxConfig.ssl }}
+            {{- if .Values.gateway.nginxConfig.ssl }}
             - name: gateway-tls
               mountPath: /etc/nginx/ssl
               readOnly: true
