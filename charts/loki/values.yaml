@@ -4360,6 +4360,9 @@ monitoring:
     scheme: http
     # -- ServiceMonitor will use these tlsConfig settings to make the health check requests
     tlsConfig: null
+    # -- ServiceMonitor job label prefix will be used to generate the job label for the scraped metrics.
+    # -- The job label is required for the included dashboards to work.
+    jobPrefix: '{{ include "loki.namespace" $ }}/'
 
 # -- DEPRECATED Configuration for the table-manager. The table-manager is only necessary when using a deprecated
 # index type such as Cassandra, Bigtable, or DynamoDB, it has not been necessary since loki introduced self-
