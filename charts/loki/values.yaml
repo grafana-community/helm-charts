@@ -727,6 +727,14 @@ lokiCanary:
   push: true
   # -- If set overwrites the default value set by loki.host helper function. Use this if gateway not enabled.
   lokiurl: null
+  # -- Authentication information for loki canary
+  auth:
+    # -- If authentication should be enabled. Requires loki.auth_enabled to be enabled as well.
+    enabled: true
+    # -- Name of the tenant for loki-canary
+    name: "self-monitoring"
+    # -- Password of the gateway for Basic auth for loki-canary
+    password: null
   # -- The name of the label to look for at loki when doing the checks.
   labelname: pod
   # -- Additional annotations for the `loki-canary` Daemonset
@@ -792,12 +800,6 @@ lokiCanary:
       maxUnavailable: 1
   # -- Replicas for `loki-canary` when using a Deployment
   replicas: 1
-  # -- Tenant to use for loki-canary
-  tenant:
-    # -- Name of the tenant for loki-canary
-    name: "self-monitoring"
-    # -- Password of the gateway for Basic auth for loki-canary
-    password: null
 ######################################################################################################################
 #
 # Service Accounts and Kubernetes RBAC
