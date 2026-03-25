@@ -56,7 +56,7 @@ spec:
             - -addr={{- default (include "loki.host" $) .lokiurl }}
             - -labelname={{ .labelname }}
             - -labelvalue=$(POD_NAME)
-            {{- if $.Values.loki.auth_enabled and $.Values.lokiCanary.auth.enabled }}
+            {{- if and $.Values.loki.auth_enabled $.Values.lokiCanary.auth.enabled }}
             - -user={{ dig "selfMonitoring" "tenant" "name" $.Values.lokiCanary.auth.name $.Values.monitoring }}
             - -tenant-id={{ dig "selfMonitoring" "tenant" "name" $.Values.lokiCanary.auth.name $.Values.monitoring }}
             - -pass={{ dig "selfMonitoring" "tenant" "password" $.Values.lokiCanary.auth.password $.Values.monitoring }}
