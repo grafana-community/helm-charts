@@ -70,6 +70,9 @@ name: {{ printf "%s-%s" .component .rolloutZoneName }}
 rollout-group: {{ .component }}
 zone: {{ .rolloutZoneName }}
 {{- end }}
+{{- with .ctx.Values.global.commonLabels }}
+{{ toYaml . }}
+{{- end }}
 helm.sh/chart: {{ include "tempo.chart" .ctx }}
 app.kubernetes.io/name: {{ include "tempo.name" .ctx }}
 app.kubernetes.io/instance: {{ .ctx.Release.Name }}
