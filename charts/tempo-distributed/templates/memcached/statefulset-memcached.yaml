@@ -58,12 +58,9 @@ spec:
         - image: {{ include "tempo.imageReference" $dict }}
           imagePullPolicy: {{ .Values.memcached.image.pullPolicy }}
           name: memcached
-          {{- if or .Values.global.extraArgs .Values.memcached.extraArgs }}
+          {{- if .Values.memcached.extraArgs }}
           args:
             {{- with .Values.memcached.extraArgs }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with .Values.global.extraArgs }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
