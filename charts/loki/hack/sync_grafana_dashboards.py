@@ -88,8 +88,8 @@ replacement_map = {
     '($namespace)/querier': {
         'replacement': '($namespace)/loki.*-querier',
     },
-    '"(.*compactor|loki.*-backend.*|loki-single-binary)"': {
-        'replacement': '".*compactor|loki.*-backend.*|loki-single-binary)',
+    '\\"(.*compactor|loki.*-backend.*|loki-single-binary)\\"': {
+        'replacement': '(loki.*-compactor|loki.*-backend.*|loki-single-binary)',
     },
     'cluster=~\\"$cluster\\"': {
         'replacement': 'cluster=~\\"|$cluster\\"',
@@ -109,7 +109,7 @@ https://github.com/grafana-community/helm-charts/tree/main/charts/loki/hack
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ printf "%%s-%%s" (include "loki.dashboardsName" $) "%(name)s" | trunc 63 | trimSuffix "-" }}
+  name: {{ printf "%%s-dashboards-%%s" (include "loki.name" $) "%(name)s" | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Values.monitoring.dashboards.namespace | default (include "loki.namespace" $) }}
   labels:
     {{- include "loki.labels" $ | nindent 4 }}

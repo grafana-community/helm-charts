@@ -7,7 +7,7 @@ https://github.com/grafana-community/helm-charts/tree/main/charts/loki/hack
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ printf "%s-%s" (include "loki.dashboardsName" $) "loki-chunks" | trunc 63 | trimSuffix "-" }}
+  name: {{ printf "%s-dashboards-%s" (include "loki.name" $) "loki-chunks" | trunc 63 | trimSuffix "-" }}
   namespace: {{ .Values.monitoring.dashboards.namespace | default (include "loki.namespace" $) }}
   labels:
     {{- include "loki.labels" $ | nindent 4 }}

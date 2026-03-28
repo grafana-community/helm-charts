@@ -1,12 +1,3 @@
-{{/*
-dashboards name
-*/}}
-{{- define "loki.dashboardsName" -}}
-{{ include "loki.name" . }}-dashboards
-{{- end }}
-
-
-
 {{/* To help configure Grafana operator folder settings (folder, folderUID, or folderRef) */}}
 {{- define "loki.grafana.operator.folder" }}
 {{- $folder := .Values.monitoring.dashboards.grafanaOperator.folder }}
