@@ -24,146 +24,128 @@ spec:
     rules:
     - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, cluster, job))
       record: cluster_job:loki_request_duration_seconds:99quantile
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, cluster, job))
       record: cluster_job:loki_request_duration_seconds:50quantile
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, job) / sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, job)
       record: cluster_job:loki_request_duration_seconds:avg
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, cluster, job)
       record: cluster_job:loki_request_duration_seconds_bucket:sum_rate
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, job)
       record: cluster_job:loki_request_duration_seconds_sum:sum_rate
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, job)
       record: cluster_job:loki_request_duration_seconds_count:sum_rate
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, cluster, job, route))
       record: cluster_job_route:loki_request_duration_seconds:99quantile
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, cluster, job, route))
       record: cluster_job_route:loki_request_duration_seconds:50quantile
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, job, route) / sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, job, route)
       record: cluster_job_route:loki_request_duration_seconds:avg
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, cluster, job, route)
       record: cluster_job_route:loki_request_duration_seconds_bucket:sum_rate
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, job, route)
       record: cluster_job_route:loki_request_duration_seconds_sum:sum_rate
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, job, route)
       record: cluster_job_route:loki_request_duration_seconds_count:sum_rate
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, cluster, namespace, job, route))
       record: cluster_namespace_job_route:loki_request_duration_seconds:99quantile
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, cluster, namespace, job, route))
       record: cluster_namespace_job_route:loki_request_duration_seconds:50quantile
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, namespace, job, route) / sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, namespace, job, route)
       record: cluster_namespace_job_route:loki_request_duration_seconds:avg
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, cluster, namespace, job, route)
       record: cluster_namespace_job_route:loki_request_duration_seconds_bucket:sum_rate
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, namespace, job, route)
       record: cluster_namespace_job_route:loki_request_duration_seconds_sum:sum_rate
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
     - expr: sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}cluster, namespace, job, route)
       record: cluster_namespace_job_route:loki_request_duration_seconds_count:sum_rate
-      {{- if or $.Values.monitoring.rules.additionalRuleLabels  }}
       labels:
+        cluster: "{{ include "loki.clusterLabel" $ }}"
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- end }}
 {{- end }}

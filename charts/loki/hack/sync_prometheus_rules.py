@@ -182,12 +182,13 @@ def add_custom_labels(rules_str, group, indent=4, label_indent=2):
     rule_group_labels = get_rule_group_condition(condition_map.get(group['name'], ''), 'additionalRuleGroupLabels')
 
     additional_rule_labels = textwrap.indent("""
+cluster: "{{ include "loki.clusterLabel" $ }}"
 {{- with .Values.monitoring.rules.additionalRuleLabels }}
   {{- toYaml . | nindent 8 }}
 {{- end }}""", " " * (indent + label_indent * 2))
 
-    additional_rule_labels_condition_start = "\n" + " " * (indent + label_indent) + '{{- if or $.Values.monitoring.rules.additionalRuleLabels %s }}' % (rule_group_labels,)
-    additional_rule_labels_condition_end = "\n" + " " * (indent + label_indent) + '{{- end }}'
+    additional_rule_labels_condition_start = ""
+    additional_rule_labels_condition_end = ""
     # labels: cannot be null, if a rule does not have any labels by default, the labels block
     # should only be added if there are .Values.monitoring.rules.additionalRuleLabels defined
     rule_seperator = "\n" + " " * indent + "-.*"
