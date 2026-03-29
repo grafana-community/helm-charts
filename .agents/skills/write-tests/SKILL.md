@@ -32,7 +32,7 @@ Work through these steps silently — do not narrate each step. Produce a single
 - Glob `charts/<chart>/tests/**` to see what test files already exist.
 - For each component group, count:
   - How many renderable templates exist (exclude `_*.tpl` helper/partial files)
-  - How many have a corresponding `_test.yaml` in `charts/<chart>/tests/<component>/`
+  - How many have a corresponding test file in `charts/<chart>/tests/<component>/`
 
 ### 3. Assess complexity
 
@@ -85,7 +85,7 @@ After the user answers, summarise the agreed scope in one short paragraph, then 
 ## Reference: test-writer conventions
 
 When writing tests directly (not delegating), follow the conventions in the test-writer subagent:
-- Test files mirror the template path: `charts/<chart>/tests/<component>/<template>_test.yaml`
+- Test files mirror the template path: `charts/<chart>/tests/<component>/<template>.yaml` (convention: `<template>_test.yaml`, but any `.yaml` filename is valid — the repo uses `--file 'tests/**/*.yaml'`)
 - Always set deployment-mode-style flags explicitly — never rely on defaults when a chart has conditional rendering modes
 - Run `make helm-unittest HELM_UNITTEST_CHART=<chart>` after each file to validate before moving on
 - Prefer `equal` and `contains` over `exists` — specific assertions catch regressions

@@ -29,13 +29,13 @@ Given a chart (or specific templates within a chart), produce a structured analy
 
 ## Historical Context Investigation
 
-When asked why a feature, pattern, or block of code exists, use git history and GitHub to trace its origin:
+When asked why a feature, pattern, or block of code exists, use Git history and GitHub to trace its origin:
 
 ### Git commands
 
 1. **`git blame <file>`** — Identify which commit introduced specific lines. Use `-L <start>,<end>` to focus on a line range.
 2. **`git log -S '<string>' -- <path>`** — Pickaxe search: find commits that added or removed a specific string (e.g., a values key or helper name).
-3. **`git log -G '<regex>' -- <path>`** — Regex search: find commits where a regex match changed in the diff.
+3. **`git log -G '<regex>' -- <path>`** — regular expression search: find commits where a regular expression match changed in the diff.
 4. **`git log --follow -- <file>`** — Track a file's history across renames.
 5. **`git show <commit>`** — Read the full commit message and diff for context on *why* a change was made.
 

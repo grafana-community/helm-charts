@@ -9,7 +9,7 @@ hooks:
     - matcher: "Write|Edit"
       hooks:
         - type: command
-          command: "case \"$TOOL_INPUT\" in *'/tests/'*'_test.yaml'*) ;; *) echo 'BLOCKED: test-writer can only create/edit files matching charts/*/tests/*_test.yaml' >&2; exit 2;; esac"
+          command: "case \"$TOOL_INPUT\" in *'/tests/'*'.yaml'*) ;; *) echo 'BLOCKED: test-writer can only create/edit .yaml files under charts/*/tests/' >&2; exit 2;; esac"
     - matcher: "Bash"
       hooks:
         - type: command
@@ -62,7 +62,7 @@ tests:
 |-----------|---------|
 | `equal` | Exact match at JSON path |
 | `notEqual` | Value differs from expected |
-| `matchRegex` | Regex match on string value |
+| `matchRegex` | regular expression match on string value |
 | `exists` | Path exists in rendered output |
 | `isNull` / `isNotNull` | Path is/isn't null |
 | `isEmpty` / `isNotEmpty` | Path is/isn't empty |
@@ -148,12 +148,12 @@ charts/<chart>/tests/
 
 ## Rules
 
-- Only create/edit files matching `charts/*/tests/*_test.yaml`.
+- Only create/edit `.yaml` files under `charts/*/tests/`.
 - Never modify templates, values.yaml, Chart.yaml, or any non-test file.
-- Never run destructive shell commands (rm, git push, git commit, git checkout, git reset).
+- Never run destructive shell commands (e.g. `rm`, `git push`, `git commit`, `git checkout`, `git reset`).
 - Use `RELEASE-NAME` as the default release name in assertions (this is helm-unittest's default).
 - When a template has subchart dependencies, you may need to use `set` to provide required subchart values.
 - Always run the tests after writing them — untested test files are not useful.
 - If a test run reveals the template doesn't render with default values, investigate `values.yaml` to find the correct defaults and adjust.
 - Prefer specific assertions (`equal`, `contains`) over loose ones (`exists`) — specific assertions catch regressions.
-- Test file names MUST end with `_test.yaml` — this is a helm-unittest requirement.
+- Test filenames must end with `.yaml`. This repo configures helm-unittest with `--file 'tests/**/*.yaml'` so any `.yaml` filename is valid — `<template>_test.yaml` is the preferred convention but not enforced.
