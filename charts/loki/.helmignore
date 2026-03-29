@@ -21,12 +21,12 @@
 .idea/
 *.tmproj
 .vscode/
+.agents/
+.claude/
 # Helm plugin tooling
 ci/
 tests/
 *.gotmpl
 # pre-fork content - to be removed
 test/
-scenarios/
-docs/
 *-values.yaml
