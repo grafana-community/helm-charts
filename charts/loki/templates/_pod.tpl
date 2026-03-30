@@ -27,6 +27,13 @@ spec:
     {{- tpl ( . | toYaml) $ctx | nindent 4 }}
   {{- end }}
   serviceAccountName: {{ include "loki.serviceAccountName" . }}
+  {{- if (kindIs "bool" $component.enableServiceLinks) }}
+  enableServiceLinks: {{ $component.enableServiceLinks }}
+  {{- else if (kindIs "bool" .Values.defaults.enableServiceLinks) }}
+  enableServiceLinks: {{ .Values.defaults.enableServiceLinks }}
+  {{- else if (kindIs "bool" .Values.loki.hostUsers) }}
+  enableServiceLinks: {{ .Values.loki.enableServiceLinks }}
+  {{- end }}
   {{- if (kindIs "bool" (coalesce $component.automountServiceAccountToken .Values.defaults.automountServiceAccountToken)) }}
   automountServiceAccountToken: {{ (coalesce $component.automountServiceAccountToken .Values.defaults.automountServiceAccountToken) }}
   {{- end }}
