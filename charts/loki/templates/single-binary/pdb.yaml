@@ -1,4 +1,4 @@
 {{- $isSingleBinary := eq (include "loki.deployment.isSingleBinary" .) "true" -}}
 {{- if $isSingleBinary -}}
-{{- include "loki.pdb" (dict "target" "single-binary" "component" .Values.singleBinary "ctx" . "name" (include "loki.fullname" )) }}
+{{- include "loki.pdb" (dict "target" "single-binary" "component" .Values.singleBinary "ctx" . "name" (include "loki.fullname" .)) }}
 {{- end }}
