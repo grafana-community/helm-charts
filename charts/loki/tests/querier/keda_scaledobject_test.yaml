@@ -1,0 +1,103 @@
+suite: querier KEDA ScaledObject
+templates:
+  - querier/so.yaml
+  - querier/deployment-querier.yaml
+
+tests:
+  - it: should not render ScaledObject when kedaAutoscaling is disabled
+    templates:
+      - querier/so.yaml
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      querier.kedaAutoscaling.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ScaledObject when kedaAutoscaling is enabled in distributed mode
+    templates:
+      - querier/so.yaml
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      loki.kedaAutoscaling.prometheusAddress: http://prometheus:9090
+      querier.kedaAutoscaling.enabled: true
+      querier.kedaAutoscaling.minReplicas: 2
+      querier.kedaAutoscaling.maxReplicas: 10
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ScaledObject
+      - equal:
+          path: spec.minReplicaCount
+          value: 2
+      - equal:
+          path: spec.maxReplicaCount
+          value: 10
+      - equal:
+          path: spec.cooldownPeriod
+          value: 300
+
+  - it: should not render ScaledObject in non-distributed mode
+    templates:
+      - querier/so.yaml
+    set:
+      deploymentMode: SimpleScalable
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      querier.kedaAutoscaling.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should include customHeaders in default Prometheus trigger
+    templates:
+      - querier/so.yaml
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      loki.kedaAutoscaling.prometheusAddress: http://prometheus:9090
+      loki.kedaAutoscaling.customHeaders: X-Scope-OrgID=tenant1
+      querier.kedaAutoscaling.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - matchRegex:
+          path: spec.triggers[0].metadata.customHeaders
+          pattern: X-Scope-OrgID=tenant1
+
+  - it: should suppress replicas in Deployment when kedaAutoscaling is enabled
+    templates:
+      - querier/deployment-querier.yaml
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      querier.kedaAutoscaling.enabled: true
+      querier.replicas: 3
+    asserts:
+      - hasDocuments:
+          count: 1
+      - notExists:
+          path: spec.replicas
+
+  - it: should include replicas in Deployment when kedaAutoscaling is disabled
+    templates:
+      - querier/deployment-querier.yaml
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      querier.kedaAutoscaling.enabled: false
+      querier.replicas: 3
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: spec.replicas
+          value: 3

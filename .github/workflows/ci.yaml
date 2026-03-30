@@ -64,7 +64,13 @@ jobs:
         run: |
           helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds
 
+      - name: Apply KEDA CRDs
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          helm install keda oci://ghcr.io/kedacore/charts/keda --namespace keda --create-namespace --set 'watchNamespace='
+
       - name: Run chart-testing (install)
+
         if: steps.list-changed.outputs.changed == 'true'
         run: ct install --config .github/linters/ct.yaml
 

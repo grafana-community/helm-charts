@@ -195,6 +195,8 @@ loki:
     unsafeSsl: false
     # -- Whether to ignore null values from Prometheus queries
     ignoreNullValues: true
+    # -- Custom HTTP headers to include in Prometheus requests. Useful for multi-tenant setups (e.g. "X-Scope-OrgID=tenant1")
+    customHeaders: ""
   ######################################################################################################################
   #
   # Loki Configuration
@@ -2287,6 +2289,7 @@ querier:
           threshold: "4"
           unsafeSsl: "{{ .Values.loki.kedaAutoscaling.unsafeSsl }}"
           ignoreNullValues: "{{ .Values.loki.kedaAutoscaling.ignoreNullValues }}"
+          customHeaders: "{{ .Values.loki.kedaAutoscaling.customHeaders }}"
   image:
     # -- The Docker registry for the querier image. Overrides `loki.image.registry`
     registry: null

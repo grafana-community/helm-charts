@@ -1,0 +1,31 @@
+deploymentMode: Distributed
+loki:
+  commonConfig:
+    replication_factor: 1
+  useTestSchema: true
+  storage:
+    bucketNames:
+      chunks: chunks
+      ruler: ruler
+      admin: admin
+  kedaAutoscaling:
+    prometheusAddress: http://prometheus:9090
+    customHeaders: X-Scope-OrgID=tenant1
+distributor:
+  replicas: 1
+ingester:
+  replicas: 1
+querier:
+  replicas: 1
+  kedaAutoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 20
+queryFrontend:
+  replicas: 1
+queryScheduler:
+  replicas: 1
+compactor:
+  replicas: 1
+indexGateway:
+  replicas: 1
