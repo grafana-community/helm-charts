@@ -63,7 +63,7 @@ commonLabels: {}
 ######################################################################################################################
 #
 # Defaults applied to all loki configurations
-# Current supported scope: bloom-builder, distributor
+# Current supported scope: backend, bloom-builder, distributor
 #
 ######################################################################################################################
 defaults:

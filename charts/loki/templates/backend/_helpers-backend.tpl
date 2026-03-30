@@ -40,6 +40,32 @@ backend sidecar
   {{- $dict := dict "service" .Values.sidecar.image "global" .Values.global }}
   image: {{ include "loki.baseImage" $dict }}
   imagePullPolicy: {{ .Values.sidecar.image.pullPolicy }}
+  {{- with .Values.sidecar.resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.sidecar.securityContext }}
+  securityContext:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.sidecar.livenessProbe }}
+    {{- if .enabled | default true }}
+  livenessProbe:
+    {{- toYaml (omit . "enabled") | nindent 8 }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.sidecar.readinessProbe }}
+    {{- if .enabled | default true }}
+  readinessProbe:
+    {{- toYaml (omit . "enabled") | nindent 8 }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.sidecar.startupProbe }}
+    {{- if .enabled | default true }}
+  startupProbe:
+    {{- toYaml (omit . "enabled") | nindent 8 }}
+    {{- end }}
+  {{- end }}
   env:
     - name: METHOD
       value: {{ .Values.sidecar.rules.watchMethod }}

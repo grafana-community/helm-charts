@@ -134,6 +134,9 @@
             "type": "string"
           }
         },
+        "automountServiceAccountToken": {
+          "type": ["boolean", "null"]
+        },
         "service": {
           "type": "object",
           "properties": {
