@@ -67,7 +67,8 @@ jobs:
       - name: Apply KEDA CRDs
         if: steps.list-changed.outputs.changed == 'true'
         run: |
-          helm install keda oci://ghcr.io/kedacore/charts/keda --namespace keda --create-namespace --set 'watchNamespace='
+          helm repo add kedacore https://kedacore.github.io/charts
+          helm install keda kedacore/keda --namespace keda --create-namespace --set 'watchNamespace='
 
       - name: Run chart-testing (install)
 
