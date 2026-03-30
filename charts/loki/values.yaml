@@ -152,7 +152,7 @@ loki:
     # -- Docker image repository
     repository: grafana/loki
     # -- Overrides the image tag whose default is the chart's appVersion
-    tag: 3.6.8
+    tag: null
     # -- Overrides the image tag with an image digest
     digest: null
     # -- Docker image pull policy
@@ -1138,7 +1138,7 @@ gateway:
     enabled: true
     image:
       repository: "ghcr.io/jkroepke/access-log-exporter"
-      tag: "0.3.7"
+      tag: "0.3.8"
       pullPolicy: IfNotPresent
     resources:
       requests: {}
@@ -3916,7 +3916,7 @@ chunksCache:
   timeout: 2000ms
   # -- Specify how long cached chunks should be stored in the chunks-cache before being expired
   defaultValidity: 0s
-  # -- Specify how long cached chunks should be stored in the chunks-cache before being expired
+  # -- Total number of chunks-cache replicas
   replicas: 1
   # -- Port of the chunks-cache service
   port: 11211
@@ -4036,7 +4036,7 @@ chunksCache:
     timeout: 2000ms
     # -- Specify how long cached chunks should be stored in the chunks-cache-l2 before being expired
     defaultValidity: 0s
-    # -- Specify how long cached chunks should be stored in the chunks-cache-l2 before being expired
+    # -- Total number of chunks-cache-l2 replicas
     replicas: 1
     # -- Port of the chunks-cache-l2 service
     port: 11211
