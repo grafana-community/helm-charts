@@ -187,6 +187,14 @@ loki:
   enableServiceLinks: true
   # -- DNS config for Loki pods
   dnsConfig: {}
+  # -- KEDA autoscaling shared configuration for all components that support KEDA
+  kedaAutoscaling:
+    # -- Prometheus server address for KEDA triggers
+    prometheusAddress: ""
+    # -- Whether to skip SSL verification when connecting to Prometheus
+    unsafeSsl: false
+    # -- Whether to ignore null values from Prometheus queries
+    ignoreNullValues: true
   ######################################################################################################################
   #
   # Loki Configuration
@@ -2257,6 +2265,28 @@ querier:
       scaleDown: {}
       # -- define scale up policies, must conform to HPAScalingRules
       scaleUp: {}
+  kedaAutoscaling:
+    # -- Enable KEDA autoscaling for the querier. Mutually exclusive with autoscaling.enabled
+    enabled: false
+    # -- Minimum replicas for KEDA autoscaling
+    minReplicas: 1
+    # -- Maximum replicas for KEDA autoscaling
+    maxReplicas: 10
+    # -- Period to wait after the last trigger reported active before scaling the resource back to 0 (seconds)
+    cooldownPeriod: 300
+    # -- Behavior configuration for KEDA ScaledObject
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 1800
+    # -- KEDA triggers for the querier. Defaults to a Prometheus trigger using inflight requests.
+    triggers:
+      - type: prometheus
+        metadata:
+          serverAddress: "{{ .Values.loki.kedaAutoscaling.prometheusAddress }}"
+          query: sum(max_over_time(loki_query_scheduler_inflight_requests{quantile="0.75"}[2m]))
+          threshold: "4"
+          unsafeSsl: "{{ .Values.loki.kedaAutoscaling.unsafeSsl }}"
+          ignoreNullValues: "{{ .Values.loki.kedaAutoscaling.ignoreNullValues }}"
   image:
     # -- The Docker registry for the querier image. Overrides `loki.image.registry`
     registry: null
