@@ -11,6 +11,12 @@ loki:
   kedaAutoscaling:
     prometheusAddress: http://prometheus:9090
     customHeaders: X-Scope-OrgID=tenant1
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
 distributor:
   replicas: 1
 ingester:
