@@ -116,6 +116,8 @@ defaults:
   podAnnotations: {}
   # -- Additional labels for loki pod
   podLabels: {}
+  # -- Should enableServiceLinks be enabled. Default to enable
+  enableServiceLinks: true
   service:
     # -- Common annotations for all services
     annotations: {}
