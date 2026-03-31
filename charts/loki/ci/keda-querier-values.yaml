@@ -21,6 +21,8 @@ distributor:
   replicas: 1
 ingester:
   replicas: 1
+  zoneAwareReplication:
+    enabled: false
 querier:
   replicas: 1
   kedaAutoscaling:
