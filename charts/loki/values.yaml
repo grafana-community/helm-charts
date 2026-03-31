@@ -197,6 +197,8 @@ loki:
     ignoreNullValues: true
     # -- Custom HTTP headers to include in Prometheus requests. Useful for multi-tenant setups (e.g. "X-Scope-OrgID=tenant1")
     customHeaders: ""
+    # -- Interval (seconds) to poll each trigger. Overridable per component.
+    pollingInterval: 30
   ######################################################################################################################
   #
   # Loki Configuration
@@ -2270,12 +2272,18 @@ querier:
   kedaAutoscaling:
     # -- Enable KEDA autoscaling for the querier. Mutually exclusive with autoscaling.enabled
     enabled: false
+    # -- Interval (seconds) to poll each trigger. Defaults to loki.kedaAutoscaling.pollingInterval if not set.
+    pollingInterval: null
     # -- Minimum replicas for KEDA autoscaling
     minReplicas: 1
     # -- Maximum replicas for KEDA autoscaling
     maxReplicas: 10
     # -- Period to wait after the last trigger reported active before scaling the resource back to 0 (seconds)
     cooldownPeriod: 300
+    # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
+    fallback:
+      failureThreshold: 3
+      replicas: 1
     # -- Behavior configuration for KEDA ScaledObject
     behavior:
       scaleDown:

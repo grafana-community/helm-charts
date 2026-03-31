@@ -14,7 +14,12 @@ spec:
     name: {{ include "loki.querierFullname" . }}
   minReplicaCount: {{ .Values.querier.kedaAutoscaling.minReplicas }}
   maxReplicaCount: {{ .Values.querier.kedaAutoscaling.maxReplicas }}
+  pollingInterval: {{ coalesce .Values.querier.kedaAutoscaling.pollingInterval .Values.loki.kedaAutoscaling.pollingInterval }}
   cooldownPeriod: {{ .Values.querier.kedaAutoscaling.cooldownPeriod }}
+  {{- with .Values.querier.kedaAutoscaling.fallback }}
+  fallback:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   {{- with .Values.querier.kedaAutoscaling.behavior }}
   advanced:
     horizontalPodAutoscalerConfig:
