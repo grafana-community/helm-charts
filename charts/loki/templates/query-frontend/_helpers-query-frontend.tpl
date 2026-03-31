@@ -35,5 +35,5 @@ priorityClassName: {{ $pcn }}
 queryFrontend target
 */}}
 {{- define "loki.queryFrontendTarget" -}}
-queryFrontend{{- if and .Values.loki.ui.enabled .Values.loki.ui.queryFrontend.enabled -}},ui{{- end -}}
+query-frontend{{- if and .Values.loki.ui.enabled .Values.loki.ui.queryFrontend.enabled -}},ui{{- end -}}
 {{- end -}}
