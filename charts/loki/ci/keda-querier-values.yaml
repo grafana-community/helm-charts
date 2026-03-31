@@ -42,3 +42,7 @@ querier:
     enabled: true
     minReplicas: 1
     maxReplicas: 20
+    # No Prometheus in CI — fall back to minReplicas immediately on trigger failure
+    fallback:
+      failureThreshold: 1
+      replicas: 1
