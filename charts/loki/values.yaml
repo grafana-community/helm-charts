@@ -679,6 +679,9 @@ loki:
     gateway:
       # enable gateway proxying to UI under /ui
       enabled: true
+    queryFrontend:
+      # enable query frontend plugin for UI
+      enabled: true
   # --  Optional querier configuration
   query_range: {}
   # --  Optional querier configuration
