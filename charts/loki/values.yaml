@@ -1337,6 +1337,8 @@ podDisruptionBudget:
 
 # Configuration for the single binary node(s)
 singleBinary:
+  # -- Enable the single binary component. Requires `loki.deploymentMode` to be set to `SingleBinary`.
+  enabled: true
   # -- Number of replicas for the single binary
   replicas: 0
   autoscaling:
@@ -1477,6 +1479,8 @@ singleBinary:
 
 # Configuration for the write pod(s)
 write:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `SimpleScalable`.
+  enabled: true
   # -- Number of replicas for the write
   replicas: 3
   autoscaling:
@@ -1638,6 +1642,8 @@ write:
     labels: {}
 # --  Configuration for the read pod(s)
 read:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `SimpleScalable`.
+  enabled: true
   # -- Number of replicas for the read
   replicas: 3
   autoscaling:
@@ -1794,6 +1800,8 @@ read:
     labels: {}
 # --  Configuration for the backend pod(s)
 backend:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `SimpleScalable`.
+  enabled: true
   # -- Number of replicas for the backend
   replicas: 3
   # -- Set this toggle to false to opt out of automounting API credentials for the service account
@@ -1956,6 +1964,8 @@ backend:
 
 # -- Configuration for the ingester
 ingester:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: true
   # -- Number of replicas for the ingester, when zoneAwareReplication.enabled is true, the total
   # number of replicas will match this value with each zone having 1/3rd of the total replicas.
   replicas: 0
@@ -2205,8 +2215,10 @@ ingester:
   # optionally allow adding 'loki-' prefix to ingester name label
   addIngesterNamePrefix: false
 
-# --  Configuration for the distributor
+# -- Configuration for the distributor
 distributor:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: true
   # -- Number of replicas for the distributor
   replicas: 0
   # -- hostAliases to add
@@ -2345,8 +2357,11 @@ distributor:
     grpc: ""
   # -- trafficDistribution for distributor service
   trafficDistribution: ""
-# --  Configuration for the querier
+
+# -- Configuration for the querier
 querier:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: true
   # -- Number of replicas for the querier
   replicas: 0
   # -- hostAliases to add
@@ -2523,8 +2538,11 @@ querier:
     grpc: ""
   # -- trafficDistribution for querier service
   trafficDistribution: ""
+
 # -- Configuration for the query-frontend
 queryFrontend:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: true
   # -- Number of replicas for the query-frontend
   replicas: 0
   # -- hostAliases to add
@@ -2662,8 +2680,11 @@ queryFrontend:
     enabled: true
   # -- trafficDistribution for query-frontend service
   trafficDistribution: ""
+
 # -- Configuration for the query-scheduler
 queryScheduler:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: true
   # -- Number of replicas for the query-scheduler.
   # It should be lower than `-querier.max-concurrent` to avoid generating back-pressure in queriers;
   # it's also recommended that this value evenly divides the latter
@@ -2772,8 +2793,11 @@ queryScheduler:
     grpc: ""
   # -- trafficDistribution for query-scheduler service
   trafficDistribution: ""
+
 # -- Configuration for the index-gateway
 indexGateway:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: true
   # -- Number of replicas for the index-gateway
   replicas: 0
   # -- Whether the index gateway should join the memberlist hashring
@@ -2918,10 +2942,22 @@ indexGateway:
     # -- Optional for updateStrategy.type=RollingUpdate. See [Partitioned rolling updates](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#partitions) in the StatefulSet docs for details.
     # rollingUpdate:
     #   partition: 0
+
 # -- Configuration for the compactor
 compactor:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: true
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: StatefulSet
   # -- Number of replicas for the compactor
   replicas: 0
+  # -- UpdateStrategy or Strategy for the compactor.
+  strategy:
+    rollingUpdate:
+      partition: 0
+  # -- PodManagementPolicy for the compactor StatefulSet. Only applicable if `compactor.kind` is StatefulSet.
+  ## OrderedReady and Parallel are supported.
+  podManagementPolicy: Parallel
   # -- hostAliases to add
   hostAliases: []
   #  - ip: 1.2.3.4
@@ -3019,6 +3055,33 @@ compactor:
   persistence:
     # -- Enable creating PVCs for the compactor
     enabled: false
+    # -- Storage type for the compactor. pvc and ephemeral are supported.
+    type: pvc
+    # -- Storage class to be used.
+    # If defined, storageClassName: <storageClass>.
+    # If set to "-", storageClassName: "", which disables dynamic provisioning.
+    # If empty or set to null, no storageClassName spec is
+    # set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).
+    storageClass: null
+    # -- Set access modes on the PersistentVolumeClaim
+    accessModes:
+      - ReadWriteOnce
+    # -- Size of persistent disk
+    size: 10Gi
+    # -- Size of persistent disk
+    # -- Volume attributes class name to be used.
+    # If empty or set to null, no volumeAttributesClassName spec is set.
+    # Requires Kubernetes 1.31
+    volumeAttributesClassName: null
+    # -- Annotations for the generated volumeClaimTemplate.
+    annotations: {}
+    # -- Labels for the generated volumeClaimTemplate.
+    labels: {}
+    # -- Selector for the generated volumeClaimTemplate.
+    selector: null
+    # -- Parameters used for the `data` volume when volumeClaimEnabled if false
+    dataVolumeParameters:
+      emptyDir: {}
     # -- List of the compactor PVCs
     # @notationType -- list
     claims:
@@ -3059,8 +3122,11 @@ compactor:
     annotations: {}
     # -- Set this toggle to false to opt out of automounting API credentials for the service account
     automountServiceAccountToken: true
+
 # -- Configuration for the bloom-gateway
 bloomGateway:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: false
   # -- Number of replicas for the bloom-gateway
   replicas: 0
   # -- hostAliases to add
@@ -3209,6 +3275,8 @@ bloomGateway:
 
 # -- Configuration for the bloom-planner
 bloomPlanner:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: false
   # -- Number of replicas for the bloom-planner
   replicas: 0
   # -- hostAliases to add
@@ -3357,6 +3425,8 @@ bloomPlanner:
 
 # -- Configuration for the bloom-builder
 bloomBuilder:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: false
   # -- Number of replicas for the bloom-builder
   replicas: 0
   # -- hostAliases to add
@@ -3490,9 +3560,11 @@ bloomBuilder:
       maxSurge: 0
       maxUnavailable: 1
   persistence:
-    ephemeralDataVolume:
-      # -- Enable generic ephemeral volume-backed storage for the bloom-builder `data` volume.
-      enabled: false
+    persistence:
+    # -- Enable generic ephemeral volume-backed storage for the bloom-builder `data` volume.
+    enabled: false
+    # -- Storage type for the bloom-builder. pvc and ephemeral are supported.
+    type: ephemeral
       # -- Set access modes on the generated volumeClaimTemplate.
       accessModes:
         - ReadWriteOnce
@@ -3516,6 +3588,8 @@ bloomBuilder:
 
 # -- Configuration for the pattern ingester
 patternIngester:
+  # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
+  enabled: false
   # -- Number of replicas for the pattern ingester
   replicas: 0
   # -- DNSConfig for pattern ingester pods
@@ -3651,6 +3725,7 @@ patternIngester:
     annotations: {}
     # -- Set this toggle to false to opt out of automounting API credentials for the service account
     automountServiceAccountToken: true
+
 # -- Configuration for the ruler
 ruler:
   # -- The ruler component is optional and can be disabled if desired.

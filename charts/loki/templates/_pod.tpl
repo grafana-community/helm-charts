@@ -94,42 +94,45 @@ spec:
         name: {{ template "loki.name" . }}-runtime
     - name: temp
       emptyDir: {}
+    {{- if not (dig "persistence" "enabled" false $component) }}
     - name: data
-      {{- if dig "persistence" "ephemeralDataVolume" "enabled" false $component }}
+      {{- tpl (toYaml (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict))) $component) $ctx | nindent 6 }}
+    {{- else if and (dig "persistence" "enabled" false $component) (eq (dig "persistence" "type" "" $component) "pvc") (eq $component.kind "Deployment") }}
+    - name: data
+      persistentVolumeClaim:
+        claimName: {{ template "loki.fullname" . }}-data
+    {{- else if and (dig "persistence" "enabled" false $component) (eq (dig "persistence" "type" "" $component) "ephemeral") }}
+    - name: data
       ephemeral:
         volumeClaimTemplate:
           metadata:
-            {{- with $component.ephemeralDataVolume.annotations }}
+            {{- with $component.persistence.annotations }}
             annotations:
               {{- toYaml . | nindent 14 }}
             {{- end }}
-            {{- with $component.ephemeralDataVolume.labels }}
+            {{- with $component.persistence.labels }}
             labels:
               {{- toYaml . | nindent 14 }}
             {{- end }}
           spec:
             accessModes:
-              {{- toYaml $component.ephemeralDataVolume.accessModes | nindent 12 }}
-            {{- if not (kindIs "invalid" $component.ephemeralDataVolume.storageClass) }}
-            storageClassName: {{ if (eq "-" $component.ephemeralDataVolume.storageClass) }}""{{ else }}{{ $component.ephemeralDataVolume.storageClass }}{{ end }}
+              {{- toYaml $component.persistence.accessModes | nindent 12 }}
+            {{- if not (kindIs "invalid" $component.persistence.storageClass) }}
+            storageClassName: {{ if (eq "-" $component.persistence.storageClass) }}""{{ else }}{{ $component.persistence.storageClass }}{{ end }}
             {{- end }}
-            {{- with $component.ephemeralDataVolume.volumeAttributesClassName }}
+            {{- with $component.persistence.volumeAttributesClassName }}
             volumeAttributesClassName: {{ . }}
             {{- end }}
             resources:
               requests:
-                storage: {{ $component.ephemeralDataVolume.size | quote }}
-            {{- with $component.ephemeralDataVolume.selector }}
+                storage: {{ $component.persistence.size | quote }}
+            {{- with $component.persistence.selector }}
             selector:
               {{- toYaml . | nindent 14 }}
             {{- end }}
-      {{- else if not (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) }}
-        {{- with (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict)) $component) }}
-      {{- toYaml . | nindent 6 }}
-        {{- end }}
       {{- end }}
     {{- with (coalesce $component.extraVolumes .Values.defaults.extraVolumes .Values.global.extraVolumes) }}
-    {{- toYaml . | nindent 8 }}
+    {{- toYaml . | nindent 4 }}
     {{- end }}
   containers:
     - name: {{ $target }}
@@ -184,6 +187,10 @@ spec:
       startupProbe:
         {{- toYaml (omit . "enabled") | nindent 8 }}
         {{- end }}
+      {{- end }}
+      {{- with $component.lifecycle }}
+      lifecycle:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       volumeMounts:
         - name: config
