@@ -99,6 +99,8 @@ memcached:
   replicas: 1
 compactor:
   replicas: 1
+  persistence:
+    enabled: true
 indexGateway:
   replicas: 2
   affinity: null
