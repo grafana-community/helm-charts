@@ -1,0 +1,6 @@
+rules:
+  secrets-outside-env:
+    config:
+      allow:
+        - APP_RENOVATE_HELPER_APP_ID
+        - APP_RENOVATE_HELPER_PRIVATE_KEY
