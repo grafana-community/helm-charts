@@ -122,6 +122,26 @@ defaults:
     # -- trafficDistribution for services
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
     trafficDistribution: ""
+  # -- KEDA autoscaling shared configuration for all components that support KEDA
+  kedaAutoscaling:
+    # -- Prometheus server address for KEDA triggers
+    prometheusAddress: ""
+    # -- Whether to skip SSL verification when connecting to Prometheus
+    unsafeSsl: false
+    # -- Whether to ignore null values from Prometheus queries
+    ignoreNullValues: true
+    # -- Custom HTTP headers to include in Prometheus requests. Useful for multi-tenant setups (e.g. "X-Scope-OrgID=tenant1")
+    customHeaders: ""
+    # -- Interval (seconds) to poll each trigger. Overridable per component.
+    pollingInterval: 30
+    # -- KEDA trigger authentication settings. Ref: https://keda.sh/docs/latest/concepts/authentication/
+    authentication:
+      # -- Enable TriggerAuthentication for KEDA triggers
+      enabled: false
+      # -- Authentication modes for the trigger (e.g. "bearer", "basic")
+      authModes: ""
+      # -- Secret key references for TriggerAuthentication
+      secretTargetRef: []
 
 ######################################################################################################################
 #
@@ -187,26 +207,6 @@ loki:
   enableServiceLinks: true
   # -- DNS config for Loki pods
   dnsConfig: {}
-  # -- KEDA autoscaling shared configuration for all components that support KEDA (querier)
-  kedaAutoscaling:
-    # -- Prometheus server address for KEDA triggers
-    prometheusAddress: ""
-    # -- Whether to skip SSL verification when connecting to Prometheus
-    unsafeSsl: false
-    # -- Whether to ignore null values from Prometheus queries
-    ignoreNullValues: true
-    # -- Custom HTTP headers to include in Prometheus requests. Useful for multi-tenant setups (e.g. "X-Scope-OrgID=tenant1")
-    customHeaders: ""
-    # -- Interval (seconds) to poll each trigger. Overridable per component.
-    pollingInterval: 30
-    # -- KEDA trigger authentication settings. Ref: https://keda.sh/docs/latest/concepts/authentication/
-    authentication:
-      # -- Enable TriggerAuthentication for KEDA triggers
-      enabled: false
-      # -- Authentication modes for the trigger (e.g. "bearer", "basic")
-      authModes: ""
-      # -- Secret key references for TriggerAuthentication
-      secretTargetRef: []
   ######################################################################################################################
   #
   # Loki Configuration
@@ -2280,7 +2280,7 @@ querier:
   kedaAutoscaling:
     # -- Enable KEDA autoscaling for the querier. Mutually exclusive with autoscaling.enabled
     enabled: false
-    # -- Interval (seconds) to poll each trigger. Defaults to loki.kedaAutoscaling.pollingInterval if not set.
+    # -- Interval (seconds) to poll each trigger. Defaults to defaults.kedaAutoscaling.pollingInterval if not set.
     pollingInterval: null
     # -- Minimum replicas for KEDA autoscaling
     minReplicas: 1
@@ -2299,13 +2299,13 @@ querier:
       - type: prometheus
         name: querier_autoscaling_metric
         metadata:
-          serverAddress: "{{ .Values.loki.kedaAutoscaling.prometheusAddress }}"
+          serverAddress: "{{ .Values.defaults.kedaAutoscaling.prometheusAddress }}"
           query: sum(max_over_time(loki_query_scheduler_inflight_requests{quantile="0.75"}[2m]))
           threshold: "4"
-          unsafeSsl: "{{ .Values.loki.kedaAutoscaling.unsafeSsl }}"
-          ignoreNullValues: "{{ .Values.loki.kedaAutoscaling.ignoreNullValues }}"
-          customHeaders: "{{ .Values.loki.kedaAutoscaling.customHeaders }}"
-          authModes: "{{ .Values.loki.kedaAutoscaling.authentication.authModes }}"
+          unsafeSsl: "{{ .Values.defaults.kedaAutoscaling.unsafeSsl }}"
+          ignoreNullValues: "{{ .Values.defaults.kedaAutoscaling.ignoreNullValues }}"
+          customHeaders: "{{ .Values.defaults.kedaAutoscaling.customHeaders }}"
+          authModes: "{{ .Values.defaults.kedaAutoscaling.authentication.authModes }}"
   image:
     # -- The Docker registry for the querier image. Overrides `loki.image.registry`
     registry: null

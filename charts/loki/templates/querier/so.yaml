@@ -14,7 +14,7 @@ spec:
     name: {{ include "loki.querierFullname" . }}
   minReplicaCount: {{ .Values.querier.kedaAutoscaling.minReplicas }}
   maxReplicaCount: {{ .Values.querier.kedaAutoscaling.maxReplicas }}
-  pollingInterval: {{ coalesce .Values.querier.kedaAutoscaling.pollingInterval .Values.loki.kedaAutoscaling.pollingInterval }}
+  pollingInterval: {{ coalesce .Values.querier.kedaAutoscaling.pollingInterval .Values.defaults.kedaAutoscaling.pollingInterval }}
   cooldownPeriod: {{ .Values.querier.kedaAutoscaling.cooldownPeriod }}
   {{- with .Values.querier.kedaAutoscaling.fallback }}
   fallback:
