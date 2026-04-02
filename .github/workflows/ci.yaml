@@ -66,7 +66,10 @@ jobs:
 
       - name: Apply KEDA CRDs
         if: steps.list-changed.outputs.changed == 'true'
-        run: kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.19.0/keda-2.19.0-crds.yaml
+        run: kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v$KEDA_VERSION/keda-$KEDA_VERSION-crds.yaml
+        env:
+          #renovate: github=kedacore/keda
+          KEDA_VERSION: 2.19.0
 
       - name: Run chart-testing (install)
 
