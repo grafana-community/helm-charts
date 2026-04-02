@@ -187,7 +187,7 @@ loki:
   enableServiceLinks: true
   # -- DNS config for Loki pods
   dnsConfig: {}
-  # -- KEDA autoscaling shared configuration for all components that support KEDA
+  # -- KEDA autoscaling shared configuration for all components that support KEDA (querier)
   kedaAutoscaling:
     # -- Prometheus server address for KEDA triggers
     prometheusAddress: ""
