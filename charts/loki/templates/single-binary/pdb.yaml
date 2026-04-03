@@ -13,7 +13,7 @@ so we merge it into the component dict before passing to the template helper.
         .Values.singleBinary
         (dict "podDisruptionBudget" .Values.podDisruptionBudget)
     )
-    "ctx" . 
+    "ctx" .
     "name" (include "loki.fullname" .)
 ) }}
 {{- end }}
