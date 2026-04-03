@@ -81,7 +81,7 @@ spec:
             - name: http-memberlist
               containerPort: 7946
               protocol: TCP
-          {{- include "loki.componentEnv" (dict "extraEnv" (concat .Values.global.extraEnv .Values.ruler.extraEnv) "resources" .Values.ruler.resources "factor" (coalesce .Values.ruler.goSettings.goMemLimitFactor .Values.defaults.goSettings.goMemLimitFactor) "gogc" (coalesce .Values.ruler.goSettings.gogc .Values.defaults.goSettings.gogc)) | nindent 10 }}
+          {{- include "loki.componentEnv" (dict "extraEnv" (concat .Values.global.extraEnv .Values.ruler.extraEnv) "resources" .Values.ruler.resources "factor" .Values.defaults.goSettings.goMemLimitFactor "gogc" .Values.defaults.goSettings.gogc) | nindent 10 }}
           {{- with (concat .Values.global.extraEnvFrom .Values.ruler.extraEnvFrom) | uniq }}
           envFrom:
             {{- toYaml . | nindent 12 }}
