@@ -63,7 +63,7 @@ commonLabels: {}
 ######################################################################################################################
 #
 # Defaults applied to all loki configurations
-# Current supported scope: bloom-builder, distributor
+# Current supported scope: backend, bloom-builder, distributor
 #
 ######################################################################################################################
 defaults:
@@ -110,10 +110,14 @@ defaults:
   nodeSelector: {}
   # -- Tolerations for loki pods
   tolerations: []
+  # -- Set this toggle to false to opt out of automounting API credentials for the service account
+  automountServiceAccountToken: false
   # -- Annotations for loki pods
   podAnnotations: {}
   # -- Additional labels for loki pod
   podLabels: {}
+  # -- Should enableServiceLinks be enabled. Default to enable
+  enableServiceLinks: true
   service:
     # -- Common annotations for all services
     annotations: {}
@@ -122,6 +126,26 @@ defaults:
     # -- trafficDistribution for services
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
     trafficDistribution: ""
+  # -- KEDA autoscaling shared configuration for all components that support KEDA
+  kedaAutoscaling:
+    # -- Prometheus server address for KEDA triggers
+    prometheusAddress: ""
+    # -- Whether to skip SSL verification when connecting to Prometheus
+    unsafeSsl: false
+    # -- Whether to ignore null values from Prometheus queries
+    ignoreNullValues: true
+    # -- Custom HTTP headers to include in Prometheus requests. Useful for multi-tenant setups (e.g. "X-Scope-OrgID=tenant1")
+    customHeaders: ""
+    # -- Interval (seconds) to poll each trigger. Overridable per component.
+    pollingInterval: 30
+    # -- KEDA trigger authentication settings. Ref: https://keda.sh/docs/latest/concepts/authentication/
+    authentication:
+      # -- Enable TriggerAuthentication for KEDA triggers
+      enabled: false
+      # -- Authentication modes for the trigger (e.g. "bearer", "basic")
+      authModes: ""
+      # -- Secret key references for TriggerAuthentication
+      secretTargetRef: []
 
 ######################################################################################################################
 #
@@ -761,7 +785,17 @@ lokiCanary:
   # -- The name of the PriorityClass for loki-canary pods
   priorityClassName: null
   # -- Use the host's user namespace in loki-canary pods
-  hostUsers: nil
+  hostUsers: null
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Image to use for loki canary
   image:
     # -- The Docker registry
@@ -993,6 +1027,16 @@ gateway:
   extraContainers: []
   # -- Grace period to allow the gateway to shutdown before it is killed
   terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Affinity for gateway pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -1307,6 +1351,16 @@ singleBinary:
   podLabels: {}
   # -- Additional selector labels for each `single binary` pod
   selectorLabels: {}
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   service:
     # -- Annotations for single binary Service
     annotations: {}
@@ -1516,7 +1570,18 @@ write:
   # -- DNS config for write pods
   dnsConfig: {}
   # -- Pod Disruption Budget maxUnavailable
+  # @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.
   maxUnavailable: 1
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Node selector for write pods
   nodeSelector: {}
   # -- Topology Spread Constraints for write pods
@@ -1665,7 +1730,18 @@ read:
   # -- DNS config for read pods
   dnsConfig: {}
   # -- Pod Disruption Budget maxUnavailable
+  # @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.
   maxUnavailable: 1
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget for read pods
+    enabled: true
+    # -- Annotations for read Pod Disruption Budget
+    annotations: {}
+    # -- Labels for read Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Node selector for read pods
   nodeSelector: {}
   # -- Topology Spread Constraints for read pods
@@ -1704,6 +1780,8 @@ read:
 backend:
   # -- Number of replicas for the backend
   replicas: 3
+  # -- Set this toggle to false to opt out of automounting API credentials for the service account
+  automountServiceAccountToken: true
   autoscaling:
     # -- Enable autoscaling for the backend.
     enabled: false
@@ -1802,7 +1880,18 @@ backend:
   # -- DNS config for backend pods
   dnsConfig: {}
   # -- Pod Disruption Budget maxUnavailable
+  # @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.
   maxUnavailable: 1
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Node selector for backend pods
   nodeSelector: {}
   # -- Topology Spread Constraints for backend pods
@@ -1979,7 +2068,18 @@ ingester:
               app.kubernetes.io/instance: '{{ .Release.Name }}'
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
+  # @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.
   maxUnavailable: 1
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Node selector for ingester pods
   nodeSelector: {}
   # -- Tolerations for ingester pods
@@ -2188,6 +2288,16 @@ distributor:
   extraContainers: []
   # -- Grace period to allow the distributor to shutdown before it is killed
   terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Affinity for distributor pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -2257,6 +2367,35 @@ querier:
       scaleDown: {}
       # -- define scale up policies, must conform to HPAScalingRules
       scaleUp: {}
+  kedaAutoscaling:
+    # -- Enable KEDA autoscaling for the querier. Mutually exclusive with autoscaling.enabled
+    enabled: false
+    # -- Interval (seconds) to poll each trigger. Defaults to defaults.kedaAutoscaling.pollingInterval if not set.
+    pollingInterval: null
+    # -- Minimum replicas for KEDA autoscaling
+    minReplicas: 1
+    # -- Maximum replicas for KEDA autoscaling
+    maxReplicas: 10
+    # -- Period to wait after the last trigger reported active before scaling the resource back to 0 (seconds)
+    cooldownPeriod: 300
+    # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
+    # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
+    fallback: {}
+    # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
+    # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
+    behavior: {}
+    # -- KEDA triggers for the querier. Defaults to a Prometheus trigger using inflight requests.
+    triggers:
+      - type: prometheus
+        name: querier_autoscaling_metric
+        metadata:
+          serverAddress: "{{ .Values.defaults.kedaAutoscaling.prometheusAddress }}"
+          query: sum(max_over_time(loki_query_scheduler_inflight_requests{quantile="0.75"}[2m]))
+          threshold: "4"
+          unsafeSsl: "{{ .Values.defaults.kedaAutoscaling.unsafeSsl }}"
+          ignoreNullValues: "{{ .Values.defaults.kedaAutoscaling.ignoreNullValues }}"
+          customHeaders: "{{ .Values.defaults.kedaAutoscaling.customHeaders }}"
+          authModes: "{{ .Values.defaults.kedaAutoscaling.authentication.authModes }}"
   image:
     # -- The Docker registry for the querier image. Overrides `loki.image.registry`
     registry: null
@@ -2316,6 +2455,16 @@ querier:
   initContainers: []
   # -- Grace period to allow the querier to shutdown before it is killed
   terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- topologySpread for querier pods.
   # @default -- Defaults to allow skew no more then 1 node
   # The value will be passed through tpl.
@@ -2455,6 +2604,16 @@ queryFrontend:
   extraContainers: []
   # -- Grace period to allow the query-frontend to shutdown before it is killed
   terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Affinity for query-frontend pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -2572,7 +2731,18 @@ queryScheduler:
               app.kubernetes.io/instance: '{{ .Release.Name }}'
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
+  # @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.
   maxUnavailable: 1
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Node selector for query-scheduler pods
   nodeSelector: {}
   # -- Topology Spread Constraints for query-scheduler pods
@@ -2658,6 +2828,16 @@ indexGateway:
   initContainers: []
   # -- Grace period to allow the index-gateway to shutdown before it is killed.
   terminationGracePeriodSeconds: 300
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Lifecycle for the index-gateway container
   lifecycle: {}
   # -- Affinity for index-gateway pods.
@@ -2950,6 +3130,16 @@ bloomGateway:
   initContainers: []
   # -- Grace period to allow the bloom-gateway to shutdown before it is killed
   terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Node selector for bloom-gateway pods
   nodeSelector: {}
   # -- Tolerations for bloom-gateway pods
@@ -3088,6 +3278,16 @@ bloomPlanner:
   initContainers: []
   # -- Grace period to allow the bloom-planner to shutdown before it is killed
   terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Node selector for bloom-planner pods
   nodeSelector: {}
   # -- Tolerations for bloom-planner pods
@@ -3235,6 +3435,16 @@ bloomBuilder:
   extraContainers: []
   # -- Grace period to allow the bloom-builder to shutdown before it is killed
   terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Affinity for bloom-builder pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -3263,30 +3473,30 @@ bloomBuilder:
     rollingUpdate:
       maxSurge: 0
       maxUnavailable: 1
-
-  ephemeralDataVolume:
-    # -- Enable generic ephemeral volume-backed storage for the bloom-builder `data` volume.
-    enabled: false
-    # -- Set access modes on the generated volumeClaimTemplate.
-    accessModes:
-      - ReadWriteOnce
-    # -- Size of the generated volumeClaimTemplate.
-    size: 10Gi
-    # -- Storage class to be used for the generated volumeClaimTemplate.
-    # If defined, storageClassName: <storageClass>.
-    # If set to "-", storageClassName: "", which disables dynamic provisioning.
-    # If empty or set to null, no storageClassName spec is set, choosing the default provisioner.
-    storageClass: null
-    # -- Volume attributes class name to be used for the generated volumeClaimTemplate.
-    # If empty or set to null, no volumeAttributesClassName spec is set.
-    # Requires Kubernetes 1.31
-    volumeAttributesClassName: null
-    # -- Selector for the generated volumeClaimTemplate.
-    selector: null
-    # -- Annotations for the generated volumeClaimTemplate.
-    annotations: {}
-    # -- Labels for the generated volumeClaimTemplate.
-    labels: {}
+  persistence:
+    ephemeralDataVolume:
+      # -- Enable generic ephemeral volume-backed storage for the bloom-builder `data` volume.
+      enabled: false
+      # -- Set access modes on the generated volumeClaimTemplate.
+      accessModes:
+        - ReadWriteOnce
+      # -- Size of the generated volumeClaimTemplate.
+      size: 10Gi
+      # -- Storage class to be used for the generated volumeClaimTemplate.
+      # If defined, storageClassName: <storageClass>.
+      # If set to "-", storageClassName: "", which disables dynamic provisioning.
+      # If empty or set to null, no storageClassName spec is set, choosing the default provisioner.
+      storageClass: null
+      # -- Volume attributes class name to be used for the generated volumeClaimTemplate.
+      # If empty or set to null, no volumeAttributesClassName spec is set.
+      # Requires Kubernetes 1.31
+      volumeAttributesClassName: null
+      # -- Selector for the generated volumeClaimTemplate.
+      selector: null
+      # -- Annotations for the generated volumeClaimTemplate.
+      annotations: {}
+      # -- Labels for the generated volumeClaimTemplate.
+      labels: {}
 
 # -- Configuration for the pattern ingester
 patternIngester:
@@ -3354,6 +3564,16 @@ patternIngester:
   initContainers: []
   # -- Grace period to allow the pattern ingester to shutdown before it is killed
   terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Node selector for pattern ingester pods
   nodeSelector: {}
   # -- Topology Spread Constraints for pattern ingester pods
@@ -3486,6 +3706,16 @@ ruler:
   initContainers: []
   # -- Grace period to allow the ruler to shutdown before it is killed
   terminationGracePeriodSeconds: 300
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- Affinity for ruler pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -3834,7 +4064,18 @@ resultsCache:
   # -- Tolerations for results-cache pods
   tolerations: []
   # -- Pod Disruption Budget maxUnavailable
+  # @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.
   maxUnavailable: 1
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+    # minAvailable: 1
+    # maxUnavailable: 1
+    # unhealthyPodEvictionPolicy: IfHealthyBudget
   # -- DNSConfig for results-cache
   dnsConfig: {}
   # -- The name of the PriorityClass for results-cache pods
@@ -4240,7 +4481,7 @@ sidecar:
     # -- The Docker registry and image for the k8s sidecar
     repository: kiwigrid/k8s-sidecar
     # -- Docker image tag
-    tag: 2.5.0
+    tag: 2.5.4
     # -- Docker image sha. If empty, no sha will be used
     sha: ""
     # -- Docker image pull policy
