@@ -134,6 +134,12 @@
             "type": "string"
           }
         },
+        "automountServiceAccountToken": {
+          "type": ["boolean", "null"]
+        },
+        "enableServiceLinks": {
+          "type": ["boolean", "null"]
+        },
         "service": {
           "type": "object",
           "properties": {
@@ -151,6 +157,29 @@
             },
             "trafficDistribution": {
               "type": "string"
+            }
+          }
+        },
+        "kedaAutoscaling": {
+          "type": "object",
+          "properties": {
+            "prometheusAddress": {
+              "type": "string"
+            },
+            "unsafeSsl": {
+              "type": "boolean"
+            },
+            "ignoreNullValues": {
+              "type": "boolean"
+            },
+            "customHeaders": {
+              "type": "string"
+            },
+            "pollingInterval": {
+              "type": "integer"
+            },
+            "authentication": {
+              "type": "object"
             }
           }
         }
