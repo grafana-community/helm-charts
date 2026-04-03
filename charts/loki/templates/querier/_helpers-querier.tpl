@@ -20,3 +20,13 @@ querier selector labels
 {{ include "loki.selectorLabels" . }}
 app.kubernetes.io/component: querier
 {{- end }}
+
+{{/*
+querier priority class name
+*/}}
+{{- define "loki.querierPriorityClassName" -}}
+{{- $pcn := coalesce .Values.global.priorityClassName .Values.querier.priorityClassName -}}
+{{- if $pcn }}
+priorityClassName: {{ $pcn }}
+{{- end }}
+{{- end }}
