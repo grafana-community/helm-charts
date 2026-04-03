@@ -13,7 +13,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-{{- if and (not .Values.querier.autoscaling.enabled) (not .Values.querier.kedaAutoscaling.enabled) }}
+{{- if not .Values.querier.autoscaling.enabled }}
   replicas: {{ .Values.querier.replicas }}
 {{- end }}
   strategy:
@@ -92,10 +92,7 @@ spec:
             - name: http-memberlist
               containerPort: 7946
               protocol: TCP
-          {{- with (concat .Values.global.extraEnv .Values.querier.extraEnv) | uniq }}
-          env:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+          {{- include "loki.componentEnv" (dict "extraEnv" (concat .Values.global.extraEnv .Values.querier.extraEnv) "resources" .Values.querier.resources "factor" (coalesce .Values.querier.goSettings.goMemLimitFactor .Values.defaults.goSettings.goMemLimitFactor) "gogc" (coalesce .Values.querier.goSettings.gogc .Values.defaults.goSettings.gogc)) | nindent 10 }}
           {{- with (concat .Values.global.extraEnvFrom .Values.querier.extraEnvFrom) | uniq }}
           envFrom:
             {{- toYaml . | nindent 12 }}
