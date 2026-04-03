@@ -3582,7 +3582,6 @@ bloomBuilder:
       maxSurge: 0
       maxUnavailable: 1
   persistence:
-    persistence:
     # -- Enable generic ephemeral volume-backed storage for the bloom-builder `data` volume.
     enabled: false
     # -- Storage type for the bloom-builder. pvc and ephemeral are supported.
