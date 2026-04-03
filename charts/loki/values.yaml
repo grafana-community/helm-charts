@@ -1016,9 +1016,11 @@ gateway:
   containerSecurityContext:
     readOnlyRootFilesystem: true
     capabilities:
-      drop:
-        - ALL
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
     allowPrivilegeEscalation: false
+
   # -- Use the host's user namespace in the gateway
   hostUsers: nil
   # -- Resource requests and limits for the gateway
@@ -1192,7 +1194,9 @@ gateway:
       allowPrivilegeEscalation: false
       readOnlyRootFilesystem: true
       capabilities:
-        drop: ["all"]
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
       privileged: false
       runAsNonRoot: true
       runAsUser: 65532
