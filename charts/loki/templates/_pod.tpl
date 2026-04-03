@@ -7,6 +7,7 @@ Pod helper
 {{- $ctx := .ctx -}}
 {{- $component := .component -}}
 {{- $args := .args -}}
+{{- $memberlist := hasKey . "memberlist" | ternary .memberlist true -}}
 {{- with $ctx -}}
 metadata:
   annotations:
@@ -17,7 +18,9 @@ metadata:
   labels:
     {{- include "loki.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ $target }}
+    {{ if $memberlist }}
     app.kubernetes.io/part-of: memberlist
+    {{- end }}
     {{- with (mergeOverwrite (dict) .Values.loki.podLabels .Values.defaults.podLabels $component.podLabels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}

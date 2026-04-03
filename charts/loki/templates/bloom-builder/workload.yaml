@@ -1,4 +1,4 @@
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
 {{- if $isDistributed }}
-{{- include "loki.component" (dict "target" "bloom-builder" "component" .Values.bloomBuilder "ctx" .) }}
+{{- include "loki.component" (dict "ctx" . "component" .Values.compactor "memberlist" false "target" "compactor") }}
 {{- end }}

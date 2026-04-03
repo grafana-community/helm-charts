@@ -8,6 +8,7 @@ Workload helper
 {{- $component := .component }}
 {{- $name := .name }}
 {{- $headlessName := .headlessName }}
+{{- $memberlist := hasKey . "memberlist" | ternary .memberlist true -}}
 {{- with $ctx }}
 {{- if $component.enabled }}
 ---
@@ -55,7 +56,7 @@ spec:
       {{- include "loki.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: {{ $target }}
   template:
-    {{- include "loki.podTemplate" (dict "target" $target "component" $component "ctx" $ctx) | nindent 4 }}
+    {{- include "loki.podTemplate" (dict "target" $target "component" $component "ctx" $ctx "memberlist" $memberlist) | nindent 4 }}
   {{- if and $component.persistence.enabled (eq $component.persistence.type "pvc") }}
     {{- if and (eq $component.kind "Deployment") (gt (int $component.replicas) 1) }}
       {{- fail "Persistence with PVC is not supported for Deployment with more than 1 replica. Please use StatefulSet or set replicas to 1." }}
