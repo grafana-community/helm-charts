@@ -120,6 +120,10 @@ defaults:
   tolerations: []
   # -- Set this toggle to false to opt out of automounting API credentials for the service account
   automountServiceAccountToken: false
+  # -- Annotations for loki Deployments/StatefulSets
+  annotations: {}
+  # -- Additional labels for loki Deployments/StatefulSets
+  labels: {}
   # -- Annotations for loki pods
   podAnnotations: {}
   # -- Additional labels for loki pod
@@ -3565,26 +3569,26 @@ bloomBuilder:
     enabled: false
     # -- Storage type for the bloom-builder. pvc and ephemeral are supported.
     type: ephemeral
-      # -- Set access modes on the generated volumeClaimTemplate.
-      accessModes:
-        - ReadWriteOnce
-      # -- Size of the generated volumeClaimTemplate.
-      size: 10Gi
-      # -- Storage class to be used for the generated volumeClaimTemplate.
-      # If defined, storageClassName: <storageClass>.
-      # If set to "-", storageClassName: "", which disables dynamic provisioning.
-      # If empty or set to null, no storageClassName spec is set, choosing the default provisioner.
-      storageClass: null
-      # -- Volume attributes class name to be used for the generated volumeClaimTemplate.
-      # If empty or set to null, no volumeAttributesClassName spec is set.
-      # Requires Kubernetes 1.31
-      volumeAttributesClassName: null
-      # -- Selector for the generated volumeClaimTemplate.
-      selector: null
-      # -- Annotations for the generated volumeClaimTemplate.
-      annotations: {}
-      # -- Labels for the generated volumeClaimTemplate.
-      labels: {}
+    # -- Set access modes on the generated volumeClaimTemplate.
+    accessModes:
+      - ReadWriteOnce
+    # -- Size of the generated volumeClaimTemplate.
+    size: 10Gi
+    # -- Storage class to be used for the generated volumeClaimTemplate.
+    # If defined, storageClassName: <storageClass>.
+    # If set to "-", storageClassName: "", which disables dynamic provisioning.
+    # If empty or set to null, no storageClassName spec is set, choosing the default provisioner.
+    storageClass: null
+    # -- Volume attributes class name to be used for the generated volumeClaimTemplate.
+    # If empty or set to null, no volumeAttributesClassName spec is set.
+    # Requires Kubernetes 1.31
+    volumeAttributesClassName: null
+    # -- Selector for the generated volumeClaimTemplate.
+    selector: null
+    # -- Annotations for the generated volumeClaimTemplate.
+    annotations: {}
+    # -- Labels for the generated volumeClaimTemplate.
+    labels: {}
 
 # -- Configuration for the pattern ingester
 patternIngester:

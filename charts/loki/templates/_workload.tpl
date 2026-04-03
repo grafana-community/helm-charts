@@ -10,16 +10,20 @@ Workload helper
 {{- $headlessName := .headlessName }}
 {{- with $ctx }}
 {{- if $component.enabled }}
+---
 apiVersion: apps/v1
 kind: {{ $component.kind }}
 metadata:
   name: {{ $name | default (include "loki.resourceName" (dict "ctx" $ctx "component" $target)) }}
   namespace: {{ include "loki.namespace" . }}
   labels:
-    {{ include "loki.labels" . }}
+    {{- include "loki.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ $target }}
     app.kubernetes.io/part-of: memberlist
-  {{- with .Values.loki.annotations }}
+    {{- with (mergeOverwrite (dict) .Values.loki.labels .Values.defaults.labels $component.labels) }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with (mergeOverwrite (dict) .Values.loki.annotations .Values.defaults.annotations $component.annotations) }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}

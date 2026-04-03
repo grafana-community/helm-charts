@@ -1,4 +1,4 @@
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
 {{- if $isDistributed }}
-{{- include "loki.component" (dict "target" "compactor" "component" .Values.compactor "ctx" .) | nindent 4 }}
+{{- include "loki.component" (dict "target" "compactor" "component" .Values.compactor "ctx" .) }}
 {{- end }}

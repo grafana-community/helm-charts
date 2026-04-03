@@ -96,7 +96,7 @@ spec:
       emptyDir: {}
     {{- if not (dig "persistence" "enabled" false $component) }}
     - name: data
-      {{- tpl (toYaml (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict))) $component) $ctx | nindent 6 }}
+      {{- tpl (toYaml (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict)) $component)) $ctx | nindent 6 }}
     {{- else if and (dig "persistence" "enabled" false $component) (eq (dig "persistence" "type" "" $component) "pvc") (eq $component.kind "Deployment") }}
     - name: data
       persistentVolumeClaim:
