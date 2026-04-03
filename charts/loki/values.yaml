@@ -62,6 +62,76 @@ commonLabels: {}
 
 ######################################################################################################################
 #
+# New Loki Configuration
+#
+# In addition to the existing configuration options for Loki, we are introducing a new way to configure Loki which
+# provides more flexibility.
+#
+######################################################################################################################
+
+# -- Enable new configuration syntax for Loki.
+newConfig: false
+
+# -- Config file contents for Loki
+# @default -- See values.yaml
+config:
+  auth_enabled: true
+  server:
+    http_listen_port: 3100
+    grpc_listen_port: 9095
+    http_server_read_timeout: 600s
+    http_server_write_timeout: 600s
+
+  memberlist:
+    join_members:
+      - '{{ include "loki.memberlist" . }}.{{ include "loki.namespace" $ }}.svc.{{ .Values.global.clusterDomain }}'
+
+  common:
+    path_prefix: /var/loki
+    replication_factor: 3
+    compactor_grpc_address: '{{ include "loki.compactorAddress" . }}'
+
+  limits_config:
+    reject_old_samples: true
+    reject_old_samples_max_age: 168h
+    max_cache_freshness_per_query: 10m
+    split_queries_by_interval: 15m
+    query_timeout: 300s
+    volume_enabled: true
+
+  runtime_config:
+    file: /etc/loki/runtime-config/runtime-config.yaml
+
+  query_range:
+    align_queries_with_step: true
+
+  index_gateway:
+    mode: simple
+
+  frontend:
+    scheduler_address: '{{ include "loki.querySchedulerAddress" . }}'
+    tail_proxy_url: '{{ include "loki.querierAddress" . }}'
+
+  frontend_worker:
+    scheduler_address: '{{ include "loki.querySchedulerAddress" . }}'
+
+  bloom_build:
+    enabled: false
+    builder:
+      planner_address: '{{ include "loki.bloomPlannerAddress" . }}'
+  bloom_gateway:
+    enabled: false
+    client:
+      addresses: '{{ include "loki.bloomGatewayAddresses" . }}'
+
+# -- Extra Loki configuration to be merged with the generated config. Passed through tpl, so it can be templated with the same context as the rest of the config.
+extraConfig: ""
+
+# -- Provides a reloadable runtime configuration file for some specific configuration. Only Used if newConfig is enabled.
+runtimeConfig: {}
+
+######################################################################################################################
+#
 # Defaults applied to all loki configurations
 # Current supported scope: backend, bloom-builder, distributor
 #

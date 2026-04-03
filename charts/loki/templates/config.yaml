@@ -16,6 +16,6 @@ data:
 {{- else }}
 data:
   config.yaml: |
-    {{ include "loki.calculatedConfig" . | nindent 4 }}
+    {{- include "loki.calculatedConfig" . | nindent 4 }}
 {{- end -}}
 {{- end }}
