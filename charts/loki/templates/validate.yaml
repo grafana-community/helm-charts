@@ -27,6 +27,10 @@
 {{- fail "You have more than zero replicas configured for both the single binary and simple scalable targets. If this was intentional change the deploymentMode to the transitional 'SingleBinary<->SimpleScalable' mode"}}
 {{- end }}
 
+{{- if and .Values.querier.kedaAutoscaling.enabled .Values.querier.autoscaling.enabled }}
+{{- fail "Cannot enable both HPA and Keda based autoscaling for querier at the same time." }}
+{{- end }}
+
 {{- if .Values.newConfig }}
 
 {{- if (empty .Values.config.schema_config) }}
