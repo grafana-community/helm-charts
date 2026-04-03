@@ -2,12 +2,12 @@
 Pod helper
 */}}
 
-{{- define "loki.podTemplate" }}
-{{- $target := .target }}
-{{- $ctx := .ctx }}
-{{- $component := .component }}
-{{- $args := .args }}
-{{- with $ctx }}
+{{- define "loki.podTemplate" -}}
+{{- $target := .target -}}
+{{- $ctx := .ctx -}}
+{{- $component := .component -}}
+{{- $args := .args -}}
+{{- with $ctx -}}
 metadata:
   annotations:
     {{- include "loki.config.checksum" . | nindent 4 }}

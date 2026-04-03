@@ -3443,6 +3443,8 @@ bloomPlanner:
 bloomBuilder:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: false
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: Deployment
   # -- Number of replicas for the bloom-builder
   replicas: 0
   # -- hostAliases to add
@@ -3492,6 +3494,10 @@ bloomBuilder:
   command: null
   # -- The name of the PriorityClass for bloom-builder pods
   priorityClassName: null
+  # -- Labels for bloom-builder
+  labels: {}
+  # -- Annotations for bloom-builder
+  annotations: {}
   # -- Labels for bloom-builder pods
   podLabels: {}
   # -- Annotations for bloom-builder pods
