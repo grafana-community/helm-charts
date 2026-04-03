@@ -1,7 +1,13 @@
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
-{{- if and $isDistributed (gt (int .Values.querier.replicas) 1) }}
+{{- $effectiveReplicas := .Values.querier.replicas -}}
+{{- if .Values.querier.autoscaling.enabled -}}
+  {{- $effectiveReplicas = .Values.querier.autoscaling.minReplicas -}}
+{{- else if .Values.querier.kedaAutoscaling.enabled -}}
+  {{- $effectiveReplicas = .Values.querier.kedaAutoscaling.minReplicas -}}
+{{- end -}}
+{{- if and $isDistributed (gt (int $effectiveReplicas) 1) }}
 {{- if kindIs "invalid" .Values.querier.maxUnavailable }}
-{{- fail "`.Values.querier.maxUnavailable` must be set when `.Values.querier.replicas` is greater than 1." }}
+{{- fail "`.Values.querier.maxUnavailable` must be set when effective querier replicas is greater than 1." }}
 {{- else }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
