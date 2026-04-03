@@ -1,7 +1,6 @@
 suite: querier PodDisruptionBudget
 templates:
   - templates/querier/pdb.yaml
-  - templates/_pdb.tpl
 set:
   deploymentMode: Distributed
   loki.storage.type: gcs
