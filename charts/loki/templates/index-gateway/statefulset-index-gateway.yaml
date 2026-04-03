@@ -15,7 +15,7 @@ spec:
   replicas: {{ .Values.indexGateway.replicas }}
 {{- with .Values.indexGateway.updateStrategy }}
   updateStrategy:
-     {{- tpl (. | toYaml) $ | nindent 4 }}
+    {{- tpl (. | toYaml) $ | nindent 4 }}
 {{- end }}
   serviceName: {{ include "loki.indexGatewayFullname" . }}-headless
   revisionHistoryLimit: {{ .Values.loki.revisionHistoryLimit }}

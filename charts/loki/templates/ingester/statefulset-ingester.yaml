@@ -22,7 +22,7 @@ spec:
   podManagementPolicy: Parallel
 {{- with .Values.ingester.updateStrategy }}
   updateStrategy:
-     {{- tpl (. | toYaml) $ | nindent 4 }}
+    {{- tpl (. | toYaml) $ | nindent 4 }}
 {{- end }}
   serviceName: {{ include "loki.ingesterFullname" . }}-headless
   revisionHistoryLimit: {{ .Values.loki.revisionHistoryLimit }}
