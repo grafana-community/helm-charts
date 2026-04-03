@@ -1024,9 +1024,11 @@ gateway:
   containerSecurityContext:
     readOnlyRootFilesystem: true
     capabilities:
-      drop:
-        - ALL
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
     allowPrivilegeEscalation: false
+
   # -- Use the host's user namespace in the gateway
   hostUsers: nil
   # -- Resource requests and limits for the gateway
@@ -1200,7 +1202,9 @@ gateway:
       allowPrivilegeEscalation: false
       readOnlyRootFilesystem: true
       capabilities:
-        drop: ["all"]
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
       privileged: false
       runAsNonRoot: true
       runAsUser: 65532
@@ -1326,6 +1330,10 @@ migrate:
 # For small Loki installations up to a few 10's of GB per day, or for testing and development.
 #
 ######################################################################################################################
+
+# -- Pod Disruption Budget for single binary deployment. Deprecated in favor of `singleBinary.podDisruptionBudget`
+podDisruptionBudget:
+  enabled: true
 
 # Configuration for the single binary node(s)
 singleBinary:
@@ -1717,7 +1725,7 @@ read:
   resources: {}
   # -- liveness probe settings for read pods. If empty, applies no livenessProbe
   livenessProbe: {}
-    # -- startup probe for the read pods. If empty, applies no startupProbe
+  # -- startup probe for the read pods. If empty, applies no startupProbe
   startupProbe: {}
   # -- Grace period to allow the read to shutdown before it is killed
   terminationGracePeriodSeconds: 30
