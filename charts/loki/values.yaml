@@ -1367,6 +1367,8 @@ singleBinary:
   priorityClassName: null
   # -- Annotations for single binary StatefulSet
   annotations: {}
+  # -- Additional labels for single binary StatefulSet
+  labels: {}
   # -- Annotations for single binary pods
   podAnnotations: {}
   # -- Additional labels for each `single binary` pod
@@ -1523,6 +1525,8 @@ write:
   priorityClassName: null
   # -- Annotations for write StatefulSet
   annotations: {}
+  # -- Additional labels for write StatefulSet
+  labels: {}
   # -- Annotations for write pods
   podAnnotations: {}
   # -- Additional labels for each `write` pod
@@ -1686,6 +1690,8 @@ read:
   priorityClassName: null
   # -- Annotations for read deployment
   annotations: {}
+  # -- Additional labels for read deployment
+  labels: {}
   # -- Annotations for read pods
   podAnnotations: {}
   # -- Additional labels for each `read` pod
@@ -1846,6 +1852,8 @@ backend:
   priorityClassName: null
   # -- Annotations for backend StatefulSet
   annotations: {}
+  # -- Additional labels for backend StatefulSet
+  labels: {}
   # -- Annotations for backend pods
   podAnnotations: {}
   # -- Additional labels for each `backend` pod
@@ -2982,6 +2990,10 @@ compactor:
   command: null
   # -- The name of the PriorityClass for compactor pods
   priorityClassName: null
+  # -- Labels for compactor
+  labels: {}
+  # -- Annotations for compactor
+  annotations: {}
   # -- Labels for compactor pods
   podLabels: {}
   # -- Annotations for compactor pods

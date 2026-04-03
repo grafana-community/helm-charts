@@ -20,10 +20,10 @@ metadata:
     {{- include "loki.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ $target }}
     app.kubernetes.io/part-of: memberlist
-    {{- with (mergeOverwrite (dict) .Values.loki.labels .Values.defaults.labels $component.labels) }}
+    {{- with (mergeOverwrite (dict) .Values.defaults.labels $component.labels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with (mergeOverwrite (dict) .Values.loki.annotations .Values.defaults.annotations $component.annotations) }}
+  {{- with (mergeOverwrite (dict) .Values.defaults.annotations $component.annotations) }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
