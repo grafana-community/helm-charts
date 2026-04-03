@@ -64,7 +64,15 @@ jobs:
         run: |
           helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds
 
+      - name: Apply KEDA CRDs
+        if: steps.list-changed.outputs.changed == 'true'
+        run: kubectl apply --server-side -f "https://github.com/kedacore/keda/releases/download/v${KEDA_VERSION}/keda-${KEDA_VERSION}-crds.yaml"
+        env:
+          #renovate: github=kedacore/keda
+          KEDA_VERSION: 2.19.0
+
       - name: Run chart-testing (install)
+
         if: steps.list-changed.outputs.changed == 'true'
         run: ct install --config .github/linters/ct.yaml
 
@@ -131,7 +139,7 @@ jobs:
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: super-linter/super-linter/slim@61abc07d755095a68f4987d1c2c3d1d64408f1f9 # v8.5.0
+        uses: super-linter/super-linter/slim@9e863354e3ff62e0727d37183162c4a88873df41 # v8.6.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MULTI_STATUS: false
@@ -153,12 +161,14 @@ jobs:
           # VALIDATE_MARKDOWN: true - disable to for now.
           VALIDATE_RENOVATE: true
           VALIDATE_SHELL_SHFMT: true
+          VALIDATE_SPELL_CODESPELL: true
           # VALIDATE_XML: true
           # VALIDATE_YAML: true
 
   renovate-auto-merge:
     name: Auto-approve PRs from Renovate
     runs-on: ubuntu-24.04
+    environment: renovate-auto-merge
     needs:
       - chart-testing
       - check-generated-files
