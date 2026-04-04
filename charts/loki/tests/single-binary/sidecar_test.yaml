@@ -1,11 +1,11 @@
 # $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
-suite: single-binary sidecar
+suite: monolithic sidecar
 templates:
   - single-binary/statefulset.yaml
   - config.yaml
 
 set:
-  deploymentMode: SingleBinary
+  deploymentMode: Monolithic
   loki.useTestSchema: true
   loki.storage.bucketNames.chunks: chunks
   loki.storage.bucketNames.ruler: ruler

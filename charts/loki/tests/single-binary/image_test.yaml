@@ -1,10 +1,10 @@
 # $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
-suite: single-binary image
+suite: monolithic image
 templates:
   - single-binary/statefulset.yaml
   - config.yaml
 set:
-  deploymentMode: SingleBinary
+  deploymentMode: Monolithic
   loki.useTestSchema: true
   loki.image.tag: 0.0.0
   loki.storage.bucketNames.chunks: chunks
