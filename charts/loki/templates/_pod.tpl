@@ -97,14 +97,14 @@ spec:
         name: {{ template "loki.name" . }}-runtime
     - name: temp
       emptyDir: {}
-    {{- if not (dig "persistence" "enabled" false $component) }}
+    {{- if not (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) }}
     - name: data
       {{- tpl (toYaml (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict)) $component)) $ctx | nindent 6 }}
-    {{- else if and (dig "persistence" "enabled" false $component) (eq (dig "persistence" "type" "" $component) "pvc") (eq $component.kind "Deployment") }}
+    {{- else if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq (dig "persistence" "type" "" $component) "pvc") (eq $component.kind "Deployment") }}
     - name: data
       persistentVolumeClaim:
         claimName: {{ template "loki.fullname" . }}-data
-    {{- else if and (dig "persistence" "enabled" false $component) (eq (dig "persistence" "type" "" $component) "ephemeral") }}
+    {{- else if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq (dig "persistence" "type" "" $component) "ephemeral") }}
     - name: data
       ephemeral:
         volumeClaimTemplate:

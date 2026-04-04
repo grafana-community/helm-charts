@@ -57,7 +57,7 @@ spec:
       app.kubernetes.io/component: {{ $target }}
   template:
     {{- include "loki.podTemplate" (dict "target" $target "component" $component "ctx" $ctx "memberlist" $memberlist) | nindent 4 }}
-  {{- if and $component.persistence.enabled (eq $component.persistence.type "pvc") }}
+  {{- if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq $component.persistence.type "pvc") }}
     {{- if and (eq $component.kind "Deployment") (gt (int $component.replicas) 1) }}
       {{- fail "Persistence with PVC is not supported for Deployment with more than 1 replica. Please use StatefulSet or set replicas to 1." }}
     {{- end }}
