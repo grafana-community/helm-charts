@@ -684,7 +684,9 @@ loki:
   # --  Optional querier configuration
   querier: {}
   # --  Optional ingester configuration
-  ingester: {}
+  ingester:
+    wal:
+      flush_on_shutdown: true
   # --  Optional ingester client configuration
   ingester_client: {}
   # --  Optional block builder configuration

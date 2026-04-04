@@ -141,7 +141,7 @@ spec:
       {{- end }}
       args:
         - -config.file=/etc/loki/config/config.yaml
-        - -target={{ $target }}
+        - -target={{ $component.targetModule | default $target }}
         {{- with $args }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
