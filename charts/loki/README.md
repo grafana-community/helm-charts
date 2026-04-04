@@ -53,6 +53,28 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### 9.6.0
+
+In Helm chart version 9.6.0, PR [#238](https://github.com/grafana-community/helm-charts/pull/238) uses a new pod template for the compactor statefulsets. This new template includes changes like `enableServiceLinks`.
+
+#### Required action before upgrading to 9.6.0:
+
+```yaml
+kubectl delete statefulset \
+    <release-name>-compactor \
+    --cascade=orphan
+    -n <loki-namespace>
+```
+#### What happens:
+
+- PersistentVolumeClaims and data are preserved
+- New StatefulSets will be created with correct service references
+- Pods will restart and reattach to existing storage
+
+#### Why this change was necessary
+
+The previous pod template does not include `enableServiceLinks` field. As part of generalize all loki components to use the same pod template, this field was added to the new template.
+
 ### From 8.x to 9.0.0 ([#187](https://github.com/grafana-community/helm-charts/pull/187))
 
 The `monitoring.selfMonitoring` component has been removed along with `grafana-agent-operator` subchart dependency.  Additionally, loki-canary tenant authentication has been moved as it was located under selfMonitoring.

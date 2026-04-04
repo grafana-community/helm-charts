@@ -18,7 +18,7 @@ metadata:
   labels:
     {{- include "loki.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ $target }}
-    {{ if $memberlist }}
+    {{- if $memberlist }}
     app.kubernetes.io/part-of: memberlist
     {{- end }}
     {{- with (mergeOverwrite (dict) .Values.loki.podLabels .Values.defaults.podLabels $component.podLabels) }}
@@ -34,7 +34,7 @@ spec:
   enableServiceLinks: {{ $component.enableServiceLinks }}
   {{- else if (kindIs "bool" .Values.defaults.enableServiceLinks) }}
   enableServiceLinks: {{ .Values.defaults.enableServiceLinks }}
-  {{- else if (kindIs "bool" .Values.loki.hostUsers) }}
+  {{- else if (kindIs "bool" .Values.loki.enableServiceLinks) }}
   enableServiceLinks: {{ .Values.loki.enableServiceLinks }}
   {{- end }}
   {{- if (kindIs "bool" (coalesce $component.automountServiceAccountToken .Values.defaults.automountServiceAccountToken)) }}
