@@ -1,4 +1,0 @@
-{{- $isMonolithic := eq (include "loki.deployment.isMonolithic" .) "true" -}}
-{{- if $isMonolithic }}
-{{- include "loki.service" (dict "target" "single-binary" "component" .Values.singleBinary "ctx" . "name" (include "loki.MonolithicFullname" .) "headlessName" (printf "%s-headless" (include "loki.name" . ))) }}
-{{- end }}

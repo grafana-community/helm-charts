@@ -29,9 +29,9 @@ Allow the release namespace to be overridden for multi-namespace deployments in 
 {{- end -}}
 
 {{/*
-singleBinary fullname
+monolithic fullname
 */}}
-{{- define "loki.MonolithicFullname" -}}
+{{- define "loki.monolithicFullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -467,7 +467,7 @@ Generate list of ingress service paths based on deployment type
 */}}
 {{- define "loki.ingress.servicePaths" -}}
 {{- if (eq (include "loki.deployment.isMonolithic" .) "true") -}}
-{{- include "loki.ingress.singleBinaryServicePaths" . }}
+{{- include "loki.ingress.monolithicServicePaths" . }}
 {{- else if (eq (include "loki.deployment.isDistributed" .) "true") -}}
 {{- include "loki.ingress.distributedServicePaths" . }}
 {{- else if and (eq (include "loki.deployment.isScalable" .) "true") (not .Values.read.legacyReadTarget ) -}}
@@ -519,8 +519,8 @@ Ingress service paths for legacy simple scalable deployment
 {{/*
 Ingress service paths for single binary deployment
 */}}
-{{- define "loki.ingress.singleBinaryServicePaths" -}}
-{{- $serviceName := include "loki.MonolithicFullname" . }}
+{{- define "loki.ingress.monolithicServicePaths" -}}
+{{- $serviceName := include "loki.monolithicFullname" . }}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $serviceName "paths" .Values.ingress.paths.distributor )}}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $serviceName "paths" .Values.ingress.paths.queryFrontend )}}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $serviceName "paths" .Values.ingress.paths.ruler )}}
@@ -579,7 +579,7 @@ Create the service endpoint including port for MinIO.
 {{- $isMonolithic := eq (include "loki.deployment.isMonolithic" .) "true" -}}
 {{- $url := printf "%s.%s.svc.%s.:%s" (include "loki.gatewayFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.gateway.service.port | toString)  }}
 {{- if and $isMonolithic (not .Values.gateway.enabled)  }}
-  {{- $url = printf "%s.%s.svc.%s.:%s" (include "loki.MonolithicFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
+  {{- $url = printf "%s.%s.svc.%s.:%s" (include "loki.monolithicFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
 {{- end }}
 {{- printf "%s" $url -}}
 {{- end -}}
@@ -723,8 +723,8 @@ http {
     {{- $backendUrl = .Values.gateway.nginxConfig.customBackendUrl }}
     {{- end }}
 
-    {{- $singleBinaryHost := include "loki.MonolithicFullname" . }}
-    {{- $singleBinaryUrl  := printf "%s://%s.%s.svc.%s:%s" $httpSchema $singleBinaryHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
+    {{- $monolithicHost := include "loki.monolithicFullname" . }}
+    {{- $monolithicUrl  := printf "%s://%s.%s.svc.%s:%s" $httpSchema $monolithicHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
 
     {{- $distributorHost := include "loki.distributorFullname" .}}
     {{- $ingesterHost := include "loki.ingesterFullname" .}}
@@ -745,14 +745,14 @@ http {
     {{- $querierUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $querierHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
 
     {{- if eq (include "loki.deployment.isMonolithic" .) "true"}}
-    {{- $distributorUrl = $singleBinaryUrl }}
-    {{- $ingesterUrl = $singleBinaryUrl }}
-    {{- $queryFrontendUrl = $singleBinaryUrl }}
-    {{- $indexGatewayUrl = $singleBinaryUrl }}
-    {{- $rulerUrl = $singleBinaryUrl }}
-    {{- $compactorUrl = $singleBinaryUrl }}
-    {{- $schedulerUrl = $singleBinaryUrl }}
-    {{- $querierUrl = $singleBinaryUrl }}
+    {{- $distributorUrl = $monolithicUrl }}
+    {{- $ingesterUrl = $monolithicUrl }}
+    {{- $queryFrontendUrl = $monolithicUrl }}
+    {{- $indexGatewayUrl = $monolithicUrl }}
+    {{- $rulerUrl = $monolithicUrl }}
+    {{- $compactorUrl = $monolithicUrl }}
+    {{- $schedulerUrl = $monolithicUrl }}
+    {{- $querierUrl = $monolithicUrl }}
     {{- else if eq (include "loki.deployment.isScalable" .) "true"}}
     {{- $distributorUrl = $writeUrl }}
     {{- $ingesterUrl = $writeUrl }}
@@ -994,7 +994,7 @@ enableServiceLinks: false
 {{- $compactorAddress = include "loki.readFullname" . -}}
 {{- else if $isMonolithic -}}
 {{/* single binary */}}
-{{- $compactorAddress = include "loki.MonolithicFullname" . -}}
+{{- $compactorAddress = include "loki.monolithicFullname" . -}}
 {{/* distributed */}}
 {{- else if $isDistributed -}}
 {{- $compactorAddress = include "loki.compactorFullname" . -}}
