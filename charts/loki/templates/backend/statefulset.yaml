@@ -17,7 +17,7 @@ metadata:
   {{- end }}
 spec:
 {{- if not .Values.backend.autoscaling.enabled }}
-  {{- if eq .Values.deploymentMode "SingleBinary" }}
+  {{- if or (eq .Values.deploymentMode "SingleBinary") (eq .Values.deploymentMode "Monolithic") }}
   replicas: 0
   {{- else }}
   replicas: {{ .Values.backend.replicas }}

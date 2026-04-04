@@ -1,18 +1,18 @@
-{{- $isSingleBinary := eq (include "loki.deployment.isSingleBinary" .) "true" -}}
+{{- $isMonolithic := eq (include "loki.deployment.isMonolithic" .) "true" -}}
 {{- $usingObjectStorage := eq (include "loki.isUsingObjectStorage" .) "true" }}
-{{- if and $isSingleBinary $usingObjectStorage ( .Values.singleBinary.autoscaling.enabled ) }}
+{{- if and $isMonolithic $usingObjectStorage ( .Values.singleBinary.autoscaling.enabled ) }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "loki.singleBinaryFullname" . }}
+  name: {{ include "loki.MonolithicFullname" . }}
   namespace: {{ include "loki.namespace" . }}
   labels:
-    {{- include "loki.singleBinaryLabels" . | nindent 4 }}
+    {{- include "loki.MonolithicLabels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: StatefulSet
-    name: {{ include "loki.singleBinaryFullname" . }}
+    name: {{ include "loki.MonolithicFullname" . }}
   minReplicas: {{ .Values.singleBinary.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.singleBinary.autoscaling.maxReplicas }}
   {{- with .Values.singleBinary.autoscaling.behavior }}

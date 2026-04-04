@@ -1,14 +1,14 @@
 {{/*
 singleBinary common labels
 */}}
-{{- define "loki.singleBinaryLabels" -}}
+{{- define "loki.MonolithicLabels" -}}
 {{ include "loki.labels" . }}
 app.kubernetes.io/component: single-binary
 {{- end }}
 
 
 {{/* singleBinary selector labels */}}
-{{- define "loki.singleBinarySelectorLabels" -}}
+{{- define "loki.MonolithicSelectorLabels" -}}
 {{ include "loki.selectorLabels" . }}
 app.kubernetes.io/component: single-binary
 {{- end }}
@@ -16,7 +16,7 @@ app.kubernetes.io/component: single-binary
 {{/*
 singleBinary priority class name
 */}}
-{{- define "loki.singleBinaryPriorityClassName" -}}
+{{- define "loki.MonolithicPriorityClassName" -}}
 {{- $pcn := coalesce .Values.global.priorityClassName .Values.singleBinary.priorityClassName -}}
 {{- if $pcn }}
 priorityClassName: {{ $pcn }}
@@ -24,7 +24,7 @@ priorityClassName: {{ $pcn }}
 {{- end }}
 
 {{/* singleBinary replicas calculation */}}
-{{- define "loki.singleBinaryReplicas" -}}
+{{- define "loki.MonolithicReplicas" -}}
 {{- $replicas := 1 }}
 {{- $usingObjectStorage := eq (include "loki.isUsingObjectStorage" .) "true" }}
 {{- if and $usingObjectStorage (gt (int .Values.singleBinary.replicas) 1)}}
@@ -36,6 +36,6 @@ priorityClassName: {{ $pcn }}
 {{/*
 singleBinary target
 */}}
-{{- define "loki.singleBinaryTarget" -}}
+{{- define "loki.MonolithicTarget" -}}
 {{- .Values.singleBinary.targetModule -}}{{- if .Values.loki.ui.enabled -}},ui{{- end -}}
 {{- end -}}

@@ -27,8 +27,8 @@
 {{- fail "You have more than zero replicas configured for both the single binary and distributed targets, there is no transition mode between these targets please change one or the other to zero or transition to the SimpleScalable mode first."}}
 {{- end }}
 
-{{- if and (gt $singleBinaryReplicas 0) $atLeastOneScalableReplica (ne .Values.deploymentMode "SingleBinary<->SimpleScalable") }}
-{{- fail "You have more than zero replicas configured for both the single binary and simple scalable targets. If this was intentional change the deploymentMode to the transitional 'SingleBinary<->SimpleScalable' mode"}}
+{{- if and (gt $singleBinaryReplicas 0) $atLeastOneScalableReplica (ne .Values.deploymentMode "Monolithic<->SimpleScalable") (ne .Values.deploymentMode "SingleBinary<->SimpleScalable") }}
+{{- fail "You have more than zero replicas configured for both the single binary and simple scalable targets. If this was intentional change the deploymentMode to the transitional 'Monolithic<->SimpleScalable' mode"}}
 {{- end }}
 
 {{- if and .Values.querier.kedaAutoscaling.enabled .Values.querier.autoscaling.enabled }}
