@@ -152,7 +152,7 @@ spec:
       {{- end }}
       args:
         - -config.file=/etc/loki/config/config.yaml
-        - -target={{ $target }}{{- if $component.ui.enabled }},ui{{- end }}
+        - -target={{ $target }}{{- if $component.uiEnabled }},ui{{- end }}
         {{- with $args }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
