@@ -55,7 +55,7 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ### From 9.x to 10.0.0 ([#187](https://github.com/grafana-community/helm-charts/pull/236))
 
-The `loki.ui.enabled` values has been removed, if you want to enable the ui target, you can set `queryFrontend.ui.enabled` or `querier.ui.enabled` or `read.ui.enabled`
+The `loki.ui.enabled` values has been removed, if you want to enable the ui target, you can set `queryFrontend.uiEnabled` or `querier.uiEnabled` or `read.uiEnabled`
 
 Actions required:
 - if you used `loki.ui.enabled` move to `querier.uiEnabled`
