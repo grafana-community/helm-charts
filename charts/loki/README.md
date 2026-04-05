@@ -53,6 +53,15 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### From 9.x to 10.0.0 ([#258](https://github.com/grafana-community/helm-charts/pull/258))
+
+The `deploymentMode` default value has been changed to `Monolithic`. `SingleBinary` has been renamed to `Monolithic`. 
+The old naming `SingleBinary` is still supported. `SimpleScalable` is still supported but will be removed in Loki 4.0.0.
+
+Actions required:
+- If you are using `SimpleScalable` deployment mode, you have to explicitly set `deploymentMode: SimpleScalable` in your values file to avoid breaking changes. Consider migrating to `Monolithic` deployment mode as `SimpleScalable` will be removed in Loki 4.0.0.
+- If you are using `SingleBinary` deployment mode, you have to explicitly set `deploymentMode: Monolithic` in your values file to avoid breaking changes.
+
 ### From 8.x to 9.0.0 ([#187](https://github.com/grafana-community/helm-charts/pull/187))
 
 The `monitoring.selfMonitoring` component has been removed along with `grafana-agent-operator` subchart dependency.  Additionally, loki-canary tenant authentication has been moved as it was located under selfMonitoring.

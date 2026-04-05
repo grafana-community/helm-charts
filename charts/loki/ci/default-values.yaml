@@ -8,13 +8,12 @@ loki:
       chunks: chunks
       ruler: ruler
       admin: admin
+deploymentMode: Monolithic
+singleBinary:
+  replicas: 1
 read:
-  replicas: 1
+  replicas: 0
 write:
-  replicas: 1
+  replicas: 0
 backend:
-  replicas: 1
-
-sidecar:
-  rules:
-    enabled: true
+  replicas: 0
