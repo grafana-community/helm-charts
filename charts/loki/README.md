@@ -53,6 +53,14 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### From 9.x to 10.0.0 ([#187](https://github.com/grafana-community/helm-charts/pull/236))
+
+The `loki.ui.enabled` values has been removed, if you want to enable the ui target, you can set `queryFrontend.uiEnabled` or `querier.uiEnabled` or `read.uiEnabled`
+
+Actions required:
+- if you used `loki.ui.enabled` move to `querier.uiEnabled`
+
+
 ### From 8.x to 9.0.0 ([#187](https://github.com/grafana-community/helm-charts/pull/187))
 
 The `monitoring.selfMonitoring` component has been removed along with `grafana-agent-operator` subchart dependency.  Additionally, loki-canary tenant authentication has been moved as it was located under selfMonitoring.

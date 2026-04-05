@@ -429,7 +429,7 @@ loki:
       {{- tpl (. | toYaml) $ | nindent 4 }}
     {{- end }}
 
-    {{- if .Values.loki.ui.enabled }}
+    {{- if or .Values.querier.uiEnabled .Values.queryFrontend.uiEnabled .Values.read.uiEnabled }}
     ui:
       enabled: true
     {{- end }}
