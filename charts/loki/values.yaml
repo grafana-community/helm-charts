@@ -684,7 +684,9 @@ loki:
   # --  Optional querier configuration
   querier: {}
   # --  Optional ingester configuration
-  ingester: {}
+  ingester:
+    wal:
+      flush_on_shutdown: true
   # --  Optional ingester client configuration
   ingester_client: {}
   # --  Optional block builder configuration
@@ -1349,7 +1351,23 @@ singleBinary:
     # -- Target CPU utilisation percentage for the single binary
     targetCPUUtilizationPercentage: 60
     # -- Target memory utilisation percentage for the single binary
-    targetMemoryUtilizationPercentage:
+    targetMemoryUtilizationPercentage: null
+    # -- Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)
+    customMetrics: []
+    # - type: Pods
+    #   pods:
+    #     metric:
+    #       name: loki_lines_total
+    #     target:
+    #       type: AverageValue
+    #       averageValue: 10k
+    behavior:
+      # -- Enable autoscaling behaviours
+      enabled: false
+      # -- define scale down policies, must conform to HPAScalingRules
+      scaleDown: {}
+      # -- define scale up policies, must conform to HPAScalingRules
+      scaleUp: {}
   image:
     # -- The Docker registry for the single binary image. Overrides `loki.image.registry`
     registry: null
@@ -1538,8 +1556,6 @@ write:
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
       grpc: ""
-  # -- Comma-separated list of Loki modules to load for the write
-  targetModule: "write"
   # -- Additional CLI args for the write
   extraArgs: []
   # -- Environment variables to add to the write pods
@@ -1699,8 +1715,6 @@ read:
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
       grpc: ""
-  # -- Comma-separated list of Loki modules to load for the read
-  targetModule: "read"
   # -- Whether or not to use the 2 target type simple scalable mode (read, write) or the
   # 3 target type (read, write, backend). Legacy refers to the 2 target type, so true will
   # run two targets, false will run 3 targets.
@@ -1796,6 +1810,8 @@ read:
 backend:
   # -- Number of replicas for the backend
   replicas: 3
+  # -- Whether to enable the rules sidecar
+  sidecar: true
   # -- Set this toggle to false to opt out of automounting API credentials for the service account
   automountServiceAccountToken: true
   autoscaling:
@@ -1857,8 +1873,6 @@ backend:
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
       grpc: ""
-  # -- Comma-separated list of Loki modules to load for the backend
-  targetModule: "backend"
   # -- Additional CLI args for the backend
   extraArgs: []
   # -- Environment variables to add to the backend pods
