@@ -2,12 +2,13 @@
 Pod helper
 */}}
 
-{{- define "loki.podTemplate" }}
-{{- $target := .target }}
-{{- $ctx := .ctx }}
-{{- $component := .component }}
-{{- $args := .args }}
-{{- with $ctx }}
+{{- define "loki.podTemplate" -}}
+{{- $target := .target -}}
+{{- $ctx := .ctx -}}
+{{- $component := .component -}}
+{{- $args := .args -}}
+{{- $memberlist := hasKey . "memberlist" | ternary .memberlist true -}}
+{{- with $ctx -}}
 metadata:
   annotations:
     {{- include "loki.config.checksum" . | nindent 4 }}
@@ -17,7 +18,9 @@ metadata:
   labels:
     {{- include "loki.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ $target }}
+    {{- if $memberlist }}
     app.kubernetes.io/part-of: memberlist
+    {{- end }}
     {{- with (mergeOverwrite (dict) .Values.loki.podLabels .Values.defaults.podLabels $component.podLabels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -31,7 +34,7 @@ spec:
   enableServiceLinks: {{ $component.enableServiceLinks }}
   {{- else if (kindIs "bool" .Values.defaults.enableServiceLinks) }}
   enableServiceLinks: {{ .Values.defaults.enableServiceLinks }}
-  {{- else if (kindIs "bool" .Values.loki.hostUsers) }}
+  {{- else if (kindIs "bool" .Values.loki.enableServiceLinks) }}
   enableServiceLinks: {{ .Values.loki.enableServiceLinks }}
   {{- end }}
   {{- if (kindIs "bool" (coalesce $component.automountServiceAccountToken .Values.defaults.automountServiceAccountToken)) }}
@@ -94,39 +97,42 @@ spec:
         name: {{ template "loki.name" . }}-runtime
     - name: temp
       emptyDir: {}
+    {{- if not (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) }}
     - name: data
-      {{- if dig "persistence" "ephemeralDataVolume" "enabled" false $component }}
+      {{- tpl (toYaml (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict)) $component)) $ctx | nindent 6 }}
+    {{- else if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq (dig "persistence" "type" "" $component) "pvc") (eq $component.kind "Deployment") }}
+    - name: data
+      persistentVolumeClaim:
+        claimName: {{ template "loki.fullname" . }}-data
+    {{- else if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq (dig "persistence" "type" "" $component) "ephemeral") }}
+    - name: data
       ephemeral:
         volumeClaimTemplate:
           metadata:
-            {{- with $component.ephemeralDataVolume.annotations }}
+            {{- with $component.persistence.annotations }}
             annotations:
               {{- toYaml . | nindent 14 }}
             {{- end }}
-            {{- with $component.ephemeralDataVolume.labels }}
+            {{- with $component.persistence.labels }}
             labels:
               {{- toYaml . | nindent 14 }}
             {{- end }}
           spec:
             accessModes:
-              {{- toYaml $component.ephemeralDataVolume.accessModes | nindent 12 }}
-            {{- if not (kindIs "invalid" $component.ephemeralDataVolume.storageClass) }}
-            storageClassName: {{ if (eq "-" $component.ephemeralDataVolume.storageClass) }}""{{ else }}{{ $component.ephemeralDataVolume.storageClass }}{{ end }}
+              {{- toYaml $component.persistence.accessModes | nindent 12 }}
+            {{- if not (kindIs "invalid" $component.persistence.storageClass) }}
+            storageClassName: {{ if (eq "-" $component.persistence.storageClass) }}""{{ else }}{{ $component.persistence.storageClass }}{{ end }}
             {{- end }}
-            {{- with $component.ephemeralDataVolume.volumeAttributesClassName }}
+            {{- with $component.persistence.volumeAttributesClassName }}
             volumeAttributesClassName: {{ . }}
             {{- end }}
             resources:
               requests:
-                storage: {{ $component.ephemeralDataVolume.size | quote }}
-            {{- with $component.ephemeralDataVolume.selector }}
+                storage: {{ $component.persistence.size | quote }}
+            {{- with $component.persistence.selector }}
             selector:
               {{- toYaml . | nindent 14 }}
             {{- end }}
-      {{- else if not (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) }}
-        {{- with (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict)) $component) }}
-      {{- toYaml . | nindent 6 }}
-        {{- end }}
       {{- end }}
     {{- if and $component.sidecar .Values.sidecar.rules.enabled }}
     - name: sc-rules-volume
@@ -195,6 +201,10 @@ spec:
       startupProbe:
         {{- toYaml (omit . "enabled") | nindent 8 }}
         {{- end }}
+      {{- end }}
+      {{- with $component.lifecycle }}
+      lifecycle:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       volumeMounts:
         - name: config

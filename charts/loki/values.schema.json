@@ -122,6 +122,18 @@
         "tolerations": {
           "type": "array"
         },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "podAnnotations": {
           "type": "object",
           "additionalProperties": {
