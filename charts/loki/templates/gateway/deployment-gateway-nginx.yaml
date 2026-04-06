@@ -43,7 +43,7 @@ spec:
         {{- end }}
         {{- include "loki.gatewaySelectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "loki.serviceAccountName" . }}
+      serviceAccountName: {{ include "loki.serviceAccountName" (dict "ctx" . "component" .Values.gateway "target" "gateway" ) }}
       {{ include "loki.enableServiceLinks" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
