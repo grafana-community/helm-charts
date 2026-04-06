@@ -470,10 +470,8 @@ Generate list of ingress service paths based on deployment type
 {{- include "loki.ingress.singleBinaryServicePaths" . }}
 {{- else if (eq (include "loki.deployment.isDistributed" .) "true") -}}
 {{- include "loki.ingress.distributedServicePaths" . }}
-{{- else if and (eq (include "loki.deployment.isScalable" .) "true") (not .Values.read.legacyReadTarget ) -}}
+{{- else if and (eq (include "loki.deployment.isScalable" .) "true") -}}
 {{- include "loki.ingress.scalableServicePaths" . }}
-{{- else -}}
-{{- include "loki.ingress.legacyScalableServicePaths" . }}
 {{- end -}}
 {{- end -}}
 
@@ -492,7 +490,7 @@ Ingress service paths for distributed deployment
 {{- end -}}
 
 {{/*
-Ingress service paths for legacy simple scalable deployment when backend components were part of read component.
+Ingress service paths for simple scalable deployment when backend components were part of read component.
 */}}
 {{- define "loki.ingress.scalableServicePaths" -}}
 {{- $readServiceName := include "loki.readFullname" . }}
@@ -502,18 +500,6 @@ Ingress service paths for legacy simple scalable deployment when backend compone
 {{- $backendServiceName := include "loki.backendFullname" . }}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $backendServiceName "paths" .Values.ingress.paths.ruler )}}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $backendServiceName "paths" .Values.ingress.paths.compactor )}}
-{{- end -}}
-
-{{/*
-Ingress service paths for legacy simple scalable deployment
-*/}}
-{{- define "loki.ingress.legacyScalableServicePaths" -}}
-{{- $readServiceName := include "loki.readFullname" . }}
-{{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $readServiceName "paths" .Values.ingress.paths.queryFrontend )}}
-{{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $readServiceName "paths" .Values.ingress.paths.ruler )}}
-{{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $readServiceName "paths" .Values.ingress.paths.compactor )}}
-{{- $writeServiceName := include "loki.writeFullname" . }}
-{{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $writeServiceName "paths" .Values.ingress.paths.distributor )}}
 {{- end -}}
 
 {{/*
@@ -702,10 +688,6 @@ http {
     {{- $backendHost := include "loki.backendFullname" . }}
     {{- $readHost := include "loki.readFullname" . }}
     {{- $writeHost := include "loki.writeFullname" . }}
-
-    {{- if .Values.read.legacyReadTarget }}
-    {{- $backendHost = include "loki.readFullname" . }}
-    {{- end }}
 
     {{- $httpSchema := .Values.gateway.nginxConfig.schema }}
 
@@ -989,10 +971,7 @@ enableServiceLinks: false
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
 {{- $isSingleBinary := eq (include "loki.deployment.isSingleBinary" .) "true" -}}
 {{- $compactorAddress := include "loki.backendFullname" . -}}
-{{- if and $isSimpleScalable .Values.read.legacyReadTarget -}}
-{{/* 2 target configuration */}}
-{{- $compactorAddress = include "loki.readFullname" . -}}
-{{- else if $isSingleBinary -}}
+{{- if $isSingleBinary -}}
 {{/* single binary */}}
 {{- $compactorAddress = include "loki.singleBinaryFullname" . -}}
 {{/* distributed */}}
