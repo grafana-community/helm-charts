@@ -152,7 +152,7 @@ spec:
       {{- end }}
       args:
         - -config.file=/etc/loki/config/config.yaml
-        - -target={{ $target }}{{- if $component.uiEnabled }},ui{{- end }}
+        - -target={{ $target }}{{- if and .Values.loki.ui.enabled (or (eq $target "read") (eq $target "query-frontend") (eq $target "querier")) }},ui{{- end }}
         {{- with $args }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
