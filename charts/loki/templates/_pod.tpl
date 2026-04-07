@@ -24,7 +24,6 @@ metadata:
     {{- if ne $target "canary" }}
     app.kubernetes.io/part-of: memberlist
     {{- end }}
-    {{- with (mergeOverwrite (dict) .Values.loki.podLabels .Values.defaults.podLabels ($component.podLabels | default (dict))) }}
     {{- if $rolloutZoneName }}
     name: {{ $target }}-{{ $rolloutZoneName }}
     rollout-group: {{ $target }}

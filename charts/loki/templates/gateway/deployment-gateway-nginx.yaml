@@ -44,6 +44,11 @@ spec:
         {{- include "loki.gatewaySelectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "loki.serviceAccountName" (dict "ctx" . "component" .Values.gateway "target" "gateway" ) }}
+      {{- if (kindIs "bool" .Values.gateway.automountServiceAccountToken) }}
+      automountServiceAccountToken: {{ .Values.gateway.automountServiceAccountToken }}
+      {{- else if (kindIs "bool" .Values.defaults.automountServiceAccountToken) }}
+      automountServiceAccountToken: {{ .Values.defaults.automountServiceAccountToken }}
+      {{- end }}
       {{ include "loki.enableServiceLinks" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

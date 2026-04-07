@@ -119,7 +119,7 @@ defaults:
   # -- Tolerations for loki pods
   tolerations: []
   # -- Set this toggle to false to opt out of automounting API credentials for the service account
-  automountServiceAccountToken: null
+  automountServiceAccountToken: true
   # -- Annotations for loki pods
   podAnnotations: {}
   # -- Additional labels for loki pod
@@ -796,6 +796,8 @@ lokiCanary:
   tolerations: []
   # -- Affinity for canary pods
   affinity: {}
+  # -- Set this toggle to false to opt out of automounting API credentials for the service account
+  automountServiceAccountToken: false
   # -- The name of the PriorityClass for loki-canary pods
   priorityClassName: null
   # -- Use the host's user namespace in loki-canary pods
@@ -823,7 +825,7 @@ lokiCanary:
     # -- Docker image pull policy
     pullPolicy: IfNotPresent
   # -- Liveness probe
-  livenessProbe:
+  livenessProbe: {}
   # -- Readiness probe
   readinessProbe:
     httpGet:
@@ -832,7 +834,7 @@ lokiCanary:
     initialDelaySeconds: 15
     timeoutSeconds: 1
   # -- Startup probe
-  startupProbe:
+  startupProbe: {}
   # -- Update strategy for the `loki-canary` Daemonset pods
   updateStrategy:
     type: RollingUpdate
@@ -859,7 +861,7 @@ lokiCanary:
     # -- Labels for the service account
     labels: {}
     # -- Set this toggle to false to opt out of automounting API credentials for the service account
-    automountServiceAccountToken: true
+    automountServiceAccountToken: false
 ######################################################################################################################
 #
 # Service Accounts and Kubernetes RBAC
@@ -1105,6 +1107,8 @@ gateway:
   dnsConfig: {}
   # -- Node selector for gateway pods
   nodeSelector: {}
+  # -- Set this toggle to false to opt out of automounting API credentials for the service account
+  automountServiceAccountToken: false
   # -- Topology Spread Constraints for gateway pods
   # The value will be passed through tpl.
   topologySpreadConstraints: []
@@ -1905,7 +1909,21 @@ read:
   # -- Tolerations for read pods
   tolerations: []
   # -- The default is to deploy all pods in parallel.
-  podManagementPolicy: "Parallel"
+  serviceAccount:
+    # -- Specifies whether a ServiceAccount should be created
+    create: false
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: null
+    # -- Image pull secrets for the service account
+    imagePullSecrets: []
+    # -- Annotations for the service account
+    annotations: {}
+    # -- Labels for the service account
+    labels: {}
+    # -- Set this toggle to false to opt out of automounting API credentials for the service account
+    automountServiceAccountToken: true
+
 # --  Configuration for the backend pod(s)
 backend:
   # -- Number of replicas for the backend
