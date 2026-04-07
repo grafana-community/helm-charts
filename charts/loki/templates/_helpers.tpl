@@ -759,7 +759,7 @@ http {
       {{- with .Values.gateway.nginxConfig.locationSnippet }}
       {{- tpl . $ | nindent 6 }}
       {{- end }}
-      set $backend     "{{ $querierUrl }}"
+      set $backend     "{{ $querierUrl }}";
       proxy_pass       $backend$request_uri;
     }
     {{- end }}
