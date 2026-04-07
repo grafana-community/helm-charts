@@ -55,7 +55,7 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ### From 10.x to 11.0.0 ([#270](https://github.com/grafana-community/helm-charts/pull/270))
 
-The `read.legacyReadTarget` option has been removed. Simple scalable deployments requires always a dedicated backend target.
+The `read.legacyReadTarget` option has been removed. Simple scalable deployments always requires a dedicated backend target.
 
 ### From 9.x to 10.0.0 ([#270](https://github.com/grafana-community/helm-charts/pull/270))
 
