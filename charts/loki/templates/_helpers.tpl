@@ -479,13 +479,13 @@ Generate list of ingress service paths based on deployment type
 Ingress service paths for distributed deployment
 */}}
 {{- define "loki.ingress.distributedServicePaths" -}}
-{{- $distributorServiceName := include "loki.distributorFullname" . }}
+{{- $distributorServiceName := include "loki.resourceName" (dict "ctx" . "component" "distributor") }}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $distributorServiceName "paths" .Values.ingress.paths.distributor )}}
-{{- $queryFrontendServiceName := include "loki.queryFrontendFullname" . }}
+{{- $queryFrontendServiceName := include "loki.resourceName" (dict "ctx" . "component" "query-frontend") }}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $queryFrontendServiceName "paths" .Values.ingress.paths.queryFrontend )}}
-{{- $rulerServiceName := include "loki.rulerFullname" . }}
+{{- $rulerServiceName := include "loki.resourceName" (dict "ctx" . "component" "ruler") }}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $rulerServiceName "paths" .Values.ingress.paths.ruler)}}
-{{- $compactorServiceName := include "loki.compactorFullname" . }}
+{{- $compactorServiceName := include "loki.resourceName" (dict "ctx" . "component" "compactor") }}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $compactorServiceName "paths" .Values.ingress.paths.compactor)}}
 {{- end -}}
 
@@ -493,11 +493,11 @@ Ingress service paths for distributed deployment
 Ingress service paths for simple scalable deployment when backend components were part of read component.
 */}}
 {{- define "loki.ingress.scalableServicePaths" -}}
-{{- $readServiceName := include "loki.readFullname" . }}
+{{- $readServiceName := include "loki.resourceName" (dict "ctx" . "component" "read") }}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $readServiceName "paths" .Values.ingress.paths.queryFrontend )}}
-{{- $writeServiceName := include "loki.writeFullname" . }}
+{{- $writeServiceName := include "loki.resourceName" (dict "ctx" . "component" "write") }}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $writeServiceName "paths" .Values.ingress.paths.distributor )}}
-{{- $backendServiceName := include "loki.backendFullname" . }}
+{{- $backendServiceName := include "loki.resourceName" (dict "ctx" . "component" "backend") }}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $backendServiceName "paths" .Values.ingress.paths.ruler )}}
 {{- include "loki.ingress.servicePath" (dict "ctx" . "serviceName" $backendServiceName "paths" .Values.ingress.paths.compactor )}}
 {{- end -}}
@@ -563,7 +563,7 @@ Create the service endpoint including port for MinIO.
 {{/* Determine the public host for the Loki cluster */}}
 {{- define "loki.host" -}}
 {{- $isSingleBinary := eq (include "loki.deployment.isSingleBinary" .) "true" -}}
-{{- $url := printf "%s.%s.svc.%s.:%s" (include "loki.gatewayFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.gateway.service.port | toString)  }}
+{{- $url := printf "%s.%s.svc.%s.:%s" (include "loki.resourceName" (dict "ctx" . "component" "gateway")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.gateway.service.port | toString)  }}
 {{- if and $isSingleBinary (not .Values.gateway.enabled)  }}
   {{- $url = printf "%s.%s.svc.%s.:%s" (include "loki.singleBinaryFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
 {{- end }}
@@ -685,9 +685,9 @@ http {
     # Configure backend targets
 
     {{- $namespace := include "loki.namespace" . }}
-    {{- $backendHost := include "loki.backendFullname" . }}
-    {{- $readHost := include "loki.readFullname" . }}
-    {{- $writeHost := include "loki.writeFullname" . }}
+    {{- $backendHost := include "loki.resourceName" (dict "ctx" . "component" "backend") }}
+    {{- $readHost := include "loki.resourceName" (dict "ctx" . "component" "read") }}
+    {{- $writeHost := include "loki.resourceName" (dict "ctx" . "component" "write") }}
 
     {{- $httpSchema := .Values.gateway.nginxConfig.schema }}
 
@@ -708,14 +708,14 @@ http {
     {{- $singleBinaryHost := include "loki.singleBinaryFullname" . }}
     {{- $singleBinaryUrl  := printf "%s://%s.%s.svc.%s:%s" $httpSchema $singleBinaryHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
 
-    {{- $distributorHost := include "loki.distributorFullname" .}}
-    {{- $ingesterHost := include "loki.ingesterFullname" .}}
-    {{- $queryFrontendHost := include "loki.queryFrontendFullname" .}}
-    {{- $indexGatewayHost := include "loki.indexGatewayFullname" .}}
-    {{- $rulerHost := include "loki.rulerFullname" .}}
-    {{- $compactorHost := include "loki.compactorFullname" .}}
-    {{- $schedulerHost := include "loki.querySchedulerFullname" .}}
-    {{- $querierHost := include "loki.querierFullname" .}}
+    {{- $distributorHost := include "loki.resourceName" (dict "ctx" . "component" "distributor") }}
+    {{- $ingesterHost := include "loki.resourceName" (dict "ctx" . "component" "ingester") }}
+    {{- $queryFrontendHost := include "loki.resourceName" (dict "ctx" . "component" "query-frontend") }}
+    {{- $indexGatewayHost := include "loki.resourceName" (dict "ctx" . "component" "index-gateway") }}
+    {{- $rulerHost := include "loki.resourceName" (dict "ctx" . "component" "ruler") }}
+    {{- $compactorHost := include "loki.resourceName" (dict "ctx" . "component" "compactor") }}
+    {{- $schedulerHost := include "loki.resourceName" (dict "ctx" . "component" "scheduler") }}
+    {{- $querierHost := include "loki.resourceName" (dict "ctx" . "component" "querier") }}
 
     {{- $distributorUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $distributorHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) -}}
     {{- $ingesterUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $ingesterHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
@@ -976,7 +976,7 @@ enableServiceLinks: false
 {{- $compactorAddress = include "loki.singleBinaryFullname" . -}}
 {{/* distributed */}}
 {{- else if $isDistributed -}}
-{{- $compactorAddress = include "loki.compactorFullname" . -}}
+{{- $compactorAddress = include "loki.resourceName" (dict "ctx" . "component" "compactor") -}}
 {{- end -}}
 {{- printf "%s.%s.svc.%s:%s" $compactorAddress .Release.Namespace .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) }}
 {{- end }}
@@ -986,7 +986,7 @@ enableServiceLinks: false
 {{- $schedulerAddress := ""}}
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
 {{- if $isDistributed -}}
-{{- $schedulerAddress = printf "%s.%s.svc.%s:%s" (include "loki.querySchedulerFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
+{{- $schedulerAddress = printf "%s.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "query-scheduler")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
 {{- end -}}
 {{- printf "%s" $schedulerAddress }}
 {{- end }}
@@ -996,7 +996,7 @@ enableServiceLinks: false
 {{- $querierAddress := "" }}
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
 {{- if $isDistributed -}}
-{{- $querierHost := include "loki.querierFullname" .}}
+{{- $querierHost := include "loki.resourceName" (dict "ctx" . "component" "querier")}}
 {{- $querierUrl := printf "http://%s.%s.svc.%s:3100" $querierHost (include "loki.namespace" .) .Values.global.clusterDomain }}
 {{- $querierAddress = $querierUrl }}
 {{- end -}}
@@ -1009,10 +1009,10 @@ enableServiceLinks: false
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
 {{- $isScalable := eq (include "loki.deployment.isScalable" .) "true" -}}
 {{- if $isDistributed -}}
-{{- $idxGatewayAddress = printf "dns+%s-headless.%s.svc.%s:%s" (include "loki.indexGatewayFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
+{{- $idxGatewayAddress = printf "dns+%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "index-gateway")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
 {{- end -}}
 {{- if $isScalable -}}
-{{- $idxGatewayAddress = printf "dns+%s-headless.%s.svc.%s:%s" (include "loki.backendFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
+{{- $idxGatewayAddress = printf "dns+%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "backend")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
 {{- end -}}
 {{- printf "%s" $idxGatewayAddress }}
 {{- end }}
@@ -1023,10 +1023,10 @@ enableServiceLinks: false
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
 {{- $isScalable := eq (include "loki.deployment.isScalable" .) "true" -}}
 {{- if $isDistributed -}}
-{{- $bloomPlannerAddress = printf "%s-headless.%s.svc.%s:%s" (include "loki.bloomPlannerFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
+{{- $bloomPlannerAddress = printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "bloom-planner")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
 {{- end -}}
 {{- if $isScalable -}}
-{{- $bloomPlannerAddress = printf "%s-headless.%s.svc.%s:%s" (include "loki.backendFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
+{{- $bloomPlannerAddress = printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "backend")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
 {{- end -}}
 {{- printf "%s" $bloomPlannerAddress}}
 {{- end }}
@@ -1037,10 +1037,10 @@ enableServiceLinks: false
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
 {{- $isScalable := eq (include "loki.deployment.isScalable" .) "true" -}}
 {{- if $isDistributed -}}
-{{- $bloomGatewayAddresses = printf "dnssrvnoa+_grpc._tcp.%s-headless.%s.svc.%s" (include "loki.bloomGatewayFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain -}}
+{{- $bloomGatewayAddresses = printf "dnssrvnoa+_grpc._tcp.%s-headless.%s.svc.%s" (include "loki.resourceName" (dict "ctx" . "component" "bloom-gateway")) (include "loki.namespace" .) .Values.global.clusterDomain -}}
 {{- end -}}
 {{- if $isScalable -}}
-{{- $bloomGatewayAddresses = printf "dnssrvnoa+_grpc._tcp.%s-headless.%s.svc.%s" (include "loki.backendFullname" .) (include "loki.namespace" .) .Values.global.clusterDomain -}}
+{{- $bloomGatewayAddresses = printf "dnssrvnoa+_grpc._tcp.%s-headless.%s.svc.%s" (include "loki.resourceName" (dict "ctx" . "component" "backend")) (include "loki.namespace" .) .Values.global.clusterDomain -}}
 {{- end -}}
 {{- printf "%s" $bloomGatewayAddresses}}
 {{- end }}
