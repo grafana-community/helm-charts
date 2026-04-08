@@ -4,7 +4,11 @@ description: Helm chart for Grafana Loki supporting monolithic, simple scalable,
 type: application
 # renovate: docker=docker.io/grafana/loki
 appVersion: 3.7.1
+<<<<<<< loki
 version: 11.2.2
+=======
+version: 11.3.0
+>>>>>>> main
 kubeVersion: ">=1.25.0-0"
 home: https://grafana-community.github.io/helm-charts
 sources:
