@@ -5,12 +5,12 @@ Params:
   memcacheConfig = cache config
   valuesSection = name of the section in values.yaml
   component = name of the component
-valuesSection and component are specified separately because helm prefers camelcase for naming convetion and k8s components are named with snake case.
+valuesSection and component are specified separately because helm prefers camelcase for naming convention and k8s components are named with snake case.
 */}}
 {{- define "loki.memcached.pdb" -}}
 {{ with $.memcacheConfig }}
 {{- $pdb := mergeOverwrite (pick . "maxUnavailable") .podDisruptionBudget }}
-{{- if and .enabled .podDisruptionBudget.enabled (gt .replicas 1) -}}
+{{- if and .enabled .podDisruptionBudget.enabled (gt (int .replicas) 1) -}}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
