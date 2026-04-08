@@ -114,7 +114,7 @@ tests:
       backend.persistence.volumeClaimsEnabled: true
       backend.persistence.size: 25Gi
     asserts:
-      - isNotNull:
+      - exists:
           path: spec.volumeClaimTemplates
         template: backend/statefulset.yaml
       - equal:

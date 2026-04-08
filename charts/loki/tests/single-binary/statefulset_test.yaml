@@ -157,7 +157,7 @@ tests:
       singleBinary.persistence.enabled: true
       singleBinary.persistence.size: 25Gi
     asserts:
-      - isNotNull:
+      - exists:
           path: spec.volumeClaimTemplates
         template: single-binary/statefulset.yaml
       - equal:
