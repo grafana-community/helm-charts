@@ -315,7 +315,7 @@ tests:
         contains:
           path: spec.template.spec.containers
           content:
-            name: loki
+            name: ruler
             image: quay.io/custom/ruler:1.2.3
           any: true
       - template: ruler/statefulset.yaml
