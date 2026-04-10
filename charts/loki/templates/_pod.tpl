@@ -203,7 +203,7 @@ spec:
       args:
         {{- if ne $target "canary" }}
         - -config.file=/etc/loki/config/config.yaml
-        - -target={{ replace "single-binary" "all" $target }}{{- if and .Values.loki.ui.enabled (or (eq $target "read") (eq $target "query-frontend") (eq $target "querier")) }},ui{{- end }}
+        - -target={{ replace "single-binary" "all" $target }}{{- if and .Values.loki.ui.enabled (has $target (list "single-binary" "read" "query-frontend" "querier")) }},ui{{- end }}
         {{- end }}
         {{- with $args }}
         {{- toYaml . | nindent 8 }}
