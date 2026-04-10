@@ -17,7 +17,7 @@ metadata:
     {{- with (mergeOverwrite (dict) .Values.loki.podAnnotations .Values.defaults.podAnnotations ($component.podAnnotations | default (dict))) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-    kubectl.kubernetes.io/default-container: "loki"
+    kubectl.kubernetes.io/default-container: "{{ replace "single-binary" "loki" $target }}"
   labels:
     {{- include "loki.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ $target }}
@@ -36,7 +36,7 @@ spec:
   topologySpreadConstraints:
     {{- tpl ( . | toYaml) $ctx | nindent 4 }}
   {{- end }}
-  serviceAccountName: {{ include "loki.serviceAccountName" (dict "ctx" . "component" $component "target" $target ) }}
+  serviceAccountName: {{ include "loki.serviceAccountName" (dict "ctx" . "component" (eq $target "single-binary" | ternary . $component) "target" $target ) }}
   {{- if (kindIs "bool" $component.enableServiceLinks) }}
   enableServiceLinks: {{ $component.enableServiceLinks }}
   {{- else if (kindIs "bool" .Values.defaults.enableServiceLinks) }}
@@ -193,7 +193,7 @@ spec:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   containers:
-    - name: loki
+    - name: {{ replace "single-binary" "loki" $target }}
       image: {{ include "loki.image" (dict "ctx" . "component" $component.image "default" .Values.loki.image "defaultVersion" .Chart.AppVersion) }}
       imagePullPolicy: {{ coalesce $component.image.pullPolicy .Values.loki.image.pullPolicy }}
       {{- with coalesce $component.command .Values.defaults.command .Values.loki.command }}
