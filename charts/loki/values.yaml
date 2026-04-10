@@ -1420,6 +1420,8 @@ podDisruptionBudget:
 singleBinary:
   # -- Number of replicas for the single binary
   replicas: 0
+  # -- Whether to enable the rules sidecar
+  sidecar: true
   autoscaling:
     # -- Enable autoscaling
     enabled: false
