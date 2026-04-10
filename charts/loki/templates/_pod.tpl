@@ -271,7 +271,7 @@ spec:
         - name: sc-rules-volume
           mountPath: {{ .Values.sidecar.rules.folder | quote }}
         {{- end }}
-        {{- if eq $target "ruler" }}
+        {{- if has (list "ruler" "backend" "single-binary") $target }}
           {{- range $dir, $_ := .Values.ruler.directories }}
         - name: {{ include "loki.rulerRulesDirName" $dir }}
           mountPath: /etc/loki/rules/{{ $dir }}
