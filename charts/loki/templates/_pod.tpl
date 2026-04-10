@@ -41,7 +41,7 @@ spec:
   enableServiceLinks: {{ $component.enableServiceLinks }}
   {{- else if (kindIs "bool" .Values.defaults.enableServiceLinks) }}
   enableServiceLinks: {{ .Values.defaults.enableServiceLinks }}
-  {{- else if (kindIs "bool" .Values.loki.hostUsers) }}
+  {{- else if (kindIs "bool" .Values.loki.enableServiceLinks) }}
   enableServiceLinks: {{ .Values.loki.enableServiceLinks }}
   {{- end }}
   {{- if (kindIs "bool" $component.automountServiceAccountToken) }}
@@ -110,9 +110,11 @@ spec:
     {{- tpl ( . | toYaml) $ctx | nindent 4 }}
     {{- end }}
   {{- end }}
-  {{- if (dig "zoneAwareReplication" (printf "zone%s" (upper (splitList "-" $rolloutZoneName | last))) "extraNodeSelector" nil $component) }}
+  {{- if $rolloutZoneName }}
+  {{- with (dig "zoneAwareReplication" (printf "zone%s" (upper (splitList "-" $rolloutZoneName | last))) "nodeSelector" nil $component) }}
   nodeSelector:
     {{- tpl ( . | toYaml) $ctx | nindent 4 }}
+  {{- end }}
   {{- else }}
   {{- with (coalesce $component.nodeSelector .Values.defaults.nodeSelector .Values.loki.nodeSelector) }}
   nodeSelector:
