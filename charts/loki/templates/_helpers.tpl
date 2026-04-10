@@ -1162,3 +1162,72 @@ env:
   {{- toYaml . | nindent 2 }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Gateway API version detection
+*/}}
+{{- define "loki.gatewayApi.apiVersion" -}}
+{{- if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" }}
+{{- print "gateway.networking.k8s.io/v1" }}
+{{- else if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1beta1" }}
+{{- print "gateway.networking.k8s.io/v1beta1" }}
+{{- else }}
+{{- print "gateway.networking.k8s.io/v1" }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Gateway API HTTPRoute template for the loki gateway.
+Params:
+  ctx    - chart root context ($)
+  route  - route values object (e.g. .Values.gateway.route)
+  name   - resource name for the route and backend service
+  port   - backend service port
+*/}}
+{{- define "loki.route" -}}
+{{- $route := .route -}}
+{{- $ctx := .ctx -}}
+---
+apiVersion: {{ $route.apiVersion | default (include "loki.gatewayApi.apiVersion" $ctx) }}
+kind: {{ $route.kind | default "HTTPRoute" }}
+metadata:
+  name: {{ .name }}
+  namespace: {{ include "loki.namespace" $ctx }}
+  labels:
+    {{- include "loki.gatewayLabels" $ctx | nindent 4 }}
+    {{- with $route.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $route.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $route.parentRefs }}
+  parentRefs:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $route.hostnames }}
+  hostnames:
+    {{- tpl (toYaml .) $ctx | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- with $route.additionalRules }}
+    {{- tpl (toYaml .) $ctx | nindent 4 }}
+    {{- end }}
+    - backendRefs:
+        - name: {{ .name }}
+          port: {{ .port }}
+      {{- with $route.filters }}
+      filters:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $route.matches }}
+      matches:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $route.timeouts }}
+      timeouts:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end -}}

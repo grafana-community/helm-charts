@@ -1,0 +1,28 @@
+loki:
+  useTestSchema: true
+  storage:
+    bucketNames:
+      chunks: chunks
+      ruler: ruler
+      admin: admin
+    type: s3
+
+gateway:
+  enabled: true
+  route:
+    enabled: true
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    annotations:
+      test-annotation: test-value
+    labels:
+      test-label: test-value
+    hostnames:
+      - gateway.loki.example.com
+    parentRefs:
+      - name: my-gateway
+        namespace: gateway-namespace
+    matches:
+      - path:
+          type: PathPrefix
+          value: /

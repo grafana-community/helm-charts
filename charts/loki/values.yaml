@@ -1223,6 +1223,39 @@ gateway:
       {{- end }}
     # -- Existing basic auth secret to use. Must contain '.htpasswd'
     existingSecret: null
+  # -- Gateway API HTTPRoute configuration. Mutually exclusive with ingress.
+  # Use either ingress or route, but not both at once.
+  route:
+    # -- Specifies whether a Gateway API HTTPRoute should be created for the gateway
+    enabled: false
+    # -- Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1beta1.
+    # If not set, the latest available version will be auto-detected.
+    apiVersion: ""
+    # -- Set the route kind. Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
+    kind: HTTPRoute
+    # -- Additional annotations for the route
+    annotations: {}
+    # -- Additional labels for the route
+    labels: {}
+    # -- Hostnames for the route
+    hostnames: []
+    # - gateway.loki.example.com
+    # -- Parent gateway references to attach the route to
+    parentRefs: []
+    # - name: my-gateway
+    #   namespace: gateway-namespace
+    # -- Additional rules to prepend before the default catch-all rule.
+    # Useful for advanced routing logic (e.g. header-based routing or auth policies).
+    additionalRules: []
+    # -- Matches for the default rule. Defaults to match all paths.
+    matches:
+      - path:
+          type: PathPrefix
+          value: /
+    # -- Filters for the default rule
+    filters: []
+    # -- Timeouts for the default rule
+    timeouts: {}
   # -- liveness probe for the nginx container in the gateway pods.
   livenessProbe: {}
   # Configures the readiness probe for the gateway
