@@ -1231,3 +1231,75 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end -}}
+
+{{/*
+Generate HTTPRoute rules based on deployment type for direct routing to Loki services.
+*/}}
+{{- define "loki.route.rules" -}}
+{{- if (eq (include "loki.deployment.isSingleBinary" .) "true") -}}
+{{- include "loki.route.singleBinaryRules" . }}
+{{- else if (eq (include "loki.deployment.isDistributed" .) "true") -}}
+{{- include "loki.route.distributedRules" . }}
+{{- else if and (eq (include "loki.deployment.isScalable" .) "true") -}}
+{{- include "loki.route.scalableRules" . }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+HTTPRoute rules for distributed deployment
+*/}}
+{{- define "loki.route.distributedRules" -}}
+{{- $distributorServiceName := include "loki.resourceName" (dict "ctx" . "component" "distributor") }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $distributorServiceName "paths" .Values.route.paths.distributor) }}
+{{- $queryFrontendServiceName := include "loki.resourceName" (dict "ctx" . "component" "query-frontend") }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $queryFrontendServiceName "paths" .Values.route.paths.queryFrontend) }}
+{{- $rulerServiceName := include "loki.resourceName" (dict "ctx" . "component" "ruler") }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $rulerServiceName "paths" .Values.route.paths.ruler) }}
+{{- $compactorServiceName := include "loki.resourceName" (dict "ctx" . "component" "compactor") }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $compactorServiceName "paths" .Values.route.paths.compactor) }}
+{{- end -}}
+
+{{/*
+HTTPRoute rules for simple scalable deployment
+*/}}
+{{- define "loki.route.scalableRules" -}}
+{{- $readServiceName := include "loki.resourceName" (dict "ctx" . "component" "read") }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $readServiceName "paths" .Values.route.paths.queryFrontend) }}
+{{- $writeServiceName := include "loki.resourceName" (dict "ctx" . "component" "write") }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $writeServiceName "paths" .Values.route.paths.distributor) }}
+{{- $backendServiceName := include "loki.resourceName" (dict "ctx" . "component" "backend") }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $backendServiceName "paths" .Values.route.paths.ruler) }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $backendServiceName "paths" .Values.route.paths.compactor) }}
+{{- end -}}
+
+{{/*
+HTTPRoute rules for single binary deployment
+*/}}
+{{- define "loki.route.singleBinaryRules" -}}
+{{- $serviceName := include "loki.singleBinaryFullname" . }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $serviceName "paths" .Values.route.paths.distributor) }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $serviceName "paths" .Values.route.paths.queryFrontend) }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $serviceName "paths" .Values.route.paths.ruler) }}
+{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $serviceName "paths" .Values.route.paths.compactor) }}
+{{- end -}}
+
+{{/*
+HTTPRoute service rule helper.
+Params:
+  ctx         - chart root context ($)
+  serviceName - fully qualified k8s service name
+  paths       - list of URL path prefixes to match
+*/}}
+{{- define "loki.route.serviceRule" -}}
+{{- if .paths }}
+- backendRefs:
+    - name: {{ .serviceName }}
+      port: {{ .ctx.Values.loki.server.http_listen_port }}
+  matches:
+    {{- range .paths }}
+    - path:
+        type: PathPrefix
+        value: {{ . }}
+    {{- end }}
+{{- end -}}
+{{- end -}}

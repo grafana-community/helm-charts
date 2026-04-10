@@ -1,0 +1,34 @@
+{{- if .Values.route.enabled -}}
+{{- if .Values.ingress.enabled -}}
+{{- fail "You have selected both ingress.enabled and route.enabled, you must select either ingress or route but not both" -}}
+{{- end -}}
+---
+apiVersion: {{ .Values.route.apiVersion | default (include "loki.gatewayApi.apiVersion" .) }}
+kind: {{ .Values.route.kind | default "HTTPRoute" }}
+metadata:
+  name: {{ include "loki.fullname" . }}
+  namespace: {{ include "loki.namespace" . }}
+  labels:
+    {{- include "loki.labels" . | nindent 4 }}
+    {{- with .Values.route.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.route.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.route.parentRefs }}
+  parentRefs:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.route.hostnames }}
+  hostnames:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- with .Values.route.additionalRules }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+    {{- include "loki.route.rules" . | nindent 4 }}
+{{- end -}}
