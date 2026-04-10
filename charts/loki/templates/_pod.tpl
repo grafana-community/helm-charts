@@ -184,7 +184,7 @@ spec:
     - name: sc-rules-temp
       emptyDir: {}
     {{- end }}
-    {{- if eq $target "ruler" }}
+    {{- if has (list "ruler" "backend" "single-binary") $target }}
     {{- range $dir, $_ := .Values.ruler.directories }}
     - name: {{ include "loki.rulerRulesDirName" $dir }}
       configMap:
