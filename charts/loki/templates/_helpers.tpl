@@ -1186,7 +1186,7 @@ Params:
 */}}
 {{- define "loki.route" -}}
 {{- $route := .route -}}
-{{- $ctx := .ctx -}}
+{{- $ctx := .ctx }}
 ---
 apiVersion: {{ $route.apiVersion | default (include "loki.gatewayApi.apiVersion" $ctx) }}
 kind: {{ $route.kind | default "HTTPRoute" }}
