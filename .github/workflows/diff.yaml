@@ -1,0 +1,177 @@
+name: Diff
+permissions: {}
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  generate-jobs:
+    name: generate-jobs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.list-changed.outputs.changed }}
+      changed_list: ${{ steps.list-changed.outputs.changed_list }}
+      values_files_json: ${{ steps.list-changed.outputs.values_files_json }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0
+        with:
+          # renovate: github=helm/helm
+          version: v4.1.3
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.14'
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2.8.0
+        with:
+          # renovate: github=helm/chart-testing
+          version: v3.14.0
+
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        #language=bash
+        run: |
+          set -euo pipefail
+          # get changed charts (one per line)
+          changed=$(ct list-changed --config .github/linters/ct.yaml)
+
+          # normalize and count changed charts
+          changed_trimmed=$(echo "$changed" | sed '/^\s*$/d')
+          num_changed=$(echo "$changed_trimmed" | sed '/^\s*$/d' | wc -l | tr -d ' ')
+
+          if [[ -z "$changed_trimmed" ]]; then
+            # nothing changed
+            {
+              echo "changed=false"
+              echo "changed_list="
+              echo "values_files_json=[]"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$num_changed" -gt 1 ]; then
+            echo "More than one chart changed (count=$num_changed). Failing."
+            echo "$changed_trimmed"
+            exit 1
+          fi
+
+          # single chart changed: compute ci/*-values.yaml files for that chart
+          chart_path=$(echo "$changed_trimmed" | head -n1 | tr -d '"')
+          # extract chart name (basename)
+          chart_name=$(basename "$chart_path")
+
+          values_json="[]"
+          # look for ci/*-values.yaml under the chart directory
+          # enable nullglob so the glob expands to empty array when no match
+          shopt -s nullglob
+          files=(charts/"$chart_name"/ci/*-values.yaml)
+          if [ ${#files[@]} -gt 0 ]; then
+            values_json="["
+            sep=""
+            for f in "${files[@]}"; do
+              # ensure we only include files
+              if [ -f "$f" ]; then
+                # make path relative to workspace root
+                relpath="$f"
+                values_json+="$sep\"$relpath\""
+                sep=","
+              fi
+            done
+            values_json+="]"
+          fi
+          shopt -u nullglob
+
+          {
+            echo "changed=true"
+            echo "changed_list=\"$chart_path\""
+            echo "values_files_json=$values_json"
+          } >> "$GITHUB_OUTPUT"
+
+      # The following steps are only used to detect changes and produce the
+      # list of values files. The per-values-file diff runs are executed in a
+      # separate matrix job below.
+
+  diff:
+    name: diff
+    needs: generate-jobs
+    runs-on: ubuntu-latest
+    if: needs.generate-jobs.outputs.changed == 'true'
+    strategy:
+      matrix:
+        valuefile: ${{ fromJson(needs.generate-jobs.outputs.values_files_json) }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0
+        with:
+          # renovate: github=helm/helm
+          version: v4.1.3
+
+      - name: install helm diff plugin
+        run: helm plugin install https://github.com/databus23/helm-diff --version 3.15.4 --verify=false
+
+      - name: Create kind cluster
+        uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
+
+      - name: Checkout Target of PR
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          path: target
+          ref: ${{ github.event.pull_request.base.ref }}
+          persist-credentials: false
+
+      - name: Apply Gateway API CRDs
+        run: kubectl apply -k https://github.com/kubernetes-sigs/gateway-api/config/crd
+
+      - name: Run diff for value file
+        env:
+          value_file: "${{ matrix.valuefile }}"
+        #language=bash
+        run: |
+          set -euo pipefail
+          IFS=$'\n\t'
+
+          echo "Running diff for value file: $value_file"
+          # extract chart name from path like charts/<chart>/ci/<file>
+          # dirname twice: charts/<chart>/ci -> charts/<chart>, basename -> <chart>
+          chart="$(basename "$(dirname "$(dirname "$value_file")")")"
+
+          # install current target chart into cluster so helm diff has a baseline
+          helm upgrade -i "$chart" "./target/charts/$chart" \
+            --create-namespace \
+            --namespace "$chart" \
+            --wait \
+            --values "$value_file"
+
+          {
+            printf '```diff\n'
+            helm diff upgrade "$chart" "./charts/$chart" \
+              --namespace "$chart" \
+              --suppress=CustomResourceDefinition \
+              --normalize-manifests \
+              --reset-values \
+              --no-color \
+              -C 5 \
+              --suppress-output-line-regex="helm.sh/chart:" \
+              --suppress-output-line-regex="chart:" \
+              --suppress-output-line-regex="app.kubernetes.io/version:" \
+              --values "$value_file" | tee /dev/stderr
+            printf '\n```'
+          } > "$GITHUB_STEP_SUMMARY"
