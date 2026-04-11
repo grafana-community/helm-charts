@@ -57,6 +57,19 @@ tests:
           pattern: .*-loki-gateway-grpc$
         template: gateway/route-gateway.yaml
 
+  - it: should always route to the gateway service regardless of route key
+    set:
+      gateway.route.main.enabled: false
+      gateway.route.grpc.enabled: true
+      gateway.route.grpc.parentRefs:
+        - name: my-gateway
+          namespace: gateway-namespace
+    asserts:
+      - matchRegex:
+          path: spec.rules[0].backendRefs[0].name
+          pattern: .*-loki-gateway$
+        template: gateway/route-gateway.yaml
+
   - it: should render parentRefs
     asserts:
       - equal:

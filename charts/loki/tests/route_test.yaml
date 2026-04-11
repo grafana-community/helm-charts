@@ -85,6 +85,27 @@ tests:
           value: gateway.networking.k8s.io/v1beta1
         template: route.yaml
 
+  - it: should use grpc_listen_port automatically for GRPCRoute
+    set:
+      route.main.kind: GRPCRoute
+      loki.server.grpc_listen_port: 9095
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 9095
+        template: route.yaml
+
+  - it: should use backendPort override even for GRPCRoute
+    set:
+      route.main.kind: GRPCRoute
+      route.main.backendPort: 9999
+      loki.server.grpc_listen_port: 9095
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 9999
+        template: route.yaml
+
   - it: should not render when all routes are disabled
     set:
       route.main.enabled: false
@@ -171,6 +192,24 @@ tests:
       - matchRegex:
           path: spec.rules[1].backendRefs[0].name
           pattern: .*-loki-query-frontend$
+        template: route.yaml
+      - equal:
+          path: spec.rules[1].matches[0].path.value
+          value: /api/prom/query
+        template: route.yaml
+
+  - it: should route query paths to the querier when query-frontend is disabled in Distributed mode
+    set:
+      deploymentMode: Distributed
+      ingester.replicas: 1
+      distributor.replicas: 1
+      querier.replicas: 1
+      queryFrontend.replicas: 0
+      queryScheduler.replicas: 1
+    asserts:
+      - matchRegex:
+          path: spec.rules[1].backendRefs[0].name
+          pattern: .*-loki-querier$
         template: route.yaml
       - equal:
           path: spec.rules[1].matches[0].path.value
