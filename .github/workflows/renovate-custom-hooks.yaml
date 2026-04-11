@@ -21,6 +21,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          fetch-tags: 'false'
 
       # Using a GitHub App token, because GitHub Actions doesn't run on commits from github-actions bot
       # Used App:
@@ -141,8 +142,8 @@ jobs:
 
           # Call GitHub API
           curl https://api.github.com/graphql -f \
-               -sSf -H "Authorization: Bearer $GITHUB_TOKEN" \
-               --data "@$JSON_PAYLOAD_FILE"
+            -sSf -H "Authorization: Bearer $GITHUB_TOKEN" \
+            --data "@$JSON_PAYLOAD_FILE"
 
           # Clean up temporary files
           rm "$FILE_CHANGES_JSON_FILE" "$JSON_PAYLOAD_FILE"
