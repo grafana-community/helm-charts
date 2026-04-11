@@ -26,9 +26,11 @@ spec:
     name: {{ include "loki.resourceName" (dict "ctx" . "component" $target "suffix" $suffix) }}
   minReplicas: {{ $component.autoscaling.minReplicas }}
   maxReplicas: {{ $component.autoscaling.maxReplicas }}
-  {{- with omit ($component.autoscaling.behavior | default dict) "enabled" }}
+  {{- $behavior := $component.autoscaling.behavior | default dict }}
+  {{- $enabled := get $behavior "enabled" | default false }}
+  {{- if $enabled }}
   behavior:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml (omit $behavior "enabled") | nindent 4 }}
   {{- end }}
   {{- if or $component.autoscaling.targetMemoryUtilizationPercentage $component.autoscaling.targetCPUUtilizationPercentage $component.autoscaling.customMetrics }}
   metrics:

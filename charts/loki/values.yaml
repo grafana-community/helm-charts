@@ -1443,7 +1443,13 @@ singleBinary:
     #       type: AverageValue
     #       averageValue: 10k
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
-    behavior: {}
+    behavior:
+      # -- Enable autoscaling behaviours
+      enabled: false
+      # -- define scale down policies, must conform to HPAScalingRules
+      scaleDown: {}
+      # -- define scale up policies, must conform to HPAScalingRules
+      scaleUp: {}
   kedaAutoscaling:
     # -- Enable KEDA autoscaling for the single binary. Mutually exclusive with autoscaling.enabled
     enabled: false
@@ -2177,7 +2183,13 @@ ingester:
     #       type: AverageValue
     #       averageValue: 10k
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
-    behavior: {}
+    behavior:
+      # -- Enable autoscaling behaviours
+      enabled: false
+      # -- define scale down policies, must conform to HPAScalingRules
+      scaleDown: {}
+      # -- define scale up policies, must conform to HPAScalingRules
+      scaleUp: {}
   kedaAutoscaling:
     # -- Enable KEDA autoscaling for the ingester. Mutually exclusive with autoscaling.enabled
     enabled: false
@@ -2457,7 +2469,13 @@ distributor:
     #       type: AverageValue
     #       averageValue: 10k
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
-    behavior: {}
+    behavior:
+      # -- Enable autoscaling behaviours
+      enabled: false
+      # -- define scale down policies, must conform to HPAScalingRules
+      scaleDown: {}
+      # -- define scale up policies, must conform to HPAScalingRules
+      scaleUp: {}
   kedaAutoscaling:
     # -- Enable KEDA autoscaling for the distributor. Mutually exclusive with autoscaling.enabled
     enabled: false
@@ -2626,7 +2644,13 @@ querier:
     #       type: AverageValue
     #       averageValue: 12
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
-    behavior: {}
+    behavior:
+      # -- Enable autoscaling behaviours
+      enabled: false
+      # -- define scale down policies, must conform to HPAScalingRules
+      scaleDown: {}
+      # -- define scale up policies, must conform to HPAScalingRules
+      scaleUp: {}
   kedaAutoscaling:
     # -- Enable KEDA autoscaling for the querier. Mutually exclusive with autoscaling.enabled
     enabled: false
@@ -2816,7 +2840,13 @@ queryFrontend:
     #       type: AverageValue
     #       averageValue: 100
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
-    behavior: {}
+    behavior:
+      # -- Enable autoscaling behaviours
+      enabled: false
+      # -- define scale down policies, must conform to HPAScalingRules
+      scaleDown: {}
+      # -- define scale up policies, must conform to HPAScalingRules
+      scaleUp: {}
   kedaAutoscaling:
     # -- Enable KEDA autoscaling for the query-frontend. Mutually exclusive with autoscaling.enabled
     enabled: false
@@ -3720,7 +3750,13 @@ bloomBuilder:
     #       type: AverageValue
     #       averageValue: 100
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
-    behavior: {}
+    behavior:
+      # -- Enable autoscaling behaviours
+      enabled: false
+      # -- define scale down policies, must conform to HPAScalingRules
+      scaleDown: {}
+      # -- define scale up policies, must conform to HPAScalingRules
+      scaleUp: {}
   kedaAutoscaling:
     # -- Enable KEDA autoscaling for the bloom-builder. Mutually exclusive with autoscaling.enabled
     enabled: false
