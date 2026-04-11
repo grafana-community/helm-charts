@@ -154,17 +154,6 @@ Return the appropriate apiVersion for HorizontalPodAutoscaler.
 {{- end -}}
 
 {{/*
-Return the appropriate apiVersion for PodDisruptionBudget.
-*/}}
-{{- define "tempo.podDisruptionBudget.apiVersion" -}}
-  {{- if .Capabilities.APIVersions.Has "policy/v1" -}}
-    {{- print "policy/v1" -}}
-  {{- else -}}
-    {{- print "policy/v1beta1" -}}
-  {{- end -}}
-{{- end -}}
-
-{{/*
 Resource name template
 */}}
 {{- define "tempo.resourceName" -}}
