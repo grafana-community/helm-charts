@@ -159,7 +159,7 @@ Parameters:
   defaultVersion = default version to use if tag is not defined (optional)
   default = default image config to use if component config is not defined (optional)
 */}}
-{{- define "loki.image" }}
+{{- define "loki.image" -}}
 {{- $ctx := .ctx -}}
 {{- $component := .component | default .service | default dict -}}
 {{- $defaultVersion := .defaultVersion -}}
@@ -522,7 +522,7 @@ Create the service endpoint including port for MinIO.
 {{/* Configure the correct name for the memberlist service */}}
 {{- define "loki.memberlist" -}}
 {{- if .Values.memberlist.service.name }}
-{{- tpl .Values.memberlist.service.name $ }}
+{{- tpl .Values.memberlist.service.name . }}
 {{- else }}
 {{- include "loki.fullname" . }}-memberlist
 {{- end -}}
@@ -530,7 +530,7 @@ Create the service endpoint including port for MinIO.
 
 {{/* Configure the correct name for the runtime config */}}
 {{- define "loki.runtime.name" -}}
-{{ include "loki.fullname" . }}-runtime
+{{- include "loki.fullname" . }}-runtime
 {{- end -}}
 
 {{/* Determine the public host for the Loki cluster */}}
