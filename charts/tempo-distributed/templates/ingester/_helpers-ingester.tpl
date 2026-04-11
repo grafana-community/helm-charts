@@ -86,6 +86,9 @@ app.kubernetes.io/managed-by: {{ .ctx.Release.Service }}
 {{- with .ctx.Values.ingester.labels }}
 {{ toYaml . }}
 {{- end }}
+{{- if .ctx.Values.global.commonLabels }}
+{{ toYaml .ctx.Values.global.commonLabels | indent 0 }}
+{{- end }}
 {{- end -}}
 {{/*
 Resource name template
