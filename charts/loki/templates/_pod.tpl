@@ -7,18 +7,27 @@ Pod helper
 {{- $ctx := .ctx }}
 {{- $component := .component }}
 {{- $args := .args }}
+{{- $rolloutZoneName := .rolloutZoneName | default "" }}
 {{- with $ctx }}
 metadata:
   annotations:
+    {{- if ne $target "canary" }}
     {{- include "loki.config.checksum" . | nindent 4 }}
-    {{- with (mergeOverwrite (dict) .Values.loki.podAnnotations .Values.defaults.podAnnotations $component.podAnnotations) }}
+    {{- end }}
+    {{- with (mergeOverwrite (dict) .Values.loki.podAnnotations .Values.defaults.podAnnotations ($component.podAnnotations | default (dict))) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-    kubectl.kubernetes.io/default-container: "{{ $target }}"
+    kubectl.kubernetes.io/default-container: "{{ replace "single-binary" "loki" $target }}"
   labels:
     {{- include "loki.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ $target }}
+    {{- if ne $target "canary" }}
     app.kubernetes.io/part-of: memberlist
+    {{- end }}
+    {{- if $rolloutZoneName }}
+    name: {{ if $component.addIngesterNamePrefix }}loki-{{ end }}{{ $target }}-{{ $rolloutZoneName }}
+    rollout-group: {{ with $component.rolloutGroupPrefix }}{{ . }}-{{ end }}{{ $target }}
+    {{- end }}
     {{- with (mergeOverwrite (dict) .Values.loki.podLabels .Values.defaults.podLabels $component.podLabels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -27,16 +36,18 @@ spec:
   topologySpreadConstraints:
     {{- tpl ( . | toYaml) $ctx | nindent 4 }}
   {{- end }}
-  serviceAccountName: {{ include "loki.serviceAccountName" . }}
+  serviceAccountName: {{ include "loki.serviceAccountName" (dict "ctx" . "component" (eq $target "single-binary" | ternary .Values $component) "target" (replace "single-binary" "" $target) ) }}
   {{- if (kindIs "bool" $component.enableServiceLinks) }}
   enableServiceLinks: {{ $component.enableServiceLinks }}
   {{- else if (kindIs "bool" .Values.defaults.enableServiceLinks) }}
   enableServiceLinks: {{ .Values.defaults.enableServiceLinks }}
-  {{- else if (kindIs "bool" .Values.loki.hostUsers) }}
+  {{- else if (kindIs "bool" .Values.loki.enableServiceLinks) }}
   enableServiceLinks: {{ .Values.loki.enableServiceLinks }}
   {{- end }}
-  {{- if (kindIs "bool" (coalesce $component.automountServiceAccountToken .Values.defaults.automountServiceAccountToken)) }}
-  automountServiceAccountToken: {{ (coalesce $component.automountServiceAccountToken .Values.defaults.automountServiceAccountToken) }}
+  {{- if (kindIs "bool" $component.automountServiceAccountToken) }}
+  automountServiceAccountToken: {{ $component.automountServiceAccountToken }}
+  {{- else if (kindIs "bool" .Values.defaults.automountServiceAccountToken) }}
+  automountServiceAccountToken: {{ .Values.defaults.automountServiceAccountToken }}
   {{- end }}
   {{- with .Values.imagePullSecrets }}
   imagePullSecrets:
@@ -60,7 +71,7 @@ spec:
   {{- with (coalesce $component.priorityClassName .Values.defaults.priorityClassName .Values.loki.priorityClassName .Values.global.priorityClassName) }}
   priorityClassName: {{ . }}
   {{- end }}
-  {{- with (coalesce .Values.defaults.podSecurityContext .Values.loki.podSecurityContext) }}
+  {{- with (coalesce $component.podSecurityContext .Values.defaults.podSecurityContext .Values.loki.podSecurityContext) }}
   securityContext:
     {{- toYaml . | nindent 4 }}
   {{- end }}
@@ -75,28 +86,56 @@ spec:
       {{- tpl . $ctx | nindent 4 }}
     {{- end }}
   {{- end }}
-  {{- with $component.affinity }}
+  {{- if $rolloutZoneName }}
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: rollout-group
+                operator: In
+                values:
+                  - {{ with $component.rolloutGroupPrefix }}{{ . }}-{{ end }}{{ $target }}
+              - key: name
+                operator: NotIn
+                values:
+                  - {{ if $component.addIngesterNamePrefix -}}loki-{{ end }}{{ $target }}-{{ $rolloutZoneName }}
+          topologyKey: kubernetes.io/hostname
+    {{- with (dig "zoneAwareReplication" (printf "zone%s" (upper (splitList "-" $rolloutZoneName | last))) "extraAffinity" nil $component) }}
+      {{- tpl ( . | toYaml) $ctx | nindent 4 }}
+    {{- end }}
+  {{- else }}
+    {{- with $component.affinity }}
   affinity:
     {{- tpl ( . | toYaml) $ctx | nindent 4 }}
+    {{- end }}
   {{- end }}
+  {{- if $rolloutZoneName }}
+  {{- with (dig "zoneAwareReplication" (printf "zone%s" (upper (splitList "-" $rolloutZoneName | last))) "nodeSelector" nil $component) }}
+  nodeSelector:
+    {{- tpl ( . | toYaml) $ctx | nindent 4 }}
+  {{- end }}
+  {{- else }}
   {{- with (coalesce $component.nodeSelector .Values.defaults.nodeSelector .Values.loki.nodeSelector) }}
   nodeSelector:
     {{- tpl ( . | toYaml) $ctx | nindent 4 }}
+  {{- end }}
   {{- end }}
   {{- with (coalesce $component.tolerations .Values.defaults.tolerations .Values.loki.tolerations) }}
   tolerations:
     {{- tpl ( . | toYaml) $ctx | nindent 4 }}
   {{- end }}
   volumes:
+    - name: temp
+      emptyDir: {}
+    {{- if ne $target "canary" }}
     - name: config
       {{- include "loki.configVolume" . | nindent 6 }}
     - name: runtime-config
       configMap:
         name: {{ template "loki.name" . }}-runtime
-    - name: temp
-      emptyDir: {}
-    - name: data
       {{- if dig "persistence" "ephemeralDataVolume" "enabled" false $component }}
+    - name: {{ eq $target "single-binary" | ternary "storage" "data" }}
       ephemeral:
         volumeClaimTemplate:
           metadata:
@@ -124,11 +163,18 @@ spec:
             selector:
               {{- toYaml . | nindent 14 }}
             {{- end }}
-      {{- else if not (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) }}
-        {{- with (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict)) $component) }}
-      {{- toYaml . | nindent 6 }}
+      {{- else if dig "persistence" "inMemory" false $component }}
+    - name: {{ eq $target "single-binary" | ternary "storage" "data" }}
+      emptyDir:
+        medium: Memory
+        {{- with $component.persistence.size }}
+        sizeLimit: {{ . }}
         {{- end }}
+      {{- else if not (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) }}
+    - name: {{ eq $target "single-binary" | ternary "storage" "data" }}
+      {{- toYaml (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict)) $component) | nindent 6 }}
       {{- end }}
+    {{- end }}
     {{- if and $component.sidecar .Values.sidecar.rules.enabled }}
     - name: sc-rules-volume
       {{- if .Values.sidecar.rules.sizeLimit }}
@@ -139,26 +185,30 @@ spec:
       {{- end }}
     - name: sc-rules-temp
       emptyDir: {}
+    {{- end }}
+    {{- if has $target (list "ruler" "backend" "single-binary") }}
     {{- range $dir, $_ := .Values.ruler.directories }}
     - name: {{ include "loki.rulerRulesDirName" $dir }}
       configMap:
-        name: {{ include "loki.resourceName" (dict "ctx" . "component" $target) }}-{{ include "loki.rulerRulesDirName" $dir }}
+        name: {{ include "loki.resourceName" (dict "ctx" $ctx "component" $target "suffix" (include "loki.rulerRulesDirName" $dir)) }}
     {{- end }}
     {{- end }}
     {{- with (coalesce $component.extraVolumes .Values.defaults.extraVolumes .Values.global.extraVolumes) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   containers:
-    - name: {{ $target }}
+    - name: {{ replace "single-binary" "loki" $target }}
       image: {{ include "loki.image" (dict "ctx" . "component" $component.image "default" .Values.loki.image "defaultVersion" .Chart.AppVersion) }}
-      imagePullPolicy: {{ .Values.loki.image.pullPolicy }}
+      imagePullPolicy: {{ coalesce $component.image.pullPolicy .Values.loki.image.pullPolicy }}
       {{- with coalesce $component.command .Values.defaults.command .Values.loki.command }}
       command:
         - {{ . | quote }}
       {{- end }}
       args:
+        {{- if ne $target "canary" }}
         - -config.file=/etc/loki/config/config.yaml
-        - -target={{ $target }}{{- if and .Values.loki.ui.enabled (or (eq $target "read") (eq $target "query-frontend") (eq $target "querier")) }},ui{{- end }}
+        - -target={{ replace "single-binary" "all" $target }}{{- if and .Values.loki.ui.enabled (has $target (list "single-binary" "read" "query-frontend" "querier")) }},ui{{- end }}
+        {{- end }}
         {{- with $args }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -166,21 +216,27 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       ports:
+        {{- if eq $target "canary" }}
         - name: http-metrics
-          containerPort: 3100
+          containerPort: 3500
+          protocol: TCP
+        {{- else }}
+        - name: http-metrics
+          containerPort: {{ .Values.loki.server.http_listen_port }}
           protocol: TCP
         - name: grpc
-          containerPort: 9095
+          containerPort: {{ .Values.loki.server.grpc_listen_port }}
           protocol: TCP
         - name: http-memberlist
           containerPort: 7946
           protocol: TCP
+        {{- end }}
       {{- include "loki.componentEnv" (dict "extraEnv" (concat .Values.global.extraEnv .Values.defaults.extraEnv $component.extraEnv) "resources" $component.resources "factor" .Values.defaults.goSettings.goMemLimitFactor "gogc" .Values.defaults.goSettings.gogc) | nindent 6 }}
       {{- with (concat .Values.global.extraEnvFrom .Values.defaults.extraEnvFrom $component.extraEnvFrom) | uniq }}
       envFrom:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with (coalesce .Values.defaults.containerSecurityContext .Values.loki.containerSecurityContext) }}
+      {{- with (coalesce $component.containerSecurityContext .Values.defaults.containerSecurityContext .Values.loki.containerSecurityContext) }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -203,19 +259,23 @@ spec:
         {{- end }}
       {{- end }}
       volumeMounts:
+        {{- if ne $target "canary" }}
         - name: config
           mountPath: /etc/loki/config
         - name: runtime-config
           mountPath: /etc/loki/runtime-config
+        - name: {{ eq $target "single-binary" | ternary "storage" "data" }}
+          mountPath: /var/loki
+        {{- end }}
         - name: temp
           mountPath: /tmp
-        - name: data
-          mountPath: /var/loki
         {{- if and $component.sidecar .Values.sidecar.rules.enabled }}
         - name: sc-rules-volume
           mountPath: {{ .Values.sidecar.rules.folder | quote }}
+        {{- end }}
+        {{- if has $target (list "ruler" "backend" "single-binary") }}
           {{- range $dir, $_ := .Values.ruler.directories }}
-        - name: rules-{{ include "loki.rulerRulesDirName" $dir }}
+        - name: {{ include "loki.rulerRulesDirName" $dir }}
           mountPath: /etc/loki/rules/{{ $dir }}
           {{- end }}
         {{- end }}
