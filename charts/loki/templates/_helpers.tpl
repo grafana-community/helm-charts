@@ -1234,14 +1234,19 @@ spec:
 
 {{/*
 Generate HTTPRoute rules based on deployment type for direct routing to Loki services.
+Params:
+  ctx   - chart root context ($)
+  paths - paths object from the route entry (e.g. .Values.route.main.paths)
 */}}
 {{- define "loki.route.rules" -}}
-{{- if (eq (include "loki.deployment.isSingleBinary" .) "true") -}}
-{{- include "loki.route.singleBinaryRules" . }}
-{{- else if (eq (include "loki.deployment.isDistributed" .) "true") -}}
-{{- include "loki.route.distributedRules" . }}
-{{- else if and (eq (include "loki.deployment.isScalable" .) "true") -}}
-{{- include "loki.route.scalableRules" . }}
+{{- $ctx := .ctx -}}
+{{- $paths := .paths -}}
+{{- if (eq (include "loki.deployment.isSingleBinary" $ctx) "true") -}}
+{{- include "loki.route.singleBinaryRules" (dict "ctx" $ctx "paths" $paths) }}
+{{- else if (eq (include "loki.deployment.isDistributed" $ctx) "true") -}}
+{{- include "loki.route.distributedRules" (dict "ctx" $ctx "paths" $paths) }}
+{{- else if and (eq (include "loki.deployment.isScalable" $ctx) "true") -}}
+{{- include "loki.route.scalableRules" (dict "ctx" $ctx "paths" $paths) }}
 {{- end -}}
 {{- end -}}
 
@@ -1249,38 +1254,44 @@ Generate HTTPRoute rules based on deployment type for direct routing to Loki ser
 HTTPRoute rules for distributed deployment
 */}}
 {{- define "loki.route.distributedRules" -}}
-{{- $distributorServiceName := include "loki.resourceName" (dict "ctx" . "component" "distributor") }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $distributorServiceName "paths" .Values.route.paths.distributor) }}
-{{- $queryFrontendServiceName := include "loki.resourceName" (dict "ctx" . "component" "query-frontend") }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $queryFrontendServiceName "paths" .Values.route.paths.queryFrontend) }}
-{{- $rulerServiceName := include "loki.resourceName" (dict "ctx" . "component" "ruler") }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $rulerServiceName "paths" .Values.route.paths.ruler) }}
-{{- $compactorServiceName := include "loki.resourceName" (dict "ctx" . "component" "compactor") }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $compactorServiceName "paths" .Values.route.paths.compactor) }}
+{{- $ctx := .ctx -}}
+{{- $paths := .paths -}}
+{{- $distributorServiceName := include "loki.resourceName" (dict "ctx" $ctx "component" "distributor") }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $distributorServiceName "paths" $paths.distributor) }}
+{{- $queryFrontendServiceName := include "loki.resourceName" (dict "ctx" $ctx "component" "query-frontend") }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $queryFrontendServiceName "paths" $paths.queryFrontend) }}
+{{- $rulerServiceName := include "loki.resourceName" (dict "ctx" $ctx "component" "ruler") }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $rulerServiceName "paths" $paths.ruler) }}
+{{- $compactorServiceName := include "loki.resourceName" (dict "ctx" $ctx "component" "compactor") }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $compactorServiceName "paths" $paths.compactor) }}
 {{- end -}}
 
 {{/*
 HTTPRoute rules for simple scalable deployment
 */}}
 {{- define "loki.route.scalableRules" -}}
-{{- $readServiceName := include "loki.resourceName" (dict "ctx" . "component" "read") }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $readServiceName "paths" .Values.route.paths.queryFrontend) }}
-{{- $writeServiceName := include "loki.resourceName" (dict "ctx" . "component" "write") }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $writeServiceName "paths" .Values.route.paths.distributor) }}
-{{- $backendServiceName := include "loki.resourceName" (dict "ctx" . "component" "backend") }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $backendServiceName "paths" .Values.route.paths.ruler) }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $backendServiceName "paths" .Values.route.paths.compactor) }}
+{{- $ctx := .ctx -}}
+{{- $paths := .paths -}}
+{{- $readServiceName := include "loki.resourceName" (dict "ctx" $ctx "component" "read") }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $readServiceName "paths" $paths.queryFrontend) }}
+{{- $writeServiceName := include "loki.resourceName" (dict "ctx" $ctx "component" "write") }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $writeServiceName "paths" $paths.distributor) }}
+{{- $backendServiceName := include "loki.resourceName" (dict "ctx" $ctx "component" "backend") }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $backendServiceName "paths" $paths.ruler) }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $backendServiceName "paths" $paths.compactor) }}
 {{- end -}}
 
 {{/*
 HTTPRoute rules for single binary deployment
 */}}
 {{- define "loki.route.singleBinaryRules" -}}
-{{- $serviceName := include "loki.singleBinaryFullname" . }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $serviceName "paths" .Values.route.paths.distributor) }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $serviceName "paths" .Values.route.paths.queryFrontend) }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $serviceName "paths" .Values.route.paths.ruler) }}
-{{- include "loki.route.serviceRule" (dict "ctx" . "serviceName" $serviceName "paths" .Values.route.paths.compactor) }}
+{{- $ctx := .ctx -}}
+{{- $paths := .paths -}}
+{{- $serviceName := include "loki.singleBinaryFullname" $ctx }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $serviceName "paths" $paths.distributor) }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $serviceName "paths" $paths.queryFrontend) }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $serviceName "paths" $paths.ruler) }}
+{{- include "loki.route.serviceRule" (dict "ctx" $ctx "serviceName" $serviceName "paths" $paths.compactor) }}
 {{- end -}}
 
 {{/*

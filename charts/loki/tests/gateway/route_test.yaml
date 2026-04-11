@@ -10,11 +10,11 @@ set:
   loki.storage.bucketNames.ruler: ruler
   loki.storage.bucketNames.admin: admin
   gateway.enabled: true
-  gateway.route.enabled: true
-  gateway.route.parentRefs:
+  gateway.route.main.enabled: true
+  gateway.route.main.parentRefs:
     - name: my-gateway
       namespace: gateway-namespace
-  gateway.route.hostnames:
+  gateway.route.main.hostnames:
     - gateway.loki.example.com
 
 tests:
@@ -34,11 +34,27 @@ tests:
           value: gateway.networking.k8s.io/v1
         template: gateway/route-gateway.yaml
 
-  - it: should use the gateway fullname as the route name
+  - it: should use the gateway fullname as the route name for the main route
     asserts:
       - matchRegex:
           path: metadata.name
           pattern: .*-loki-gateway$
+        template: gateway/route-gateway.yaml
+
+  - it: should append the route key as suffix for non-main routes
+    set:
+      gateway.route.main.enabled: false
+      gateway.route.grpc.enabled: true
+      gateway.route.grpc.parentRefs:
+        - name: my-gateway
+          namespace: gateway-namespace
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: gateway/route-gateway.yaml
+      - matchRegex:
+          path: metadata.name
+          pattern: .*-loki-gateway-grpc$
         template: gateway/route-gateway.yaml
 
   - it: should render parentRefs
@@ -83,7 +99,7 @@ tests:
 
   - it: should support a custom apiVersion
     set:
-      gateway.route.apiVersion: gateway.networking.k8s.io/v1beta1
+      gateway.route.main.apiVersion: gateway.networking.k8s.io/v1beta1
     asserts:
       - equal:
           path: apiVersion
@@ -92,7 +108,7 @@ tests:
 
   - it: should support custom matches
     set:
-      gateway.route.matches:
+      gateway.route.main.matches:
         - path:
             type: PathPrefix
             value: /loki/api/v1/push
@@ -104,7 +120,7 @@ tests:
 
   - it: should prepend additionalRules before the default rule
     set:
-      gateway.route.additionalRules:
+      gateway.route.main.additionalRules:
         - backendRefs:
             - name: special-backend
               port: 8080
@@ -126,12 +142,24 @@ tests:
           count: 0
         template: gateway/route-gateway.yaml
 
-  - it: should not render when route is disabled
+  - it: should not render when all routes are disabled
     set:
-      gateway.route.enabled: false
+      gateway.route.main.enabled: false
     asserts:
       - hasDocuments:
           count: 0
+        template: gateway/route-gateway.yaml
+
+  - it: should render multiple routes when multiple entries are enabled
+    set:
+      gateway.route.grpc.enabled: true
+      gateway.route.grpc.parentRefs:
+        - name: my-gateway
+          namespace: gateway-namespace
+      gateway.route.grpc.kind: GRPCRoute
+    asserts:
+      - hasDocuments:
+          count: 2
         template: gateway/route-gateway.yaml
 
   - it: should fail when both ingress and route are enabled
@@ -139,5 +167,5 @@ tests:
       gateway.ingress.enabled: true
     asserts:
       - failedTemplate:
-          errorMessage: "You have selected both gateway.ingress.enabled and gateway.route.enabled, you must select either ingress or route but not both"
+          errorMessage: "You have selected both gateway.ingress.enabled and a gateway route, you must select either ingress or route but not both"
         template: gateway/route-gateway.yaml
