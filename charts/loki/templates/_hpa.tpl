@@ -26,7 +26,7 @@ spec:
     name: {{ include "loki.resourceName" (dict "ctx" . "component" $target "suffix" $suffix) }}
   minReplicas: {{ $component.autoscaling.minReplicas }}
   maxReplicas: {{ $component.autoscaling.maxReplicas }}
-  {{- with $component.autoscaling.behavior }}
+  {{- with omit ($component.autoscaling.behavior | default dict) "enabled" }}
   behavior:
     {{- toYaml . | nindent 4 }}
   {{- end }}
