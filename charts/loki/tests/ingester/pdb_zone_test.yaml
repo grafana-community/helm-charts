@@ -9,8 +9,8 @@ set:
   loki.storage.bucketNames.admin: admin
   ingester.zoneAwareReplication.enabled: true
   ingester.replicas: 3
-  ingester.maxUnavailable: 1
   ingester.podDisruptionBudget.enabled: true
+  ingester.podDisruptionBudget.maxUnavailable: 1
 tests:
   - it: should not render when zoneAwareReplication is disabled
     set:
@@ -55,12 +55,6 @@ tests:
             app.kubernetes.io/instance: RELEASE-NAME
             app.kubernetes.io/component: ingester
             rollout-group: ingester
-
-  - it: should use maxUnavailable from deprecated field
-    asserts:
-      - equal:
-          path: spec.maxUnavailable
-          value: 1
 
   - it: should use podDisruptionBudget.maxUnavailable when set
     set:

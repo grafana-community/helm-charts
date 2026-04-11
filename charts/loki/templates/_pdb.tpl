@@ -16,11 +16,6 @@ PDB helper
   {{- $extraMatchExpressions := .extraMatchExpressions }}
   {{- with $ctx }}
     {{- $podDisruptionBudget := dict }}
-    {{- if hasKey $component "maxUnavailable"}}
-    {{- if not (kindIs "invalid" $component.maxUnavailable) }}
-    {{- $_ := set $podDisruptionBudget "maxUnavailable" $component.maxUnavailable }}
-    {{- end }}
-    {{- end }}
     {{- $_ := mergeOverwrite $podDisruptionBudget (omit ($component.podDisruptionBudget | default dict) "enabled" "labels" "annotations") }}
     {{- if (omit $podDisruptionBudget "selector") }}
 apiVersion: policy/v1

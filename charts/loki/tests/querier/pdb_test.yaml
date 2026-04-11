@@ -8,7 +8,7 @@ set:
   loki.storage.bucketNames.ruler: test
   loki.storage.bucketNames.admin: test
   querier.podDisruptionBudget.enabled: true
-  querier.maxUnavailable: 1
+  querier.podDisruptionBudget.maxUnavailable: 1
 tests:
   - it: should not render PDB when replicas is 0 and no autoscaling
     set:

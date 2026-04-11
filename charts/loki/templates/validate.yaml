@@ -36,6 +36,10 @@
 {{- include "loki.validateAutoscaling" (dict "component" .Values.ingester "name" "ingester") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.queryFrontend "name" "query-frontend") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomBuilder "name" "bloom-builder") }}
+{{- include "loki.validateAutoscaling" (dict "component" .Values.bloomGateway "name" "bloom-gateway") }}
+{{- include "loki.validateAutoscaling" (dict "component" .Values.bloomPlanner "name" "bloom-planner") }}
+{{- include "loki.validateAutoscaling" (dict "component" .Values.patternIngester "name" "pattern-ingester") }}
+{{- include "loki.validateAutoscaling" (dict "component" .Values.overridesExporter "name" "overrides-exporter") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.gateway "name" "gateway") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.read "name" "read") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.write "name" "write") }}
