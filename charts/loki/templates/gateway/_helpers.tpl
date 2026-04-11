@@ -2,16 +2,16 @@
 gateway fullname
 */}}
 {{- define "loki.gatewayFullname" -}}
-{{ include "loki.fullname" . }}-gateway
-{{- end }}
+{{- include "loki.fullname" . -}}-gateway
+{{- end -}}
 
 {{/*
 gateway common labels
 */}}
 {{- define "loki.gatewayLabels" -}}
-{{ include "loki.labels" . }}
+{{- include "loki.labels" . }}
 app.kubernetes.io/component: gateway
-{{- end }}
+{{- end -}}
 
 {{/*
 gateway selector labels
