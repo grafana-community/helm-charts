@@ -1177,12 +1177,13 @@ Gateway API version detection
 {{- end -}}
 
 {{/*
-Gateway API HTTPRoute template for the loki gateway.
+Gateway API route manifest shared between the nginx gateway route and direct Loki service routes.
 Params:
-  ctx    - chart root context ($)
-  route  - route values object (e.g. .Values.gateway.route)
-  name   - resource name for the route and backend service
-  port   - backend service port
+  ctx            - chart root context ($)
+  route          - route values object
+  name           - resource name for the HTTPRoute object
+  rules          - pre-rendered rules string to embed under spec.rules
+  labelsTemplate - optional: name of the labels helper to use (default "loki.labels")
 */}}
 {{- define "loki.route" -}}
 {{- $route := .route -}}
@@ -1194,7 +1195,7 @@ metadata:
   name: {{ .name }}
   namespace: {{ include "loki.namespace" $ctx }}
   labels:
-    {{- include "loki.gatewayLabels" $ctx | nindent 4 }}
+    {{- include (.labelsTemplate | default "loki.labels") $ctx | nindent 4 }}
     {{- with $route.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -1215,21 +1216,36 @@ spec:
     {{- with $route.additionalRules }}
     {{- tpl (toYaml .) $ctx | nindent 4 }}
     {{- end }}
-    - backendRefs:
-        - name: {{ .name }}
-          port: {{ .port }}
-      {{- with $route.filters }}
-      filters:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $route.matches }}
-      matches:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $route.timeouts }}
-      timeouts:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+    {{- .rules | nindent 4 }}
+{{- end -}}
+
+{{/*
+HTTPRoute rule that points to the nginx gateway backend.
+Params:
+  ctx   - chart root context ($)
+  route - route values object
+  name  - backend service name
+  port  - backend service port
+*/}}
+{{- define "loki.route.gatewayRule" -}}
+- backendRefs:
+    - group: ""
+      kind: Service
+      name: {{ .name }}
+      port: {{ .port }}
+      weight: 1
+  {{- with .route.filters }}
+  filters:
+    {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- with .route.matches }}
+  matches:
+    {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- with .route.timeouts }}
+  timeouts:
+    {{- toYaml . | nindent 2 }}
+  {{- end }}
 {{- end -}}
 
 {{/*
@@ -1304,8 +1320,11 @@ Params:
 {{- define "loki.route.serviceRule" -}}
 {{- if .paths }}
 - backendRefs:
-    - name: {{ .serviceName }}
+    - group: ""
+      kind: Service
+      name: {{ .serviceName }}
       port: {{ .ctx.Values.loki.server.http_listen_port }}
+      weight: 1
   matches:
     {{- range .paths }}
     - path:

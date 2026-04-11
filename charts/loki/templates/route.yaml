@@ -1,37 +1,7 @@
 {{- range $name, $route := .Values.route -}}
 {{- if $route.enabled -}}
-{{- if $.Values.ingress.enabled -}}
-{{- fail "You have selected both ingress.enabled and a direct route, you must select either ingress or route but not both" -}}
-{{- end -}}
 {{- $routeName := ternary (include "loki.fullname" $) (printf "%s-%s" (include "loki.fullname" $) $name) (eq $name "main") -}}
----
-apiVersion: {{ $route.apiVersion | default (include "loki.gatewayApi.apiVersion" $) }}
-kind: {{ $route.kind | default "HTTPRoute" }}
-metadata:
-  name: {{ $routeName }}
-  namespace: {{ include "loki.namespace" $ }}
-  labels:
-    {{- include "loki.labels" $ | nindent 4 }}
-    {{- with $route.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with $route.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  {{- with $route.parentRefs }}
-  parentRefs:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with $route.hostnames }}
-  hostnames:
-    {{- tpl (toYaml .) $ | nindent 4 }}
-  {{- end }}
-  rules:
-    {{- with $route.additionalRules }}
-    {{- tpl (toYaml .) $ | nindent 4 }}
-    {{- end }}
-    {{- include "loki.route.rules" (dict "ctx" $ "paths" $route.paths) | nindent 4 }}
+{{- $rules := include "loki.route.rules" (dict "ctx" $ "paths" $route.paths) -}}
+{{- include "loki.route" (dict "ctx" $ "route" $route "name" $routeName "rules" $rules) }}
 {{- end -}}
 {{- end -}}

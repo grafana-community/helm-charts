@@ -93,14 +93,6 @@ tests:
           count: 0
         template: route.yaml
 
-  - it: should fail when both ingress and route are enabled
-    set:
-      ingress.enabled: true
-    asserts:
-      - failedTemplate:
-          errorMessage: "You have selected both ingress.enabled and a direct route, you must select either ingress or route but not both"
-        template: route.yaml
-
   - it: should prepend additionalRules before the generated rules
     set:
       route.main.additionalRules:

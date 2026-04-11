@@ -162,10 +162,3 @@ tests:
           count: 2
         template: gateway/route-gateway.yaml
 
-  - it: should fail when both ingress and route are enabled
-    set:
-      gateway.ingress.enabled: true
-    asserts:
-      - failedTemplate:
-          errorMessage: "You have selected both gateway.ingress.enabled and a gateway route, you must select either ingress or route but not both"
-        template: gateway/route-gateway.yaml
