@@ -80,7 +80,7 @@ spec:
   {{- end }}
   {{- with $component.initContainers }}
   initContainers:
-     {{- if kindIs "slice" . }}
+    {{- if kindIs "slice" . }}
       {{- tpl (toYaml .) $ctx | nindent 4 }}
     {{- else if kindIs "string" . }}
       {{- tpl . $ctx | nindent 4 }}
