@@ -1,9 +1,9 @@
-{{- if and .Values.gateway.ingress.enabled .Values.gateway.route.enabled -}}
-{{- fail "You have selected both gateway.ingress.enabled and gateway.route.enabled, you must select either ingress or route but not both" -}}
-{{- end -}}
 {{- if .Values.gateway.enabled -}}
-{{- if .Values.gateway.route.enabled -}}
-{{- $dict := dict "ctx" . "component" "gateway" -}}
-{{- include "tempo.route" (dict "ctx" . "route" .Values.gateway.route "component" "gateway" "serviceName" (include "tempo.resourceName" $dict) "servicePort" .Values.gateway.service.port) }}
+{{- range $name, $route := .Values.gateway.route }}
+{{- if $route.enabled }}
+{{- $dict := dict "ctx" $ "component" "gateway" -}}
+---
+{{- include "tempo.route" (dict "ctx" $ "route" $route "component" "gateway" "name" (printf "%s-%s" (include "tempo.resourceName" $dict) $name) "serviceName" (include "tempo.resourceName" $dict) "servicePort" $.Values.gateway.service.port) }}
+{{- end }}
 {{- end }}
 {{- end }}

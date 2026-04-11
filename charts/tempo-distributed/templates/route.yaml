@@ -1,6 +1,6 @@
-{{- if and .Values.ingress.enabled .Values.route.enabled -}}
-{{- fail "You have selected both ingress.enabled and route.enabled, you must select either ingress or route but not both" -}}
-{{- end -}}
-{{- if .Values.route.enabled }}
-{{- include "tempo.route" (dict "ctx" . "route" .Values.route "component" "gateway" "name" (include "tempo.fullname" .)) }}
+{{- range $name, $route := .Values.route }}
+{{- if $route.enabled }}
+---
+{{- include "tempo.route" (dict "ctx" $ "route" $route "component" "gateway" "name" (printf "%s-%s" (include "tempo.fullname" $) $name)) }}
+{{- end }}
 {{- end }}
