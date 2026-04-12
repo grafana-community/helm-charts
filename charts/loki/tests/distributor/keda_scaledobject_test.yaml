@@ -65,6 +65,7 @@ tests:
       - equal:
           path: spec.scaleTargetRef.kind
           value: Deployment
+
   - it: should use component pollingInterval when it is an integer
     set:
       deploymentMode: Distributed
