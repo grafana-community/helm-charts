@@ -1561,6 +1561,7 @@ singleBinary:
     #     target:
     #       type: AverageValue
     #       averageValue: 10k
+    # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
       enabled: false
@@ -2300,6 +2301,7 @@ ingester:
     #     target:
     #       type: AverageValue
     #       averageValue: 10k
+    # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
       enabled: false
@@ -2585,6 +2587,7 @@ distributor:
     #     target:
     #       type: AverageValue
     #       averageValue: 10k
+    # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
       enabled: false
@@ -2759,6 +2762,7 @@ querier:
     #     target:
     #       type: AverageValue
     #       averageValue: 12
+    # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
       enabled: false
@@ -2954,6 +2958,7 @@ queryFrontend:
     #     target:
     #       type: AverageValue
     #       averageValue: 100
+    # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
       enabled: false
@@ -3863,6 +3868,7 @@ bloomBuilder:
     #     target:
     #       type: AverageValue
     #       averageValue: 100
+    # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
       enabled: false
