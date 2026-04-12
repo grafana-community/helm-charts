@@ -110,6 +110,7 @@ tests:
       deploymentMode: Distributed
       loki.commonConfig.replication_factor: 1
       loki.useTestSchema: true
+      defaults.kedaAutoscaling.prometheusAddress: http://prometheus:9090
       querier.kedaAutoscaling.enabled: true
       querier.kedaAutoscaling.pollingInterval: 15
     asserts:
@@ -122,6 +123,7 @@ tests:
       deploymentMode: Distributed
       loki.commonConfig.replication_factor: 1
       loki.useTestSchema: true
+      defaults.kedaAutoscaling.prometheusAddress: http://prometheus:9090
       defaults.kedaAutoscaling.pollingInterval: 30
       querier.kedaAutoscaling.enabled: true
       querier.kedaAutoscaling.pollingInterval: "15" # string, not int
