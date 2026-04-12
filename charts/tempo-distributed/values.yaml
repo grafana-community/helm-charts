@@ -1605,7 +1605,9 @@ config: |
       target_bytes_per_job: {{ .Values.queryFrontend.config.search.target_bytes_per_job }}
       concurrent_jobs: {{ .Values.queryFrontend.config.search.concurrent_jobs }}
       max_spans_per_span_set: {{ .Values.queryFrontend.config.search.max_spans_per_span_set }}
-      max_result_limit: {{ .Values.queryFrontend.config.search.max_result_limit }}
+      {{- with .Values.queryFrontend.config.search.max_result_limit }}
+      max_result_limit: {{ . }}
+      {{- end }}
     trace_by_id:
       query_shards: {{ .Values.queryFrontend.config.trace_by_id.query_shards }}
     metrics:
