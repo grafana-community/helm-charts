@@ -36,8 +36,18 @@ spec:
     name: {{ include "loki.resourceName" (dict "ctx" . "component" $target "suffix" $suffix) }}
   minReplicaCount: {{ $component.kedaAutoscaling.minReplicas }}
   maxReplicaCount: {{ $component.kedaAutoscaling.maxReplicas }}
-  pollingInterval: {{ default .Values.defaults.kedaAutoscaling.pollingInterval $component.kedaAutoscaling.pollingInterval | int }}
-  cooldownPeriod: {{ default .Values.defaults.kedaAutoscaling.cooldownPeriod $component.kedaAutoscaling.cooldownPeriod | int }}
+  pollingInterval: {{
+    include "loki.safeInt" (dict
+      "value" $component.kedaAutoscaling.pollingInterval
+      "default" .Values.defaults.kedaAutoscaling.pollingInterval
+    )
+  }}
+  cooldownPeriod: {{
+  include "loki.safeInt" (dict
+    "value" $component.kedaAutoscaling.cooldownPeriod
+    "default" .Values.defaults.kedaAutoscaling.cooldownPeriod
+  )
+  }}
   {{- with $component.kedaAutoscaling.fallback }}
   fallback:
     {{- toYaml . | nindent 4 }}

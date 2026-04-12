@@ -87,7 +87,7 @@ tests:
       defaults.kedaAutoscaling.prometheusAddress: http://prometheus:9090
       defaults.kedaAutoscaling.pollingInterval: 30
       distributor.kedaAutoscaling.enabled: true
-      distributor.kedaAutoscaling.pollingInterval: "15" # string, not int
+      distributor.kedaAutoscaling.pollingInterval: "notAnInt" # not int
     asserts:
       - equal:
           path: spec.pollingInterval
