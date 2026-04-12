@@ -3,7 +3,7 @@ gateway fullname
 */}}
 {{- define "loki.gatewayFullname" -}}
 {{ include "loki.fullname" . }}-gateway
-{{- end -}}
+{{- end }}
 
 {{/*
 gateway common labels
