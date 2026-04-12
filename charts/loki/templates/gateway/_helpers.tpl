@@ -11,7 +11,7 @@ gateway common labels
 {{- define "loki.gatewayLabels" -}}
 {{ include "loki.labels" . }}
 app.kubernetes.io/component: gateway
-{{- end -}}
+{{- end }}
 
 {{/*
 gateway selector labels
