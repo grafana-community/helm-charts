@@ -47,6 +47,9 @@ tests:
           path: spec.cooldownPeriod
           value: 300
       - equal:
+          path: spec.pollingInterval
+          value: 30
+      - equal:
           path: spec.scaleTargetRef.kind
           value: Deployment
 
@@ -101,3 +104,28 @@ tests:
       - equal:
           path: spec.advanced.horizontalPodAutoscalerConfig.behavior.scaleDown.stabilizationWindowSeconds
           value: 300
+
+  - it: should use component pollingInterval when it is an integer
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      querier.kedaAutoscaling.enabled: true
+      querier.kedaAutoscaling.pollingInterval: 15
+    asserts:
+      - equal:
+          path: spec.pollingInterval
+          value: 15
+
+  - it: should fallback to default pollingInterval when value is not an integer
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      defaults.kedaAutoscaling.pollingInterval: 30
+      querier.kedaAutoscaling.enabled: true
+      querier.kedaAutoscaling.pollingInterval: "15" # string, not int
+    asserts:
+      - equal:
+          path: spec.pollingInterval
+          value: 30
