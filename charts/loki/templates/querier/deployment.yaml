@@ -1,0 +1,38 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if $isDistributed }}
+{{ $args := list }}
+{{- if .Values.ingester.zoneAwareReplication.enabled }}
+  {{- if and (.Values.ingester.zoneAwareReplication.migration.enabled) (not .Values.ingester.zoneAwareReplication.migration.readPath) }}
+{{ $args = list "-distributor.zone-awareness-enabled=false" }}
+  {{- else }}
+{{ $args = list "-distributor.zone-awareness-enabled=true" }}
+  {{- end }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "loki.querierFullname" . }}
+  namespace: {{ include "loki.namespace" . }}
+  labels:
+    {{- include "loki.querierLabels" . | nindent 4 }}
+    app.kubernetes.io/part-of: memberlist
+  {{- with .Values.loki.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+{{- if and (not .Values.querier.autoscaling.enabled) (not .Values.querier.kedaAutoscaling.enabled) }}
+  replicas: {{ .Values.querier.replicas }}
+{{- end }}
+  strategy:
+    rollingUpdate:
+      maxSurge: {{ .Values.querier.maxSurge }}
+      maxUnavailable: 1
+  revisionHistoryLimit: {{ .Values.loki.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "loki.querierSelectorLabels" . | nindent 6 }}
+  template:
+    {{- include "loki.podTemplate" (dict "target" "querier" "component" .Values.querier "ctx" . "args" $args) | nindent 4 }}
+{{- end }}

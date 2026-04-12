@@ -34,8 +34,8 @@ rbac:
   #   verbs: []
 serviceAccount:
   create: true
-  name:
-  nameTest:
+  name: ""
+  nameTest: ""
   ## ServiceAccount labels.
   labels: {}
   ## Service account annotations. Can be templated.
@@ -190,7 +190,7 @@ downloadDashboardsImage:
   # -- The Docker registry
   registry: docker.io
   repository: curlimages/curl
-  tag: 8.18.0
+  tag: 8.19.0
   sha: ""
   pullPolicy: IfNotPresent
 
@@ -272,9 +272,9 @@ serviceMonitor:
   targetLabels: []
 
 extraExposePorts: []
- # - name: keycloak
- #   port: 8080
- #   targetPort: 8080
+  # - name: keycloak
+  #   port: 8080
+  #   targetPort: 8080
 
 # overrides pod.spec.hostAliases in the grafana deployment's pods
 hostAliases: []
@@ -340,6 +340,21 @@ route:
       - path:
           type: PathPrefix
           value: /
+
+    ## Timeouts define the timeouts that can be configured for an HTTP request.
+    ## Ref. https://gateway-api.sigs.k8s.io/api-types/httproute/#timeouts-optional
+    timeouts: {}
+    # request: 10s
+    # backendRequest: 5s
+
+    ## SessionPersistence defines and configures session persistence for the route rule.
+    ## Ref. https://gateway-api.sigs.k8s.io/geps/gep-1619/
+    sessionPersistence: {}
+    # sessionName: grafana-session
+    # type: Cookie
+    # absoluteTimeout: 48h
+    # cookieConfig:
+    #   lifetimeType: Permanent
 
     ## Filters define the filters that are applied to requests that match this rule.
     filters: []
@@ -829,6 +844,8 @@ defaultCurlOptions: "-skf"
 ## ref: https://grafana.com/dashboards
 ##
 ## dashboards per provider, use provider name as key.
+## For dashboards downloaded via gnetId or url, the optional "title" key overrides
+## the dashboard title in the downloaded JSON so the UI displays your custom title.
 ##
 dashboards: {}
   # default:
@@ -838,6 +855,7 @@ dashboards: {}
   #   custom-dashboard:
   #     file: dashboards/custom-dashboard.json
   #   prometheus-stats:
+  #     title: My Custom Dashboard Title   # optional; overrides the dashboard title in the downloaded JSON
   #     gnetId: 2
   #     revision: 2
   #     datasource: Prometheus
@@ -890,21 +908,21 @@ grafana.ini:
   unified_storage:
     index_path: /var/lib/grafana-search/bleve
 ## grafana Authentication can be enabled with the following values on grafana.ini
- # server:
-      # The full public facing url you use in browser, used for redirects and emails
- #    root_url:
- # https://grafana.com/docs/grafana/latest/auth/github/#enable-github-in-grafana
- # auth.github:
- #    enabled: false
- #    allow_sign_up: false
- #    scopes: user:email,read:org
- #    auth_url: https://github.com/login/oauth/authorize
- #    token_url: https://github.com/login/oauth/access_token
- #    api_url: https://api.github.com/user
- #    team_ids:
- #    allowed_organizations:
- #    client_id:
- #    client_secret:
+  # server:
+  # The full public facing url you use in browser, used for redirects and emails
+  #    root_url:
+  # https://grafana.com/docs/grafana/latest/auth/github/#enable-github-in-grafana
+  # auth.github:
+  #    enabled: false
+  #    allow_sign_up: false
+  #    scopes: user:email,read:org
+  #    auth_url: https://github.com/login/oauth/authorize
+  #    token_url: https://github.com/login/oauth/access_token
+  #    api_url: https://api.github.com/user
+  #    team_ids:
+  #    allowed_organizations:
+  #    client_id:
+  #    client_secret:
 ## LDAP Authentication can be enabled with the following values on grafana.ini
 ## NOTE: Grafana will fail to start if the value for ldap.toml is invalid
   # auth.ldap:
@@ -961,7 +979,7 @@ sidecar:
     # -- The Docker registry
     registry: quay.io
     repository: kiwigrid/k8s-sidecar
-    tag: 2.5.0
+    tag: 2.6.0
     sha: ""
   imagePullPolicy: IfNotPresent
   resources: {}
@@ -1439,7 +1457,7 @@ namespaceOverride: ""
 ##
 revisionHistoryLimit: 10
 
-## Add a seperate remote image renderer deployment/service
+## Add a separate remote image renderer deployment/service
 imageRenderer:
   deploymentStrategy: {}
   # Enable the image-renderer deployment & service
@@ -1514,6 +1532,8 @@ imageRenderer:
   hostAliases: []
   # image-renderer deployment priority class
   priorityClassName: ''
+  # Path to the healthcheck endpoint. On Image Renderer v5.0.0 or newer, this is '/healthz'. Older versions use '/'.
+  healthcheckPath: '/healthz'
   service:
     # Enable the image-renderer service
     enabled: true
@@ -1703,3 +1723,25 @@ extraObjects: []
 # Alternatively, if you wish to allow secret values to be exposed in the rendered grafana.ini configmap,
 # you can disable this check by setting assertNoLeakedSecrets to false.
 assertNoLeakedSecrets: true
+
+# updateMode options are:
+# Off: n the Off update mode, the VPA recommender still analyzes resource usage and generates recommendations, but these recommendations are not automatically applied to Pods. The recommendations are only stored in the VPA object's .status field.
+# Initial: In Initial mode, VPA only sets resource requests when Pods are first created. It does not update resources for already running Pods, even if recommendations change over time. The recommendations apply only during Pod creation.
+# Recreate: In Recreate mode, VPA actively manages Pod resources by evicting Pods when their current resource requests differ significantly from recommendations. When a Pod is evicted, the workload controller (managing a Deployment, StatefulSet, etc) creates a replacement Pod, and the VPA admission controller applies the updated resource requests to the new Pod.
+# InPlaceOrRecreate: In Recreate mode, VPA actively manages Pod resources by evicting Pods when their current resource requests differ significantly from recommendations. When a Pod is evicted, the workload controller (managing a Deployment, StatefulSet, etc) creates a replacement Pod, and the VPA admission controller applies the updated resource requests to the new Pod.
+# Auto (deprecated): The Auto update mode is deprecated since VPA version 1.4.0. Use Recreate for eviction-based updates, or InPlaceOrRecreate for in-place updates with eviction fallback.
+verticalPodAutoscaler:
+  enabled: false
+  updateMode: "Off"
+  controlledResources:
+    cpu: true
+    memory: true
+
+  # Default safety bounds
+  minAllowed:
+    cpu: "25m"
+    memory: "128Mi"
+
+  maxAllowed:
+    cpu: "1000m"
+    memory: "1Gi"

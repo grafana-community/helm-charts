@@ -1,0 +1,35 @@
+{{- $isSimpleScalable := eq (include "loki.deployment.isScalable" .) "true" -}}
+{{- if and $isSimpleScalable }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "loki.readFullname" . }}
+  namespace: {{ include "loki.namespace" $ }}
+  labels:
+    app.kubernetes.io/part-of: memberlist
+    {{- include "loki.readLabels" . | nindent 4 }}
+  {{- if or (not (empty .Values.loki.annotations)) (not (empty .Values.read.annotations))}}
+  annotations:
+    {{- with .Values.loki.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .Values.read.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- if and (not .Values.read.autoscaling.enabled) (not .Values.read.kedaAutoscaling.enabled) }}
+  replicas: {{ .Values.read.replicas }}
+  {{- end }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  revisionHistoryLimit: {{ .Values.loki.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "loki.readSelectorLabels" . | nindent 6 }}
+  template:
+    {{- include "loki.podTemplate" (dict "target" "read" "component" .Values.read "ctx" .) | nindent 4 }}
+{{- end }}

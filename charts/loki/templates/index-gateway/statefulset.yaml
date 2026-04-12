@@ -1,0 +1,63 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if $isDistributed }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "loki.indexGatewayFullname" . }}
+  namespace: {{ include "loki.namespace" . }}
+  labels:
+    {{- include "loki.indexGatewayLabels" . | nindent 4 }}
+  {{- with .Values.loki.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.indexGateway.replicas }}
+{{- with .Values.indexGateway.updateStrategy }}
+  updateStrategy:
+    {{- tpl (. | toYaml) $ | nindent 4 }}
+{{- end }}
+  serviceName: {{ include "loki.indexGatewayFullname" . }}-headless
+  revisionHistoryLimit: {{ .Values.loki.revisionHistoryLimit }}
+  {{- if and (.Values.indexGateway.persistence.enableStatefulSetAutoDeletePVC)  }}
+  {{/*
+    Data on the read nodes is easy to replace, so we want to always delete PVCs to make
+    operation easier, and will rely on re-fetching data when needed.
+  */}}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .Values.indexGateway.persistence.whenDeleted }}
+    whenScaled: {{ .Values.indexGateway.persistence.whenScaled }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "loki.indexGatewaySelectorLabels" . | nindent 6 }}
+  template:
+    {{- include "loki.podTemplate" (dict "target" "index-gateway" "component" .Values.indexGateway "ctx" .) | nindent 4 }}
+  {{- if .Values.indexGateway.persistence.enabled }}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+        {{- with .Values.indexGateway.persistence.annotations }}
+        annotations:
+          {{- . | toYaml | nindent 10 }}
+        {{- end }}
+        {{- with .Values.indexGateway.persistence.labels }}
+        labels:
+          {{- . | toYaml | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- toYaml .Values.indexGateway.persistence.accessModes | nindent 10 }}
+        {{- with .Values.indexGateway.persistence.storageClass }}
+        storageClassName: {{ if (eq "-" .) }}""{{ else }}{{ . }}{{ end }}
+        {{- end }}
+        {{- with .Values.indexGateway.persistence.volumeAttributesClassName }}
+        volumeAttributesClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.indexGateway.persistence.size | quote }}
+  {{- end }}
+{{- end }}

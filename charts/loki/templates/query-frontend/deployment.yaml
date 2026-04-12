@@ -1,0 +1,28 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if $isDistributed -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "loki.queryFrontendFullname" . }}
+  namespace: {{ include "loki.namespace" . }}
+  labels:
+    {{- include "loki.queryFrontendLabels" . | nindent 4 }}
+  {{- with .Values.loki.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+{{- if and (not .Values.queryFrontend.autoscaling.enabled) (not .Values.queryFrontend.kedaAutoscaling.enabled) }}
+  replicas: {{ .Values.queryFrontend.replicas }}
+{{- end }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  revisionHistoryLimit: {{ .Values.loki.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "loki.queryFrontendSelectorLabels" . | nindent 6 }}
+  template:
+    {{- include "loki.podTemplate" (dict "target" "query-frontend" "component" .Values.queryFrontend "ctx" .) | nindent 4 }}
+{{- end -}}

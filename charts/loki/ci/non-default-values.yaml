@@ -1,0 +1,199 @@
+global:
+  extraVolumes:
+    - name: ca-bundle
+      configMap:
+        name: kube-root-ca.crt
+        items:
+          - key: ca.crt
+            path: ca.crt
+deploymentMode: Distributed
+nameOverride: '{{ $.Release.Name }}'
+test:
+  enabled: true
+loki:
+  auth_enabled: true
+  commonConfig:
+    replication_factor: 1
+  useTestSchema: true
+  tenants:
+    - name: "self-monitoring"
+      password: "self-monitoring"
+    - name: "test-user-1"
+      password: "test-password-1"
+    - name: "test-user-2"
+      passwordHash: "$2y$10$7O40CaY1yz7fu9O24k2/u.ct/wELYHRBsn25v/7AyuQ8E8hrLqpva"
+  dnsConfig:
+    options:
+      - name: ndots
+        value: "3"
+ingester:
+  replicas: 2
+  affinity: null
+  zoneAwareReplication:
+    enabled: true
+    migration:
+      enabled: true
+    zoneA:
+      extraAffinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: name
+                    operator: In
+                    values:
+                      - '{{ include "loki.prefixIngesterName" . }}ingester-zone-a'
+              topologyKey: kubernetes.io/hostname
+    zoneB:
+      extraAffinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: name
+                    operator: In
+                    values:
+                      - '{{ include "loki.prefixIngesterName" . }}ingester-zone-b'
+              topologyKey: kubernetes.io/hostname
+    zoneC:
+      extraAffinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: name
+                    operator: In
+                    values:
+                      - '{{ include "loki.prefixIngesterName" . }}ingester-zone-c'
+              topologyKey: kubernetes.io/hostname
+  dnsConfig:
+    options:
+      - name: ndots
+        value: "4"
+sidecar:
+  rules:
+    enabled: true
+minio:
+  enabled: true
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
+ruler:
+  replicas: 2
+  affinity: null
+  directories:
+    fake:
+      alerts.yaml: |
+        groups: {}
+distributor:
+  replicas: 2
+  affinity: null
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+memcached:
+  enabled: true
+  replicas: 1
+compactor:
+  replicas: 1
+indexGateway:
+  replicas: 2
+  affinity: null
+querier:
+  replicas: 2
+  affinity: null
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+queryFrontend:
+  replicas: 2
+  affinity: null
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+queryScheduler:
+  replicas: 2
+  affinity: null
+bloomBuilder:
+  enabled: true
+  replicas: 2
+  affinity: null
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+bloomCompactor:
+  enabled: true
+  replicas: 1
+bloomGateway:
+  enabled: true
+  replicas: 2
+  affinity: null
+bloomPlanner:
+  enabled: true
+  replicas: 2
+  affinity: null
+patternIngester:
+  enabled: true
+  replicas: 2
+  affinity: null
+lokiCanary:
+  enabled: true
+  kind: Deployment
+  tenant:
+    password: "self-monitoring"
+chunksCache:
+  suffix: "l1"
+  enabled: true
+  allocatedMemory: 128
+  persistence:
+    labels:
+      foo: bar
+      baz: qux
+  l2:
+    enabled: true
+    replicas: 2
+    allocatedMemory: 128
+    persistence:
+      labels:
+        foo: bar
+        baz: qux
+resultsCache:
+  allocatedMemory: 128
+  persistence:
+    labels:
+      foo: bar
+      baz: qux
+gateway:
+  enabled: true
+  replicas: 2
+  affinity: null
+  basicAuth:
+    enabled: true
+  metrics:
+    enabled: true
+monitoring:
+  serviceMonitor:
+    enabled: true
+    labels:
+      release: kube-prometheus-stack
+  dashboards:
+    enabled: true
+  rules:
+    enabled: true
+    alerting: true
+    labels:
+      release: kube-prometheus-stack
+    additionalGroups:
+      - name: "additional-rules"
+        rules:
+          - alert: HighRequestLatency
+            expr: 'job:request_latency_seconds:mean5m{job="myjob"} > 0.5'
+            for: 10m
+            labels:
+              severity: page
+            annotations:
+              summary: "High request latency"
+              description: "Request latency is above 0.5s for more than 10 minutes"

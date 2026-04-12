@@ -22,6 +22,14 @@ global:
   dnsService: 'kube-dns'
   # -- configures DNS service namespace
   dnsNamespace: 'kube-system'
+  goSettings:
+    # -- Fraction of the container memory limit used to compute GOMEMLIMIT (e.g. 0.85 = 85%).
+    # Set to 0 to disable automatic GOMEMLIMIT injection.
+    goMemLimitFactor: 0.85
+    # -- Value to set for GOGC alongside GOMEMLIMIT. Lowering below the default of 100 reduces
+    # heap growth between GC cycles, working in tandem with GOMEMLIMIT to smooth memory usage.
+    # Set to 0 to disable automatic GOGC injection.
+    gogc: 80
   # -- Common environment variables to add to all pods directly managed by this chart.
   # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached, metrics-generator, querier, query-frontend, tokengen
   extraEnv: []
@@ -33,6 +41,7 @@ global:
   extraArgs: []
   # -- Global storage class to be used for persisted components
   storageClass: null
+
 fullnameOverride: ''
 # fullnameOverride: tempo
 
@@ -679,8 +688,8 @@ distributor:
       filter_by_status_error: false
     # -- Disables write extension with inactive ingesters
     extend_writes: null
-    # -- Trace Attribute bytes limit. This is the maximum number of bytes that can be used in a trace.0 for no limit.
-    max_attribute_bytes: 0
+    # -- Trace Attribute bytes limit. This is the maximum number of bytes that can be used in a trace. 0 for no limit. Set to null to omit from config.
+    max_attribute_bytes: null
     # Configures usage trackers in the distributor which expose metrics of ingested traffic grouped by configurable
     # attributes exposed on /usage_metrics.
     cost_attribution:
@@ -1110,6 +1119,41 @@ queryFrontend:
       - secretName: tempo-query-tls
         hosts:
           - query.tempo.example.com
+  # -- Gateway API route configuration for the query-frontend (Jaeger UI).
+  # Multiple routes can be added by adding a dictionary key like the 'main' route.
+  route:
+    main:
+      # -- Specifies whether a Gateway API route for the query-frontend should be created
+      enabled: false
+      # -- Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1beta1
+      # If not set, the latest available version will be auto-detected
+      apiVersion: ""
+      # -- Set the route kind
+      # Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
+      kind: HTTPRoute
+      # -- Route annotations
+      annotations: {}
+      # -- Route labels
+      labels: {}
+      # -- Hostnames for the route
+      hostnames: []
+      # - query.tempo.example.com
+      # -- Parent references (gateway to attach to)
+      parentRefs: []
+      # - name: my-gateway
+      #   namespace: gateway-namespace
+      # -- Matches define conditions for matching incoming requests
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+      # -- Timeouts define the timeouts that can be configured for an HTTP request.
+      # Ref. https://gateway-api.sigs.k8s.io/api-types/httproute/#timeouts-optional
+      timeouts: {}
+      # -- Filters define the filters that are applied to requests that match this rule.
+      filters: []
+      # -- Additional custom rules that can be added to the route
+      additionalRules: []
   # -- The name of the PriorityClass for query-frontend pods
   priorityClassName: null
   # -- Labels for queryFrontend pods
@@ -1579,7 +1623,7 @@ config: |
     {{- if .Values.distributor.config.extend_writes }}
     extend_writes: {{ .Values.distributor.config.extend_writes }}
     {{- end }}
-    {{- if .Values.distributor.config.max_attribute_bytes }}
+    {{- if not (eq .Values.distributor.config.max_attribute_bytes nil) }}
     max_attribute_bytes: {{ .Values.distributor.config.max_attribute_bytes }}
     {{- end }}
   querier:
@@ -1663,7 +1707,7 @@ config: |
     http_server_read_timeout: {{ .Values.server.http_server_read_timeout }}
     http_server_write_timeout: {{ .Values.server.http_server_write_timeout }}
   cache:
-  {{- toYaml .Values.cache | nindent 2}}
+  {{- include "tempo.cacheConfig" . | nindent 2}}
   storage:
     trace:
       {{- if .Values.storage.trace.block.version }}
@@ -1741,6 +1785,9 @@ server:
 # Use this block to configure caches available throughout the application.
 # Multiple caches can be created and assigned roles which determine how they are used by Tempo.
 # https://grafana.com/docs/tempo/latest/configuration/#cache
+# When memcached.enabled is true (the default), the cache.caches list is auto-generated from the
+# memcached and per-role memcached sections (memcachedBloom, memcachedParquetFooter, memcachedFrontendSearch).
+# When memcached.enabled is false, this block is passed through verbatim to allow configuring external caches.
 cache:
   caches:
     - memcached:
@@ -1830,12 +1877,16 @@ memcached:
     # -- Memcached Docker image repository
     repository: memcached
     # -- Memcached Docker image tag
-    tag: 1.6.40-alpine
+    tag: 1.6.41-alpine
     # -- Memcached Docker image pull policy
     pullPolicy: IfNotPresent
   host: memcached
   # Number of replicas for memchached
   replicas: 1
+  # -- Timeout for cache operations
+  timeout: 500ms
+  # -- Enable consistent hashing for cache
+  consistentHash: true
   # -- Additional CLI args for memcached
   extraArgs: []
   # -- Toleration for memcached pods
@@ -1927,13 +1978,275 @@ memcachedExporter:
     # -- Memcached Exporter Docker image repository
     repository: prom/memcached-exporter
     # -- Memcached Exporter Docker image tag
-    tag: v0.15.5
+    tag: v0.16.0
     # -- Memcached Exporter Docker image pull policy
     pullPolicy: IfNotPresent
     # -- Memcached Exporter resource requests and limits
   resources: {}
   # -- Additional CLI args for the memcached exporter
   extraArgs: []
+
+# -- Configuration for a dedicated memcached cluster for the bloom cache role.
+# When enabled, bloom cache is served by its own memcached StatefulSet.
+# Image is shared with the main `memcached` section.
+memcachedBloom:
+  # -- Enable a dedicated memcached cluster for the bloom cache role
+  enabled: false
+  # -- Annotations for the memcached-bloom StatefulSet
+  annotations: {}
+  # -- Number of replicas for the bloom memcached StatefulSet
+  replicas: 1
+  # -- Timeout for bloom cache operations
+  timeout: 500ms
+  # -- Enable consistent hashing for bloom cache
+  consistentHash: true
+  # -- Additional CLI args for memcached
+  extraArgs: []
+  # -- Tolerations for memcached-bloom pods
+  tolerations: []
+  # -- Environment variables to add to memcached-bloom pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to memcached-bloom pods
+  extraEnvFrom: []
+  # -- Labels for memcached-bloom pods
+  podLabels: {}
+  # -- Annotations for memcached-bloom pods
+  podAnnotations: {}
+  # -- Resource requests and limits for memcached-bloom
+  resources: {}
+  # -- topologySpread for memcached-bloom pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more than 1 node per AZ
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-bloom") | nindent 6 }}
+  # -- Affinity for memcached-bloom pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Hard node and soft zone anti-affinity
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-bloom") | nindent 10 }}
+          topologyKey: kubernetes.io/hostname
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-bloom") | nindent 12 }}
+            topologyKey: topology.kubernetes.io/zone
+  # -- Pod Disruption Budget configuration
+  podDisruptionBudget:
+    # -- Enable PodDisruptionBudget for memcached-bloom
+    enabled: true
+  # -- Pod Disruption Budget maxUnavailable
+  maxUnavailable: 1
+  # -- Init containers for the memcached-bloom pod
+  initContainers: []
+  # -- Containers to add to the memcached-bloom pods
+  extraContainers: []
+  # -- Extra volume mounts for memcached-bloom pods
+  extraVolumeMounts: []
+  # -- Extra volumes for memcached-bloom StatefulSet
+  extraVolumes: []
+  service:
+    # -- Annotations for memcached-bloom service
+    annotations: {}
+  # -- configuration for readiness probe for memcached-bloom statefulset
+  readinessProbe:
+    tcpSocket:
+      port: client
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 6
+    successThreshold: 1
+  # -- configuration for liveness probe for memcached-bloom statefulset
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
+# -- Configuration for a dedicated memcached cluster for the parquet-footer cache role.
+# When enabled, parquet-footer cache is served by its own memcached StatefulSet.
+# Image is shared with the main `memcached` section.
+memcachedParquetFooter:
+  # -- Enable a dedicated memcached cluster for the parquet-footer cache role
+  enabled: false
+  # -- Annotations for the memcached-parquet-footer StatefulSet
+  annotations: {}
+  # -- Number of replicas for the parquet-footer memcached StatefulSet
+  replicas: 1
+  # -- Timeout for parquet-footer cache operations
+  timeout: 500ms
+  # -- Enable consistent hashing for parquet-footer cache
+  consistentHash: true
+  # -- Additional CLI args for memcached
+  extraArgs: []
+  # -- Tolerations for memcached-parquet-footer pods
+  tolerations: []
+  # -- Environment variables to add to memcached-parquet-footer pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to memcached-parquet-footer pods
+  extraEnvFrom: []
+  # -- Labels for memcached-parquet-footer pods
+  podLabels: {}
+  # -- Annotations for memcached-parquet-footer pods
+  podAnnotations: {}
+  # -- Resource requests and limits for memcached-parquet-footer
+  resources: {}
+  # -- topologySpread for memcached-parquet-footer pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more than 1 node per AZ
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-parquet-footer") | nindent 6 }}
+  # -- Affinity for memcached-parquet-footer pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Hard node and soft zone anti-affinity
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-parquet-footer") | nindent 10 }}
+          topologyKey: kubernetes.io/hostname
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-parquet-footer") | nindent 12 }}
+            topologyKey: topology.kubernetes.io/zone
+  # -- Pod Disruption Budget configuration
+  podDisruptionBudget:
+    # -- Enable PodDisruptionBudget for memcached-parquet-footer
+    enabled: true
+  # -- Pod Disruption Budget maxUnavailable
+  maxUnavailable: 1
+  # -- Init containers for the memcached-parquet-footer pod
+  initContainers: []
+  # -- Containers to add to the memcached-parquet-footer pods
+  extraContainers: []
+  # -- Extra volume mounts for memcached-parquet-footer pods
+  extraVolumeMounts: []
+  # -- Extra volumes for memcached-parquet-footer StatefulSet
+  extraVolumes: []
+  service:
+    # -- Annotations for memcached-parquet-footer service
+    annotations: {}
+  # -- configuration for readiness probe for memcached-parquet-footer statefulset
+  readinessProbe:
+    tcpSocket:
+      port: client
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 6
+    successThreshold: 1
+  # -- configuration for liveness probe for memcached-parquet-footer statefulset
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
+# -- Configuration for a dedicated memcached cluster for the frontend-search cache role.
+# When enabled, frontend-search cache is served by its own memcached StatefulSet.
+# Image is shared with the main `memcached` section.
+memcachedFrontendSearch:
+  # -- Enable a dedicated memcached cluster for the frontend-search cache role
+  enabled: false
+  # -- Annotations for the memcached-frontend-search StatefulSet
+  annotations: {}
+  # -- Number of replicas for the frontend-search memcached StatefulSet
+  replicas: 1
+  # -- Timeout for frontend-search cache operations
+  timeout: 500ms
+  # -- Enable consistent hashing for frontend-search cache
+  consistentHash: true
+  # -- Additional CLI args for memcached
+  extraArgs: []
+  # -- Tolerations for memcached-frontend-search pods
+  tolerations: []
+  # -- Environment variables to add to memcached-frontend-search pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to memcached-frontend-search pods
+  extraEnvFrom: []
+  # -- Labels for memcached-frontend-search pods
+  podLabels: {}
+  # -- Annotations for memcached-frontend-search pods
+  podAnnotations: {}
+  # -- Resource requests and limits for memcached-frontend-search
+  resources: {}
+  # -- topologySpread for memcached-frontend-search pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more than 1 node per AZ
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-frontend-search") | nindent 6 }}
+  # -- Affinity for memcached-frontend-search pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Hard node and soft zone anti-affinity
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-frontend-search") | nindent 10 }}
+          topologyKey: kubernetes.io/hostname
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-frontend-search") | nindent 12 }}
+            topologyKey: topology.kubernetes.io/zone
+  # -- Pod Disruption Budget configuration
+  podDisruptionBudget:
+    # -- Enable PodDisruptionBudget for memcached-frontend-search
+    enabled: true
+  # -- Pod Disruption Budget maxUnavailable
+  maxUnavailable: 1
+  # -- Init containers for the memcached-frontend-search pod
+  initContainers: []
+  # -- Containers to add to the memcached-frontend-search pods
+  extraContainers: []
+  # -- Extra volume mounts for memcached-frontend-search pods
+  extraVolumeMounts: []
+  # -- Extra volumes for memcached-frontend-search StatefulSet
+  extraVolumes: []
+  service:
+    # -- Annotations for memcached-frontend-search service
+    annotations: {}
+  # -- configuration for readiness probe for memcached-frontend-search statefulset
+  readinessProbe:
+    tcpSocket:
+      port: client
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 6
+    successThreshold: 1
+  # -- configuration for liveness probe for memcached-frontend-search statefulset
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
 metaMonitoring:
   # ServiceMonitor configuration
   serviceMonitor:
@@ -2197,6 +2510,8 @@ gateway:
     clusterIP: null
     # -- Node port if service type is NodePort
     nodePort: null
+    # -- Node port for the gRPC port if service type is NodePort
+    grpcNodePort: null
     # -- Load balancer IP address if service type is LoadBalancer
     loadBalancerIP: null
     # -- Annotations for the gateway service
@@ -2227,6 +2542,41 @@ gateway:
       - secretName: tempo-gateway-tls
         hosts:
           - gateway.tempo.example.com
+  # -- Gateway API route configuration for the gateway.
+  # Multiple routes can be added by adding a dictionary key like the 'main' route.
+  route:
+    main:
+      # -- Specifies whether a Gateway API route for the gateway should be created
+      enabled: false
+      # -- Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1beta1
+      # If not set, the latest available version will be auto-detected
+      apiVersion: ""
+      # -- Set the route kind
+      # Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
+      kind: HTTPRoute
+      # -- Route annotations
+      annotations: {}
+      # -- Route labels
+      labels: {}
+      # -- Hostnames for the route
+      hostnames: []
+      # - gateway.tempo.example.com
+      # -- Parent references (gateway to attach to)
+      parentRefs: []
+      # - name: my-gateway
+      #   namespace: gateway-namespace
+      # -- Matches define conditions for matching incoming requests
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+      # -- Timeouts define the timeouts that can be configured for an HTTP request.
+      # Ref. https://gateway-api.sigs.k8s.io/api-types/httproute/#timeouts-optional
+      timeouts: {}
+      # -- Filters define the filters that are applied to requests that match this rule.
+      filters: []
+      # -- Additional custom rules that can be added to the route
+      additionalRules: []
   # Basic auth configuration
   basicAuth:
     # -- Enables basic authentication for the gateway
@@ -2266,6 +2616,10 @@ gateway:
     serverSnippet: ''
     # -- Allows appending custom configuration to the http block
     httpSnippet: ''
+    # -- Whether ssl should be appended to the listen directive of the server block or not.
+    ssl: false
+    # -- TLS secret name containing the certificate and key to be used if ssl is enabled. The secret must contain 'tls.crt' and 'tls.key'. Required if ssl is true.
+    tlsSecretName: ''
     # -- Allows overriding the DNS resolver address nginx will use
     resolver: ''
     # -- Config file contents for Nginx. Passed through the `tpl` function to allow templating
@@ -2316,7 +2670,7 @@ gateway:
         {{- end }}
 
         server {
-          listen             8080;
+          listen             8080 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
 
           {{- if .Values.streamOverHTTPEnabled }}
           http2 on;
@@ -2386,6 +2740,11 @@ gateway:
             proxy_pass       http://$compactor:3200$request_uri;
           }
 
+          {{- if .Values.gateway.nginxConfig.ssl }}
+          ssl_certificate     /etc/nginx/ssl/tls.crt;
+          ssl_certificate_key /etc/nginx/ssl/tls.key;
+          {{- end }}
+
           {{- with .Values.gateway.nginxConfig.serverSnippet }}
           {{ . | nindent 4 }}
           {{- end }}
@@ -2394,7 +2753,7 @@ gateway:
         {{- if .Values.traces.otlp.grpc.enabled }}
         # OTLP gRPC
         server {
-          listen               {{ .Values.traces.otlp.grpc.port }} http2;
+          listen               {{ .Values.traces.otlp.grpc.port }} http2 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
 
           {{- if .Values.gateway.basicAuth.enabled }}
           auth_basic           "Tempo";
@@ -2408,6 +2767,11 @@ gateway:
           location ~ /opentelemetry {
             grpc_pass          grpc://{{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.traces.otlp.grpc.port }};
           }
+
+          {{- if .Values.gateway.nginxConfig.ssl }}
+          ssl_certificate     /etc/nginx/ssl/tls.crt;
+          ssl_certificate_key /etc/nginx/ssl/tls.key;
+          {{- end }}
 
           {{- with .Values.gateway.nginxConfig.serverSnippet }}
           {{ . | nindent 4 }}
@@ -2439,6 +2803,54 @@ ingress:
       - path: /compactor/ring
   hosts:
     - tempo.example.com
+
+# -- Gateway API route configuration.
+# Multiple routes can be added by adding a dictionary key like the 'main' route.
+# This is useful for creating both HTTPRoute and GRPCRoute resources (e.g. for OTLP HTTP + gRPC).
+route:
+  main:
+    # -- Specifies whether a Gateway API route should be created
+    enabled: false
+    # -- Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1beta1
+    # If not set, the latest available version will be auto-detected
+    apiVersion: ""
+    # -- Set the route kind
+    # Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
+    kind: HTTPRoute
+    # -- Route annotations
+    annotations: {}
+    # -- Route labels
+    labels: {}
+    # -- Hostnames for the route
+    hostnames: []
+    # - tempo.example.com
+    # -- Parent references (gateway to attach to)
+    parentRefs: []
+    # - name: my-gateway
+    #   namespace: gateway-namespace
+    # -- Paths to route to backend services. Each key is a service name suffix, and the value is a list of path matches.
+    paths:
+      distributor:
+        - path: /v1/traces
+          # -- pathType for the match (e.g. PathPrefix, Exact)
+          pathType: PathPrefix
+        - path: /distributor/ring
+          pathType: PathPrefix
+        - path: /ingester/ring
+          pathType: PathPrefix
+        - path: /metrics-generator/ring
+          pathType: PathPrefix
+      ingester:
+        - path: /flush
+          pathType: PathPrefix
+        - path: /shutdown
+          pathType: PathPrefix
+      query-frontend:
+        - path: /api
+          pathType: PathPrefix
+      compactor:
+        - path: /compactor/ring
+          pathType: PathPrefix
 
 ##############################################################################
 # The values in and after the `enterprise:` key configure the enterprise features
@@ -2504,7 +2916,7 @@ provisioner:
   # Example: "http://tempo-admin-api.namespace.svc:3100"
   apiUrl: ""
   # -- Additional tenants to be created. Each tenant will get a read and write policy
-  # and associated token. Tenant must have a name and a namespace for the secret containting
+  # and associated token. Tenant must have a name and a namespace for the secret containing
   # the token to be created in. For example
   # additionalTenants:
   #   - name: tempo

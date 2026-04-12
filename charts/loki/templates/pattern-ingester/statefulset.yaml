@@ -1,0 +1,63 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if $isDistributed }}
+{{- if (gt (int .Values.patternIngester.replicas) 0) -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "loki.patternIngesterFullname" . }}
+  namespace: {{ include "loki.namespace" . }}
+  labels:
+    {{- include "loki.patternIngesterLabels" . | nindent 4 }}
+  {{- with .Values.loki.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.patternIngester.replicas }}
+  podManagementPolicy: Parallel
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+  serviceName: {{ include "loki.patternIngesterFullname" . }}-headless
+  revisionHistoryLimit: {{ .Values.loki.revisionHistoryLimit }}
+  {{- if and (.Values.patternIngester.persistence.enableStatefulSetAutoDeletePVC)  }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .Values.patternIngester.persistence.whenDeleted }}
+    whenScaled: {{ .Values.patternIngester.persistence.whenScaled }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "loki.patternIngesterSelectorLabels" . | nindent 6 }}
+  template:
+    {{- include "loki.podTemplate" (dict "target" "pattern-ingester" "component" .Values.patternIngester "ctx" .) | nindent 4 }}
+  {{- if .Values.patternIngester.persistence.enabled }}
+  volumeClaimTemplates:
+  {{- range .Values.patternIngester.persistence.claims }}
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: {{ .name }}
+        {{- with .annotations }}
+        annotations:
+          {{- . | toYaml | nindent 10 }}
+        {{- end }}
+        {{- with .labels }}
+        labels:
+          {{- . | toYaml | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- toYaml .accessModes | nindent 10 }}
+        {{- with .storageClass }}
+        storageClassName: {{ if (eq "-" .) }}""{{ else }}{{ . }}{{ end }}
+        {{- end }}
+        {{- with .volumeAttributesClassName }}
+        volumeAttributesClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .size | quote }}
+  {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

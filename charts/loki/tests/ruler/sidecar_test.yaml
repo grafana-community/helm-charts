@@ -1,0 +1,364 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ruler sidecar
+templates:
+  - ruler/statefulset.yaml
+  - config.yaml
+
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+  ruler.sidecar: true
+  loki.image.tag: 0.0.0
+  sidecar.image.tag: 0.0.0
+
+tests:
+  - it: should render the ruler rules sidecar
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: ruler/statefulset.yaml
+      - isKind:
+          of: StatefulSet
+        template: ruler/statefulset.yaml
+      - template:
+          ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers
+          content:
+            name: loki-sc-rules
+            image: docker.io/kiwigrid/k8s-sidecar:0.0.0
+          any: true
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: METHOD
+            value: WATCH
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: LABEL
+            value: loki_rule
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: FOLDER
+            value: /rules
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: RESOURCE
+            value: both
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.volumes
+          content:
+            name: sc-rules-volume
+            emptyDir: {}
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: sc-rules-volume
+            mountPath: /rules
+
+  - it: should render optional sidecar env vars and a sized shared volume when configured
+    set:
+      sidecar.enableUniqueFilenames: true
+      sidecar.skipTlsVerify: true
+      sidecar.disableX509StrictVerification: true
+      sidecar.rules.sizeLimit: 1Gi
+      sidecar.rules.watchMethod: SLEEP
+      sidecar.rules.label: custom_rule
+      sidecar.rules.labelValue: tenant-a
+      sidecar.rules.folder: /tmp/rules
+      sidecar.rules.folderAnnotation: loki-folder
+      sidecar.rules.resource: configmap
+      sidecar.rules.script: /reload.sh
+      sidecar.rules.watchServerTimeout: 120
+      sidecar.rules.watchClientTimeout: 130
+      sidecar.rules.logLevel: DEBUG
+    asserts:
+      - template: ruler/statefulset.yaml
+        hasDocuments:
+          count: 1
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: METHOD
+            value: SLEEP
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: LABEL
+            value: custom_rule
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: LABEL_VALUE
+            value: tenant-a
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: FOLDER
+            value: /tmp/rules
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: FOLDER_ANNOTATION
+            value: loki-folder
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: RESOURCE
+            value: configmap
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: UNIQUE_FILENAMES
+            value: "true"
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: DISABLE_X509_STRICT_VERIFICATION
+            value: "true"
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: SCRIPT
+            value: /reload.sh
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: WATCH_SERVER_TIMEOUT
+            value: "120"
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: WATCH_CLIENT_TIMEOUT
+            value: "130"
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: LOG_LEVEL
+            value: DEBUG
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.volumes
+          content:
+            name: sc-rules-volume
+            emptyDir:
+              sizeLimit: 1Gi
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: sc-rules-volume
+            mountPath: /tmp/rules
+
+  - it: should render configmap-backed rule volumes and mounts for ruler directories
+    set:
+      sidecar.rules.enabled: true
+      ruler:
+        directories:
+          fake:
+            alerts.yaml: |
+              groups:
+          Tenant_Foo-:
+            alerts.yaml: |
+              groups:
+    asserts:
+      - template: ruler/statefulset.yaml
+        hasDocuments:
+          count: 1
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.volumes
+          content:
+            name: rules-fake
+            configMap:
+              name: RELEASE-NAME-loki-ruler-rules-fake
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.volumes
+          content:
+            name: rules-tenant-foo
+            configMap:
+              name: RELEASE-NAME-loki-ruler-rules-tenant-foo
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: rules-fake
+            mountPath: /etc/loki/rules/fake
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: rules-tenant-foo
+            mountPath: /etc/loki/rules/Tenant_Foo-
+
+  - it: should render configmap-backed rule volumes and mounts for ruler directories without the rules sidecar
+    set:
+      sidecar.rules.enabled: false
+      loki.rulerConfig.storage.type: local
+      ruler:
+        directories:
+          fake:
+            alerts.yaml: |
+              groups:
+    asserts:
+      - template: ruler/statefulset.yaml
+        hasDocuments:
+          count: 1
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.volumes
+          content:
+            name: rules-fake
+            configMap:
+              name: RELEASE-NAME-loki-ruler-rules-fake
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: rules-fake
+            mountPath: /etc/loki/rules/fake
+      - template: ruler/statefulset.yaml
+        notContains:
+          path: spec.template.spec.containers
+          content:
+            name: loki-sc-rules
+      - template: ruler/statefulset.yaml
+        notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: sc-rules-volume
+
+  - it: should not add the sidecar container or shared volume when disabled via sidecar.rules.enabled
+    set:
+      sidecar.rules.enabled: false
+    asserts:
+      - template: ruler/statefulset.yaml
+        hasDocuments:
+          count: 1
+      - template: ruler/statefulset.yaml
+        isKind:
+          of: StatefulSet
+      - notContains:
+          template: ruler/statefulset.yaml
+          path: spec.template.spec.containers
+          content:
+            name: loki-sc-rules
+      - template: ruler/statefulset.yaml
+        notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: sc-rules-volume
+      - template: ruler/statefulset.yaml
+        notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: sc-rules-volume
+
+  - it: should not add the sidecar container or shared volume when disabled via backend.sidecar
+    set:
+      ruler.sidecar: false
+    asserts:
+      - template: ruler/statefulset.yaml
+        hasDocuments:
+          count: 1
+      - template: ruler/statefulset.yaml
+        isKind:
+          of: StatefulSet
+      - notContains:
+          template: ruler/statefulset.yaml
+          path: spec.template.spec.containers
+          content:
+            name: loki-sc-rules
+      - template: ruler/statefulset.yaml
+        notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: sc-rules-volume
+      - template: ruler/statefulset.yaml
+        notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: sc-rules-volume
+
+  - it: should preserve backend extra containers alongside the generated sidecar
+    set:
+      ruler:
+        extraContainers:
+          - name: extra-helper
+            image: busybox:1.36
+            command:
+              - sh
+              - -c
+              - sleep 3600
+    asserts:
+      - template: ruler/statefulset.yaml
+        hasDocuments:
+          count: 1
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-helper
+            image: busybox:1.36
+          any: true
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers
+          content:
+            name: loki-sc-rules
+          any: true
+
+  - it: should use the ruler component image override without changing the sidecar image
+    set:
+      ruler.image.registry: quay.io
+      ruler.image.repository: custom/ruler
+      ruler.image.tag: 1.2.3
+    asserts:
+      - template: ruler/statefulset.yaml
+        hasDocuments:
+          count: 1
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers
+          content:
+            name: ruler
+            image: quay.io/custom/ruler:1.2.3
+          any: true
+      - template: ruler/statefulset.yaml
+        contains:
+          path: spec.template.spec.containers
+          content:
+            name: loki-sc-rules
+            image: docker.io/kiwigrid/k8s-sidecar:0.0.0
+          any: true

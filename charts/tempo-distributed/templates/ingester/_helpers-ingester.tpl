@@ -1,7 +1,3 @@
-{{- define "tempo.ingesterImagePullSecrets" -}}
-{{- $dict := dict "tempo" .Values.tempo.image "component" .Values.ingester.image "global" .Values.global.image -}}
-{{- include "tempo.imagePullSecrets" $dict -}}
-{{- end }}
 {{- define "ingester.zoneAwareReplicationMap" -}}
 {{- $zonesMap := (dict) -}}
 {{- $defaultZone := (dict "affinity" .ctx.Values.ingester.affinity "annotations" (default (dict)) "nodeSelector" .ctx.Values.ingester.nodeSelector "podAnnotations" (default (dict)) "replicas" .ctx.Values.ingester.replicas "storageClass" .ctx.Values.ingester.storageClass) -}}
@@ -74,23 +70,12 @@ name: {{ printf "%s-%s" .component .rolloutZoneName }}
 rollout-group: {{ .component }}
 zone: {{ .rolloutZoneName }}
 {{- end }}
-helm.sh/chart: {{ include "tempo.chart" .ctx }}
-app.kubernetes.io/name: {{ include "tempo.name" .ctx }}
-app.kubernetes.io/instance: {{ .ctx.Release.Name }}
-{{- if .component }}
-app.kubernetes.io/component: {{ .component }}
-{{- end }}
-{{- if .memberlist }}
-app.kubernetes.io/part-of: memberlist
-{{- end }}
-{{- if .ctx.Chart.AppVersion }}
-app.kubernetes.io/version: {{ .ctx.Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .ctx.Release.Service }}
+{{- include "tempo.labels" (dict "ctx" .ctx "component" .component) }}
 {{- with .ctx.Values.ingester.labels }}
 {{ toYaml . }}
 {{- end }}
 {{- end -}}
+
 {{/*
 Resource name template
 */}}

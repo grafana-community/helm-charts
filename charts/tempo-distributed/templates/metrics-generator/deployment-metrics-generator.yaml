@@ -46,7 +46,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       enableServiceLinks: false
-      {{- include "tempo.metricsGeneratorImagePullSecrets" . | nindent 6 -}}
+      {{- include "tempo.componentImagePullSecrets" (dict "ctx" . "component" "metrics-generator") | nindent 6 -}}
       {{- with .Values.metricsGenerator.hostAliases }}
       hostAliases:
         {{- toYaml . | nindent 8 }}
@@ -71,15 +71,7 @@ spec:
             - name: {{ .name | quote }}
               containerPort: {{ .port }}
             {{- end }}
-          {{- if or .Values.global.extraEnv .Values.metricsGenerator.extraEnv }}
-          env:
-            {{- with .Values.global.extraEnv }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with .Values.metricsGenerator.extraEnv }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- end }}
+          {{- include "tempo.componentEnv" (dict "extraEnv" (concat .Values.global.extraEnv .Values.metricsGenerator.extraEnv) "resources" .Values.metricsGenerator.resources "factor" .Values.global.goSettings.goMemLimitFactor "gogc" .Values.global.goSettings.gogc) | nindent 10 }}
           {{- if or .Values.global.extraEnvFrom .Values.metricsGenerator.extraEnvFrom }}
           envFrom:
             {{- with .Values.global.extraEnvFrom }}

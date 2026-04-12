@@ -47,7 +47,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       enableServiceLinks: false
-      {{- include "tempo.memcachedExporterImagePullSecrets" . | nindent 6 -}}
+      {{- include "tempo.componentImagePullSecrets" (dict "ctx" . "component" "memcached-exporter" "noTempoFallback" true) | nindent 6 -}}
       {{- with .Values.memcachedExporter.hostAliases }}
       hostAliases:
         {{- toYaml . | nindent 8 }}
@@ -58,14 +58,9 @@ spec:
         - image: {{ include "tempo.imageReference" $dict }}
           imagePullPolicy: {{ .Values.memcached.image.pullPolicy }}
           name: memcached
-          {{- if or .Values.global.extraArgs .Values.memcached.extraArgs }}
+          {{- with .Values.memcached.extraArgs }}
           args:
-            {{- with .Values.memcached.extraArgs }}
             {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with .Values.global.extraArgs }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
           {{- end }}
           ports:
             - containerPort: 11211

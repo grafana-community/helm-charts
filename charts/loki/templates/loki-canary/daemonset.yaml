@@ -1,0 +1,30 @@
+{{- if .Values.lokiCanary.enabled -}}
+{{- $component := set .Values.lokiCanary "extraEnv" (concat (list (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name"))))) }}
+---
+apiVersion: apps/v1
+kind: {{ .Values.lokiCanary.kind }}
+metadata:
+  name: {{ include "loki-canary.fullname" $ }}
+  namespace: {{ include "loki.namespace" $ }}
+  labels:
+    {{- include "loki-canary.labels" $ | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "loki-canary.selectorLabels" $ | nindent 6 }}
+  {{- if eq .Values.lokiCanary.kind "Deployment" }}
+  replicas: {{ .Values.lokiCanary.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  revisionHistoryLimit: {{ $.Values.loki.revisionHistoryLimit }}
+  {{- else }}
+  {{- with .Values.lokiCanary.updateStrategy }}
+  updateStrategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  template:
+    {{- include "loki.podTemplate" (dict "target" "canary" "component" $component "ctx" . "args" (include "loki-canary.args" . | fromYamlArray)) | nindent 4 }}
+{{- end }}
