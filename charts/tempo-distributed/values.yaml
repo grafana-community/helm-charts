@@ -1021,7 +1021,7 @@ queryFrontend:
       # -- The maximum allowed value of spans per span set. 0 disables this limit.
       max_spans_per_span_set: 100
       # -- The maximum allowed value for the limit parameter on search requests. 0 disables this limit.
-      max_result_limit: 262144
+      # max_result_limit: 262144 maximum number of results returned by search requests
     # -- Trace by ID lookup configuration
     trace_by_id:
       # -- The number of shards to split a trace by ID query into.
