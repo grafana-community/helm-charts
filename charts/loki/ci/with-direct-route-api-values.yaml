@@ -7,6 +7,14 @@ loki:
       admin: admin
     type: s3
 
+
+read:
+  replicas: 1
+write:
+  replicas: 1
+backend:
+  replicas: 1
+
 # Disable the nginx gateway — direct route bypasses it
 gateway:
   enabled: false

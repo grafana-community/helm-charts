@@ -7,6 +7,13 @@ loki:
       admin: admin
     type: s3
 
+read:
+  replicas: 1
+write:
+  replicas: 1
+backend:
+  replicas: 1
+
 gateway:
   enabled: true
   route:
