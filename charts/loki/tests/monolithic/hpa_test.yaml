@@ -1,7 +1,7 @@
 # $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
 suite: monolithic hpa
 templates:
-  - templates/single-binary/hpa.yaml
+  - templates/monolithic/hpa.yaml
 set:
   deploymentMode: Monolithic
   singleBinary:
