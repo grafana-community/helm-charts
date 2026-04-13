@@ -9,12 +9,14 @@ loki:
       ruler: ruler
       admin: admin
 deploymentMode: SimpleScalable
+
 read:
   replicas: 1
 write:
   replicas: 1
 backend:
   replicas: 1
+
 sidecar:
   rules:
     enabled: true

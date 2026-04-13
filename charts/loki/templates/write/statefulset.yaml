@@ -24,6 +24,7 @@ spec:
   replicas: 0
   {{- else }}
   replicas: {{ .Values.write.replicas }}
+  {{- end }}
 {{- end }}
   podManagementPolicy: {{ .Values.write.podManagementPolicy }}
   updateStrategy:

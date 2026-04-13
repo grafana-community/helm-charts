@@ -676,7 +676,7 @@ http {
     {{- end }}
 
     {{- $monolithicHost := include "loki.fullname" . }}
-    {{- $monolithicUrl  := printf "%s://%s.%s.svc.%s:%s" $httpSchema $singleBinaryHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
+    {{- $monolithicUrl  := printf "%s://%s.%s.svc.%s:%s" $httpSchema $monolithicHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
 
     {{- $distributorHost := include "loki.resourceName" (dict "ctx" . "component" "distributor") }}
     {{- $ingesterHost := include "loki.resourceName" (dict "ctx" . "component" "ingester") }}
