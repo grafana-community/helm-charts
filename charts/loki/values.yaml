@@ -1716,6 +1716,15 @@ singleBinary:
     annotations: {}
     # -- Labels for volume claim
     labels: {}
+    # -- Parameters used for the `storage` volume when persistence.enabled is false.
+    # Allows replacing the default emptyDir volume with a custom volume definition.
+    # For example, to use an existing PVC:
+    #   dataVolumeParameters:
+    #     emptyDir: null
+    #     persistentVolumeClaim:
+    #       claimName: my-existing-pvc
+    dataVolumeParameters:
+      emptyDir: {}
 ######################################################################################################################
 #
 # Simple Scalable Deployment (SSD) Mode
