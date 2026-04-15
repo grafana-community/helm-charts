@@ -288,8 +288,8 @@ sensitiveKeys:
 {{- end -}}
 
 {{/*
- Give health port for dashboards sidecar
- */}}
+  Give health port for dashboards sidecar
+*/}}
 {{- define "grafana.sidecar.dashboards.healthPort" -}}
 {{- $healthPort := 8084 -}}
 {{- if hasKey .Values.sidecar.dashboards "startupProbe" -}}
