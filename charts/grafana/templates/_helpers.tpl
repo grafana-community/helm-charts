@@ -165,8 +165,8 @@ Formats imagePullSecrets. Input is (dict "root" . "imagePullSecrets" .{specific 
 
 
 {{/*
- Checks whether or not the configSecret secret has to be created
- */}}
+  Checks whether or not the configSecret secret has to be created
+*/}}
 {{- define "grafana.shouldCreateConfigSecret" -}}
 {{- $secretFound := false -}}
 {{- range $key, $value := .Values.datasources }}
@@ -239,12 +239,12 @@ sensitiveKeys:
 {{- end -}}
 
 {{/*
- Sidecars health port
- */}}
+  Sidecars health port
+*/}}
 
 {{/*
- Give health port for alerts sidecar
- */}}
+  Give health port for alerts sidecar
+*/}}
 {{- define "grafana.sidecar.alerts.healthPort" -}}
 {{- $healthPort := 8081 -}}
 {{- if hasKey .Values.sidecar.alerts "startupProbe" -}}
@@ -258,8 +258,8 @@ sensitiveKeys:
 {{- end -}}
 
 {{/*
- Give health port for datasources sidecar
- */}}
+  Give health port for datasources sidecar
+*/}}
 {{- define "grafana.sidecar.datasources.healthPort" -}}
 {{- $healthPort := 8082 -}}
 {{- if hasKey .Values.sidecar.datasources "startupProbe" -}}
@@ -273,8 +273,8 @@ sensitiveKeys:
 {{- end -}}
 
 {{/*
- Give health port for notifiers sidecar
- */}}
+  Give health port for notifiers sidecar
+*/}}
 {{- define "grafana.sidecar.notifiers.healthPort" -}}
 {{- $healthPort := 8083 -}}
 {{- if hasKey .Values.sidecar.notifiers "startupProbe" -}}
