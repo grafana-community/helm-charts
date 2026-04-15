@@ -1262,6 +1262,8 @@ queryFrontend:
   initContainers: []
   # -- Containers to add to the query-frontend pods
   extraContainers: []
+  # -- Additional ports to expose on the query-frontend container.
+  extraPorts: []
   # -- Extra volumes for query-frontend pods
   extraVolumeMounts: []
   # -- Extra volumes for query-frontend deployment

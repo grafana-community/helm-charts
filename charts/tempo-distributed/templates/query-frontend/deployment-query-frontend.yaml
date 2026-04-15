@@ -1,4 +1,48 @@
 {{ $dict := dict "ctx" . "component" "query-frontend" }}
+{{/*
+Build extraPorts by prepending the gRPC port that query-frontend exposes in addition to
+the two standard ports (http-memberlist, http-metrics) rendered by tempo.podTemplate.
+User-defined queryFrontend.extraPorts are appended after the fixed gRPC port.
+Duplicates are removed so that a user can override a port via queryFrontend.extraPorts
+without ending up with two entries for the same port.
+*/}}
+{{- $extraPorts := list (dict "containerPort" 9095 "name" "grpc" "protocol" "TCP") }}
+{{- $extraPorts = concat $extraPorts (.Values.queryFrontend.extraPorts | default list) | uniq }}
+{{/*
+Build extraContainers by optionally prepending the tempo-query sidecar when
+queryFrontend.query.enabled is true, then appending any user-defined extraContainers.
+*/}}
+{{- $extraContainers := list }}
+{{- if .Values.queryFrontend.query.enabled }}
+  {{- $queryContainer := dict
+    "name" "tempo-query"
+    "image" (include "tempo.queryImage" .)
+    "imagePullPolicy" .Values.tempo.image.pullPolicy
+    "args" (concat (list "-config=/conf/tempo.yaml") (.Values.queryFrontend.query.extraArgs | default list) (.Values.global.extraArgs | default list))
+    "ports" (list
+      (dict "containerPort" (.Values.queryFrontend.service.port | int) "name" "jaeger-ui")
+      (dict "containerPort" 16687 "name" "jaeger-metrics"))
+    "resources" .Values.queryFrontend.query.resources
+    "volumeMounts" (concat
+      (list (dict "mountPath" "/conf" "name" "config"))
+      (.Values.queryFrontend.query.extraVolumeMounts | default list))
+  }}
+  {{- if or .Values.global.extraEnv .Values.queryFrontend.query.extraEnv }}
+    {{- $env := concat (.Values.global.extraEnv | default list) (.Values.queryFrontend.query.extraEnv | default list) }}
+    {{- $queryContainer = merge $queryContainer (dict "env" $env) }}
+  {{- end }}
+  {{- if or .Values.global.extraEnvFrom .Values.queryFrontend.query.extraEnvFrom }}
+    {{- $envFrom := concat (.Values.global.extraEnvFrom | default list) (.Values.queryFrontend.query.extraEnvFrom | default list) }}
+    {{- $queryContainer = merge $queryContainer (dict "envFrom" $envFrom) }}
+  {{- end }}
+  {{- if .Values.tempo.securityContext }}
+    {{- $queryContainer = merge $queryContainer (dict "securityContext" .Values.tempo.securityContext) }}
+  {{- end }}
+  {{- $extraContainers = append $extraContainers $queryContainer }}
+{{- end }}
+{{- $extraContainers = concat $extraContainers (.Values.queryFrontend.extraContainers | default list) }}
+{{/* Merge computed extraPorts and extraContainers into a copy of the queryFrontend component dict */}}
+{{- $component := merge (dict "extraPorts" $extraPorts "extraContainers" $extraContainers) .Values.queryFrontend }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,178 +68,4 @@ spec:
       maxSurge: 0
       maxUnavailable: 1
   template:
-    metadata:
-      labels:
-        {{- include "tempo.podLabels" $dict | nindent 8 }}
-        {{- with .Values.tempo.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.queryFrontend.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap-tempo.yaml") . | sha256sum }}
-        {{- with .Values.tempo.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- with .Values.queryFrontend.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-    spec:
-      {{- if or (.Values.queryFrontend.priorityClassName) (.Values.global.priorityClassName) }}
-      priorityClassName: {{ default .Values.queryFrontend.priorityClassName .Values.global.priorityClassName }}
-      {{- end }}
-      serviceAccountName: {{ include "tempo.serviceAccountName" . }}
-      {{- with .Values.tempo.podSecurityContext }}
-      securityContext:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      enableServiceLinks: false
-      {{- include "tempo.queryImagePullSecrets" . | nindent 6 -}}
-      {{- with .Values.queryFrontend.hostAliases }}
-      hostAliases:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      initContainers:
-        {{- toYaml .Values.queryFrontend.initContainers | nindent 8 }}
-      containers:
-        - args:
-            - -target=query-frontend
-            - -config.file=/conf/tempo.yaml
-            {{- with .Values.queryFrontend.extraArgs }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with .Values.global.extraArgs }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-          image: {{ include "tempo.imageReference" $dict }}
-          imagePullPolicy: {{ .Values.tempo.image.pullPolicy }}
-          name: query-frontend
-          ports:
-            - containerPort: 3200
-              name: http-metrics
-            - containerPort: 9095
-              name: grpc
-          {{- include "tempo.componentEnv" (dict "extraEnv" (concat .Values.global.extraEnv .Values.queryFrontend.extraEnv) "resources" .Values.queryFrontend.resources "factor" .Values.global.goSettings.goMemLimitFactor "gogc" .Values.global.goSettings.gogc) | nindent 10 }}
-          {{- if or .Values.global.extraEnvFrom .Values.queryFrontend.extraEnvFrom }}
-          envFrom:
-            {{- with .Values.global.extraEnvFrom }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with .Values.queryFrontend.extraEnvFrom }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- end }}
-          {{- with or .Values.queryFrontend.livenessProbe .Values.tempo.livenessProbe }}
-          livenessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with or .Values.queryFrontend.readinessProbe .Values.tempo.readinessProbe }}
-          readinessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          resources:
-            {{- toYaml .Values.queryFrontend.resources | nindent 12 }}
-          {{- with .Values.tempo.securityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - mountPath: /conf
-              name: config
-            - mountPath: /runtime-config
-              name: runtime-config
-            - mountPath: /var/tempo
-              name: tempo-queryfrontend-store
-            {{- if .Values.enterprise.enabled }}
-            - name: license
-              mountPath: /license
-            {{- end }}
-            {{- with .Values.queryFrontend.extraVolumeMounts }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-        {{- if .Values.queryFrontend.query.enabled }}
-        - args:
-            - -config=/conf/tempo.yaml
-            {{- with .Values.queryFrontend.query.extraArgs }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with .Values.global.extraArgs }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-          image: {{ include "tempo.queryImage" . }}
-          imagePullPolicy: {{ .Values.tempo.image.pullPolicy }}
-          name: tempo-query
-          ports:
-            - containerPort: {{ .Values.queryFrontend.service.port }}
-              name: jaeger-ui
-            - containerPort: 16687
-              name: jaeger-metrics
-          {{- if or .Values.global.extraEnv .Values.queryFrontend.query.extraEnv }}
-          env:
-            {{- with .Values.global.extraEnv }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with .Values.queryFrontend.query.extraEnv }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- end }}
-          {{- if or .Values.global.extraEnvFrom .Values.queryFrontend.query.extraEnvFrom }}
-          envFrom:
-            {{- with .Values.global.extraEnvFrom }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with .Values.queryFrontend.query.extraEnvFrom }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- end }}
-          resources:
-            {{- toYaml .Values.queryFrontend.query.resources | nindent 12 }}
-          {{- with .Values.tempo.securityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - mountPath: /conf
-              name: config
-            {{- with .Values.queryFrontend.query.extraVolumeMounts }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-      {{- end}}
-        {{- with .Values.queryFrontend.extraContainers }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      terminationGracePeriodSeconds: {{ .Values.queryFrontend.terminationGracePeriodSeconds }}
-      {{- if semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version }}
-      {{- with .Values.queryFrontend.topologySpreadConstraints }}
-      topologySpreadConstraints:
-        {{- tpl . $ | nindent 8 }}
-      {{- end }}
-      {{- end }}
-      {{- with .Values.queryFrontend.affinity }}
-      affinity:
-        {{- tpl . $ | nindent 8 }}
-      {{- end }}
-      {{- with .Values.queryFrontend.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.queryFrontend.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      volumes:
-        - name: config
-          {{- include "tempo.configVolume" . | nindent 10 }}
-        - name: runtime-config
-          {{- include "tempo.runtimeVolume" . | nindent 10 }}
-        - name: tempo-queryfrontend-store
-          emptyDir: {}
-        {{- if .Values.enterprise.enabled }}
-        - name: license
-          secret:
-            secretName: {{ tpl .Values.license.secretName . }}
-        {{- end }}
-        {{- with .Values.queryFrontend.extraVolumes }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+    {{- include "tempo.podTemplate" (dict "ctx" $ "component" $component "target" "query-frontend") | nindent 4 }}
