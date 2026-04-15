@@ -997,6 +997,9 @@ querier:
   initContainers: []
   # -- Containers to add to the querier pods
   extraContainers: []
+  # -- Additional ports to expose on the querier container.
+  # Standard ports (http-metrics, http-memberlist) are always added automatically.
+  extraPorts: []
   # -- Extra volumes for querier pods
   extraVolumeMounts: []
   # -- Extra volumes for querier deployment
