@@ -115,6 +115,19 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Looks if there's an existing secret and reuse its password. If not it generates
 new password and use it.
 */}}
+{{- define "grafana.imageRenderer.token" -}}
+{{- $secret := (lookup "v1" "Secret" (include "grafana.namespace" .) (printf "%s-image-render" (include "grafana.imageRenderer.fullname" .)) ) }}
+{{- if $secret }}
+{{- index $secret "data" "token" }}
+{{- else }}
+{{- (randAlphaNum 40) | b64enc | quote }}
+{{- end }}
+{{- end }}
+
+{{/*
+Looks if there's an existing secret and reuse its password. If not it generates
+new password and use it.
+*/}}
 {{- define "grafana.password" -}}
 {{- $secret := (lookup "v1" "Secret" (include "grafana.namespace" .) (include "grafana.fullname" .) ) }}
 {{- if $secret }}
