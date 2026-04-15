@@ -1720,11 +1720,9 @@ singleBinary:
     # Allows replacing the default emptyDir volume with a custom volume definition.
     # For example, to use an existing PVC:
     #   dataVolumeParameters:
-    #     emptyDir: null
     #     persistentVolumeClaim:
     #       claimName: my-existing-pvc
-    dataVolumeParameters:
-      emptyDir: {}
+    dataVolumeParameters: {}
 ######################################################################################################################
 #
 # Simple Scalable Deployment (SSD) Mode
