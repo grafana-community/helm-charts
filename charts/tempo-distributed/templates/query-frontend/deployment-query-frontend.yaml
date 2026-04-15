@@ -1,14 +1,5 @@
 {{ $dict := dict "ctx" . "component" "query-frontend" }}
 {{/*
-Build extraPorts by prepending the gRPC port that query-frontend exposes in addition to
-the two standard ports (http-memberlist, http-metrics) rendered by tempo.podTemplate.
-User-defined queryFrontend.extraPorts are appended after the fixed gRPC port.
-Duplicates are removed so that a user can override a port via queryFrontend.extraPorts
-without ending up with two entries for the same port.
-*/}}
-{{- $extraPorts := list (dict "containerPort" 9095 "name" "grpc" "protocol" "TCP") }}
-{{- $extraPorts = concat $extraPorts (.Values.queryFrontend.extraPorts | default list) | uniq }}
-{{/*
 Build extraContainers by optionally prepending the tempo-query sidecar when
 queryFrontend.query.enabled is true, then appending any user-defined extraContainers.
 */}}
@@ -41,8 +32,8 @@ queryFrontend.query.enabled is true, then appending any user-defined extraContai
   {{- $extraContainers = append $extraContainers $queryContainer }}
 {{- end }}
 {{- $extraContainers = concat $extraContainers (.Values.queryFrontend.extraContainers | default list) }}
-{{/* Merge computed extraPorts and extraContainers into a copy of the queryFrontend component dict */}}
-{{- $component := merge (dict "extraPorts" $extraPorts "extraContainers" $extraContainers) .Values.queryFrontend }}
+{{/* Merge computed extraContainers into a copy of the queryFrontend component dict */}}
+{{- $component := merge (dict "extraContainers" $extraContainers) .Values.queryFrontend }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
