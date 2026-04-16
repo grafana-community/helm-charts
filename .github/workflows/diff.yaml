@@ -109,6 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.generate-jobs.outputs.changed == 'true'
     strategy:
+      fail-fast: false
       matrix:
         valuefile: ${{ fromJson(needs.generate-jobs.outputs.values_files_json) }}
     steps:
@@ -140,6 +141,13 @@ jobs:
       - name: Apply Gateway API CRDs
         run: kubectl apply -k https://github.com/kubernetes-sigs/gateway-api/config/crd
 
+      - name: Apply KEDA CRDs
+        run: kubectl apply --server-side -f "https://github.com/kedacore/keda/releases/download/v${KEDA_VERSION}/keda-${KEDA_VERSION}-crds.yaml"
+        env:
+          #renovate: github=kedacore/keda
+          KEDA_VERSION: 2.19.0
+
+
       - name: Run diff for value file
         env:
           value_file: "${{ matrix.valuefile }}"
@@ -152,6 +160,9 @@ jobs:
           # extract chart name from path like charts/<chart>/ci/<file>
           # dirname twice: charts/<chart>/ci -> charts/<chart>, basename -> <chart>
           chart="$(basename "$(dirname "$(dirname "$value_file")")")"
+
+          helm dependency update "./target/charts/$chart"
+          helm dependency update "./charts/$chart"
 
           # install current target chart into cluster so helm diff has a baseline
           helm upgrade -i "$chart" "./target/charts/$chart" \
