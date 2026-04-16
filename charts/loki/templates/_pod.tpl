@@ -37,12 +37,9 @@ spec:
     {{- tpl ( . | toYaml) $ctx | nindent 4 }}
   {{- end }}
   serviceAccountName: {{ include "loki.serviceAccountName" (dict "ctx" . "component" (eq $target "single-binary" | ternary .Values $component) "target" (replace "single-binary" "" $target) ) }}
-  {{- if (kindIs "bool" $component.enableServiceLinks) }}
-  enableServiceLinks: {{ $component.enableServiceLinks }}
-  {{- else if (kindIs "bool" .Values.defaults.enableServiceLinks) }}
-  enableServiceLinks: {{ .Values.defaults.enableServiceLinks }}
-  {{- else if (kindIs "bool" .Values.loki.enableServiceLinks) }}
-  enableServiceLinks: {{ .Values.loki.enableServiceLinks }}
+  {{- $esl := include "loki.enableServiceLinks" (dict "component" $component "ctx" .) }}
+  {{- if $esl }}
+  {{ $esl }}
   {{- end }}
   {{- if (kindIs "bool" $component.automountServiceAccountToken) }}
   automountServiceAccountToken: {{ $component.automountServiceAccountToken }}
@@ -80,7 +77,7 @@ spec:
   {{- end }}
   {{- with $component.initContainers }}
   initContainers:
-    {{- if kindIs "map" . }}
+    {{- if kindIs "slice" . }}
       {{- tpl (toYaml .) $ctx | nindent 4 }}
     {{- else if kindIs "string" . }}
       {{- tpl . $ctx | nindent 4 }}
@@ -193,7 +190,7 @@ spec:
         name: {{ include "loki.resourceName" (dict "ctx" $ctx "component" $target "suffix" (include "loki.rulerRulesDirName" $dir)) }}
     {{- end }}
     {{- end }}
-    {{- with (coalesce $component.extraVolumes .Values.defaults.extraVolumes .Values.global.extraVolumes) }}
+    {{- with (concat .Values.global.extraVolumes .Values.defaults.extraVolumes $component.extraVolumes) | uniq }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   containers:
@@ -282,7 +279,7 @@ spec:
         {{- with (concat .Values.global.extraVolumeMounts .Values.defaults.extraVolumeMounts $component.extraVolumeMounts) | uniq }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- with $component.resources }}
+      {{- with (coalesce $component.resources .Values.defaults.resources .Values.loki.resources) }}
       resources:
         {{- toYaml . | nindent 8 }}
       {{- end }}
