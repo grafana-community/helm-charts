@@ -1453,7 +1453,7 @@ containers:
       - name: GF_RENDERING_RENDERER_TOKEN
         valueFrom:
           secretKeyRef:
-            name: {{ include "grafana.imageRenderer.fullname" . }}-image-renderer
+            name: {{ .Values.imageRenderer.existingSecret | default (printf "%s-image-renderer" (include "grafana.imageRenderer.fullname" .)) }}
             key: token
       {{- end }}
       - name: GF_PATHS_DATA
