@@ -116,7 +116,7 @@ Looks if there's an existing secret and reuse its password. If not it generates
 new password and use it.
 */}}
 {{- define "grafana.imageRenderer.token" -}}
-{{- $secret := (lookup "v1" "Secret" (include "grafana.namespace" .) (printf "%s-image-render" (include "grafana.imageRenderer.fullname" .)) ) }}
+{{- $secret := (lookup "v1" "Secret" (include "grafana.namespace" .) (printf "%s-image-renderer" (include "grafana.imageRenderer.fullname" .)) ) }}
 {{- if $secret }}
 {{- index $secret "data" "token" }}
 {{- else }}
