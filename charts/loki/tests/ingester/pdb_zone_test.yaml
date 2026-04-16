@@ -9,8 +9,8 @@ set:
   loki.storage.bucketNames.admin: admin
   ingester.zoneAwareReplication.enabled: true
   ingester.replicas: 3
+  ingester.maxUnavailable: 1
   ingester.podDisruptionBudget.enabled: true
-  ingester.podDisruptionBudget.maxUnavailable: 1
 tests:
   - it: should not render when zoneAwareReplication is disabled
     set:
