@@ -172,7 +172,14 @@ defaults:
 # @default -- See values.yaml
 loki:
   # Configures the liveness probe for all of the Loki pods
-  livenessProbe: {}
+  livenessProbe:
+    httpGet:
+      path: /loki/api/v1/status/buildinfo
+      port: http-metrics
+    periodSeconds: 30
+    successThreshold: 1
+    failureThreshold: 10
+    timeoutSeconds: 1
   # Configures the readiness probe for all of the Loki pods
   readinessProbe:
     httpGet:
@@ -491,7 +498,15 @@ loki:
   # -- memberlist configuration (overrides embedded default)
   memberlistConfig: {}
   # -- Extra memberlist configuration
-  extraMemberlistConfig: {}
+  extraMemberlistConfig:
+    abort_if_cluster_join_fails: true
+    advertise_addr: ${HASH_RING_INSTANCE_ADDR}
+    advertise_port: 7946
+    bind_port: 7946
+    max_join_backoff: 1m
+    max_join_retries: 10
+    min_join_backoff: 1s
+    rejoin_interval: 90s
   # -- Tenants list to be created on nginx htpasswd file, with name and password or passwordHash keys<br><br>
   # Example:
   # <pre>
@@ -504,10 +519,18 @@ loki:
   tenants: []
   # -- Check https://grafana.com/docs/loki/latest/configuration/#server for more info on the server configuration.
   server:
-    http_listen_port: 3100
+    graceful_shutdown_timeout: 5s
     grpc_listen_port: 9095
-    http_server_read_timeout: 600s
-    http_server_write_timeout: 600s
+    grpc_server_min_time_between_pings: '10s'
+    grpc_server_ping_without_stream_allowed: true
+    grpc_server_max_concurrent_streams: 1000
+    grpc_server_max_recv_msg_size: 104857600
+    grpc_server_max_send_msg_size: 104857600
+    http_listen_port: 3100
+    http_server_idle_timeout: 30s
+    http_server_read_timeout: 10m0s
+    http_server_write_timeout: 10m0s
+    log_level: info
   service:
     # -- trafficDistribution for services
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
@@ -1716,6 +1739,13 @@ singleBinary:
     annotations: {}
     # -- Labels for volume claim
     labels: {}
+    # -- Parameters used for the `storage` volume when persistence.enabled is false.
+    # Allows replacing the default emptyDir volume with a custom volume definition.
+    # For example, to use an existing PVC:
+    #   dataVolumeParameters:
+    #     persistentVolumeClaim:
+    #       claimName: my-existing-pvc
+    dataVolumeParameters: {}
 ######################################################################################################################
 #
 # Simple Scalable Deployment (SSD) Mode
@@ -5228,9 +5258,25 @@ sidecar:
   # -- Ensure that rule files aren't conflicting and being overwritten by prefixing their name with the namespace they are defined in.
   enableUniqueFilenames: false
   # -- Readiness probe definition. Probe is disabled on the sidecar by default.
-  readinessProbe: {}
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http-sidecar
+    periodSeconds: 10
+    initialDelaySeconds: 3
+    successThreshold: 1
+    failureThreshold: 3
+    timeoutSeconds: 1
   # -- Liveness probe definition. Probe is disabled on the sidecar by default.
-  livenessProbe: {}
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http-sidecar
+    periodSeconds: 30
+    initialDelaySeconds: 30
+    successThreshold: 1
+    failureThreshold: 3
+    timeoutSeconds: 1
   # -- Startup probe definition. Probe is disabled on the sidecar by default.
   startupProbe: {}
   rules:
@@ -5267,6 +5313,8 @@ sidecar:
     watchClientTimeout: 60
     # -- Log level of the sidecar container.
     logLevel: INFO
+    # -- Health Server port of the sidecar container.
+    healthPort: 8080
 
 # -- Monitoring section determines which monitoring features to enable
 monitoring:

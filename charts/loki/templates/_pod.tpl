@@ -141,7 +141,7 @@ spec:
         sizeLimit: {{ . }}
         {{- end }}
       {{- else }}
-      {{- tpl (toYaml (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict)) $component)) $ctx | nindent 6 }}
+      {{- tpl (toYaml (dig "persistence" "dataVolumeParameters" (dict) $component | default (dict "emptyDir" (dict)))) $ctx | nindent 6 }}
       {{- end }}
     {{- else if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq (dig "persistence" "type" "" $component) "pvc") (eq $component.kind "Deployment") }}
     - name: {{ eq $target "single-binary" | ternary "storage" "data" }}
@@ -210,6 +210,7 @@ spec:
       args:
         {{- if ne $target "canary" }}
         - -config.file=/etc/loki/config/config.yaml
+        - -config.expand-env=true
         - -target={{ replace "single-binary" "all" $target }}{{- if and .Values.loki.ui.enabled (has $target (list "single-binary" "read" "query-frontend" "querier")) }},ui{{- end }}
         {{- end }}
         {{- with $args }}
@@ -311,10 +312,16 @@ spec:
 rules sidecar
 */}}
 {{- define "loki.rulesSidecar" -}}
-{{- if .Values.sidecar.rules.enabled }}
+{{- if .Values.sidecar.rules.enabled -}}
 - name: loki-sc-rules
   image: {{ include "loki.image" (dict "ctx" . "component" .Values.sidecar.image) }}
   imagePullPolicy: {{ .Values.sidecar.image.pullPolicy }}
+  {{- if .Values.sidecar.rules.healthPort }}
+  ports:
+    - name: http-sidecar
+      containerPort: {{ .Values.sidecar.rules.healthPort }}
+      protocol: TCP
+  {{- end }}
   {{- with .Values.sidecar.resources }}
   resources:
     {{- toYaml . | nindent 4 }}
@@ -389,6 +396,10 @@ rules sidecar
     {{- if .Values.sidecar.rules.logLevel }}
     - name: LOG_LEVEL
       value: "{{ .Values.sidecar.rules.logLevel }}"
+    {{- end }}
+    {{- if .Values.sidecar.rules.healthPort }}
+    - name: HEALTH_PORT
+      value: "{{ .Values.sidecar.rules.healthPort }}"
     {{- end }}
   volumeMounts:
     - name: sc-rules-temp

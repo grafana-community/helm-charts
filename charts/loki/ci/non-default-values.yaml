@@ -84,6 +84,7 @@ backend:
 ruler:
   replicas: 2
   affinity: null
+  sidecar: true
   directories:
     fake:
       alerts.yaml: |
