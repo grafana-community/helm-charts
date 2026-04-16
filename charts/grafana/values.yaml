@@ -1474,6 +1474,8 @@ imageRenderer:
   serverURL: ""
   # The callback url of grafana instances if it is not in the same namespace with the remote image renderer
   renderingCallbackURL: ""
+  # Token used for authentication between Grafana and the remote image renderer.
+  token: ""
   image:
     # -- The Docker registry
     registry: docker.io

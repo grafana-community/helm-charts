@@ -1450,6 +1450,11 @@ containers:
         {{- else }}
         value: {{ .Values.imageRenderer.grafanaProtocol }}://{{ include "grafana.fullname" . }}.{{ include "grafana.namespace" . }}:{{ .Values.service.port }}/{{ .Values.imageRenderer.grafanaSubPath }}
         {{- end }}
+      - name: GF_RENDERING_RENDERER_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: {{ include "grafana.imageRenderer.fullname" . }}-image-renderer
+            key: token
       {{- end }}
       - name: GF_PATHS_DATA
         value: {{ (get .Values "grafana.ini").paths.data }}
