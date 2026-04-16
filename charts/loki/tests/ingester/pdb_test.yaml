@@ -9,6 +9,7 @@ set:
   loki.storage.bucketNames.admin: admin
   ingester.zoneAwareReplication.enabled: false
   ingester.replicas: 3
+  ingester.maxUnavailable: 1
   ingester.podDisruptionBudget.enabled: true
   ingester.podDisruptionBudget.maxUnavailable: 1
 tests:
