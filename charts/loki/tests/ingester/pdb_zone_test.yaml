@@ -61,6 +61,7 @@ tests:
       - equal:
           path: spec.maxUnavailable
           value: 1
+
   - it: should use podDisruptionBudget.maxUnavailable when set
     set:
       ingester.podDisruptionBudget.maxUnavailable: 2
