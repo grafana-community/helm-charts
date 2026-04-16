@@ -7,6 +7,34 @@ See https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#sy
 {{- end }}
 
 {{/*
+Safely convert a value to int with fallback.
+
+Accepts int, float64 (e.g. 15.0), or numeric strings (e.g. "15").
+Falls back to default for invalid values (e.g. "abc", nil).
+
+Usage:
+  {{ include "loki.safeInt" (dict "value" $v "default" 30) }}
+
+Args:
+  value: input value to convert
+  default: fallback integer if value is invalid
+*/}}
+{{- define "loki.safeInt" -}}
+{{- $v := index . "value" -}}
+{{- $default := index . "default" -}}
+
+{{- if or
+  (kindIs "int" $v)
+  (kindIs "float64" $v)
+  (and (kindIs "string" $v) (eq (toString (toString $v | int)) $v))
+}}
+  {{- toString $v | int -}}
+{{- else -}}
+  {{- $default -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Expand the name of the chart.
 */}}
 {{- define "loki.name" -}}

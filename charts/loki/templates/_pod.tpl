@@ -141,7 +141,7 @@ spec:
         sizeLimit: {{ . }}
         {{- end }}
       {{- else }}
-      {{- tpl (toYaml (dig "persistence" "dataVolumeParameters" (dict "emptyDir" (dict)) $component)) $ctx | nindent 6 }}
+      {{- tpl (toYaml (dig "persistence" "dataVolumeParameters" (dict) $component | default (dict "emptyDir" (dict)))) $ctx | nindent 6 }}
       {{- end }}
     {{- else if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq (dig "persistence" "type" "" $component) "pvc") (eq $component.kind "Deployment") }}
     - name: {{ eq $target "single-binary" | ternary "storage" "data" }}
@@ -311,7 +311,7 @@ spec:
 rules sidecar
 */}}
 {{- define "loki.rulesSidecar" -}}
-{{- if .Values.sidecar.rules.enabled }}
+{{- if .Values.sidecar.rules.enabled -}}
 - name: loki-sc-rules
   image: {{ include "loki.image" (dict "ctx" . "component" .Values.sidecar.image) }}
   imagePullPolicy: {{ .Values.sidecar.image.pullPolicy }}
