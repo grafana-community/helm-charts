@@ -1476,6 +1476,8 @@ imageRenderer:
   renderingCallbackURL: ""
   # Token used for authentication between Grafana and the remote image renderer.
   token: ""
+  # Use an existing secret for the image renderer token. Must contain a key named "token".
+  existingSecret: ""
   image:
     # -- The Docker registry
     registry: docker.io
