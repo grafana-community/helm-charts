@@ -1133,6 +1133,8 @@ gateway:
   podDisruptionBudget:
     # -- Enable Pod Disruption Budget
     enabled: true
+    # -- Pod Disruption Budget maxUnavailable
+    maxUnavailable: 1
     # -- Annotations for Pod Disruption Budget
     annotations: {}
     # -- Labels for Pod Disruption Budget
