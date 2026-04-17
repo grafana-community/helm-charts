@@ -91,7 +91,7 @@ spec:
     - ports: 
       - port: http-metrics
         protocol: TCP
-  {{- if .Values.networkPolicy.metrics.cidrs }}
+  {{- if or .Values.networkPolicy.metrics.cidrs .Values.networkPolicy.metrics.namespaceSelector }}
     {{- range $cidr := .Values.networkPolicy.metrics.cidrs }}
     toCIDR:
     - {{ $cidr }}
