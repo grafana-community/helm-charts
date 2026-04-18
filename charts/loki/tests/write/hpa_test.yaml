@@ -69,20 +69,6 @@ tests:
           path: spec.behavior.scaleUp.policies[0].value
           value: 2
 
-  - it: should render behavior when enabled flag is omitted
-    set:
-      write:
-        autoscaling:
-          behavior:
-            scaleDown:
-              stabilizationWindowSeconds: 300
-    asserts:
-      - hasDocuments:
-          count: 1
-      - equal:
-          path: spec.behavior.scaleDown.stabilizationWindowSeconds
-          value: 300
-
   - it: should render customMetrics when provided
     set:
       write:

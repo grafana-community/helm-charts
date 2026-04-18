@@ -27,10 +27,8 @@ spec:
   minReplicas: {{ $component.autoscaling.minReplicas }}
   maxReplicas: {{ $component.autoscaling.maxReplicas }}
   {{- $behavior := $component.autoscaling.behavior | default dict }}
-  {{- $hasEnabled := hasKey $behavior "enabled" }}
   {{- $enabled := get $behavior "enabled" | default false }}
-  {{- $renderBehavior := ternary $enabled (not (empty (omit $behavior "enabled"))) $hasEnabled }}
-  {{- if $renderBehavior }}
+  {{- if $enabled }}
   behavior:
     {{- toYaml (omit $behavior "enabled") | nindent 4 }}
   {{- end }}
