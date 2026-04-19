@@ -73,6 +73,7 @@ ingester:
 sidecar:
   rules:
     enabled: true
+ignoreMinioDeprecation: true
 minio:
   enabled: true
 read:

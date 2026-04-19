@@ -5359,7 +5359,10 @@ rollout_operator:
     timeoutSeconds: 10
     # -- Validating and mutating webhook failure policy. `Ignore` or `Fail`.
     failurePolicy: "Ignore"
-# -- Configuration for the minio subchart
+# -- Ignore MinIO deprecation validation when `minio.enabled=true`. This is a temporary compatibility escape hatch.
+ignoreMinioDeprecation: false
+
+# -- Configuration for the minio subchart (deprecated)
 minio:
   enabled: false
   replicas: 1
