@@ -6,6 +6,10 @@
 {{- fail "Helm test requires the Loki Canary to be enabled"}}
 {{- end }}
 
+{{- if and .Values.minio.enabled (not .Values.ignoreMinioDeprecation) }}
+{{- fail "The Loki chart builtin MinIO dependency is deprecated. Configure an external object storage backend instead. To proceed temporarily, set ignoreMinioDeprecation=true."}}
+{{- end }}
+
 {{- $monolithicReplicas := int .Values.singleBinary.replicas }}
 {{- $isUsingFilesystem := eq (include "loki.isUsingObjectStorage" .) "false" }}
 {{- $atLeastOneScalableReplica := or (gt (int .Values.backend.replicas) 0) (gt (int .Values.read.replicas) 0) (gt (int .Values.write.replicas) 0) }}

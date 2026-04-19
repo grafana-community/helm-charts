@@ -1,0 +1,21 @@
+suite: chart validation
+templates:
+  - templates/validate.yaml
+
+tests:
+  - it: should fail when minio is enabled without deprecation override
+    set:
+      loki.useTestSchema: true
+      minio.enabled: true
+    asserts:
+      - failedTemplate:
+          message: "The Loki chart builtin MinIO dependency is deprecated. Configure an external object storage backend instead. To proceed temporarily, set ignoreMinioDeprecation=true."
+
+  - it: should allow minio when deprecation override is enabled
+    set:
+      loki.useTestSchema: true
+      minio.enabled: true
+      ignoreMinioDeprecation: true
+    asserts:
+      - hasDocuments:
+          count: 0

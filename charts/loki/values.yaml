@@ -5155,7 +5155,10 @@ rollout_operator:
     runAsNonRoot: true
     seccompProfile:
       type: RuntimeDefault
-# -- Configuration for the minio subchart
+# -- Ignore MinIO deprecation validation when `minio.enabled=true`. This is a temporary compatibility escape hatch.
+ignoreMinioDeprecation: false
+
+# -- Configuration for the minio subchart (deprecated)
 minio:
   enabled: false
   replicas: 1
