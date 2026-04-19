@@ -53,6 +53,125 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### From 13.x to 14.0.0
+
+The built-in MinIO subchart is now **officially deprecated**. Enabling `minio.enabled=true` now fails chart rendering by default.
+
+Actions required:
+1. Configure a dedicated external object storage backend instead of the built-in MinIO dependency
+   (for example: AWS S3, GCS, or Azure Blob). Potential self-hosted S3-compatible options include
+   RustFS and Garage; validate production suitability for your environment before adoption.
+2. Deploy a transition release that keeps old MinIO data readable but writes new data to the external store.
+3. Keep both stores configured until old data in MinIO has aged out according to retention.
+4. Remove the MinIO-related config only after retention has fully elapsed.
+
+Recommended migration values flow:
+
+Before (legacy state using built-in MinIO):
+
+```yaml
+minio:
+  enabled: true
+
+loki:
+  schemaConfig:
+    configs:
+      - from: "2024-01-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+```
+
+Transition release (temporary dual-store period):
+
+```yaml
+# Temporary escape hatch while migrating
+ignoreMinioDeprecation: true
+minio:
+  enabled: true
+
+loki:
+  # Use structuredConfig so you can configure named stores explicitly
+  structuredConfig:
+    storage_config:
+      named_stores:
+        aws:
+          minio:
+            endpoint: '{{ include "loki.minio" $ }}'
+            bucketnames: chunks
+            secret_access_key: '{{ $.Values.minio.rootPassword }}'
+            access_key_id: '{{ $.Values.minio.rootUser }}'
+            s3forcepathstyle: true
+            insecure: true
+          s3-loki-chunks:
+            endpoint: 's3.example.com'
+            bucketnames: chunks
+            access_key_id: '<s3-access-key>'
+            secret_access_key: '<s3-secret-key>'
+            s3forcepathstyle: true
+            insecure: true
+    schema_config:
+      configs:
+        # Keep old data in MinIO readable
+        - from: "2024-01-01"
+          store: tsdb
+          object_store: minio
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+        # Write new data to external S3
+        - from: "2026-05-01" # Adjust this date as needed based on your retention period. Should be in the near future
+          store: tsdb
+          object_store: s3-loki-chunks
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+```
+
+Final release (after retention has elapsed):
+
+The chart still requires `loki.storage.bucketNames` for helper-generated storage sections such as `common.storage` and ruler storage.
+
+```yaml
+loki:
+  storage:
+    bucketNames:
+      chunks: chunks
+      ruler: ruler
+  structuredConfig:
+    storage_config:
+      named_stores:
+        aws:
+          s3-loki-chunks:
+            endpoint: 's3.example.com'
+            bucketnames: chunks
+            access_key_id: '<s3-access-key>'
+            secret_access_key: '<s3-secret-key>'
+            s3forcepathstyle: true
+            insecure: true
+    schema_config:
+      configs:
+        - from: "2026-05-01"
+          store: tsdb
+          object_store: s3-loki-chunks
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+```
+
+Reference docs:
+- <https://grafana.com/docs/loki/latest/operations/storage/schema/>
+- <https://grafana.com/docs/loki/latest/configure/storage/>
+- Potential self-hosted S3-compatible options:
+  - RustFS: <https://docs.rustfs.com/installation/docker/>
+  - Garage: <https://garagehq.deuxfleurs.fr/documentation/quick-start/>
+
 ### From 12.x to 13.0.0 ([#258](https://github.com/grafana-community/helm-charts/pull/258))
 
 The persistence configuration for ephemeral volumes has been flattened.
