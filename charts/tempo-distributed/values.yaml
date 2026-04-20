@@ -2622,6 +2622,8 @@ gateway:
     tlsSecretName: ''
     # -- Allows overriding the DNS resolver address nginx will use
     resolver: ''
+    # -- Configures whether or not NGINX bind IPv6
+    enableIPv6: false
     # -- Config file contents for Nginx. Passed through the `tpl` function to allow templating
     # @default -- See values.yaml
     file: |
@@ -2671,6 +2673,9 @@ gateway:
 
         server {
           listen             8080 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
+          {{- if .Values.gateway.nginxConfig.enableIPv6 }}
+          listen             [::]:8080 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
+          {{- end }}
 
           {{- if .Values.streamOverHTTPEnabled }}
           http2 on;
