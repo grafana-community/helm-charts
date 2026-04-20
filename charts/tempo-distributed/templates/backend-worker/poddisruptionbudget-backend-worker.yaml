@@ -1,5 +1,5 @@
-{{- if and (not .Values.backendScheduler.enabled) (gt (int .Values.compactor.replicas) 1) .Values.compactor.podDisruptionBudget.enabled }}
-{{ $dict := dict "ctx" . "component" "compactor" "memberlist" true }}
+{{- if and .Values.backendScheduler.enabled (gt (int .Values.backendWorker.replicas) 1) .Values.backendWorker.podDisruptionBudget.enabled }}
+{{ $dict := dict "ctx" . "component" "backend-worker" "memberlist" true }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -11,6 +11,6 @@ spec:
   selector:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
-  maxUnavailable: {{ .Values.compactor.maxUnavailable }}
+  maxUnavailable: {{ .Values.backendWorker.maxUnavailable }}
 {{- end }}
 {{- end }}

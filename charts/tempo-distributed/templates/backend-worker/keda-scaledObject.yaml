@@ -1,0 +1,28 @@
+{{- if and .Values.backendScheduler.enabled .Values.backendWorker.autoscaling.enabled .Values.backendWorker.autoscaling.keda.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "tempo.resourceName" (dict "ctx" . "component" "backend-worker") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.labels" (dict "ctx" . "component" "backend-worker") | nindent 4 }}
+spec:
+  minReplicaCount: {{ .Values.backendWorker.autoscaling.minReplicas }}
+  maxReplicaCount: {{ .Values.backendWorker.autoscaling.maxReplicas }}
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "tempo.resourceName" (dict "ctx" . "component" "backend-worker") }}
+  triggers:
+  {{- range .Values.backendWorker.autoscaling.keda.triggers }}
+  - type: {{ .type | quote }}
+    metadata:
+      serverAddress: {{ .metadata.serverAddress }}
+      threshold: {{ .metadata.threshold | quote }}
+      query: |
+        {{- .metadata.query | nindent 8 }}
+      {{- if .metadata.customHeaders }}
+      customHeaders: {{ .metadata.customHeaders }}
+      {{- end }}
+  {{- end }}
+{{- end }}

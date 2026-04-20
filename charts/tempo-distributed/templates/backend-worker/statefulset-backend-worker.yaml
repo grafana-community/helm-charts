@@ -1,0 +1,31 @@
+{{- if .Values.backendScheduler.enabled }}
+{{- $dict := dict "ctx" . "component" "backend-worker" "memberlist" true -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "tempo.resourceName" $dict }}
+  namespace: {{ .Release.Namespace }}
+  {{- with .Values.backendWorker.annotations }}
+  annotations:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "tempo.labels" $dict | nindent 4 }}
+    {{- with .Values.backendWorker.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+{{- if not .Values.backendWorker.autoscaling.enabled }}
+  replicas: {{ .Values.backendWorker.replicas }}
+{{- end }}
+  revisionHistoryLimit: {{ .Values.tempo.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "tempo.selectorLabels" $dict | nindent 6 }}
+  serviceName: backend-worker
+  podManagementPolicy: Parallel
+  updateStrategy:
+    {{- toYaml .Values.backendWorker.statefulStrategy | nindent 4 }}
+  template:
+    {{- include "tempo.podTemplate" (dict "ctx" $ "component" .Values.backendWorker "target" "backend-worker") | nindent 4 }}
+{{- end }}

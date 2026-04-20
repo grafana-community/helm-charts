@@ -1,24 +1,25 @@
-{{- if and (not .Values.backendScheduler.enabled) }}
+{{- if .Values.backendScheduler.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "tempo.resourceName" (dict "ctx" . "component" "compactor") }}
+  name: {{ template "tempo.resourceName" (dict "ctx" . "component" "backend-worker") }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "tempo.labels" (dict "ctx" . "component" "compactor") | nindent 4 }}
-  {{- with .Values.compactor.service.annotations }}
+    {{- include "tempo.labels" (dict "ctx" . "component" "backend-worker") | nindent 4 }}
+  {{- with .Values.backendWorker.service.annotations }}
   annotations:
     {{- tpl (toYaml . | nindent 4) $ }}
   {{- end }}
 spec:
   type: ClusterIP
+  clusterIP: None
   ports:
     - name: http-metrics
       port: 3200
       targetPort: http-metrics
       protocol: TCP
   selector:
-    {{- include "tempo.selectorLabels" (dict "ctx" . "component" "compactor") | nindent 4 }}
+    {{- include "tempo.selectorLabels" (dict "ctx" . "component" "backend-worker") | nindent 4 }}
   ipFamilies: {{ .Values.tempo.service.ipFamilies }}
   ipFamilyPolicy: {{ .Values.tempo.service.ipFamilyPolicy }}
 {{- end }}
