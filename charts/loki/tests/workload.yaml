@@ -1,0 +1,580 @@
+suite: Compactor workload tests
+templates:
+  - templates/compactor/workload.yaml
+  - templates/config.yaml
+set:
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: should not render compactor when not in Distributed mode
+    set:
+      deploymentMode: "SimpleScalable"
+      compactor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/compactor/workload.yaml
+  - it: should render StatefulSet with PVC volumeClaimTemplates when persistence.type is pvc
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.kind: StatefulSet
+      compactor.replicas: 3
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.enableStatefulSetAutoDeletePVC: true
+      compactor.persistence.whenDeleted: Delete
+      compactor.persistence.whenScaled: Delete
+      compactor.persistence.claims:
+        - name: data
+          size: 5Gi
+          storageClass: standard
+          accessModes:
+            - ReadWriteOnce
+          annotations:
+            ann: val
+          labels:
+            lbl: val
+          volumeAttributesClassName: foo
+          selector:
+            matchLabels:
+              foo: bar
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: StatefulSet
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-compactor
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: data
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: "5Gi"
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: standard
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.annotations.ann
+          value: val
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.labels.lbl
+          value: val
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.persistentVolumeClaimRetentionPolicy.whenDeleted
+          value: Delete
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.persistentVolumeClaimRetentionPolicy.whenScaled
+          value: Delete
+        template: templates/compactor/workload.yaml
+      - notExists:
+          path: spec.template.spec.volumes[3].persistentVolumeClaim
+        template: templates/compactor/workload.yaml
+
+  - it: should render StatefulSet specific fields when compactor.kind is StatefulSet
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.kind: StatefulSet
+      compactor.replicas: 1
+      compactor.strategy:
+        rollingUpdate:
+          partition: 2
+    asserts:
+      - isKind:
+          of: StatefulSet
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.podManagementPolicy
+          value: Parallel
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-loki-compactor-headless
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.updateStrategy.rollingUpdate.partition
+          value: 2
+        template: templates/compactor/workload.yaml
+      - notExists:
+          path: spec.strategy
+        template: templates/compactor/workload.yaml
+
+  - it: should render Deployment specific fields when compactor.kind is Deployment
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.kind: Deployment
+      compactor.replicas: 1
+      compactor.strategy:
+        type: Recreate
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.enableStatefulSetAutoDeletePVC: true
+    asserts:
+      - isKind:
+          of: Deployment
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.strategy.type
+          value: Recreate
+        template: templates/compactor/workload.yaml
+      - notExists:
+          path: spec.serviceName
+        template: templates/compactor/workload.yaml
+      - notExists:
+          path: spec.podManagementPolicy
+        template: templates/compactor/workload.yaml
+      - notExists:
+          path: spec.updateStrategy
+        template: templates/compactor/workload.yaml
+      - notExists:
+          path: spec.persistentVolumeClaimRetentionPolicy
+        template: templates/compactor/workload.yaml
+
+  - it: should fail rendering when using Deployment with PVC and replicas > 1
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.kind: Deployment
+      compactor.replicas: 2
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+    asserts:
+      - failedTemplate:
+          message: "Persistence with PVC is not supported for Deployment with more than 1 replica"
+        template: templates/compactor/workload.yaml
+
+  - it: should not create volumeClaimTemplates when persistence.type is not pvc
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.kind: StatefulSet
+      compactor.replicas: 1
+      compactor.persistence.enabled: true
+      compactor.persistence.type: ephemeral
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/compactor/workload.yaml
+      - notExists:
+          path: spec.volumeClaimTemplates
+        template: templates/compactor/workload.yaml
+
+  - it: empty storageClass '-' should result in empty storageClassName on PVC
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.kind: StatefulSet
+      compactor.replicas: 1
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 1Gi
+          storageClass: "-"
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: ""
+        template: templates/compactor/workload.yaml
+
+  - it: should render pod spec settings for compactor
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.replicas: 1
+      serviceAccount.name: custom-sa
+      defaults.enableServiceLinks: false
+      defaults.automountServiceAccountToken: true
+      compactor.dnsConfig:
+        options:
+          - name: ndots
+            value: "2"
+        searches:
+          - svc.cluster.local
+      compactor.hostAliases:
+        - ip: 127.0.0.1
+          hostnames:
+            - loki.internal
+      compactor.hostUsers: false
+      global.priorityClassName: global-priority
+      loki.priorityClassName: loki-priority
+      defaults.priorityClassName: default-priority
+      compactor.priorityClassName: compactor-priority
+      defaults.podSecurityContext:
+        runAsUser: 2000
+        runAsGroup: 2000
+      compactor.terminationGracePeriodSeconds: 120
+      compactor.affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - us-east-1a
+      compactor.nodeSelector:
+        disktype: ssd
+      compactor.tolerations:
+        - key: dedicated
+          operator: Equal
+          value: logs
+          effect: NoSchedule
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: custom-sa
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.enableServiceLinks
+          value: false
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: true
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.dnsConfig.options[0].name
+          value: ndots
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.dnsConfig.options[0].value
+          value: "2"
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.dnsConfig.searches[0]
+          value: svc.cluster.local
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.hostAliases[0].ip
+          value: 127.0.0.1
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.hostAliases[0].hostnames[0]
+          value: loki.internal
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.hostUsers
+          value: false
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: compactor-priority
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 2000
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 2000
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 120
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key
+          value: topology.kubernetes.io/zone
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]
+          value: us-east-1a
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.tolerations[0].value
+          value: logs
+        template: templates/compactor/workload.yaml
+
+  - it: should render pod extras and container settings for compactor
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.replicas: 1
+      global.extraEnvFrom:
+        - secretRef:
+            name: global-env
+      defaults.extraEnvFrom:
+        - configMapRef:
+            name: defaults-env
+      compactor.extraEnvFrom:
+        - secretRef:
+            name: compactor-env
+      global.extraVolumes:
+        - name: global-volume
+          emptyDir: {}
+      defaults.extraVolumes:
+        - name: defaults-volume
+          configMap:
+            name: defaults-volume
+      compactor.extraVolumes:
+        - name: compactor-volume
+          secret:
+            secretName: compactor-volume
+      global.extraVolumeMounts:
+        - name: global-volume
+          mountPath: /global
+      defaults.extraVolumeMounts:
+        - name: defaults-volume
+          mountPath: /defaults
+      compactor.extraVolumeMounts:
+        - name: compactor-volume
+          mountPath: /compactor
+      compactor.initContainers: |
+        - name: init-permissions
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - chmod 777 /var/loki
+      compactor.extraContainers: |
+        - name: sidecar
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - sleep 3600
+      compactor.resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+      compactor.livenessProbe:
+        enabled: true
+        httpGet:
+          path: /live
+          port: http-metrics
+      defaults.readinessProbe:
+        enabled: true
+        httpGet:
+          path: /default-ready
+          port: http-metrics
+      loki.startupProbe:
+        enabled: true
+        httpGet:
+          path: /startup
+          port: http-metrics
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: init-permissions
+        template: templates/compactor/workload.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: compactor-volume
+            secret:
+              secretName: compactor-volume
+          any: true
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: global-env
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].configMapRef.name
+          value: defaults-env
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[2].secretRef.name
+          value: compactor-env
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /live
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /default-ready
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.path
+          value: /startup
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[4].mountPath
+          value: /global
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[5].mountPath
+          value: /defaults
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[6].mountPath
+          value: /compactor
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 256Mi
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: sidecar
+        template: templates/compactor/workload.yaml
+
+  - it: should render custom emptyDir data volume when persistence is disabled
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.persistence.enabled: false
+      compactor.persistence.dataVolumeParameters:
+        emptyDir:
+          sizeLimit: 1Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[3].name
+          value: data
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].emptyDir.sizeLimit
+          value: 1Gi
+        template: templates/compactor/workload.yaml
+
+  - it: should render emptyDir data volume for Deployment when persistence is disabled
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.kind: Deployment
+      compactor.persistence.enabled: false
+      compactor.persistence.dataVolumeParameters:
+        emptyDir:
+          medium: Memory
+          sizeLimit: 2Gi
+    asserts:
+      - isKind:
+          of: Deployment
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].name
+          value: data
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].emptyDir.medium
+          value: Memory
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].emptyDir.sizeLimit
+          value: 2Gi
+        template: templates/compactor/workload.yaml
+
+  - it: should render Deployment PVC data volume in pod spec
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.kind: Deployment
+      compactor.replicas: 1
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+    asserts:
+      - isKind:
+          of: Deployment
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].persistentVolumeClaim.claimName
+          value: RELEASE-NAME-loki-data
+        template: templates/compactor/workload.yaml
+      - notExists:
+          path: spec.volumeClaimTemplates
+        template: templates/compactor/workload.yaml
+
+  - it: should render ephemeral data volume claim template in pod spec
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.persistence.enabled: true
+      compactor.persistence.type: ephemeral
+      compactor.persistence.size: 5Gi
+      compactor.persistence.storageClass: "-"
+      compactor.persistence.accessModes:
+        - ReadWriteMany
+      compactor.persistence.annotations:
+        ann: val
+      compactor.persistence.labels:
+        lbl: val
+      compactor.persistence.volumeAttributesClassName: fast
+      compactor.persistence.selector:
+        matchLabels:
+          foo: bar
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[3].ephemeral.volumeClaimTemplate.metadata.annotations.ann
+          value: val
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].ephemeral.volumeClaimTemplate.metadata.labels.lbl
+          value: val
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].ephemeral.volumeClaimTemplate.spec.accessModes[0]
+          value: ReadWriteMany
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].ephemeral.volumeClaimTemplate.spec.storageClassName
+          value: ""
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].ephemeral.volumeClaimTemplate.spec.volumeAttributesClassName
+          value: fast
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].ephemeral.volumeClaimTemplate.spec.resources.requests.storage
+          value: 5Gi
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].ephemeral.volumeClaimTemplate.spec.selector.matchLabels.foo
+          value: bar
+        template: templates/compactor/workload.yaml
+
+  - it: should render Deployment with ephemeral data volume claim template in pod spec
+    set:
+      deploymentMode: Distributed
+      compactor.enabled: true
+      compactor.kind: Deployment
+      compactor.persistence.enabled: true
+      compactor.persistence.type: ephemeral
+      compactor.persistence.size: 1Gi
+      compactor.persistence.storageClass: null
+      compactor.persistence.accessModes:
+        - ReadWriteOnce
+    asserts:
+      - isKind:
+          of: Deployment
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].ephemeral.volumeClaimTemplate.spec.accessModes[0]
+          value: ReadWriteOnce
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.volumes[3].ephemeral.volumeClaimTemplate.spec.resources.requests.storage
+          value: 1Gi
+        template: templates/compactor/workload.yaml
+      - notExists:
+          path: spec.volumeClaimTemplates
+        template: templates/compactor/workload.yaml
