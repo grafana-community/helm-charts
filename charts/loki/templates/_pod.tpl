@@ -244,11 +244,15 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if eq $target "canary" }}
+      {{- include "loki-canary.livenesssProbe" . | nindent 6 }}
+      {{- else }}
       {{- with (coalesce $component.livenessProbe .Values.defaults.livenessProbe .Values.loki.livenessProbe) }}
         {{- if .enabled | default true }}
       livenessProbe:
         {{- toYaml (omit . "enabled") | nindent 8 }}
         {{- end }}
+      {{- end }}
       {{- end }}
       {{- with (coalesce $component.readinessProbe .Values.defaults.readinessProbe .Values.loki.readinessProbe) }}
         {{- if .enabled | default true }}

@@ -35,3 +35,15 @@ canary pod args
 {{- end }}
 - -push={{ $.Values.lokiCanary.push }}
 {{- end }}
+
+{{/*
+canary liveness probe
+*/}}
+{{- define "loki-canary.livenesssProbe" -}}
+{{- with (coalesce .Values.lokiCanary.livenessProbe .Values.defaults.livenessProbe .Values.loki.livenessProbe) }}
+{{- if .enabled | default true }}
+livenessProbe:
+  {{- toYaml (omit . "enabled") | nindent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}
