@@ -917,7 +917,7 @@ backendScheduler:
       # -- Retention job configuration
       retention:
       # -- How often to check for blocks that need to be deleted due to retention
-        interval: 1h    
+        interval: 1h
     # -- Work cache configuration
     work:
       # -- After this duration, jobs that have not been updated are considered dead and will be reassigned.
