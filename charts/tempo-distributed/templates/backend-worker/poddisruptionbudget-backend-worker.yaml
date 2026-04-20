@@ -13,4 +13,3 @@ spec:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
   maxUnavailable: {{ .Values.backendWorker.maxUnavailable }}
 {{- end }}
-{{- end }}
