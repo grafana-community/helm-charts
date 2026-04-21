@@ -11,10 +11,12 @@ spec:
   endpointSelector: {}
   egress:
   - toEndpoints:
-    - {}
+    - matchLabels:
+        "k8s:io.kubernetes.pod.namespace": {{ include "loki.namespace" . }}
   ingress:
   - fromEndpoints:
-    - {}
+    - matchLabels:
+        "k8s:io.kubernetes.pod.namespace": {{ include "loki.namespace" . }}
 
 ---
 apiVersion: cilium.io/v2
