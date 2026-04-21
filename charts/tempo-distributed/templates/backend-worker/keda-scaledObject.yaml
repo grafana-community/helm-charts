@@ -11,11 +11,21 @@ spec:
   maxReplicaCount: {{ .Values.backendWorker.autoscaling.maxReplicas }}
   scaleTargetRef:
     apiVersion: apps/v1
-    kind: Deployment
+    kind: StatefulSet
     name: {{ include "tempo.resourceName" (dict "ctx" . "component" "backend-worker") }}
   triggers:
   {{- range .Values.backendWorker.autoscaling.keda.triggers }}
-  - type: {{ .type | quote }}
+  - {{- with .name }}
+    name: {{ . | quote }}
+    {{- end }}
+    {{- with .authenticationRef }}
+    authenticationRef:
+      name: {{ .name | quote }}
+      {{- with .kind }}
+      kind: {{ . | quote }}
+      {{- end }}
+    {{- end }}
+    type: {{ .type | quote }}
     metadata:
       serverAddress: {{ .metadata.serverAddress }}
       threshold: {{ .metadata.threshold | quote }}

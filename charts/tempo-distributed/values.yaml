@@ -961,7 +961,12 @@ backendWorker:
       enabled: false
       # -- List of autoscaling triggers for the compactor
       triggers: []
-      # - type: prometheus
+      # - name: tempo-outstanding-compaction-blocks
+      ## https://keda.sh/docs/2.19/concepts/authentication/
+      ##   authenticationRef:
+      ##     name: {trigger-authentication-name} or {cluster-trigger-authentication-name}
+      ##     kind: TriggerAuthentication or ClusterTriggerAuthentication
+      #   type: prometheus
       #   metadata:
       #     serverAddress: "http://<prometheus-host>:9090"
       #     threshold: "250"
@@ -1902,8 +1907,10 @@ config: |
     proxy:
       admin_api:
         url: http://{{ template "tempo.fullname" . }}-admin-api.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
+      {{- if .Values.backendScheduler.enabled }}
       backend_worker:
         url: http://{{ template "tempo.fullname" . }}-backend-worker.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
+      {{- end }}
       compactor:
         url: http://{{ template "tempo.fullname" . }}-compactor.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
       default:
