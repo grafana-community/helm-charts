@@ -38,7 +38,9 @@ spec:
       - port: "53"
         protocol: TCP
     toEndpoints:
-    - {}
+    - matchLabels:
+        "k8s:io.kubernetes.pod.namespace": kube-system
+        k8s-app: kube-dns
 
 ---
 apiVersion: cilium.io/v2
