@@ -135,8 +135,6 @@ tempo:
 # -- Default values applied to every pod in this chart.
 # These values are overridden by component-specific settings.
 defaults:
-  # -- Default number of replicas for all components (overridden per component)
-  replicas: 1
   # -- Default pod-level security context for all pods
   podSecurityContext: {}
   # -- Default container-level security context for all containers
