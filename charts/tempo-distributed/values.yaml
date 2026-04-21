@@ -135,8 +135,6 @@ tempo:
 # -- Default values applied to every pod in this chart.
 # These values are overridden by component-specific settings.
 defaults:
-  # -- Default number of replicas for all components (overridden per component)
-  replicas: 1
   # -- Default pod-level security context for all pods
   podSecurityContext: {}
   # -- Default container-level security context for all containers
@@ -2481,7 +2479,7 @@ gateway:
     # -- The gateway image repository
     repository: nginxinc/nginx-unprivileged
     # -- The gateway image tag
-    tag: 1.29-alpine
+    tag: 1.30-alpine
     # -- The gateway image pull policy
     pullPolicy: IfNotPresent
   # -- The name of the PriorityClass for gateway pods
@@ -2667,6 +2665,8 @@ gateway:
     tlsSecretName: ''
     # -- Allows overriding the DNS resolver address nginx will use
     resolver: ''
+    # -- Configures whether or not NGINX bind IPv6
+    enableIPv6: false
     # -- Config file contents for Nginx. Passed through the `tpl` function to allow templating
     # @default -- See values.yaml
     file: |
@@ -2716,6 +2716,9 @@ gateway:
 
         server {
           listen             8080 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
+          {{- if .Values.gateway.nginxConfig.enableIPv6 }}
+          listen             [::]:8080 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
+          {{- end }}
 
           {{- if .Values.streamOverHTTPEnabled }}
           http2 on;
@@ -2908,7 +2911,7 @@ enterprise:
     # -- Grafana Enterprise Traces container image repository. Note: for Grafana Tempo use the value 'image.repository'
     repository: grafana/enterprise-traces
     # -- Grafana Enterprise Traces container image tag. Note: for Grafana Tempo use the value 'image.tag'
-    tag: v2.8.7
+    tag: v2.8.8
     # Note: pullPolicy and optional pullSecrets are set in toplevel 'image' section, not here
 
 # In order to use Grafana Enterprise Traces features, you will need to provide the contents of your Grafana Enterprise Traces

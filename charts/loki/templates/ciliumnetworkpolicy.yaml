@@ -62,7 +62,7 @@ spec:
       {{- include "loki.selectorLabels" . | nindent 6 }}
   ingress:
   - toPorts:
-    - ports: 
+    - ports:
       - port: http
         protocol: TCP
   {{- if .Values.networkPolicy.ingress.namespaceSelector }}
@@ -88,10 +88,10 @@ spec:
       {{- include "loki.selectorLabels" . | nindent 6 }}
   ingress:
   - toPorts:
-    - ports: 
+    - ports:
       - port: http-metrics
         protocol: TCP
-  {{- if .Values.networkPolicy.metrics.cidrs }}
+  {{- if or .Values.networkPolicy.metrics.cidrs .Values.networkPolicy.metrics.namespaceSelector }}
     {{- range $cidr := .Values.networkPolicy.metrics.cidrs }}
     toCIDR:
     - {{ $cidr }}
@@ -120,7 +120,7 @@ spec:
       {{- include "loki.backendSelectorLabels" . | nindent 6 }}
   egress:
   - toPorts:
-    - ports: 
+    - ports:
       - port: "{{ .Values.networkPolicy.alertmanager.port }}"
         protocol: TCP
   {{- if .Values.networkPolicy.alertmanager.namespaceSelector }}
@@ -148,7 +148,7 @@ spec:
   egress:
   - toPorts:
     - ports:
-      {{- range $port := .Values.networkPolicy.externalStorage.ports }} 
+      {{- range $port := .Values.networkPolicy.externalStorage.ports }}
       - port: "{{ $port }}"
         protocol: TCP
       {{- end }}
@@ -226,7 +226,7 @@ spec:
       {{- include "loki.selectorLabels" . | nindent 6 }}
   egress:
   - toPorts:
-    - ports: 
+    - ports:
       - port: "{{ .Values.networkPolicy.discovery.port }}"
         protocol: TCP
   {{- if .Values.networkPolicy.discovery.namespaceSelector }}
