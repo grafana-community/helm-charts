@@ -53,6 +53,41 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### From 12.x to 13.0.0 ([#258](https://github.com/grafana-community/helm-charts/pull/258))
+
+The persistence configuration for ephemeral volumes has been flattened.
+
+Actions required:
+- Replace `persistence.ephemeralDataVolume.enabled: true` with `persistence.enabled: true` and `persistence.type: ephemeral`.
+- Move any fields under `persistence.ephemeralDataVolume` (`accessModes`, `size`, `storageClass`, `volumeAttributesClassName`, `selector`, `annotations`, `labels`) directly under `persistence`.
+
+Before:
+
+```yaml
+<component>:
+  persistence:
+    ephemeralDataVolume:
+      enabled: true
+      accessModes:
+        - ReadWriteOnce
+      size: 10Gi
+      storageClass: null
+```
+
+After:
+
+```yaml
+<component>:
+  persistence:
+    enabled: true
+    type: ephemeral
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    storageClass: null
+```
+
+
 ### From 11.x to 12.0.0 ([#258](https://github.com/grafana-community/helm-charts/pull/258))
 
 The `deploymentMode` default value has been changed to `Monolithic`. `SingleBinary` has been renamed to `Monolithic`. 
