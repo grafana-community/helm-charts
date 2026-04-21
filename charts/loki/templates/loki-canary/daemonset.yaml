@@ -26,5 +26,5 @@ spec:
   {{- end }}
   {{- end }}
   template:
-    {{- include "loki.podTemplate" (dict "target" "canary" "component" $component "ctx" . "args" (include "loki-canary.args" . | fromYamlArray)) | nindent 4 }}
+    {{- include "loki.podTemplate" (dict "target" "canary" "component" $component "ctx" . "args" (include "loki-canary.args" . | fromYamlArray) "memberlist" false) | nindent 4 }}
 {{- end }}
