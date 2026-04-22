@@ -248,7 +248,7 @@ spec:
         {{- if .enabled | default true }}
       livenessProbe:
         {{- toYaml (omit . "enabled") | nindent 8 }}
-      {{- end }}
+        {{- end }}
       {{- end }}
       {{- with (coalesce $component.readinessProbe .Values.defaults.readinessProbe .Values.loki.readinessProbe) }}
         {{- if .enabled | default true }}
