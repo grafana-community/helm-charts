@@ -55,11 +55,3 @@ tests:
           path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
           value: 2
 
-  - it: disables canary liveness probe when enabled is false
-    set:
-      lokiCanary.livenessProbe:
-        enabled: false
-    asserts:
-      - template: loki-canary/daemonset.yaml
-        notExists:
-          path: spec.template.spec.containers[0].livenessProbe
