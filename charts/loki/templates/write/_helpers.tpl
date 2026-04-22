@@ -2,7 +2,11 @@
 write fullname
 */}}
 {{- define "loki.writeFullname" -}}
+{{- if .Values.write.useOldObjectNames -}}
 {{ include "loki.name" . }}-write
+{{- else -}}
+{{ include "loki.fullname" . }}-write
+{{- end -}}
 {{- end }}
 
 {{/*

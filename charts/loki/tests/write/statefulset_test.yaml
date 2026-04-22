@@ -1,0 +1,197 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: write statefulset
+templates:
+  - write/statefulset.yaml
+  - config.yaml
+set:
+  deploymentMode: SimpleScalable
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: should not render when deploymentMode is not scalable
+    set:
+      deploymentMode: Distributed
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: write/statefulset.yaml
+
+  - it: should render one StatefulSet in simple scalable mode
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: write/statefulset.yaml
+      - isKind:
+          of: StatefulSet
+        template: write/statefulset.yaml
+
+  - it: should set expected metadata labels
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: write
+        template: write/statefulset.yaml
+      - equal:
+          path: metadata.labels["app.kubernetes.io/part-of"]
+          value: memberlist
+        template: write/statefulset.yaml
+
+  - it: should merge common and component statefulset annotations
+    set:
+      loki.annotations:
+        loki-annotation: loki-value
+      write.annotations:
+        write-annotation: write-value
+    asserts:
+      - equal:
+          path: metadata.annotations["loki-annotation"]
+          value: loki-value
+        template: write/statefulset.yaml
+      - equal:
+          path: metadata.annotations["write-annotation"]
+          value: write-value
+        template: write/statefulset.yaml
+
+  - it: should set replicas from write.replicas
+    set:
+      write.replicas: 5
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 5
+        template: write/statefulset.yaml
+
+  - it: should omit replicas when autoscaling is enabled
+    set:
+      write.autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: write/statefulset.yaml
+
+  - it: should omit replicas when kedaAutoscaling is enabled
+    set:
+      write.kedaAutoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: write/statefulset.yaml
+
+  - it: should set expected statefulset spec fields
+    asserts:
+      - equal:
+          path: spec.podManagementPolicy
+          value: Parallel
+        template: write/statefulset.yaml
+      - equal:
+          path: metadata.name
+          value: loki-write
+        template: write/statefulset.yaml
+      - equal:
+          path: spec.serviceName
+          value: loki-write-headless
+        template: write/statefulset.yaml
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 10
+        template: write/statefulset.yaml
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/component"]
+          value: write
+        template: write/statefulset.yaml
+
+  - it: should set expected statefulset name according to useOldObjectNames flag
+    set:
+      write.useOldObjectNames: false
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-write
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-loki-write-headless
+        template: write/statefulset.yaml
+
+  - it: should render write podAnnotations in pod template annotations
+    set:
+      write.podAnnotations:
+        custom-annotation: custom-value
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["custom-annotation"]
+          value: custom-value
+        template: write/statefulset.yaml
+
+  - it: should render volumeClaimTemplates when volumeClaimsEnabled is true
+    set:
+      write.persistence.volumeClaimsEnabled: true
+      write.persistence.size: 25Gi
+    asserts:
+      - exists:
+          path: spec.volumeClaimTemplates
+        template: write/statefulset.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: data
+        template: write/statefulset.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 25Gi
+        template: write/statefulset.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: ReadWriteOnce
+        template: write/statefulset.yaml
+
+  - it: should not render volumeClaimTemplates when volumeClaimsEnabled is false
+    set:
+      write.persistence.volumeClaimsEnabled: false
+    asserts:
+      - notExists:
+          path: spec.volumeClaimTemplates
+        template: write/statefulset.yaml
+
+  - it: should render PVC annotations labels selector storageClass and volumeAttributesClassName when configured
+    set:
+      write.persistence.annotations:
+        pvc-annotation: pvc-value
+      write.persistence.labels:
+        pvc-label: pvc-value
+      write.persistence.selector:
+        matchLabels:
+          volume: loki-write-storage
+      write.persistence.storageClass: gp3
+      write.persistence.volumeAttributesClassName: bronze
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.annotations["pvc-annotation"]
+          value: pvc-value
+        template: write/statefulset.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.labels["pvc-label"]
+          value: pvc-value
+        template: write/statefulset.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.selector.matchLabels.volume
+          value: loki-write-storage
+        template: write/statefulset.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: gp3
+        template: write/statefulset.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.volumeAttributesClassName
+          value: bronze
+        template: write/statefulset.yaml
+
+  - it: should render empty storageClassName when persistence.storageClass is dash
+    set:
+      write.persistence.storageClass: "-"
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: ""
+        template: write/statefulset.yaml

@@ -31,8 +31,25 @@ tests:
           path: spec.scaleTargetRef.kind
           value: StatefulSet
       - equal:
+          path: spec.scaleTargetRef.name
+          value: loki-write
+      - equal:
           path: spec.metrics[0].resource.name
           value: cpu
+
+  - it: should name the HPA scaleTargetRef according to useOldObjectNames flag
+    set:
+      write.useOldObjectNames: false
+      write:
+        autoscaling:
+          minReplicas: 2
+          maxReplicas: 6
+          targetCPUUtilizationPercentage: 60
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-loki-write
+
 
   - it: should render memory metric when targetMemoryUtilizationPercentage is set
     set:

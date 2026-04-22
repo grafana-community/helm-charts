@@ -87,6 +87,10 @@ tests:
           value: Parallel
         template: backend/statefulset.yaml
       - equal:
+          path: metadata.name
+          value: loki-backend
+        template: backend/statefulset.yaml
+      - equal:
           path: spec.serviceName
           value: loki-backend-headless
         template: backend/statefulset.yaml
@@ -97,6 +101,19 @@ tests:
       - equal:
           path: spec.selector.matchLabels["app.kubernetes.io/component"]
           value: backend
+        template: backend/statefulset.yaml
+
+  - it: should set expected statefulset name according to useOldObjectNames flag
+    set:
+      backend.useOldObjectNames: false
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-backend
+        template: backend/statefulset.yaml
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-loki-backend-headless
         template: backend/statefulset.yaml
 
   - it: should render backend podAnnotations in pod template annotations

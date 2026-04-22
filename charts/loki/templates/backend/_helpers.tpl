@@ -2,7 +2,11 @@
 backend fullname
 */}}
 {{- define "loki.backendFullname" -}}
+{{- if .Values.backend.useOldObjectNames -}}
 {{ include "loki.name" . }}-backend
+{{- else -}}
+{{ include "loki.fullname" . }}-backend
+{{- end -}}
 {{- end }}
 
 {{/*

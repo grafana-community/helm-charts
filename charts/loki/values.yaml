@@ -1952,6 +1952,8 @@ write:
     labels: {}
     # -- Set this toggle to false to opt out of automounting API credentials for the service account
     automountServiceAccountToken: true
+  # -- Toggle to disable usage of Chart.Name prefix for this component
+  useOldObjectNames: true
 
 # --  Configuration for the read pod(s)
 read:
@@ -2310,6 +2312,9 @@ backend:
     labels: {}
     # -- Set this toggle to false to opt out of automounting API credentials for the service account
     automountServiceAccountToken: true
+  # -- Toggle to disable usage of Chart.Name prefix for this component
+  useOldObjectNames: true
+
 ######################################################################################################################
 #
 # Microservices Mode
