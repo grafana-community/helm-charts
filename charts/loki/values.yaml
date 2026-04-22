@@ -873,7 +873,12 @@ lokiCanary:
     # -- Docker image pull policy
     pullPolicy: IfNotPresent
   # -- Liveness probe
-  livenessProbe: {}
+  livenessProbe:
+    httpGet:
+      path: /metrics
+      port: http-metrics
+    initialDelaySeconds: 15
+    timeoutSeconds: 1
   # -- Readiness probe
   readinessProbe:
     httpGet:
