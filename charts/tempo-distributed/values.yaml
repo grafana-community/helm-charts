@@ -838,6 +838,8 @@ compactor:
   initContainers: []
   # -- Containers to add to the compactor pod
   extraContainers: []
+  # -- Additional ports to expose on the compactor container.
+  extraPorts: []
   # -- Liveness probe for compactor pods. Uses `tempo.livenessProbe` as default if not set.
   livenessProbe: {}
   # -- Readiness probe for compactor pods. Uses `tempo.readinessProbe` as default if not set.
