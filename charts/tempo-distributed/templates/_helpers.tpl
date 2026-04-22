@@ -516,7 +516,7 @@ rules:
       - delete
   {{- if $templates }}
   - apiGroups:
-      - v1
+      - ""
     resources:
       - persistentvolumeclaims
     resourceNames:
