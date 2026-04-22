@@ -1337,7 +1337,8 @@ gateway:
     # -- Whether gateway metrics should be exported
     enabled: true
     image:
-      repository: "ghcr.io/jkroepke/access-log-exporter"
+      registry: ghcr.io
+      repository: "jkroepke/access-log-exporter"
       tag: "0.3.10"
       pullPolicy: IfNotPresent
     resources:
