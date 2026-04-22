@@ -309,7 +309,7 @@ The reason for this is that the chart can be validated and installed in a CI pip
 However, this setup is not fully functional.
 The recommendation is to use object storage, such as S3, GCS, MinIO, etc., or one of the other options documented at https://grafana.com/docs/tempo/latest/configuration/#storage.
 
-Alternatively, in order to quickly test Tempo using the filestore, the [single binary chart](https://github.com/grafana/helm-charts/tree/main/charts/tempo) can be used.
+Alternatively, in order to quickly test Tempo using the filestore, the [single binary chart](https://github.com/grafana-community/helm-charts/tree/main/charts/tempo) can be used.
 
 ### Overriding configuration variables with structuredConfig
 
