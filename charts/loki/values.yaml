@@ -1344,7 +1344,7 @@ gateway:
     image:
       registry: ghcr.io
       repository: "jkroepke/access-log-exporter"
-      tag: "0.3.10"
+      tag: "0.3.11"
       pullPolicy: IfNotPresent
     resources:
       requests: {}
