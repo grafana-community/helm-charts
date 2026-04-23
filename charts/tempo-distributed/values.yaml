@@ -2804,6 +2804,9 @@ gateway:
         # OTLP gRPC
         server {
           listen               {{ .Values.traces.otlp.grpc.port }} http2 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
+          {{- if .Values.gateway.nginxConfig.enableIPv6 }}
+          listen               [::]:{{ .Values.traces.otlp.grpc.port }} http2 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
+          {{- end }}
 
           {{- if .Values.gateway.basicAuth.enabled }}
           auth_basic           "Tempo";
