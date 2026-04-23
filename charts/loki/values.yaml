@@ -519,7 +519,6 @@ loki:
   tenants: []
   # -- Check https://grafana.com/docs/loki/latest/configuration/#server for more info on the server configuration.
   server:
-    graceful_shutdown_timeout: 5s
     grpc_listen_port: 9095
     grpc_server_min_time_between_pings: '10s'
     grpc_server_ping_without_stream_allowed: true
