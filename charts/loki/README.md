@@ -53,7 +53,7 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
-### From 14.x to 15.0.0 ([#258](https://github.com/grafana-community/helm-charts/pull/258))
+### From 13.x to 14.0.0 ([#413](https://github.com/grafana-community/helm-charts/pull/413))
 
 Support for Cilium-specific network policies has been removed from this chart.
 
