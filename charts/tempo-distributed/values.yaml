@@ -784,6 +784,9 @@ backendScheduler:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the backend-scheduler pod
   extraEnvFrom: []
+  # -- Additional ports to expose on the backend-scheduler container
+  # Standard ports (grpc, http-metrics, http-memberlist) are always added automatically.
+  extraPorts: []
   # -- Liveness probe for backend-scheduler pod. Uses `tempo.livenessProbe` as default if not set.
   livenessProbe: {}
   # -- Readiness probe for backend-scheduler pod. Uses `tempo.readinessProbe` as default if not set.

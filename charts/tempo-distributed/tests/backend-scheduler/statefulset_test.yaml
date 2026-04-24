@@ -27,11 +27,13 @@ tests:
           content:
             containerPort: 9095
             name: grpc
+            protocol: TCP
       - contains:
           path: spec.template.spec.containers[0].ports
           content:
             containerPort: 3200
             name: http-metrics
+            protocol: TCP
 
   - it: does not render trace ports (backend-scheduler has no trace ingestion)
     template: backend-scheduler/statefulset-backend-scheduler.yaml
@@ -41,10 +43,15 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].ports
           value:
-            - name: grpc
-              containerPort: 9095
-            - name: http-metrics
-              containerPort: 3200
+            - containerPort: 7946
+              name: http-memberlist
+              protocol: TCP
+            - containerPort: 3200
+              name: http-metrics
+              protocol: TCP
+            - containerPort: 9095
+              name: grpc
+              protocol: TCP
 
   - it: uses tempo.podSecurityContext when no component override is set
     template: backend-scheduler/statefulset-backend-scheduler.yaml
