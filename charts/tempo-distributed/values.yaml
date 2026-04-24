@@ -3259,11 +3259,13 @@ gateway:
           {{- end }}
 
           location = /opentelemetry.proto.collector.trace.v1.TraceService/Export {
-            grpc_pass          grpc://{{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.traces.otlp.grpc.port }};
+            set $distributor  {{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }};
+            grpc_pass         grpc://$distributor:{{ .Values.traces.otlp.grpc.port }};
           }
 
           location ~ /opentelemetry {
-            grpc_pass          grpc://{{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.traces.otlp.grpc.port }};
+            set $distributor  {{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }};
+            grpc_pass         grpc://$distributor:{{ .Values.traces.otlp.grpc.port }};
           }
 
           {{- if .Values.gateway.nginxConfig.ssl }}
