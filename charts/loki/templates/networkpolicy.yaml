@@ -1,4 +1,4 @@
-{{- if and (.Values.networkPolicy.enabled) (eq .Values.networkPolicy.flavor "kubernetes") }}
+{{- if .Values.networkPolicy.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -20,7 +20,6 @@ spec:
   ingress:
     - from:
         - podSelector: {}
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -43,7 +42,6 @@ spec:
           protocol: TCP
       to:
         - namespaceSelector: {}
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -86,7 +84,6 @@ spec:
           {{- toYaml .Values.networkPolicy.ingress.podSelector | nindent 12 }}
           {{- end }}
   {{- end }}
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -182,7 +179,7 @@ spec:
 
 {{- end }}
 
-{{- if and .Values.networkPolicy.discovery.port (eq .Values.networkPolicy.flavor "kubernetes") }}
+{{- if .Values.networkPolicy.discovery.port }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
