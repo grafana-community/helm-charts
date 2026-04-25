@@ -60,6 +60,9 @@ spec:
       {{- with .Values.schedulerName }}
       schedulerName: {{ . }}
       {{- end }}
+      {{- with .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
+      {{- end }}
       {{- if or .Values.initContainers .Values.extraInitContainers }}
       initContainers:
         {{- with .Values.initContainers }}
