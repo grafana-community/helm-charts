@@ -387,6 +387,12 @@ podLabels: {}
 # Apply extra labels to common labels.
 extraLabels: {}
 
+# -- Add initContainers to the Tempo StatefulSet
+initContainers: []
+
+# -- Add extra containers to the Tempo StatefulSet
+extraContainers: []
+
 # -- Volumes to add
 extraVolumes: []
 
