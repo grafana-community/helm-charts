@@ -77,6 +77,10 @@ podDisruptionBudget: {}
 deploymentStrategy:
   type: RollingUpdate
 
+## The maximum time in seconds for a Deployment to make progress before it is considered to be failed.
+## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
+progressDeadlineSeconds: null
+
 readinessProbe:
   httpGet:
     path: /api/health
@@ -1460,6 +1464,10 @@ revisionHistoryLimit: 10
 ## Add a separate remote image renderer deployment/service
 imageRenderer:
   deploymentStrategy: {}
+  ## The maximum time in seconds for the image renderer Deployment to make progress before it is
+  ## considered to be failed.
+  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
+  progressDeadlineSeconds: null
   # Enable the image-renderer deployment & service
   enabled: false
   replicas: 1
