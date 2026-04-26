@@ -1,0 +1,57 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: canary liveness probe
+templates:
+  - loki-canary/daemonset.yaml
+  - config.yaml
+
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  lokiCanary.image.tag: 0.0.0
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: uses metrics endpoint for canary liveness by default
+    asserts:
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /metrics
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: http-metrics
+
+  - it: keeps metrics endpoint for canary liveness when workload kind is Deployment
+    set:
+      lokiCanary.kind: Deployment
+    asserts:
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: kind
+          value: Deployment
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /metrics
+
+  - it: lets lokiCanary.livenessProbe override the default path
+    set:
+      lokiCanary.livenessProbe:
+        enabled: true
+        httpGet:
+          path: /custom-health
+          port: http-metrics
+        timeoutSeconds: 2
+    asserts:
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /custom-health
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
+          value: 2
+

@@ -1,3 +1,4 @@
+{{- if and (not .Values.backendScheduler.enabled) }}
 {{ $dict := dict "ctx" . "component" "compactor" "memberlist" true }}
 apiVersion: apps/v1
 kind: Deployment
@@ -25,3 +26,4 @@ spec:
 {{- end }}
   template:
     {{- include "tempo.podTemplate" (dict "ctx" $ "component" .Values.compactor "target" "compactor") | nindent 4 }}
+{{- end }}

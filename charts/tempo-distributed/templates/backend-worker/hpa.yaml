@@ -1,25 +1,25 @@
-{{- if and (not .Values.backendScheduler.enabled) .Values.compactor.autoscaling.enabled .Values.compactor.autoscaling.hpa.enabled }}
+{{- if and .Values.backendScheduler.enabled .Values.backendWorker.autoscaling.enabled .Values.backendWorker.autoscaling.hpa.enabled }}
 {{- $apiVersion := include "tempo.hpa.apiVersion" . -}}
 apiVersion: {{ $apiVersion }}
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "tempo.resourceName" (dict "ctx" . "component" "compactor") }}
+  name: {{ include "tempo.resourceName" (dict "ctx" . "component" "backend-worker") }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "tempo.labels" (dict "ctx" . "component" "compactor") | nindent 4 }}
+    {{- include "tempo.labels" (dict "ctx" . "component" "backend-worker") | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "tempo.resourceName" (dict "ctx" . "component" "compactor") }}
-  minReplicas: {{ .Values.compactor.autoscaling.minReplicas }}
-  maxReplicas: {{ .Values.compactor.autoscaling.maxReplicas }}
-  {{- with .Values.compactor.autoscaling.hpa.behavior }}
+    name: {{ include "tempo.resourceName" (dict "ctx" . "component" "backend-worker") }}
+  minReplicas: {{ .Values.backendWorker.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.backendWorker.autoscaling.maxReplicas }}
+  {{- with .Values.backendWorker.autoscaling.hpa.behavior }}
   behavior:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   metrics:
-  {{- with .Values.compactor.autoscaling.hpa.targetMemoryUtilizationPercentage }}
+  {{- with .Values.backendWorker.autoscaling.hpa.targetMemoryUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory
@@ -31,7 +31,7 @@ spec:
         targetAverageUtilization: {{ . }}
         {{- end }}
   {{- end }}
-  {{- with .Values.compactor.autoscaling.hpa.targetCPUUtilizationPercentage }}
+  {{- with .Values.backendWorker.autoscaling.hpa.targetCPUUtilizationPercentage }}
     - type: Resource
       resource:
         name: cpu

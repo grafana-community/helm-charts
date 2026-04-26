@@ -1,0 +1,32 @@
+{{- if .Values.backendScheduler.enabled }}
+{{- $dict := dict "ctx" . "component" "backend-scheduler" "memberlist" true -}}
+{{- $grpcPort := dict "containerPort" 9095 "name" "grpc" "protocol" "TCP" }}
+{{- $extraPorts := concat (list $grpcPort) (.Values.backendScheduler.extraPorts | default list) | uniq }}
+{{- $component := merge (dict "extraPorts" $extraPorts) .Values.backendScheduler }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "tempo.resourceName" $dict }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.labels" $dict | nindent 4 }}
+    {{- with .Values.backendScheduler.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.backendScheduler.annotations }}
+  annotations:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: {{ .Values.tempo.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "tempo.selectorLabels" $dict | nindent 6 }}
+  serviceName: backend-scheduler
+  podManagementPolicy: Parallel
+  updateStrategy:
+    {{- toYaml .Values.backendScheduler.statefulStrategy | nindent 4 }}
+  template:
+    {{- include "tempo.podTemplate" (dict "ctx" $ "component" $component "target" "backend-scheduler") | nindent 4 }}
+{{- end }}

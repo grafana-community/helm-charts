@@ -1,4 +1,4 @@
-{{- if and .Values.compactor.autoscaling.enabled .Values.compactor.autoscaling.keda.enabled }}
+{{- if and (not .Values.backendScheduler.enabled) .Values.compactor.autoscaling.enabled .Values.compactor.autoscaling.keda.enabled }}
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
