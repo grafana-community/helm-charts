@@ -1,9 +1,9 @@
-{{- if and (.Values.networkPolicy.enabled) (eq .Values.networkPolicy.flavor "kubernetes") }}
+{{- if .Values.networkPolicy.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "loki.name" . }}-namespace-only
+  name: {{ include "loki.resourceName" (dict "ctx" . "suffix" "namespace-only") }}
   namespace: {{ include "loki.namespace" . }}
   labels:
     {{- include "loki.labels" . | nindent 4 }}
@@ -20,12 +20,11 @@ spec:
   ingress:
     - from:
         - podSelector: {}
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "loki.name" . }}-egress-dns
+  name: {{ include "loki.resourceName" (dict "ctx" . "suffix" "egress-dns") }}
   namespace: {{ include "loki.namespace" . }}
   labels:
     {{- include "loki.labels" . | nindent 4 }}
@@ -43,12 +42,11 @@ spec:
           protocol: TCP
       to:
         - namespaceSelector: {}
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "loki.name" . }}-ingress
+  name: {{ include "loki.resourceName" (dict "ctx" . "suffix" "ingress") }}
   namespace: {{ include "loki.namespace" . }}
   labels:
     {{- include "loki.labels" . | nindent 4 }}
@@ -86,12 +84,11 @@ spec:
           {{- toYaml .Values.networkPolicy.ingress.podSelector | nindent 12 }}
           {{- end }}
   {{- end }}
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "loki.name" . }}-ingress-metrics
+  name: {{ include "loki.resourceName" (dict "ctx" . "suffix" "ingress-metrics") }}
   namespace: {{ include "loki.namespace" . }}
   labels:
     {{- include "loki.labels" . | nindent 4 }}
@@ -125,7 +122,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "loki.name" . }}-egress-alertmanager
+  name: {{ include "loki.resourceName" (dict "ctx" . "suffix" "egress-alertmanager") }}
   namespace: {{ include "loki.namespace" $ }}
   labels:
     {{- include "loki.labels" . | nindent 4 }}
@@ -154,7 +151,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "loki.name" . }}-egress-external-storage
+  name: {{ include "loki.resourceName" (dict "ctx" . "suffix" "egress-external-storage") }}
   namespace: {{ include "loki.namespace" $ }}
   labels:
     {{- include "loki.labels" . | nindent 4 }}
@@ -181,12 +178,12 @@ spec:
 
 {{- end }}
 
-{{- if and .Values.networkPolicy.discovery.port (eq .Values.networkPolicy.flavor "kubernetes") }}
+{{- if .Values.networkPolicy.discovery.port }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "loki.name" . }}-egress-discovery
+  name: {{ include "loki.resourceName" (dict "ctx" . "suffix" "egress-discovery") }}
   namespace: {{ include "loki.namespace" $ }}
   labels:
     {{- include "loki.labels" . | nindent 4 }}

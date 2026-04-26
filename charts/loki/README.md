@@ -53,6 +53,34 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### From 13.x to 14.0.0 ([#413](https://github.com/grafana-community/helm-charts/pull/413))
+
+Support for Cilium-specific network policies has been removed from this chart.
+
+Actions required:
+- Remove `networkPolicy.flavor` from your values file. The chart now renders Kubernetes `NetworkPolicy` resources only.
+- Remove `networkPolicy.egressWorld.enabled` and `networkPolicy.egressKubeApiserver.enabled` from your values file.
+- If you relied on Cilium-only behavior, manage those `CiliumNetworkPolicy` rules outside this chart (for example with separate manifests managed by your GitOps workflow).
+
+Before:
+
+```yaml
+networkPolicy:
+  enabled: true
+  flavor: cilium
+  egressWorld:
+    enabled: true
+  egressKubeApiserver:
+    enabled: true
+```
+
+After:
+
+```yaml
+networkPolicy:
+  enabled: true
+```
+
 ### From 12.x to 13.0.0 ([#258](https://github.com/grafana-community/helm-charts/pull/258))
 
 The persistence configuration for ephemeral volumes has been flattened.

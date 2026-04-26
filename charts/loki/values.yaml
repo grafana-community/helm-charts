@@ -950,9 +950,6 @@ rbac:
 networkPolicy:
   # -- Specifies whether Network Policies should be created
   enabled: false
-  # -- Specifies whether the policies created will be standard Network Policies (flavor: kubernetes)
-  # or Cilium Network Policies (flavor: cilium)
-  flavor: kubernetes
   metrics:
     # -- Specifies the Pods which are allowed to access the metrics port.
     # As this is cross-namespace communication, you also need the namespaceSelector.
@@ -990,12 +987,6 @@ networkPolicy:
     podSelector: {}
     # -- Specifies the namespace the discovery Pods are running in
     namespaceSelector: {}
-  egressWorld:
-    # -- Enable additional cilium egress rules to external world for write, read and backend.
-    enabled: false
-  egressKubeApiserver:
-    # -- Enable additional cilium egress rules to kube-apiserver for backend.
-    enabled: false
 ######################################################################################################################
 #
 # Global memberlist configuration

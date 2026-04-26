@@ -283,6 +283,87 @@
           }
         }
       }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "podSelector": {
+              "type": "object"
+            },
+            "namespaceSelector": {
+              "type": "object"
+            },
+            "cidrs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "ingress": {
+          "type": "object",
+          "properties": {
+            "podSelector": {
+              "type": "object"
+            },
+            "namespaceSelector": {
+              "type": "object"
+            }
+          }
+        },
+        "alertmanager": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer"
+            },
+            "podSelector": {
+              "type": "object"
+            },
+            "namespaceSelector": {
+              "type": "object"
+            }
+          }
+        },
+        "externalStorage": {
+          "type": "object",
+          "properties": {
+            "ports": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "cidrs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "discovery": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": ["integer", "null"]
+            },
+            "podSelector": {
+              "type": "object"
+            },
+            "namespaceSelector": {
+              "type": "object"
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -1,0 +1,146 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: networkpolicy
+templates:
+  - networkpolicy.yaml
+
+set:
+  deploymentMode: SingleBinary
+  singleBinary.replicas: 1
+
+tests:
+  - it: does not render network policies by default
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: networkpolicy.yaml
+
+  - it: renders the base network policies when enabled
+    set:
+      networkPolicy.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 5
+        template: networkpolicy.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-namespace-only
+        documentIndex: 0
+        template: networkpolicy.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-egress-alertmanager
+        documentIndex: 4
+        template: networkpolicy.yaml
+
+  - it: does not set ingress source selectors without namespaceSelector
+    set:
+      networkPolicy.enabled: true
+    asserts:
+      - notExists:
+          path: spec.ingress[0].from
+        documentIndex: 2
+        template: networkpolicy.yaml
+
+  - it: renders ingress namespace and pod selectors when configured
+    set:
+      networkPolicy.enabled: true
+      networkPolicy.ingress.namespaceSelector.matchLabels.name: monitoring
+      networkPolicy.ingress.podSelector.matchLabels.app: gateway
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0].namespaceSelector.matchLabels.name
+          value: monitoring
+        documentIndex: 2
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.ingress[0].from[0].podSelector.matchLabels.app
+          value: gateway
+        documentIndex: 2
+        template: networkpolicy.yaml
+
+  - it: renders metrics CIDR and selector sources when configured
+    set:
+      networkPolicy.enabled: true
+      networkPolicy.metrics.cidrs:
+        - 10.0.0.0/8
+      networkPolicy.metrics.namespaceSelector.matchLabels.name: monitoring
+      networkPolicy.metrics.podSelector.matchLabels.app: prometheus
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0].ipBlock.cidr
+          value: 10.0.0.0/8
+        documentIndex: 3
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.ingress[0].from[1].namespaceSelector.matchLabels.name
+          value: monitoring
+        documentIndex: 3
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.ingress[0].from[1].podSelector.matchLabels.app
+          value: prometheus
+        documentIndex: 3
+        template: networkpolicy.yaml
+
+  - it: renders external storage policy with ports and CIDRs when configured
+    set:
+      networkPolicy.enabled: true
+      networkPolicy.externalStorage.ports:
+        - 443
+        - 9000
+      networkPolicy.externalStorage.cidrs:
+        - 172.16.0.0/16
+    asserts:
+      - hasDocuments:
+          count: 6
+        template: networkpolicy.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-egress-external-storage
+        documentIndex: 5
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.egress[0].ports[0].port
+          value: 443
+        documentIndex: 5
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.egress[0].ports[1].port
+          value: 9000
+        documentIndex: 5
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.egress[0].to[0].ipBlock.cidr
+          value: 172.16.0.0/16
+        documentIndex: 5
+        template: networkpolicy.yaml
+
+  - it: renders discovery egress policy when discovery port is set
+    set:
+      networkPolicy.discovery.port: 7946
+      networkPolicy.discovery.namespaceSelector.matchLabels.name: discovery
+      networkPolicy.discovery.podSelector.matchLabels.app: memberlist
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: networkpolicy.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-egress-discovery
+        documentIndex: 0
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.egress[0].ports[0].port
+          value: 7946
+        documentIndex: 0
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.egress[0].to[0].namespaceSelector.matchLabels.name
+          value: discovery
+        documentIndex: 0
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.egress[0].to[0].podSelector.matchLabels.app
+          value: memberlist
+        documentIndex: 0
+        template: networkpolicy.yaml
