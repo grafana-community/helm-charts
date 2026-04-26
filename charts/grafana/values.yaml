@@ -179,6 +179,14 @@ extraEmptyDirMounts: []
   # - name: provisioning-notifiers
   #   mountPath: /etc/grafana/provisioning/notifiers
 
+# Shadow `/usr/share/grafana/data/plugins-bundled` with an emptyDir so plugins
+# listed under `plugins:` install cleanly into `/var/lib/grafana/plugins` instead
+# of failing on the read-only bundled directory shipped in the Grafana image.
+# Required for plugins moved out of core in Grafana 13 (e.g. `elasticsearch`,
+# `cloudwatch`) when listed in `plugins:`. Side effect: any bundled plugin not
+# explicitly listed in `plugins:` will not be available.
+shadowBundledPlugins: false
+
 
 # Apply extra labels to common labels.
 extraLabels: {}
