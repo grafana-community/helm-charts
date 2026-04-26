@@ -131,6 +131,43 @@ tempo:
     #   - 'IPv6'
     # -- Configure the IP family policy for all tempo services.  SingleStack, PreferDualStack or RequireDualStack
     ipFamilyPolicy: 'SingleStack'
+
+# -- Default values applied to every pod in this chart.
+# These values are overridden by component-specific settings.
+defaults:
+  # -- Default pod-level security context for all pods
+  podSecurityContext: {}
+  # -- Default container-level security context for all containers
+  containerSecurityContext: {}
+  # -- Default annotations for all pods
+  podAnnotations: {}
+  # -- Default labels for all pods
+  podLabels: {}
+  # -- Default node selector for all pods
+  nodeSelector: {}
+  # -- Default tolerations for all pods
+  tolerations: []
+  # -- Default affinity for all pods
+  affinity: {}
+  # -- Default priority class name for all pods
+  priorityClassName: ""
+  # -- Default resource requests and limits for all pods
+  resources: {}
+  # -- Default extra CLI args for all Tempo binary pods
+  extraArgs: []
+  # -- Default extra environment variables for all pods
+  extraEnv: []
+  # -- Default extra environment variables from ConfigMaps or Secrets for all pods
+  extraEnvFrom: []
+  # -- Default extra volume mounts for all pods
+  extraVolumeMounts: []
+  # -- Default extra volumes for all pods
+  extraVolumes: []
+  # -- Default liveness probe for all Tempo binary pods (overrides tempo.livenessProbe)
+  livenessProbe: {}
+  # -- Default readiness probe for all Tempo binary pods (overrides tempo.readinessProbe)
+  readinessProbe: {}
+
 serviceAccount:
   # -- Specifies whether a ServiceAccount should be created
   create: true
@@ -617,6 +654,9 @@ distributor:
   initContainers: []
   # -- Containers to add to the distributor pod
   extraContainers: []
+  # -- Additional ports to expose on the distributor container (e.g. trace receiver ports).
+  # Standard ports (http-metrics, http-memberlist) are always added automatically.
+  extraPorts: []
   # -- Liveness probe for distributor pods. Uses `tempo.livenessProbe` as default if not set.
   livenessProbe: {}
   # -- Readiness probe for distributor pods. Uses `tempo.readinessProbe` as default if not set.
@@ -704,6 +744,386 @@ distributor:
   appProtocol:
     # -- Set the optional gRPC service protocol. Ex: "grpc", "http2" or "https"
     grpc: null
+
+# -- EXPERIMENTAL Feature, disabled by default
+# Configuration for the backend-scheduler
+backendScheduler:
+  # -- Specifies whether a backend-scheduler and backend-worker
+  # -- should be deployed. When enabled the compactor is disabled
+  enabled: false
+  # -- Annotations for backend-scheduler StatefulSet
+  annotations: {}
+  # -- Labels for the backend-scheduler StatefulSet
+  labels: {}
+
+  # -- hostAliases to add
+  hostAliases: []
+  #  - ip: 1.2.3.4
+  #    hostnames:
+  #      - domain.tld
+  # -- Init containers to add to the backend-scheduler pod
+  initContainers: []
+  image:
+    # -- The Docker registry for the backend-scheduler image. Overrides `tempo.image.registry`
+    registry: null
+    # -- Optional list of imagePullSecrets. Overrides `tempo.image.pullSecrets`
+    pullSecrets: []
+    # -- Docker image repository for the backend-scheduler image. Overrides `tempo.image.repository`
+    repository: null
+    # -- Docker image tag for the backend-scheduler image. Overrides `tempo.image.tag`
+    tag: null
+  # -- The name of the PriorityClass for backend-scheduler pod
+  priorityClassName: null
+  # -- Labels for backend-scheduler pod
+  podLabels: {}
+  # -- Annotations for backend-scheduler pod
+  podAnnotations: {}
+  # -- Additional CLI args for the backend-scheduler
+  extraArgs: []
+  # -- Environment variables to add to the backend-scheduler pod
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to the backend-scheduler pod
+  extraEnvFrom: []
+  # -- Additional ports to expose on the backend-scheduler container
+  # Standard ports (grpc, http-metrics, http-memberlist) are always added automatically.
+  extraPorts: []
+  # -- Liveness probe for backend-scheduler pod. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for backend-scheduler pod. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
+  # -- Resource requests and limits for the backend-scheduler
+  resources: {}
+  # -- Grace period to allow the backend-scheduler to shutdown before it is killed
+  terminationGracePeriodSeconds: 30
+  # -- topologySpread for backend-scheduler pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more then 1 node per AZ
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "backend-scheduler") | nindent 6 }}
+  # -- Affinity for backend-scheduler pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Soft node and soft zone anti-affinity
+  affinity: |
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "backend-scheduler") | nindent 12 }}
+            topologyKey: kubernetes.io/hostname
+        - weight: 75
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "backend-scheduler") | nindent 12 }}
+            topologyKey: topology.kubernetes.io/zone
+  # -- Node selector for backend-scheduler pod
+  nodeSelector: {}
+  # -- Tolerations for backend-scheduler pod
+  tolerations: []
+  # -- Extra volumes for backend-scheduler pod
+  extraVolumeMounts: []
+  # -- Extra volumes for backend-scheduler StatefulSet
+  extraVolumes: []
+  # -- Containers to add to the backend-scheduler pods
+  extraContainers: []
+  # -- Persistence configuration for backend-scheduler
+  persistence:
+    # -- Enable creating PVCs which is required when using boltdb-shipper
+    enabled: false
+    # -- Enable StatefulSetRecreation for changes to PVC size
+    enableStatefulSetRecreationForSizeChange: false
+    # -- use emptyDir with ramdisk instead of PVC. **Please note that all data in backend-scheduler will be lost on pod restart**
+    inMemory: false
+    # -- Size of persistent or memory disk
+    size: 10Gi
+    # -- Storage class to be used.
+    # If defined, storageClassName: <storageClass>.
+    # If set to "-", storageClassName: "", which disables dynamic provisioning.
+    # If empty or set to null, no storageClassName spec is
+    # set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).
+    storageClass: null
+    # -- Annotations for backend-scheduler's persist volume claim
+    annotations: {}
+    # -- Labels for backend-scheduler's persist volume claim
+    labels: {}
+
+  # -- updateStrategy of the backend-scheduler statefulset.
+  statefulStrategy:
+    rollingUpdate:
+      partition: 0
+  persistentVolumeClaimRetentionPolicy:
+    # -- Enable Persistent volume retention policy for StatefulSet
+    enabled: false
+    # -- Volume retention behavior when the replica count of the StatefulSet is reduced
+    whenScaled: Retain
+    # -- Volume retention behavior that applies when the StatefulSet is deleted
+    whenDeleted: Retain
+  config:
+    # -- How often to flush the work cache to backend storage
+    backend_flush_interval: 1m
+    # -- How long to wait for a worker to complete a job before timing out internally
+    job_timeout: 15s
+    # -- Path to store local work cache files
+    local_work_path: /var/tempo
+    # -- How often to perform maintenance tasks (pruning old jobs, checking for dead jobs, etc.)
+    maintenance_interval: 1m
+    # -- Provider configuration for job generation
+    provider:
+      # -- Compaction job configuration
+      compaction:
+        # -- Compaction configuration
+        compaction:
+          # -- Duration to keep blocks
+          block_retention: 48h
+          # Duration to keep blocks that have been compacted elsewhere
+          compacted_block_retention: 1h
+          # -- The time between compaction cycles
+          compaction_cycle: 30s
+          # -- Blocks in this time window will be compacted together
+          compaction_window: 1h
+          # -- Maximum size of a compacted block in bytes
+          # -- This should be set to a lower value, ideally 5GB or less
+          # -- 100GB is a legacy default for v2 storage format which is
+          # -- no longer even available as of Tempo 2.1.x
+          # -- https://github.com/grafana/tempo/discussions/5301
+          max_block_bytes: 107374182400
+          # -- Maximum number of traces in a compacted block. WARNING: Deprecated. Use max_block_bytes instead.
+          max_compaction_objects: 6000000
+          # -- The maximum amount of time to spend compacting a single tenant before moving to the next
+          max_time_per_tenant: 5m
+          # -- Number of tenants to process in parallel during retention
+          retention_concurrency: 10
+          # -- v2 was removed in Tempo 2.1.x but they haven't been removed from Tempo
+          # -- Amount of data to buffer from input blocks
+          v2_in_buffer_bytes: 5242880
+          # -- Flush data to backend when buffer is this large
+          v2_out_buffer_bytes: 20971520
+          # -- Number of traces to buffer in memory during compaction
+          v2_prefetch_traces_count: 1000
+        # -- Maximum number of compaction jobs to create per tenant
+        max_compaction_level: 0
+        # -- Maximum number of blocks to compact together
+        max_input_blocks: 4
+        # -- Maximum compaction level (0 means no limit)
+        max_jobs_per_tenant: 1000
+        # -- How often to measure tenant block lists and create new compaction jobs
+        measure_interval: 1m
+        # -- Minimum time between compaction cycles for a tenant
+        min_cycle_interval: 30s
+        # -- Minimum number of blocks required for compaction
+        min_input_blocks: 2
+      # -- Retention job configuration
+      retention:
+      # -- How often to check for blocks that need to be deleted due to retention
+        interval: 1h
+    # -- Work cache configuration
+    work:
+      # -- After this duration, jobs that have not been updated are considered dead and will be reassigned.
+      dead_job_timeout: 24h
+      # -- How long to keep completed or failed jobs in the work cache before pruning them.
+      prune_age: 1h
+  service:
+    # -- Annotations for backend-scheduler service
+    annotations: {}
+  dnsConfigOverides:
+    enabled: false
+    dnsConfig:
+      options:
+        - name: ndots
+          value: "3"    # This is required for Azure Kubernetes Service (AKS) https://github.com/grafana/tempo/issues/1462
+
+# Configuration for the backend-worker
+backendWorker:
+  # -- Number of replicas for the backend-worker
+  replicas: 1
+  # -- Autoscaling configurations
+  autoscaling:
+    # -- Enable autoscaling for the backend-worker
+    enabled: false
+    # -- Minimum autoscaling replicas for the backend-worker
+    minReplicas: 1
+    # -- Maximum autoscaling replicas for the backend-worker
+    maxReplicas: 3
+    # -- Autoscaling via HPA object
+    hpa:
+      enabled: false
+      # -- Autoscaling behavior configuration for the backend-worker
+      behavior: {}
+      # -- Target CPU utilisation percentage for the backend-worker
+      targetCPUUtilizationPercentage: 100
+      # -- Target memory utilisation percentage for the backend-worker
+      targetMemoryUtilizationPercentage:
+    # -- Autoscaling via keda/ScaledObject
+    keda:
+      # requires https://keda.sh/
+      enabled: false
+      # -- List of autoscaling triggers for the compactor
+      triggers: []
+      # - name: tempo-outstanding-compaction-blocks
+      ## https://keda.sh/docs/2.19/concepts/authentication/
+      ##   authenticationRef:
+      ##     name: {trigger-authentication-name} or {cluster-trigger-authentication-name}
+      ##     kind: TriggerAuthentication or ClusterTriggerAuthentication
+      #   type: prometheus
+      #   metadata:
+      #     serverAddress: "http://<prometheus-host>:9090"
+      #     threshold: "250"
+      #     query: |-
+      #       sum by (cluster, namespace, tenant) (
+      #         tempodb_compaction_outstanding_blocks{container="backend-scheduler", namespace=~".*"}
+      #       ) /
+      #       ignoring(tenant) group_left count by (cluster, namespace)(
+      #         tempo_build_info{container="backend-worker", namespace=~".*"}
+      #       )
+      #     customHeaders: X-Scope-OrgID=<tenant-id>
+
+  # -- Annotations for backend-worker StatefulSet
+  annotations: {}
+  # -- Labels for the backend-worker StatefulSet
+  labels: {}
+
+  # -- hostAliases to add
+  hostAliases: []
+  #  - ip: 1.2.3.4
+  #    hostnames:
+  #      - domain.tld
+  # -- Init containers to add to the backend-worker pods
+  initContainers: []
+  image:
+    # -- The Docker registry for the backend-worker image. Overrides `tempo.image.registry`
+    registry: null
+    # -- Optional list of imagePullSecrets. Overrides `tempo.image.pullSecrets`
+    pullSecrets: []
+    # -- Docker image repository for the backend-worker image. Overrides `tempo.image.repository`
+    repository: null
+    # -- Docker image tag for the backend-worker image. Overrides `tempo.image.tag`
+    tag: null
+  # -- The name of the PriorityClass for backend-worker pods
+  priorityClassName: null
+  # -- Labels for backend-worker pods
+  podLabels: {}
+  # -- Annotations for backend-worker pods
+  podAnnotations: {}
+  # -- Additional CLI args for the backend-worker
+  extraArgs: []
+  # -- Environment variables to add to the backend-worker pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to the backend-worker pods
+  extraEnvFrom: []
+  # -- Liveness probe for backend-worker pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for backend-worker pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
+  # -- Resource requests and limits for the backend-worker
+  resources: {}
+  # -- Grace period to allow the backend-worker to shutdown before it is killed
+  terminationGracePeriodSeconds: 30
+  # -- topologySpread for backend-worker pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more then 1 node per AZ
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "backend-worker") | nindent 6 }}
+  # -- Affinity for backend-worker pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Soft node and soft zone anti-affinity
+  affinity: |
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "backend-worker") | nindent 12 }}
+            topologyKey: kubernetes.io/hostname
+        - weight: 75
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "backend-worker") | nindent 12 }}
+            topologyKey: topology.kubernetes.io/zone
+  # -- Node selector for backend-worker pods
+  nodeSelector: {}
+  # -- Tolerations for backend-worker pods
+  tolerations: []
+  # -- Extra volumes for backend-worker pods
+  extraVolumeMounts: []
+  # -- Extra volumes for backend-worker StatefulSet
+  extraVolumes: []
+  # -- Containers to add to the backend-worker pods
+  extraContainers: []
+  # -- Persistence configuration for backend-worker
+  persistence:
+    # -- Enable creating PVCs which is required when using boltdb-shipper
+    enabled: false
+    # -- Enable StatefulSetRecreation for changes to PVC size
+    enableStatefulSetRecreationForSizeChange: false
+    # -- use emptyDir with ramdisk instead of PVC. **Please note that all data in backend-worker will be lost on pod restart**
+    inMemory: false
+    # -- Size of persistent or memory disk
+    size: 10Gi
+    # -- Storage class to be used.
+    # If defined, storageClassName: <storageClass>.
+    # If set to "-", storageClassName: "", which disables dynamic provisioning.
+    # If empty or set to null, no storageClassName spec is
+    # set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).
+    storageClass: null
+    # -- Annotations for backend-worker's persist volume claim
+    annotations: {}
+    # -- Labels for backend-worker's persist volume claim
+    labels: {}
+
+  # -- updateStrategy of the backend-worker statefulset.
+  statefulStrategy:
+    rollingUpdate:
+      partition: 0
+  persistentVolumeClaimRetentionPolicy:
+    # -- Enable Persistent volume retention policy for StatefulSet
+    enabled: false
+    # -- Volume retention behavior when the replica count of the StatefulSet is reduced
+    whenScaled: Retain
+    # -- Volume retention behavior that applies when the StatefulSet is deleted
+    whenDeleted: Retain
+  config:
+    backend_scheduler_client:
+      # -- gRPC client configuration
+      grpc_client_config: {}
+    # -- Backoff configuration for retrying failed jobs
+    backoff:
+      min_period: 100ms
+      max_period: 1m
+      max_retries: 0
+    # -- Compaction settings
+    # -- .Values.backendScheduler.compaction.compaction will be used
+    compaction: {}
+    # -- Timeout for finishing the current job before shutting down the worker
+    finish_on_shutdown_timeout: 30s
+    # -- Maximum number of compaction jobs to create per tenant
+    max_jobs_per_tenant: 1000
+    # -- Minimum number of blocks required for compaction
+    min_input_blocks: 2
+    # -- Maximum number of blocks to compact together
+    max_input_blocks: 4
+    # -- Maximum compaction level (0 means no limit)
+    max_compaction_level: 0
+    # -- Minimum time between compaction cycles for a tenant
+    min_cycle_interval: 30s
+  service:
+    # -- Annotations for backend-worker service
+    annotations: {}
+  dnsConfigOverides:
+    enabled: false
+    dnsConfig:
+      options:
+        - name: ndots
+          value: "3"    # This is required for Azure Kubernetes Service (AKS) https://github.com/grafana/tempo/issues/1462
 
 # Configuration for the compactor
 compactor:
@@ -798,6 +1218,8 @@ compactor:
   initContainers: []
   # -- Containers to add to the compactor pod
   extraContainers: []
+  # -- Additional ports to expose on the compactor container.
+  extraPorts: []
   # -- Liveness probe for compactor pods. Uses `tempo.livenessProbe` as default if not set.
   livenessProbe: {}
   # -- Readiness probe for compactor pods. Uses `tempo.readinessProbe` as default if not set.
@@ -955,6 +1377,9 @@ querier:
   initContainers: []
   # -- Containers to add to the querier pods
   extraContainers: []
+  # -- Additional ports to expose on the querier container.
+  # Standard ports (http-metrics, http-memberlist) are always added automatically.
+  extraPorts: []
   # -- Extra volumes for querier pods
   extraVolumeMounts: []
   # -- Extra volumes for querier deployment
@@ -1485,6 +1910,10 @@ config: |
     proxy:
       admin_api:
         url: http://{{ template "tempo.fullname" . }}-admin-api.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
+      {{- if .Values.backendScheduler.enabled }}
+      backend_worker:
+        url: http://{{ template "tempo.fullname" . }}-backend-worker.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
+      {{- end }}
       compactor:
         url: http://{{ template "tempo.fullname" . }}-compactor.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
       default:
@@ -1508,6 +1937,59 @@ config: |
   {{- end }}
   {{- end }}
 
+  {{- if .Values.backendScheduler.enabled }}
+  backend_scheduler:
+    work:
+      prune_age: {{ .Values.backendScheduler.config.work.prune_age }}
+      dead_job_timeout: {{ .Values.backendScheduler.config.work.dead_job_timeout }}
+    maintenance_interval: {{ .Values.backendScheduler.config.maintenance_interval }}
+    backend_flush_interval: {{ .Values.backendScheduler.config.backend_flush_interval }}
+    provider:
+      retention:
+        interval: {{ .Values.backendScheduler.config.provider.retention.interval }}
+      compaction:
+        compaction:
+          block_retention: {{ .Values.backendScheduler.config.provider.compaction.compaction.block_retention }}
+          compacted_block_retention: {{ .Values.backendScheduler.config.provider.compaction.compaction.compacted_block_retention }}
+          compaction_cycle: {{ .Values.backendScheduler.config.provider.compaction.compaction.compaction_cycle }}
+          compaction_window: {{ .Values.backendScheduler.config.provider.compaction.compaction.compaction_window }}
+          max_block_bytes: {{ .Values.backendScheduler.config.provider.compaction.compaction.max_block_bytes }}
+          max_compaction_objects: {{ .Values.backendScheduler.config.provider.compaction.compaction.max_compaction_objects }}
+          max_time_per_tenant: {{ .Values.backendScheduler.config.provider.compaction.compaction.max_time_per_tenant }}
+          retention_concurrency: {{ .Values.backendScheduler.config.provider.compaction.compaction.retention_concurrency }}
+          v2_in_buffer_bytes: {{ .Values.backendScheduler.config.provider.compaction.compaction.v2_in_buffer_bytes }}
+          v2_out_buffer_bytes: {{ .Values.backendScheduler.config.provider.compaction.compaction.v2_out_buffer_bytes }}
+          v2_prefetch_traces_count: {{ .Values.backendScheduler.config.provider.compaction.compaction.v2_prefetch_traces_count }}
+        max_jobs_per_tenant: {{ .Values.backendScheduler.config.provider.compaction.max_jobs_per_tenant }}
+        min_input_blocks: {{ .Values.backendScheduler.config.provider.compaction.min_input_blocks }}
+        max_input_blocks: {{ .Values.backendScheduler.config.provider.compaction.max_input_blocks }}
+        max_compaction_level: {{ .Values.backendScheduler.config.provider.compaction.max_compaction_level }}
+        min_cycle_interval: {{ .Values.backendScheduler.config.provider.compaction.min_cycle_interval }}
+    job_timeout: {{ .Values.backendScheduler.config.job_timeout }}
+    local_work_path: {{ .Values.backendScheduler.config.local_work_path }}
+
+  {{- with .Values.backendWorker.config.backend_scheduler_client.grpc_client_config }}
+  backend_scheduler_client:
+    grpc_client_config:
+      {{- toYaml . | nindent 6 }}
+
+  {{- end }}
+  backend_worker:
+    backend_scheduler_addr: {{ include "tempo.resourceName" (dict "ctx" . "component" "backend-scheduler") }}:9095
+    backoff:
+      min_period: {{ .Values.backendWorker.config.backoff.min_period }}
+      max_period: {{ .Values.backendWorker.config.backoff.max_period }}
+      max_retries: {{ .Values.backendWorker.config.backoff.max_retries }}
+    {{- $compaction_default := .Values.backendScheduler.config.provider.compaction.compaction }}
+    {{- $worker_overrides := .Values.backendWorker.config.compaction }}
+    {{- $compaction := mergeOverwrite (deepCopy $compaction_default) $worker_overrides }}
+    compaction:
+      {{- toYaml $compaction | nindent 6 }}
+    finish_on_shutdown_timeout: {{ .Values.backendWorker.config.finish_on_shutdown_timeout }}
+    ring:
+      kvstore:
+        store: memberlist
+  {{- else }}
   compactor:
     compaction:
       block_retention: {{ .Values.compactor.config.compaction.block_retention }}
@@ -1524,6 +2006,7 @@ config: |
     ring:
       kvstore:
         store: memberlist
+    # {{- end }}
   {{- if and .Values.enterprise.enabled .Values.enterpriseFederationFrontend.enabled }}
   federation:
     proxy_targets:
@@ -2436,7 +2919,7 @@ gateway:
     # -- The gateway image repository
     repository: nginxinc/nginx-unprivileged
     # -- The gateway image tag
-    tag: 1.29-alpine
+    tag: 1.30-alpine
     # -- The gateway image pull policy
     pullPolicy: IfNotPresent
   # -- The name of the PriorityClass for gateway pods
@@ -2622,6 +3105,8 @@ gateway:
     tlsSecretName: ''
     # -- Allows overriding the DNS resolver address nginx will use
     resolver: ''
+    # -- Configures whether or not NGINX bind IPv6
+    enableIPv6: false
     # -- Config file contents for Nginx. Passed through the `tpl` function to allow templating
     # @default -- See values.yaml
     file: |
@@ -2671,6 +3156,9 @@ gateway:
 
         server {
           listen             8080 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
+          {{- if .Values.gateway.nginxConfig.enableIPv6 }}
+          listen             [::]:8080 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
+          {{- end }}
 
           {{- if .Values.streamOverHTTPEnabled }}
           http2 on;
@@ -2740,6 +3228,13 @@ gateway:
             proxy_pass       http://$compactor:3200$request_uri;
           }
 
+          {{- if .Values.backendScheduler.enabled }}
+          location = /backend-worker/ring {
+            set $backend_worker {{ include "tempo.resourceName" (dict "ctx" . "component" "backend-worker") }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }};
+            proxy_pass       http://$backend_worker:3200$request_uri;
+          }
+          {{- end }}
+
           {{- if .Values.gateway.nginxConfig.ssl }}
           ssl_certificate     /etc/nginx/ssl/tls.crt;
           ssl_certificate_key /etc/nginx/ssl/tls.key;
@@ -2754,6 +3249,9 @@ gateway:
         # OTLP gRPC
         server {
           listen               {{ .Values.traces.otlp.grpc.port }} http2 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
+          {{- if .Values.gateway.nginxConfig.enableIPv6 }}
+          listen               [::]:{{ .Values.traces.otlp.grpc.port }} http2 {{- if .Values.gateway.nginxConfig.ssl }} ssl{{- end }};
+          {{- end }}
 
           {{- if .Values.gateway.basicAuth.enabled }}
           auth_basic           "Tempo";
@@ -2761,11 +3259,13 @@ gateway:
           {{- end }}
 
           location = /opentelemetry.proto.collector.trace.v1.TraceService/Export {
-            grpc_pass          grpc://{{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.traces.otlp.grpc.port }};
+            set $distributor  {{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }};
+            grpc_pass         grpc://$distributor:{{ .Values.traces.otlp.grpc.port }};
           }
 
           location ~ /opentelemetry {
-            grpc_pass          grpc://{{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.traces.otlp.grpc.port }};
+            set $distributor  {{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }};
+            grpc_pass         grpc://$distributor:{{ .Values.traces.otlp.grpc.port }};
           }
 
           {{- if .Values.gateway.nginxConfig.ssl }}
@@ -2801,6 +3301,8 @@ ingress:
       - path: /api
     compactor:
       - path: /compactor/ring
+    backend-worker:
+      - path: /backend-worker/ring
   hosts:
     - tempo.example.com
 
@@ -2851,6 +3353,9 @@ route:
       compactor:
         - path: /compactor/ring
           pathType: PathPrefix
+      backendWorker:
+        - path: /backend-worker/ring
+          pathType: PathPrefix
 
 ##############################################################################
 # The values in and after the `enterprise:` key configure the enterprise features
@@ -2863,7 +3368,7 @@ enterprise:
     # -- Grafana Enterprise Traces container image repository. Note: for Grafana Tempo use the value 'image.repository'
     repository: grafana/enterprise-traces
     # -- Grafana Enterprise Traces container image tag. Note: for Grafana Tempo use the value 'image.tag'
-    tag: v2.8.7
+    tag: v2.8.8
     # Note: pullPolicy and optional pullSecrets are set in toplevel 'image' section, not here
 
 # In order to use Grafana Enterprise Traces features, you will need to provide the contents of your Grafana Enterprise Traces

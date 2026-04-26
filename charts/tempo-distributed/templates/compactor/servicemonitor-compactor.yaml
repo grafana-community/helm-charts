@@ -1,1 +1,3 @@
+{{- if and (not .Values.backendScheduler.enabled) }}
 {{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" "compactor" "memberlist" true) }}
+{{- end }}

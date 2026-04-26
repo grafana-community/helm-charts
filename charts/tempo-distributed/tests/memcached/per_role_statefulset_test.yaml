@@ -1,12 +1,16 @@
 # $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
 suite: per-role memcached StatefulSets
 templates:
+  - lib/service-monitor.tpl
   - memcached/statefulset-memcached-bloom.yaml
   - memcached/statefulset-memcached-parquet-footer.yaml
   - memcached/statefulset-memcached-frontend-search.yaml
   - memcached/service-memcached-bloom.yaml
   - memcached/service-memcached-parquet-footer.yaml
   - memcached/service-memcached-frontend-search.yaml
+  - memcached/servicemonitor-memcached-bloom.yaml
+  - memcached/servicemonitor-memcached-parquet-footer.yaml
+  - memcached/servicemonitor-memcached-frontend-search.yaml
   - memcached/poddisruptionbudget-memcached-bloom.yaml
   - memcached/poddisruptionbudget-memcached-parquet-footer.yaml
   - memcached/poddisruptionbudget-memcached-frontend-search.yaml
@@ -62,6 +66,20 @@ tests:
           path: kind
           value: Service
         template: memcached/service-memcached-bloom.yaml
+
+  - it: bloom ServiceMonitor rendered with correct name
+    set:
+      memcachedBloom.enabled: true
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-memcached-bloom
+        template: memcached/servicemonitor-memcached-bloom.yaml
+      - equal:
+          path: kind
+          value: ServiceMonitor
+        template: memcached/servicemonitor-memcached-bloom.yaml
 
   - it: bloom PDB not rendered when replicas is 1 (default)
     set:
@@ -133,6 +151,20 @@ tests:
           value: Service
         template: memcached/service-memcached-parquet-footer.yaml
 
+  - it: parquet-footer ServiceMonitor rendered with correct name when enabled
+    set:
+      memcachedParquetFooter.enabled: true
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-memcached-parquet-footer
+        template: memcached/servicemonitor-memcached-parquet-footer.yaml
+      - equal:
+          path: kind
+          value: ServiceMonitor
+        template: memcached/servicemonitor-memcached-parquet-footer.yaml
+
   - it: frontend-search Service rendered with correct name when enabled
     set:
       memcachedFrontendSearch.enabled: true
@@ -145,6 +177,21 @@ tests:
           path: kind
           value: Service
         template: memcached/service-memcached-frontend-search.yaml
+
+  - it: frontend-search ServiceMonitor rendered with correct name when enabled
+    set:
+      memcachedFrontendSearch.enabled: true
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-memcached-frontend-search
+        template: memcached/servicemonitor-memcached-frontend-search.yaml
+      - equal:
+          path: kind
+          value: ServiceMonitor
+        template: memcached/servicemonitor-memcached-frontend-search.yaml
+
 
   - it: parquet-footer PDB not rendered when replicas is 1 (default)
     set:

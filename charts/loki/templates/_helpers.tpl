@@ -1182,8 +1182,12 @@ the list is returned unchanged so users retain full control.
 {{- if not $hasGogc -}}
   {{- $envList = append $envList (dict "name" "GOGC" "value" ($gogc | toString)) -}}
 {{- end -}}
-{{- with $envList | uniq -}}
 env:
+  {{- with $envList | uniq }}
   {{- toYaml . | nindent 2 }}
-{{- end -}}
+  {{- end }}
+  - name: HASH_RING_INSTANCE_ADDR
+    valueFrom:
+      fieldRef:
+        fieldPath: status.podIP
 {{- end -}}

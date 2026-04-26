@@ -1,0 +1,118 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: backend-scheduler StatefulSet
+templates:
+  - backend-scheduler/statefulset-backend-scheduler.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: renders a StatefulSet with correct name and kind
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+    asserts:
+      - equal:
+          path: kind
+          value: StatefulSet
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-backend-scheduler
+
+  - it: renders standard ports on the backend-scheduler container
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 9095
+            name: grpc
+            protocol: TCP
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 3200
+            name: http-metrics
+            protocol: TCP
+
+  - it: does not render trace ports (backend-scheduler has no trace ingestion)
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports
+          value:
+            - containerPort: 7946
+              name: http-memberlist
+              protocol: TCP
+            - containerPort: 3200
+              name: http-metrics
+              protocol: TCP
+            - containerPort: 9095
+              name: grpc
+              protocol: TCP
+
+  - it: uses tempo.podSecurityContext when no component override is set
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+
+  - it: global.priorityClassName is used when no component override
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+      global.priorityClassName: high-priority
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: high-priority
+
+  - it: global.extraArgs are prepended to component extraArgs
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+      global.extraArgs:
+        - -config.expand-env=true
+      backendScheduler.extraArgs:
+        - -log.level=debug
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -config.expand-env=true
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -log.level=debug
+
+  - it: volumes include config, runtime-config and backend-scheduler store
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config
+            configMap:
+              name: RELEASE-NAME-tempo-config
+              items:
+                - key: "tempo.yaml"
+                  path: "tempo.yaml"
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: runtime-config
+            configMap:
+              name: RELEASE-NAME-tempo-runtime
+              items:
+                - key: "overrides.yaml"
+                  path: "overrides.yaml"
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: tempo-backend-scheduler-store
+            emptyDir: {}
