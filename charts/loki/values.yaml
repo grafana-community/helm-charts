@@ -799,6 +799,8 @@ lokiCanary:
   labelname: pod
   # -- Additional annotations for the `loki-canary` Daemonset
   annotations: {}
+  # -- Additional annotations for each `loki-canary` pod
+  podAnnotations: {}
   # -- Additional labels for each `loki-canary` pod
   podLabels: {}
   service:
@@ -1282,7 +1284,21 @@ gateway:
       # - name: my-gateway
       #   namespace: gateway-namespace
       # -- Additional rules to prepend before the default catch-all rule.
-      # Useful for advanced routing logic (e.g. header-based routing or auth policies).
+      # Each entry is rendered into spec.rules as written (templating is supported),
+      # so any HTTPRoute/GRPCRoute rule shape is accepted — including filter-only rules
+      # with no backendRefs (e.g. RequestRedirect, URLRewrite).
+      # Useful for advanced routing logic (e.g. header-based routing, auth policies, redirects).
+      # Note: the chart-generated rule that points at the gateway service is always rendered
+      # for this route — additionalRules are prepended, not a replacement.
+      # Example HTTP-to-HTTPS redirect:
+      #   additionalRules:
+      #     - filters:
+      #         - type: RequestRedirect
+      #           requestRedirect:
+      #             scheme: https
+      #             statusCode: 301
+      #       matches:
+      #         - path: { type: PathPrefix, value: / }
       additionalRules: []
       # -- Matches for the default rule. Defaults to match all paths.
       matches:
@@ -1481,13 +1497,19 @@ route:
     hostnames: []
     # -- Parent references for the route (required for Gateway API)
     parentRefs: []
-    # -- Additional rules to prepend before the generated path-routing rules
+    # -- Additional rules to prepend before the generated path-routing rules.
+    # Each entry is rendered into spec.rules as written (templating is supported),
+    # so any HTTPRoute/GRPCRoute rule shape is accepted — including filter-only rules
+    # with no backendRefs (e.g. RequestRedirect, URLRewrite).
     additionalRules: []
     # -- Backend port override for all generated rules.
     # When unset, GRPCRoute automatically uses loki.server.grpc_listen_port (default 9095)
     # and all other kinds use loki.server.http_listen_port (default 3100).
     backendPort: null
     # -- Paths routed to each Loki service group. The target service depends on the deployment mode.
+    # To produce a route that contains only `additionalRules` and no chart-generated path rules
+    # (for example, a dedicated HTTP-to-HTTPS redirect route), set every entry below to an empty
+    # list — e.g. `distributor: []`, `queryFrontend: []`, `ruler: []`, `compactor: []`.
     paths:
       # -- Paths that are exposed by Loki Distributor.
       # If deployment mode is Distributed, the requests are forwarded to the service: `{{"loki.distributorFullname"}}`.

@@ -1,0 +1,70 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: loki canary annotations
+templates:
+  - loki-canary/daemonset.yaml
+  - config.yaml
+
+set:
+  deploymentMode: SingleBinary
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: does not render annotations on the DaemonSet by default
+    asserts:
+      - template: loki-canary/daemonset.yaml
+        notExists:
+          path: metadata.annotations
+
+  - it: renders lokiCanary.annotations on the DaemonSet metadata
+    set:
+      lokiCanary.annotations:
+        canary-annotation: canary-value
+    asserts:
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: metadata.annotations.canary-annotation
+          value: canary-value
+
+  - it: merges loki.annotations and lokiCanary.annotations on the DaemonSet metadata
+    set:
+      loki.annotations:
+        common-annotation: common-value
+      lokiCanary.annotations:
+        canary-annotation: canary-value
+    asserts:
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: metadata.annotations.common-annotation
+          value: common-value
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: metadata.annotations.canary-annotation
+          value: canary-value
+
+  - it: loki.annotations takes precedence over lokiCanary.annotations on conflict
+    set:
+      loki.annotations:
+        shared-annotation: from-loki
+      lokiCanary.annotations:
+        shared-annotation: from-canary
+    asserts:
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: metadata.annotations.shared-annotation
+          value: from-loki
+
+  - it: renders lokiCanary.podAnnotations on the pod template only
+    set:
+      lokiCanary.podAnnotations:
+        pod-annotation: pod-value
+    asserts:
+      - template: loki-canary/daemonset.yaml
+        equal:
+          path: spec.template.metadata.annotations.pod-annotation
+          value: pod-value
+      - template: loki-canary/daemonset.yaml
+        notExists:
+          path: metadata.annotations
