@@ -1,0 +1,174 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ingester rollout-operator integration
+templates:
+  - ingester/statefulset-zone.yaml
+  - ingester/hpa.yaml
+  - ingester/so.yaml
+  - config.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+  ingester.zoneAwareReplication.enabled: true
+  ingester.replicas: 3
+
+tests:
+  # ── HPA suppression ──────────────────────────────────────────────────────────
+
+  - it: renders an HPA per zone when rollout-operator is disabled
+    set:
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.maxReplicas: 3
+      rollout_operator.enabled: false
+    asserts:
+      - template: ingester/hpa.yaml
+        hasDocuments:
+          count: 3
+
+  - it: renders only the zone-a HPA when rollout-operator is enabled
+    set:
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.maxReplicas: 3
+      rollout_operator.enabled: true
+    asserts:
+      - template: ingester/hpa.yaml
+        hasDocuments:
+          count: 1
+      - template: ingester/hpa.yaml
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-ingester-zone-a
+
+  - it: renders a ScaledObject per zone when rollout-operator is disabled
+    set:
+      ingester.kedaAutoscaling.enabled: true
+      ingester.kedaAutoscaling.maxReplicas: 3
+      ingester.kedaAutoscaling.triggers:
+        - type: cpu
+          metricType: Utilization
+          metadata:
+            value: "60"
+      rollout_operator.enabled: false
+    asserts:
+      - template: ingester/so.yaml
+        hasDocuments:
+          count: 3
+
+  - it: renders only the zone-a ScaledObject when rollout-operator is enabled
+    set:
+      ingester.kedaAutoscaling.enabled: true
+      ingester.kedaAutoscaling.maxReplicas: 3
+      ingester.kedaAutoscaling.triggers:
+        - type: cpu
+          metricType: Utilization
+          metadata:
+            value: "60"
+      rollout_operator.enabled: true
+    asserts:
+      - template: ingester/so.yaml
+        hasDocuments:
+          count: 1
+      - template: ingester/so.yaml
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-ingester-zone-a
+
+  # ── Mirror-replicas annotations ──────────────────────────────────────────────
+
+  - it: does not add mirror-replicas annotations when rollout-operator is disabled
+    set:
+      rollout_operator.enabled: false
+    asserts:
+      - template: ingester/statefulset-zone.yaml
+        notExists:
+          path: metadata.annotations["grafana.com/rollout-mirror-replicas-from-resource-name"]
+        documentIndex: 0
+      - template: ingester/statefulset-zone.yaml
+        notExists:
+          path: metadata.annotations["grafana.com/rollout-mirror-replicas-from-resource-name"]
+        documentIndex: 1
+      - template: ingester/statefulset-zone.yaml
+        notExists:
+          path: metadata.annotations["grafana.com/rollout-mirror-replicas-from-resource-name"]
+        documentIndex: 2
+
+  - it: adds mirror-replicas annotations on zone-b and zone-c only when rollout-operator is enabled
+    set:
+      rollout_operator.enabled: true
+    asserts:
+      # zone-a: no mirror annotations
+      - template: ingester/statefulset-zone.yaml
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-ingester-zone-a
+        documentIndex: 0
+      - template: ingester/statefulset-zone.yaml
+        notExists:
+          path: metadata.annotations["grafana.com/rollout-mirror-replicas-from-resource-name"]
+        documentIndex: 0
+      # zone-b: mirrors from zone-a
+      - template: ingester/statefulset-zone.yaml
+        equal:
+          path: metadata.annotations["grafana.com/rollout-mirror-replicas-from-resource-name"]
+          value: RELEASE-NAME-loki-ingester-zone-a
+        documentIndex: 1
+      - template: ingester/statefulset-zone.yaml
+        equal:
+          path: metadata.annotations["grafana.com/rollout-mirror-replicas-from-resource-kind"]
+          value: StatefulSet
+        documentIndex: 1
+      # zone-c: mirrors from zone-a
+      - template: ingester/statefulset-zone.yaml
+        equal:
+          path: metadata.annotations["grafana.com/rollout-mirror-replicas-from-resource-name"]
+          value: RELEASE-NAME-loki-ingester-zone-a
+        documentIndex: 2
+      - template: ingester/statefulset-zone.yaml
+        equal:
+          path: metadata.annotations["grafana.com/rollout-mirror-replicas-from-resource-kind"]
+          value: StatefulSet
+        documentIndex: 2
+
+  # ── replicas suppression on zone-b/c ─────────────────────────────────────────
+
+  - it: omits spec.replicas on zone-b and zone-c when rollout-operator is enabled (no autoscaler)
+    set:
+      rollout_operator.enabled: true
+      ingester.autoscaling.enabled: false
+      ingester.kedaAutoscaling.enabled: false
+    asserts:
+      # zone-a still has replicas (operator is the source of truth, but Helm seeds it)
+      - template: ingester/statefulset-zone.yaml
+        exists:
+          path: spec.replicas
+        documentIndex: 0
+      # zone-b/c: replicas omitted, operator mirrors from zone-a
+      - template: ingester/statefulset-zone.yaml
+        notExists:
+          path: spec.replicas
+        documentIndex: 1
+      - template: ingester/statefulset-zone.yaml
+        notExists:
+          path: spec.replicas
+        documentIndex: 2
+
+  - it: keeps replicas on all zones when rollout-operator is disabled and no autoscaler
+    set:
+      rollout_operator.enabled: false
+      ingester.autoscaling.enabled: false
+      ingester.kedaAutoscaling.enabled: false
+    asserts:
+      - template: ingester/statefulset-zone.yaml
+        exists:
+          path: spec.replicas
+        documentIndex: 0
+      - template: ingester/statefulset-zone.yaml
+        exists:
+          path: spec.replicas
+        documentIndex: 1
+      - template: ingester/statefulset-zone.yaml
+        exists:
+          path: spec.replicas
+        documentIndex: 2

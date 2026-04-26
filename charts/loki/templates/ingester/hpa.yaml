@@ -2,7 +2,8 @@
 {{- if and $isDistributed (or (not .Values.ingester.zoneAwareReplication.enabled) .Values.ingester.zoneAwareReplication.migration.enabled) }}
 {{- include "loki.hpa" (dict "target" "ingester" "component" .Values.ingester "ctx" .) }}
 {{- else if and $isDistributed .Values.ingester.zoneAwareReplication.enabled }}
-  {{- range $zone := list "zone-a" "zone-b" "zone-c" }}
+  {{- $zones := ternary (list "zone-a") (list "zone-a" "zone-b" "zone-c") .Values.rollout_operator.enabled }}
+  {{- range $zone := $zones }}
 {{- include "loki.hpa" (dict "target" "ingester" "component" $.Values.ingester "ctx" $ "suffix" $zone) }}
   {{- end }}
 {{- end }}
