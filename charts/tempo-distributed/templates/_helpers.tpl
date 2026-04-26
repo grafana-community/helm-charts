@@ -475,7 +475,7 @@ spec:
             - pvc
             - --namespace={{ $newStatefulSet.metadata.namespace }}
             - {{ printf "%s-%s-%d" $template $newStatefulSet.metadata.name $index }}
-            - --type='json'
+            - --type=json
             - '-p=[{"op": "replace", "path": "/spec/resources/requests/storage", "value": "{{ $size }}"}]'
           {{- end }}
         {{- end }}
@@ -516,7 +516,7 @@ rules:
       - delete
   {{- if $templates }}
   - apiGroups:
-      - v1
+      - ""
     resources:
       - persistentvolumeclaims
     resourceNames:
@@ -527,6 +527,7 @@ rules:
     {{- end }}
     verbs:
       - patch
+      - get
   {{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1

@@ -21,6 +21,8 @@ spec:
   {{- if and (eq "LoadBalancer" .Values.gateway.service.type) .Values.gateway.service.loadBalancerIP }}
   loadBalancerIP: {{ .Values.gateway.service.loadBalancerIP }}
   {{- end }}
+  ipFamilies: {{ .Values.tempo.service.ipFamilies }}
+  ipFamilyPolicy: {{ .Values.tempo.service.ipFamilyPolicy }}
   ports:
     - name: http-metrics
       port: {{ .Values.gateway.service.port }}
