@@ -1640,6 +1640,13 @@ queryFrontend:
   initContainers: []
   # -- Containers to add to the query-frontend pods
   extraContainers: []
+  # -- Additional ports to expose on the query-frontend container.
+  # The gRPC port is included by default. Standard ports (http-metrics, http-memberlist)
+  # are always added automatically by the pod template.
+  extraPorts:
+    - containerPort: 9095
+      name: grpc
+      protocol: TCP
   # -- Extra volumes for query-frontend pods
   extraVolumeMounts: []
   # -- Extra volumes for query-frontend deployment
