@@ -799,6 +799,8 @@ lokiCanary:
   labelname: pod
   # -- Additional annotations for the `loki-canary` Daemonset
   annotations: {}
+  # -- Additional annotations for each `loki-canary` pod
+  podAnnotations: {}
   # -- Additional labels for each `loki-canary` pod
   podLabels: {}
   service:
