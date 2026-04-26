@@ -1,0 +1,304 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: query-frontend Deployment
+templates:
+  - query-frontend/deployment-query-frontend.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: renders a Deployment with correct name and kind
+    template: query-frontend/deployment-query-frontend.yaml
+    asserts:
+      - equal:
+          path: kind
+          value: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-query-frontend
+
+  - it: renders standard ports on the query-frontend container
+    template: query-frontend/deployment-query-frontend.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 7946
+            name: http-memberlist
+            protocol: TCP
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 3200
+            name: http-metrics
+            protocol: TCP
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 9095
+            name: grpc
+            protocol: TCP
+
+  - it: does not render trace ports (query-frontend has no trace ingestion)
+    template: query-frontend/deployment-query-frontend.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports
+          value:
+            - containerPort: 7946
+              name: http-memberlist
+              protocol: TCP
+            - containerPort: 3200
+              name: http-metrics
+              protocol: TCP
+            - containerPort: 9095
+              name: grpc
+              protocol: TCP
+
+  - it: renders user-defined queryFrontend.extraPorts
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      queryFrontend.extraPorts:
+        - containerPort: 9999
+          name: custom-port
+          protocol: TCP
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 9999
+            name: custom-port
+            protocol: TCP
+
+  - it: uses tempo.podSecurityContext when no component override is set
+    template: query-frontend/deployment-query-frontend.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+
+  - it: component podSecurityContext overrides tempo.podSecurityContext
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      queryFrontend.podSecurityContext:
+        fsGroup: 2000
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 2000
+
+  - it: defaults.podSecurityContext is used when neither component nor tempo override is set
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      tempo.podSecurityContext: null
+      defaults.podSecurityContext:
+        fsGroup: 3000
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 3000
+
+  - it: uses tempo.securityContext for container securityContext by default
+    template: query-frontend/deployment-query-frontend.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 1000
+
+  - it: component containerSecurityContext overrides tempo.securityContext
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      queryFrontend.containerSecurityContext:
+        runAsUser: 2000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 2000
+
+  - it: defaults.nodeSelector is applied when component has no nodeSelector
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      defaults.nodeSelector:
+        kubernetes.io/os: linux
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: linux
+
+  - it: component nodeSelector overrides defaults.nodeSelector
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      defaults.nodeSelector:
+        kubernetes.io/os: linux
+      queryFrontend.nodeSelector:
+        kubernetes.io/arch: amd64
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/arch: amd64
+
+  - it: defaults.tolerations are applied when component has no tolerations
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      defaults.tolerations:
+        - key: dedicated
+          operator: Equal
+          value: tempo
+          effect: NoSchedule
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: dedicated
+            operator: Equal
+            value: tempo
+            effect: NoSchedule
+
+  - it: defaults.resources are used when neither component nor tempo resources are set
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      defaults.resources.limits.memory: 256Mi
+      defaults.resources.requests.cpu: 100m
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 256Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+
+  - it: component resources override defaults.resources
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      defaults.resources.limits.memory: 256Mi
+      queryFrontend.resources.limits.memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+
+  - it: defaults.podAnnotations are applied to pod
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      defaults.podAnnotations:
+        team: platform
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["team"]
+          value: platform
+
+  - it: component podAnnotations override defaults.podAnnotations
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      defaults.podAnnotations:
+        env: default
+      queryFrontend.podAnnotations:
+        env: production
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["env"]
+          value: production
+
+  - it: global.priorityClassName is used when no component override
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      global.priorityClassName: high-priority
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: high-priority
+
+  - it: defaults.priorityClassName overrides global.priorityClassName
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      global.priorityClassName: high-priority
+      defaults.priorityClassName: medium-priority
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: medium-priority
+
+  - it: component priorityClassName overrides defaults and global
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      global.priorityClassName: high-priority
+      defaults.priorityClassName: medium-priority
+      queryFrontend.priorityClassName: low-priority
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: low-priority
+
+  - it: global.extraArgs are prepended to component extraArgs
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      global.extraArgs:
+        - -config.expand-env=true
+      queryFrontend.extraArgs:
+        - -log.level=debug
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -config.expand-env=true
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -log.level=debug
+
+  - it: autoscaling disabled uses static replicas
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      queryFrontend.autoscaling.enabled: false
+      queryFrontend.replicas: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: autoscaling enabled omits replicas from spec
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      queryFrontend.autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: volumes include config, runtime-config and query-frontend store
+    template: query-frontend/deployment-query-frontend.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config
+            configMap:
+              name: RELEASE-NAME-tempo-config
+              items:
+                - key: "tempo.yaml"
+                  path: "tempo.yaml"
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: runtime-config
+            configMap:
+              name: RELEASE-NAME-tempo-runtime
+              items:
+                - key: "overrides.yaml"
+                  path: "overrides.yaml"
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: tempo-query-frontend-store
+            emptyDir: {}
+
+  - it: first container name is query-frontend
+    template: query-frontend/deployment-query-frontend.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: query-frontend
+
+  - it: args contain -target=query-frontend
+    template: query-frontend/deployment-query-frontend.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -target=query-frontend
