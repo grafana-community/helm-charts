@@ -18,6 +18,10 @@ metadata:
     {{- end }}
   annotations:
     rollout-max-unavailable: "{{ include "loki.ingester.maxUnavailable" (dict "ctx" $ "replicas" $replicas)}}"
+    {{- if and $.Values.rollout_operator.enabled (ne $zone "zone-a") }}
+    grafana.com/rollout-mirror-replicas-from-resource-name: {{ include "loki.ingesterFullname" $ }}-zone-a
+    grafana.com/rollout-mirror-replicas-from-resource-kind: StatefulSet
+    {{- end }}
     {{- with $.Values.loki.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -25,7 +29,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-{{- if and (not $.Values.ingester.autoscaling.enabled) (not $.Values.ingester.kedaAutoscaling.enabled) }}
+{{- if and (not $.Values.ingester.autoscaling.enabled) (not $.Values.ingester.kedaAutoscaling.enabled) (or (eq $zone "zone-a") (not $.Values.rollout_operator.enabled)) }}
   replicas: {{ $replicas }}
 {{- end }}
   podManagementPolicy: Parallel
