@@ -3336,6 +3336,8 @@ route:
         - path: /v1/traces
           # -- pathType for the match (e.g. PathPrefix, Exact)
           pathType: PathPrefix
+          # -- OTLP HTTP receiver port. This path is only rendered when traces.otlp.http.enabled is true.
+          port: 4318
         - path: /distributor/ring
           pathType: PathPrefix
         - path: /ingester/ring

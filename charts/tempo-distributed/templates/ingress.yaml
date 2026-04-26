@@ -36,6 +36,9 @@ spec:
         paths:
           {{- range $svcName, $paths := $.Values.ingress.paths }}
             {{- range $paths }}
+            {{- if and (eq .path "/v1/traces") (not $.Values.traces.otlp.http.enabled) }}
+            {{- /* skip: /v1/traces requires the OTLP HTTP receiver, which is disabled */ -}}
+            {{- else }}
           - path: {{ .path }}
             pathType: {{ .pathType | default "Prefix" }}
             backend:
@@ -43,6 +46,7 @@ spec:
                 name: {{ include "tempo.fullname" $ }}-{{ $svcName }}
                 port:
                   number: {{ .port | default (printf "%s" (include "tempo.serverHttpListenPort" $ )) }}
+            {{- end }}
             {{- end }}
           {{- end }}
     {{- end }}
