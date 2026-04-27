@@ -30,7 +30,7 @@ spec:
     spec:
       serviceAccountName: {{ template "tempo.serviceAccountName" . }}
       {{- if .Values.enterpriseGateway.priorityClassName }}
-      priorityClassName: {{ .Values.enterpriseGateway.priorityClassName }}
+      priorityClassName: {{ tpl .Values.enterpriseGateway.priorityClassName . }}
       {{- end }}
       securityContext:
         {{- toYaml .Values.enterpriseGateway.securityContext | nindent 8 }}

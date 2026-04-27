@@ -48,7 +48,7 @@ spec:
         {{- end }}
     spec:
       {{- if or ($.memcachedConfig.priorityClassName) ($.ctx.Values.global.priorityClassName) }}
-      priorityClassName: {{ default $.memcachedConfig.priorityClassName $.ctx.Values.global.priorityClassName }}
+      priorityClassName: {{ tpl (default $.memcachedConfig.priorityClassName $.ctx.Values.global.priorityClassName) $.ctx }}
       {{- end }}
       serviceAccountName: {{ include "tempo.serviceAccountName" $.ctx }}
       {{- with $.ctx.Values.tempo.podSecurityContext }}

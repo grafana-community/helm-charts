@@ -27,7 +27,7 @@ spec:
     spec:
       serviceAccountName: {{ include "tempo.resourceName" (dict "ctx" . "component" "tokengen") }}
       {{- if .Values.tokengenJob.priorityClassName }}
-      priorityClassName: {{ .Values.tokengenJob.priorityClassName }}
+      priorityClassName: {{ tpl .Values.tokengenJob.priorityClassName . }}
       {{- end }}
       securityContext:
         {{- toYaml .Values.tokengenJob.securityContext | nindent 8 }}

@@ -38,7 +38,7 @@ spec:
         {{- end }}
     spec:
       {{- if or (.Values.metricsGenerator.priorityClassName) (.Values.global.priorityClassName) }}
-      priorityClassName: {{ default .Values.metricsGenerator.priorityClassName .Values.global.priorityClassName }}
+      priorityClassName: {{ tpl (default .Values.metricsGenerator.priorityClassName .Values.global.priorityClassName) . }}
       {{- end }}
       serviceAccountName: {{ include "tempo.serviceAccountName" . }}
       {{- with .Values.tempo.podSecurityContext }}

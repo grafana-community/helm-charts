@@ -31,7 +31,7 @@ spec:
     spec:
       serviceAccountName: {{ include "tempo.resourceName" (dict "ctx" . "component" "provisioner") }}
       {{- if .Values.provisioner.priorityClassName }}
-      priorityClassName: {{ .Values.provisioner.priorityClassName }}
+      priorityClassName: {{ tpl .Values.provisioner.priorityClassName . }}
       {{- end }}
       securityContext:
         {{- toYaml .Values.provisioner.securityContext | nindent 8 }}
