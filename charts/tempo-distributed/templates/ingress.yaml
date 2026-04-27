@@ -22,10 +22,10 @@ spec:
     {{- range . }}
     - hosts:
         {{- range .hosts }}
-        - {{ . | quote }}
+        - {{ tpl . $ | quote }}
         {{- end }}
       {{- with .secretName }}
-      secretName: {{ . }}
+      secretName: {{ tpl . $ }}
       {{- end }}
     {{- end }}
   {{- end }}

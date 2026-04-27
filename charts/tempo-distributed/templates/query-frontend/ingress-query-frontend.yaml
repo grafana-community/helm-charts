@@ -20,10 +20,10 @@ spec:
     {{- range .Values.queryFrontend.ingress.tls }}
     - hosts:
         {{- range .hosts }}
-        - {{ . | quote }}
-        {{- end }}
-      {{- with .secretName }}
-      secretName: {{ . }}
+        - {{ tpl . $ | quote }}
+          {{- end }}
+        {{- with .secretName }}
+        secretName: {{ tpl . $ }}
       {{- end }}
     {{- end }}
   {{- end }}
