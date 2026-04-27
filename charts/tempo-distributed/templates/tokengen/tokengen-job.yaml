@@ -95,7 +95,7 @@ spec:
               if cat /shared/admin-token; then
                 echo "Admin token generated successfully and is readable"
                 # Create or update the secret with the admin token
-                kubectl create secret generic {{ .Values.tokengenJob.adminTokenSecret }} \
+                kubectl create secret generic {{ tpl .Values.tokengenJob.adminTokenSecret . }} \
                   --from-file=token=/shared/admin-token \
                   --dry-run=client -o yaml | kubectl apply -f -
                 echo "Admin token secret created/updated successfully"

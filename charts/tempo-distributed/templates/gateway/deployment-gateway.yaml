@@ -160,7 +160,7 @@ spec:
         {{- if .Values.gateway.nginxConfig.ssl }}
         - name: gateway-tls
           secret:
-            secretName: {{ .Values.gateway.nginxConfig.tlsSecretName }}
+            secretName: {{ tpl .Values.gateway.nginxConfig.tlsSecretName . }}
         {{- end }}
         {{- if .Values.gateway.extraVolumes }}
         {{- toYaml .Values.gateway.extraVolumes | nindent 8 }}
