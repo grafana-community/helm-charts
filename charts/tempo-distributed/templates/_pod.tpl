@@ -122,11 +122,9 @@ spec:
     {{- end }}
     {{- end }}
   terminationGracePeriodSeconds: {{ $component.terminationGracePeriodSeconds }}
-  {{- if semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version }}
   {{- with $component.topologySpreadConstraints }}
   topologySpreadConstraints:
     {{- tpl . $ctx | nindent 4 }}
-  {{- end }}
   {{- end }}
   {{- with $component.affinity }}
   affinity:

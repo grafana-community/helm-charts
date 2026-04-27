@@ -116,11 +116,9 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.metricsGenerator.terminationGracePeriodSeconds }}
-      {{- if semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version }}
       {{- with .Values.metricsGenerator.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- tpl . $ | nindent 8 }}
-      {{- end }}
       {{- end }}
       {{- with .Values.metricsGenerator.affinity }}
       affinity:

@@ -99,11 +99,9 @@ spec:
         {{- end }}
       nodeSelector:
         {{- toYaml .Values.adminApi.nodeSelector | nindent 8 }}
-      {{- if semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version }}
       {{- with .Values.adminApi.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- tpl . $ | nindent 8 }}
-      {{- end }}
       {{- end }}
       {{- with .Values.adminApi.affinity }}
       affinity:

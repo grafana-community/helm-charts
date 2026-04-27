@@ -148,11 +148,9 @@ spec:
         {{- with $.memcachedConfig.extraContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- if semverCompare ">= 1.19-0" $.ctx.Capabilities.KubeVersion.Version }}
       {{- with $.memcachedConfig.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- tpl . $.ctx | nindent 8 }}
-      {{- end }}
       {{- end }}
       {{- with $.memcachedConfig.affinity }}
       affinity:

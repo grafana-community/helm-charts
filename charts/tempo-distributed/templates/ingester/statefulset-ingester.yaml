@@ -141,11 +141,9 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       terminationGracePeriodSeconds: {{ .Values.ingester.terminationGracePeriodSeconds }}
-      {{- if semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version }}
       {{- with .Values.ingester.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- tpl . $ | nindent 8 }}
-      {{- end }}
       {{- end }}
       {{- if eq $zoneName ""}}
       {{- with $rolloutZone.affinity }}
