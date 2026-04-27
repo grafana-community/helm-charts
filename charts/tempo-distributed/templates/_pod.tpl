@@ -41,6 +41,11 @@ spec:
   hostAliases:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  {{- $dnsOverride := $component.dnsConfigOverides | default dict }}
+  {{- if and $dnsOverride.enabled $dnsOverride.dnsConfig }}
+  dnsConfig:
+    {{- toYaml $dnsOverride.dnsConfig | nindent 4 }}
+  {{- end }}
   {{- with $component.initContainers }}
   initContainers:
     {{- if kindIs "slice" . }}
