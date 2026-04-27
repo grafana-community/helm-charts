@@ -73,8 +73,8 @@ streamOverHTTPEnabled: false
 
 tempo:
   image:
-    # -- The Docker registry
-    registry: docker.io
+    # -- The Docker registry. Overrides `global.image.registry`
+    registry: null
     # -- Optional list of imagePullSecrets. Overrides `global.image.pullSecrets`
     pullSecrets: []
     # -- Docker image repository
