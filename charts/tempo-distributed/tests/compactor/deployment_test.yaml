@@ -279,3 +279,53 @@ tests:
           content:
             name: tempo-compactor-store
             emptyDir: {}
+
+  - it: dnsConfigOverides disabled by default - no dnsConfig rendered
+    template: compactor/deployment-compactor.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.dnsConfig
+
+  - it: dnsConfigOverides.enabled=true renders dnsConfig from default body
+    template: compactor/deployment-compactor.yaml
+    set:
+      compactor.dnsConfigOverides.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.dnsConfig
+          value:
+            options:
+              - name: ndots
+                value: "3"
+
+  - it: dnsConfigOverides.enabled=true with custom dnsConfig body
+    template: compactor/deployment-compactor.yaml
+    set:
+      compactor.dnsConfigOverides.enabled: true
+      compactor.dnsConfigOverides.dnsConfig:
+        nameservers:
+          - 8.8.8.8
+        options:
+          - name: ndots
+            value: "1"
+    asserts:
+      - equal:
+          path: spec.template.spec.dnsConfig
+          value:
+            nameservers:
+              - 8.8.8.8
+            options:
+              - name: ndots
+                value: "1"
+
+  - it: dnsConfigOverides.enabled=false renders no dnsConfig even with body set
+    template: compactor/deployment-compactor.yaml
+    set:
+      compactor.dnsConfigOverides.enabled: false
+      compactor.dnsConfigOverides.dnsConfig:
+        options:
+          - name: ndots
+            value: "3"
+    asserts:
+      - notExists:
+          path: spec.template.spec.dnsConfig
