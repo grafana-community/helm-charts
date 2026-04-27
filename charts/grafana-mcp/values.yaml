@@ -235,6 +235,9 @@ runtimeClassName: ""
 # -- Scheduler name
 schedulerName: ""
 
+# -- Termination grace period in seconds (defaults to Kubernetes' default of 30s when unset)
+terminationGracePeriodSeconds: ""
+
 # -- Host aliases
 hostAliases: []
 
