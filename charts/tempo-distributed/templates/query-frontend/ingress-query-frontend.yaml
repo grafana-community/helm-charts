@@ -29,7 +29,7 @@ spec:
   {{- end }}
   rules:
     {{- range .Values.queryFrontend.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: {{ tpl .host $ | quote }}
       http:
         paths:
           {{- range .paths }}
