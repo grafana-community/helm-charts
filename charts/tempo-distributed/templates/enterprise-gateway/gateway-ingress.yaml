@@ -14,7 +14,7 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
 spec:
   {{- with .Values.enterpriseGateway.ingress.ingressClassName }}
-  ingressClassName: {{ . }}
+  ingressClassName: {{ tpl . $ }}
   {{- end }}
   {{- if .Values.enterpriseGateway.ingress.tls }}
   tls:
