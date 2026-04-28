@@ -56,6 +56,10 @@ spec:
       hostAliases:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
       containers:
       - args:
         - -config.file=/conf/tempo.yaml
@@ -154,6 +158,9 @@ spec:
         {{- end }}
         - mountPath: /conf
           name: tempo-query-conf
+      {{- end }}
+      {{- with .Values.extraContainers }}
+        {{- toYaml . | nindent 6 }}
       {{- end }}
       {{- with .Values.affinity }}
       affinity:
