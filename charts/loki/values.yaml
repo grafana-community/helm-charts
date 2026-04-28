@@ -2641,6 +2641,13 @@ distributor:
   enabled: true
   # -- Number of replicas for the distributor
   replicas: 0
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: Deployment
+  # -- UpdateStrategy or Strategy for the distributor.
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   # -- hostAliases to add
   hostAliases: []
   #  - ip: 1.2.3.4
@@ -2710,6 +2717,10 @@ distributor:
   command: null
   # -- The name of the PriorityClass for distributor pods
   priorityClassName: null
+  # -- Labels for distributor
+  labels: {}
+  # -- Annotations for distributor
+  annotations: {}
   # -- Labels for distributor pods
   podLabels: {}
   # -- Annotations for distributor pods

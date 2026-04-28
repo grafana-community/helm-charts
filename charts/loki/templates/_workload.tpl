@@ -8,6 +8,7 @@ Workload helper
 {{- $component := .component }}
 {{- $name := .name }}
 {{- $headlessName := .headlessName }}
+{{- $args := .args }}
 {{- $memberlist := hasKey . "memberlist" | ternary .memberlist true -}}
 {{- with $ctx }}
 {{- if $component.enabled }}
@@ -15,7 +16,7 @@ Workload helper
 apiVersion: apps/v1
 kind: {{ $component.kind }}
 metadata:
-  name: {{ $name | default (include "loki.resourceName" (dict "ctx" $ctx "component" $target)) }}
+  name: {{ $name | default $component.fullnameOverride | default (include "loki.resourceName" (dict "ctx" $ctx "component" $target)) }}
   namespace: {{ include "loki.namespace" . }}
   labels:
     {{- include "loki.labels" . | nindent 4 }}
@@ -55,7 +56,7 @@ spec:
       {{- include "loki.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: {{ $target }}
   template:
-    {{- include "loki.podTemplate" (dict "target" $target "component" $component "ctx" $ctx "memberlist" $memberlist) | nindent 4 }}
+    {{- include "loki.podTemplate" (dict "target" $target "component" $component "ctx" $ctx "memberlist" $memberlist "args" $args) | nindent 4 }}
   {{- if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq $component.persistence.type "pvc") }}
     {{- if and (eq $component.kind "Deployment") (gt (int $component.replicas) 1) }}
       {{- fail "Persistence with PVC is not supported for Deployment with more than 1 replica. Please use StatefulSet or set replicas to 1." }}
