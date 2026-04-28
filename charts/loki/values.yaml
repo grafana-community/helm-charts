@@ -1399,6 +1399,13 @@ gateway:
       failureThreshold: 3
     # -- Startup probe for memcached exporter
     startupProbe: {}
+    service:
+      # -- Annotations for the gateway metrics exporter service.
+      # Use this instead of gateway.service.annotations to avoid propagating
+      # annotations (e.g. external-dns) to the exporter ClusterIP service.
+      annotations: {}
+      # -- Labels for the gateway metrics exporter service.
+      labels: {}
 
 # -- Ingress configuration Use either this ingress or the gateway, but not both at once.
 # If you enable this, make sure to disable the gateway.

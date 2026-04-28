@@ -281,6 +281,28 @@
           "additionalProperties": {
             "$ref": "#/definitions/gatewayRouteEntry"
           }
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "labels": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
