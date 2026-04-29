@@ -721,7 +721,7 @@ http {
     {{- $indexGatewayUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $indexGatewayHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
     {{- $rulerUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $rulerHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
     {{- $compactorUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $compactorHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
-    {{- $schedulerUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $querySchedulerHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
+    {{- $querySchedulerUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $querySchedulerHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
     {{- $querierUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $querierHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
 
     {{- if eq (include "loki.deployment.isMonolithic" .) "true"}}
@@ -731,7 +731,7 @@ http {
     {{- $indexGatewayUrl = $monolithicUrl }}
     {{- $rulerUrl = $monolithicUrl }}
     {{- $compactorUrl = $monolithicUrl }}
-    {{- $schedulerUrl = $monolithicUrl }}
+    {{- $querySchedulerUrl = $monolithicUrl }}
     {{- $querierUrl = $monolithicUrl }}
     {{- else if eq (include "loki.deployment.isScalable" .) "true"}}
     {{- $distributorUrl = $writeUrl }}
@@ -741,7 +741,7 @@ http {
     {{- $indexGatewayUrl = $backendUrl }}
     {{- $rulerUrl = $backendUrl }}
     {{- $compactorUrl = $backendUrl }}
-    {{- $schedulerUrl = $backendUrl }}
+    {{- $querySchedulerUrl = $backendUrl }}
     {{- end -}}
 
     {{- if .Values.loki.ui.gateway.enabled }}
@@ -912,7 +912,7 @@ http {
       {{- with .Values.gateway.nginxConfig.locationSnippet }}
       {{- tpl . $ | nindent 6 }}
       {{- end }}
-      set $backend     "{{ $schedulerUrl }}";
+      set $backend     "{{ $querySchedulerUrl }}";
       proxy_pass       $backend$request_uri;
     }
 
