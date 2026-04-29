@@ -284,10 +284,10 @@
         },
         "metrics": {
           "type": "object",
-          "additionalProperties": false,
           "properties": {
             "service": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "annotations": {
                   "type": "object",
