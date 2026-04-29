@@ -712,7 +712,7 @@ http {
     {{- $indexGatewayHost := include "loki.resourceName" (dict "ctx" . "component" "index-gateway") }}
     {{- $rulerHost := include "loki.resourceName" (dict "ctx" . "component" "ruler") }}
     {{- $compactorHost := include "loki.resourceName" (dict "ctx" . "component" "compactor") }}
-    {{- $schedulerHost := include "loki.resourceName" (dict "ctx" . "component" "scheduler") }}
+    {{- $schedulerHost := include "loki.resourceName" (dict "ctx" . "component" "query-scheduler") }}
     {{- $querierHost := include "loki.resourceName" (dict "ctx" . "component" "querier") }}
 
     {{- $distributorUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $distributorHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) -}}
