@@ -284,6 +284,7 @@
         },
         "metrics": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "service": {
               "type": "object",
