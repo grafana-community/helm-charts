@@ -2430,6 +2430,10 @@ ingester:
   # -- Number of replicas for the ingester, when zoneAwareReplication.enabled is true, the total
   # number of replicas will match this value with each zone having 1/3rd of the total replicas.
   replicas: 0
+  # -- When true, omit spec.replicas from the StatefulSet(s) entirely.
+  # Use when an external controller (e.g. HPA, KEDA, rollout-operator) manages replica counts,
+  # to prevent Helm or ArgoCD from resetting replicas on every sync.
+  externalReplicaManagement: false
   # -- DNSConfig for ingester pods
   dnsConfig: {}
   # -- hostAliases to add
