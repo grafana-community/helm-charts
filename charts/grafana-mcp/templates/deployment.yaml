@@ -137,6 +137,9 @@ spec:
             {{- if .Values.metrics.enabled }}
             - --metrics
             {{- end }}
+            {{- if .Values.disableWrite }}
+            - --disable-write
+            {{- end }}
             {{- range .Values.disabledCategories }}
             - --disable-{{ . }}
             {{- end }}

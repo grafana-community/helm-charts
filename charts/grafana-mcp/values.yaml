@@ -41,6 +41,9 @@ debug: false
 # -- Categories to disable (e.g., oncall, incident, sift)
 disabledCategories: []
 
+# -- Disable write operations to Grafana
+disableWrite: false
+
 # -- Additional command line arguments
 extraArgs: []
 
