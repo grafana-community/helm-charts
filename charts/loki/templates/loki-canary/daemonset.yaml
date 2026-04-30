@@ -8,6 +8,12 @@ metadata:
   namespace: {{ include "loki.namespace" $ }}
   labels:
     {{- include "loki-canary.labels" $ | nindent 4 }}
+  {{- if or (not (empty .Values.loki.annotations)) (not (empty .Values.lokiCanary.annotations)) }}
+  annotations:
+    {{- with merge (dict) .Values.loki.annotations .Values.lokiCanary.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
 spec:
   selector:
     matchLabels:

@@ -1,6 +1,5 @@
 {{- if .Values.distributor.autoscaling.enabled }}
-{{- $apiVersion := include "tempo.hpa.apiVersion" . -}}
-apiVersion: {{ $apiVersion }}
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}
@@ -23,24 +22,16 @@ spec:
     - type: Resource
       resource:
         name: memory
-        {{- if (eq $apiVersion "autoscaling/v2") }}
         target:
           type: Utilization
           averageUtilization: {{ . }}
-        {{- else }}
-        targetAverageUtilization: {{ . }}
-        {{- end }}
   {{- end }}
   {{- with .Values.distributor.autoscaling.targetCPUUtilizationPercentage }}
     - type: Resource
       resource:
         name: cpu
-        {{- if (eq $apiVersion "autoscaling/v2") }}
         target:
           type: Utilization
           averageUtilization: {{ . }}
-        {{- else }}
-        targetAverageUtilization: {{ . }}
-        {{- end }}
   {{- end }}
 {{- end }}

@@ -27,7 +27,7 @@ spec:
     spec:
       serviceAccountName: {{ include "tempo.resourceName" (dict "ctx" . "component" "tokengen") }}
       {{- if .Values.tokengenJob.priorityClassName }}
-      priorityClassName: {{ .Values.tokengenJob.priorityClassName }}
+      priorityClassName: {{ tpl .Values.tokengenJob.priorityClassName . }}
       {{- end }}
       securityContext:
         {{- toYaml .Values.tokengenJob.securityContext | nindent 8 }}
@@ -95,7 +95,7 @@ spec:
               if cat /shared/admin-token; then
                 echo "Admin token generated successfully and is readable"
                 # Create or update the secret with the admin token
-                kubectl create secret generic {{ .Values.tokengenJob.adminTokenSecret }} \
+                kubectl create secret generic {{ tpl .Values.tokengenJob.adminTokenSecret . }} \
                   --from-file=token=/shared/admin-token \
                   --dry-run=client -o yaml | kubectl apply -f -
                 echo "Admin token secret created/updated successfully"

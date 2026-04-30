@@ -21,27 +21,27 @@ metadata:
   {{- end }}
 spec:
   {{- with .Values.gateway.ingress.ingressClassName }}
-  ingressClassName: {{ . }}
+  ingressClassName: {{ tpl . $ }}
   {{- end }}
   {{- if .Values.gateway.ingress.tls }}
   tls:
     {{- range .Values.gateway.ingress.tls }}
     - hosts:
         {{- range .hosts }}
-        - {{ . | quote }}
+        - {{ tpl . $ | quote }}
         {{- end }}
       {{- with .secretName }}
-      secretName: {{ . }}
+      secretName: {{ tpl . $ }}
       {{- end }}
     {{- end }}
   {{- end }}
   rules:
     {{- range .Values.gateway.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: {{ tpl .host $ | quote }}
       http:
         paths:
           {{- range .paths }}
-          - path: {{ .path }}
+          - path: {{ tpl .path $ }}
             pathType: {{ .pathType }}
             backend:
               service:

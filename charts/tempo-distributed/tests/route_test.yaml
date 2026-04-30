@@ -1,0 +1,117 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: route /v1/traces conditional rendering
+templates:
+  - route.yaml
+  - ingress.yaml
+  - configmap-tempo.yaml
+
+set:
+  route.main.enabled: true
+  route.main.parentRefs:
+    - name: gw
+  ingress.enabled: true
+  ingress.hosts:
+    - tempo.example.com
+
+tests:
+  - it: renders /v1/traces with port 4318 in HTTPRoute when OTLP HTTP is enabled
+    set:
+      traces.otlp.http.enabled: true
+    asserts:
+      - template: route.yaml
+        contains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /v1/traces
+            backendRefs:
+              - name: RELEASE-NAME-tempo-distributor
+                port: 4318
+
+  - it: renders /v1/traces with port 4318 in Ingress when OTLP HTTP is enabled
+    set:
+      traces.otlp.http.enabled: true
+    asserts:
+      - template: ingress.yaml
+        contains:
+          path: spec.rules[0].http.paths
+          content:
+            path: /v1/traces
+            pathType: Prefix
+            backend:
+              service:
+                name: RELEASE-NAME-tempo-distributor
+                port:
+                  number: 4318
+
+  - it: omits /v1/traces from HTTPRoute when OTLP HTTP is disabled
+    set:
+      traces.otlp.http.enabled: false
+    asserts:
+      - template: route.yaml
+        notContains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /v1/traces
+            backendRefs:
+              - name: RELEASE-NAME-tempo-distributor
+                port: 4318
+      - template: route.yaml
+        notContains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /v1/traces
+            backendRefs:
+              - name: RELEASE-NAME-tempo-distributor
+                port: 3200
+
+  - it: omits /v1/traces from Ingress when OTLP HTTP is disabled
+    set:
+      traces.otlp.http.enabled: false
+    asserts:
+      - template: ingress.yaml
+        notContains:
+          path: spec.rules[0].http.paths
+          content:
+            path: /v1/traces
+            pathType: Prefix
+            backend:
+              service:
+                name: RELEASE-NAME-tempo-distributor
+                port:
+                  number: 4318
+
+  - it: still renders other distributor paths (e.g. /distributor/ring) when OTLP HTTP is disabled
+    set:
+      traces.otlp.http.enabled: false
+    asserts:
+      - template: route.yaml
+        contains:
+          path: spec.rules
+          content:
+            matches:
+              - path:
+                  type: PathPrefix
+                  value: /distributor/ring
+            backendRefs:
+              - name: RELEASE-NAME-tempo-distributor
+                port: 3200
+      - template: ingress.yaml
+        contains:
+          path: spec.rules[0].http.paths
+          content:
+            path: /distributor/ring
+            pathType: Prefix
+            backend:
+              service:
+                name: RELEASE-NAME-tempo-distributor
+                port:
+                  number: 3200

@@ -31,7 +31,7 @@ spec:
     spec:
       serviceAccountName: {{ include "tempo.resourceName" (dict "ctx" . "component" "provisioner") }}
       {{- if .Values.provisioner.priorityClassName }}
-      priorityClassName: {{ .Values.provisioner.priorityClassName }}
+      priorityClassName: {{ tpl .Values.provisioner.priorityClassName . }}
       {{- end }}
       securityContext:
         {{- toYaml .Values.provisioner.securityContext | nindent 8 }}
@@ -53,7 +53,7 @@ spec:
               /usr/bin/provisioner \
                 -bootstrap-path=/bootstrap \
                 -cluster-name={{ include "tempo.clusterName" $ }} \
-                -api-url={{ $.Values.provisioner.apiUrl }} \
+                -api-url={{ tpl $.Values.provisioner.apiUrl $ }} \
                 -tenant={{ $tenant.name }} \
                 -access-policy=write-{{ $tenant.name }}:{{ $tenant.name }}:traces:write \
                 -access-policy=read-{{ $tenant.name }}:{{ $tenant.name }}:traces:read \
@@ -90,8 +90,8 @@ spec:
               # In this case, the admin resources have already been created, the provisioner job
               # does not write the token files to the bootstrap mount.
               # Therefore, secrets are only created if the respective token files exist.
-              # Note: the following bash commands should always return a success status code. 
-              # Therefore, in case the token file does not exist, the first clause of the 
+              # Note: the following bash commands should always return a success status code.
+              # Therefore, in case the token file does not exist, the first clause of the
               # or-operation is successful.
               {{- $secretPrefix := .Values.provisioner.provisionedSecretPrefix | default (include "tempo.resourceName" (dict "ctx" . "component" "token")) }}
               {{- range .Values.provisioner.additionalTenants }}
@@ -119,7 +119,7 @@ spec:
       volumes:
         - name: admin-token
           secret:
-            secretName: {{ .Values.tokengenJob.adminTokenSecret }}
+            secretName: {{ tpl .Values.tokengenJob.adminTokenSecret . }}
         - name: bootstrap
           emptyDir: {}
         {{- if .Values.provisioner.extraVolumes }}

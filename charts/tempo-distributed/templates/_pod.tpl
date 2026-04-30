@@ -41,6 +41,11 @@ spec:
   hostAliases:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  {{- $dnsOverride := $component.dnsConfigOverides | default dict }}
+  {{- if and $dnsOverride.enabled $dnsOverride.dnsConfig }}
+  dnsConfig:
+    {{- toYaml $dnsOverride.dnsConfig | nindent 4 }}
+  {{- end }}
   {{- with $component.initContainers }}
   initContainers:
     {{- if kindIs "slice" . }}
@@ -117,11 +122,9 @@ spec:
     {{- end }}
     {{- end }}
   terminationGracePeriodSeconds: {{ $component.terminationGracePeriodSeconds }}
-  {{- if semverCompare ">= 1.19-0" .Capabilities.KubeVersion.Version }}
   {{- with $component.topologySpreadConstraints }}
   topologySpreadConstraints:
     {{- tpl . $ctx | nindent 4 }}
-  {{- end }}
   {{- end }}
   {{- with $component.affinity }}
   affinity:

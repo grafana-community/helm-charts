@@ -41,6 +41,9 @@ debug: false
 # -- Categories to disable (e.g., oncall, incident, sift)
 disabledCategories: []
 
+# -- Disable write operations to Grafana
+disableWrite: false
+
 # -- Additional command line arguments
 extraArgs: []
 
@@ -234,6 +237,9 @@ runtimeClassName: ""
 
 # -- Scheduler name
 schedulerName: ""
+
+# -- Termination grace period in seconds (defaults to Kubernetes' default of 30s when unset)
+terminationGracePeriodSeconds: ""
 
 # -- Host aliases
 hostAliases: []

@@ -48,7 +48,7 @@ spec:
         {{- end }}
     spec:
       {{- if or ($.memcachedConfig.priorityClassName) ($.ctx.Values.global.priorityClassName) }}
-      priorityClassName: {{ default $.memcachedConfig.priorityClassName $.ctx.Values.global.priorityClassName }}
+      priorityClassName: {{ tpl (default $.memcachedConfig.priorityClassName $.ctx.Values.global.priorityClassName) $.ctx }}
       {{- end }}
       serviceAccountName: {{ include "tempo.serviceAccountName" $.ctx }}
       {{- with $.ctx.Values.tempo.podSecurityContext }}
@@ -148,11 +148,9 @@ spec:
         {{- with $.memcachedConfig.extraContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- if semverCompare ">= 1.19-0" $.ctx.Capabilities.KubeVersion.Version }}
       {{- with $.memcachedConfig.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- tpl . $.ctx | nindent 8 }}
-      {{- end }}
       {{- end }}
       {{- with $.memcachedConfig.affinity }}
       affinity:

@@ -53,6 +53,9 @@ spec:
     {{- if $route.paths }}
     {{- range $svcName, $paths := $route.paths }}
     {{- range $paths }}
+    {{- if and (eq .path "/v1/traces") (not $ctx.Values.traces.otlp.http.enabled) }}
+    {{- /* skip: /v1/traces requires the OTLP HTTP receiver, which is disabled */ -}}
+    {{- else }}
     - matches:
         - path:
             type: {{ .pathType | default "PathPrefix" }}
@@ -60,6 +63,7 @@ spec:
       backendRefs:
         - name: {{ include "tempo.fullname" $ctx }}-{{ $svcName }}
           port: {{ .port | default (include "tempo.serverHttpListenPort" $ctx | trim | int) }}
+    {{- end }}
     {{- end }}
     {{- end }}
     {{- else }}

@@ -75,15 +75,15 @@ Params:
       weight: 1
   {{- with .route.filters }}
   filters:
-    {{- toYaml . | nindent 2 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- with .route.matches }}
   matches:
-    {{- toYaml . | nindent 2 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- with .route.timeouts }}
   timeouts:
-    {{- toYaml . | nindent 2 }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end -}}
 

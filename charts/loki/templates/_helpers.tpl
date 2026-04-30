@@ -712,7 +712,7 @@ http {
     {{- $indexGatewayHost := include "loki.resourceName" (dict "ctx" . "component" "index-gateway") }}
     {{- $rulerHost := include "loki.resourceName" (dict "ctx" . "component" "ruler") }}
     {{- $compactorHost := include "loki.resourceName" (dict "ctx" . "component" "compactor") }}
-    {{- $schedulerHost := include "loki.resourceName" (dict "ctx" . "component" "scheduler") }}
+    {{- $querySchedulerHost := include "loki.resourceName" (dict "ctx" . "component" "query-scheduler") }}
     {{- $querierHost := include "loki.resourceName" (dict "ctx" . "component" "querier") }}
 
     {{- $distributorUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $distributorHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) -}}
@@ -721,7 +721,7 @@ http {
     {{- $indexGatewayUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $indexGatewayHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
     {{- $rulerUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $rulerHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
     {{- $compactorUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $compactorHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
-    {{- $schedulerUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $schedulerHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
+    {{- $querySchedulerUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $querySchedulerHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
     {{- $querierUrl := printf "%s://%s.%s.svc.%s:%s" $httpSchema $querierHost $namespace .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
 
     {{- if eq (include "loki.deployment.isMonolithic" .) "true"}}
@@ -731,7 +731,7 @@ http {
     {{- $indexGatewayUrl = $monolithicUrl }}
     {{- $rulerUrl = $monolithicUrl }}
     {{- $compactorUrl = $monolithicUrl }}
-    {{- $schedulerUrl = $monolithicUrl }}
+    {{- $querySchedulerUrl = $monolithicUrl }}
     {{- $querierUrl = $monolithicUrl }}
     {{- else if eq (include "loki.deployment.isScalable" .) "true"}}
     {{- $distributorUrl = $writeUrl }}
@@ -741,7 +741,7 @@ http {
     {{- $indexGatewayUrl = $backendUrl }}
     {{- $rulerUrl = $backendUrl }}
     {{- $compactorUrl = $backendUrl }}
-    {{- $schedulerUrl = $backendUrl }}
+    {{- $querySchedulerUrl = $backendUrl }}
     {{- end -}}
 
     {{- if .Values.loki.ui.gateway.enabled }}
@@ -912,7 +912,7 @@ http {
       {{- with .Values.gateway.nginxConfig.locationSnippet }}
       {{- tpl . $ | nindent 6 }}
       {{- end }}
-      set $backend     "{{ $schedulerUrl }}";
+      set $backend     "{{ $querySchedulerUrl }}";
       proxy_pass       $backend$request_uri;
     }
 
@@ -1015,12 +1015,12 @@ enableServiceLinks: {{ $ctx.Values.loki.enableServiceLinks }}
 
 {{/* Determine query-scheduler address */}}
 {{- define "loki.querySchedulerAddress" -}}
-{{- $schedulerAddress := ""}}
+{{- $querySchedulerAddress := ""}}
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
 {{- if $isDistributed -}}
-{{- $schedulerAddress = printf "%s.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "query-scheduler")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
+{{- $querySchedulerAddress = printf "%s.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "query-scheduler")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
 {{- end -}}
-{{- printf "%s" $schedulerAddress }}
+{{- printf "%s" $querySchedulerAddress }}
 {{- end }}
 
 {{/* Determine querier address */}}

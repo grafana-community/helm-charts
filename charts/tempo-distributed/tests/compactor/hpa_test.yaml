@@ -1,0 +1,93 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: compactor HorizontalPodAutoscaler
+templates:
+  - compactor/hpa.yaml
+
+tests:
+  - it: HPA is not rendered by default (autoscaling disabled)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: HPA is rendered when autoscaling and hpa enabled, with autoscaling/v2 shape
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.hpa.enabled: true
+      compactor.autoscaling.hpa.targetCPUUtilizationPercentage: 60
+      compactor.autoscaling.hpa.targetMemoryUtilizationPercentage: 70
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: apiVersion
+          value: autoscaling/v2
+      - equal:
+          path: kind
+          value: HorizontalPodAutoscaler
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-compactor
+      - equal:
+          path: spec.scaleTargetRef
+          value:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: RELEASE-NAME-tempo-compactor
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 60
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: memory
+              target:
+                type: Utilization
+                averageUtilization: 70
+      # Regression guard: ensure the legacy v2beta1 field shape is not used
+      - notContains:
+          path: spec.metrics
+          content:
+            targetAverageUtilization: 60
+
+  - it: HPA renders min/max replicas
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.hpa.enabled: true
+      compactor.autoscaling.minReplicas: 2
+      compactor.autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 2
+      - equal:
+          path: spec.maxReplicas
+          value: 10
+
+  - it: HPA renders behavior block when set
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.hpa.enabled: true
+      compactor.autoscaling.hpa.behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+    asserts:
+      - equal:
+          path: spec.behavior.scaleDown.stabilizationWindowSeconds
+          value: 300
+
+  - it: HPA is not rendered when backendScheduler is enabled
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.hpa.enabled: true
+      backendScheduler.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0

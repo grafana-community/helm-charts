@@ -161,6 +161,15 @@ defaults:
       authModes: ""
       # -- Secret key references for TriggerAuthentication
       secretTargetRef: []
+  statefulSetRecreateJob:
+    # -- Enable the PVC resize job for statefulsets. This job will be triggered when the storage size is increased and
+    # will recreate the statefulset to allow resizing of PVCs, which is not natively supported by Kubernetes.
+    patchPVC: true
+    image:
+      registry: registry.k8s.io
+      repository: kubectl
+      # -- Overrides the image tag. Defaults to .Capabilities.KubeVersion.Version
+      tag: ''
 
 ######################################################################################################################
 #
@@ -799,6 +808,8 @@ lokiCanary:
   labelname: pod
   # -- Additional annotations for the `loki-canary` Daemonset
   annotations: {}
+  # -- Additional annotations for each `loki-canary` pod
+  podAnnotations: {}
   # -- Additional labels for each `loki-canary` pod
   podLabels: {}
   service:
@@ -1282,7 +1293,21 @@ gateway:
       # - name: my-gateway
       #   namespace: gateway-namespace
       # -- Additional rules to prepend before the default catch-all rule.
-      # Useful for advanced routing logic (e.g. header-based routing or auth policies).
+      # Each entry is rendered into spec.rules as written (templating is supported),
+      # so any HTTPRoute/GRPCRoute rule shape is accepted — including filter-only rules
+      # with no backendRefs (e.g. RequestRedirect, URLRewrite).
+      # Useful for advanced routing logic (e.g. header-based routing, auth policies, redirects).
+      # Note: the chart-generated rule that points at the gateway service is always rendered
+      # for this route — additionalRules are prepended, not a replacement.
+      # Example HTTP-to-HTTPS redirect:
+      #   additionalRules:
+      #     - filters:
+      #         - type: RequestRedirect
+      #           requestRedirect:
+      #             scheme: https
+      #             statusCode: 301
+      #       matches:
+      #         - path: { type: PathPrefix, value: / }
       additionalRules: []
       # -- Matches for the default rule. Defaults to match all paths.
       matches:
@@ -1383,6 +1408,13 @@ gateway:
       failureThreshold: 3
     # -- Startup probe for memcached exporter
     startupProbe: {}
+    service:
+      # -- Annotations for the gateway metrics exporter service.
+      # Use this instead of gateway.service.annotations to avoid propagating
+      # annotations (e.g. external-dns) to the exporter ClusterIP service.
+      annotations: {}
+      # -- Labels for the gateway metrics exporter service.
+      labels: {}
 
 # -- Ingress configuration Use either this ingress or the gateway, but not both at once.
 # If you enable this, make sure to disable the gateway.
@@ -1481,13 +1513,19 @@ route:
     hostnames: []
     # -- Parent references for the route (required for Gateway API)
     parentRefs: []
-    # -- Additional rules to prepend before the generated path-routing rules
+    # -- Additional rules to prepend before the generated path-routing rules.
+    # Each entry is rendered into spec.rules as written (templating is supported),
+    # so any HTTPRoute/GRPCRoute rule shape is accepted — including filter-only rules
+    # with no backendRefs (e.g. RequestRedirect, URLRewrite).
     additionalRules: []
     # -- Backend port override for all generated rules.
     # When unset, GRPCRoute automatically uses loki.server.grpc_listen_port (default 9095)
     # and all other kinds use loki.server.http_listen_port (default 3100).
     backendPort: null
     # -- Paths routed to each Loki service group. The target service depends on the deployment mode.
+    # To produce a route that contains only `additionalRules` and no chart-generated path rules
+    # (for example, a dedicated HTTP-to-HTTPS redirect route), set every entry below to an empty
+    # list — e.g. `distributor: []`, `queryFrontend: []`, `ruler: []`, `compactor: []`.
     paths:
       # -- Paths that are exposed by Loki Distributor.
       # If deployment mode is Distributed, the requests are forwarded to the service: `{{"loki.distributorFullname"}}`.
@@ -1946,7 +1984,7 @@ write:
     labels: {}
   serviceAccount:
     # -- Specifies whether a ServiceAccount should be created
-    create: true
+    create: false
     # -- The name of the ServiceAccount to use.
     # If not set and create is true, a name is generated using the fullname template
     name: null
@@ -2619,6 +2657,13 @@ distributor:
   enabled: true
   # -- Number of replicas for the distributor
   replicas: 0
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: Deployment
+  # -- UpdateStrategy or Strategy for the distributor.
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   # -- hostAliases to add
   hostAliases: []
   #  - ip: 1.2.3.4
@@ -2688,6 +2733,10 @@ distributor:
   command: null
   # -- The name of the PriorityClass for distributor pods
   priorityClassName: null
+  # -- Labels for distributor
+  labels: {}
+  # -- Annotations for distributor
+  annotations: {}
   # -- Labels for distributor pods
   podLabels: {}
   # -- Annotations for distributor pods
@@ -3468,6 +3517,10 @@ compactor:
   enabled: true
   # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
   kind: StatefulSet
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the compactor StatefulSet when the compactor configuration is changed.
+  ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Number of replicas for the compactor
   replicas: 0
   # -- UpdateStrategy or Strategy for the compactor.
@@ -3605,7 +3658,7 @@ compactor:
     # -- Parameters used for the `data` volume when volumeClaimEnabled if false
     dataVolumeParameters:
       emptyDir: {}
-    # -- List of the compactor PVCs
+    # -- List of the compactor PVCs. Deprecated in favor of `compactor.persistence.dataVolumeParameters` and `compactor.persistence.size`.
     # @notationType -- list
     claims:
       - name: data
@@ -3956,6 +4009,10 @@ bloomBuilder:
   enabled: false
   # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
   kind: Deployment
+  # -- Enable creating a Job to recreate the compactor StatefulSet when the compactor configuration is changed.
+  ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Number of replicas for the bloom-builder
   replicas: 0
   # -- hostAliases to add
@@ -5235,7 +5292,7 @@ sidecar:
     # -- The Docker registry and image for the k8s sidecar
     repository: kiwigrid/k8s-sidecar
     # -- Docker image tag
-    tag: 2.6.0
+    tag: 2.7.1
     # -- Docker image sha. If empty, no sha will be used
     sha: ""
     # -- Docker image pull policy

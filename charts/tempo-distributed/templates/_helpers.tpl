@@ -28,7 +28,7 @@ If release name contains chart name it will be used as a full name.
 Docker image selector for Tempo. Hierarchy based on global, component, and tempo values.
 */}}
 {{- define "tempo.tempoImage" -}}
-{{- $registry := coalesce .global.registry .component.registry .tempo.registry -}}
+{{- $registry := coalesce .component.registry .tempo.registry .global.registry -}}
 {{- $repository := coalesce .component.repository .tempo.repository -}}
 {{- $tag := coalesce .component.tag .tempo.tag .defaultVersion | toString -}}
 {{- printf "%s/%s:%s" $registry $repository $tag -}}
@@ -140,17 +140,6 @@ Create the name of the service account to use
 {{- else -}}
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
-{{- end -}}
-
-{{/*
-Return the appropriate apiVersion for HorizontalPodAutoscaler.
-*/}}
-{{- define "tempo.hpa.apiVersion" -}}
-  {{- if and (.Capabilities.APIVersions.Has "autoscaling/v2") (semverCompare ">=1.23-0" .Capabilities.KubeVersion.Version) -}}
-    {{- print "autoscaling/v2" -}}
-  {{- else -}}
-    {{- print "autoscaling/v2beta1" -}}
-  {{- end -}}
 {{- end -}}
 
 {{/*

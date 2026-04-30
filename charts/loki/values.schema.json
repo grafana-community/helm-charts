@@ -250,6 +250,30 @@
               "description": "Value to set for GOGC alongside GOMEMLIMIT. Set to 0 to disable."
             }
           }
+        },
+        "statefulSetRecreateJob": {
+          "type": "object",
+          "properties": {
+            "patchPVC": {
+              "type": "boolean"
+            },
+            "image": {
+              "type": "object",
+              "properties": {
+                "registry": {
+                  "type": "string"
+                },
+                "repository": {
+                  "type": "string"
+                },
+                "tag": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -280,6 +304,29 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/gatewayRouteEntry"
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "annotations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "labels": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         }
       }

@@ -1,0 +1,151 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: Loki NOTES
+templates:
+  - NOTES.txt
+
+set:
+  gateway.enabled: false
+  minio.enabled: false
+  deploymentMode: Monolithic
+  loki.storage.type: s3
+  loki.auth_enabled: false
+
+tests:
+  - it: renders monolithic instructions without gateway
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "\\* loki"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "Loki has been deployed as a single binary\\."
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "http://RELEASE-NAME-loki\\.NAMESPACE\\.svc\\.cluster\\.local:3100/loki/api/v1/push"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "kubectl port-forward --namespace NAMESPACE svc/RELEASE-NAME-loki 3100:3100"
+        template: NOTES.txt
+      - notMatchRegexRaw:
+          pattern: "Loki has been configured with a gateway \\(nginx\\)"
+        template: NOTES.txt
+
+  - it: renders simple scalable component list and service URLs without gateway
+    set:
+      deploymentMode: SimpleScalable
+    asserts:
+      - matchRegexRaw:
+          pattern: "\\* read"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "\\* write"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "\\* backend"
+        template: NOTES.txt
+      - notMatchRegexRaw:
+          pattern: "\\* compactor"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "http://.*loki-write\\.NAMESPACE\\.svc\\.cluster\\.local:3100/loki/api/v1/push"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "http://.*loki-read\\.NAMESPACE\\.svc\\.cluster\\.local:3100/"
+        template: NOTES.txt
+
+  - it: renders distributed component list when gateway is enabled
+    set:
+      deploymentMode: Distributed
+      gateway.enabled: true
+    asserts:
+      - matchRegexRaw:
+          pattern: "\\* gateway"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "\\* compactor"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "\\* distributor"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "\\* query frontend"
+        template: NOTES.txt
+      - notMatchRegexRaw:
+          pattern: "\\* read"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "http://RELEASE-NAME-loki-gateway\\.NAMESPACE\\.svc\\.cluster\\.local/loki/api/v1/push"
+        template: NOTES.txt
+
+  - it: renders gateway-specific instructions when gateway is enabled
+    set:
+      deploymentMode: Monolithic
+      gateway.enabled: true
+    asserts:
+      - matchRegexRaw:
+          pattern: "Loki has been configured with a gateway \\(nginx\\)"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "http://RELEASE-NAME-loki-gateway\\.NAMESPACE\\.svc\\.cluster\\.local/loki/api/v1/push"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "kubectl port-forward --namespace NAMESPACE svc/RELEASE-NAME-loki-gateway 3100:80"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "http://RELEASE-NAME-loki-gateway\\.NAMESPACE\\.svc\\.cluster\\.local/"
+        template: NOTES.txt
+      - notMatchRegexRaw:
+          pattern: "\\* gateway"
+        template: NOTES.txt
+
+  - it: renders multi-tenancy instructions when auth is enabled
+    set:
+      loki.auth_enabled: true
+    asserts:
+      - matchRegexRaw:
+          pattern: "Multi-tenancy"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "X-Scope-OrgID"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "-H X-Scope-OrgId:foo"
+        template: NOTES.txt
+
+  - it: omits tenant headers and multi-tenancy section when auth is disabled
+    asserts:
+      - notMatchRegexRaw:
+          pattern: "Multi-tenancy"
+        template: NOTES.txt
+      - notMatchRegexRaw:
+          pattern: "X-Scope-OrgID"
+        template: NOTES.txt
+      - notMatchRegexRaw:
+          pattern: "-H X-Scope-OrgId:foo"
+        template: NOTES.txt
+
+  - it: renders distributed instructions without gateway
+    set:
+      deploymentMode: Distributed
+      gateway.enabled: false
+    asserts:
+      - matchRegexRaw:
+          pattern: "\\* compactor"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "\\* distributor"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "\\* query frontend"
+        template: NOTES.txt
+      - notMatchRegexRaw:
+          pattern: "\\* gateway"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "http://.*loki-distributor\\.NAMESPACE\\.svc\\.cluster\\.local:3100/loki/api/v1/push"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "http://.*loki-query-frontend\\.NAMESPACE\\.svc\\.cluster\\.local:3100/"
+        template: NOTES.txt
