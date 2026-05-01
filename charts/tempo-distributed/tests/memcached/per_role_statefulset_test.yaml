@@ -67,9 +67,27 @@ tests:
           value: Service
         template: memcached/service-memcached-bloom.yaml
 
+  - it: bloom ServiceMonitor not rendered when bloom not enabled
+    set:
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: memcached/servicemonitor-memcached-bloom.yaml
+
+  - it: bloom ServiceMonitor not rendered when memcached exporter not enabled
+    set:
+      memcachedBloom.enabled: true
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: memcached/servicemonitor-memcached-bloom.yaml
+
   - it: bloom ServiceMonitor rendered with correct name
     set:
       memcachedBloom.enabled: true
+      memcachedExporter.enabled: true
       metaMonitoring.serviceMonitor.enabled: true
     asserts:
       - equal:
@@ -151,9 +169,27 @@ tests:
           value: Service
         template: memcached/service-memcached-parquet-footer.yaml
 
+  - it: parquet-footer ServiceMonitor not rendered when parquet-footer not enabled
+    set:
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: memcached/servicemonitor-memcached-parquet-footer.yaml
+
+  - it: parquet-footer ServiceMonitor not rendered when memcached exporter not enabled
+    set:
+      memcachedBloom.enabled: true
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: memcached/servicemonitor-memcached-parquet-footer.yaml
+
   - it: parquet-footer ServiceMonitor rendered with correct name when enabled
     set:
       memcachedParquetFooter.enabled: true
+      memcachedExporter.enabled: true
       metaMonitoring.serviceMonitor.enabled: true
     asserts:
       - equal:
@@ -178,9 +214,27 @@ tests:
           value: Service
         template: memcached/service-memcached-frontend-search.yaml
 
+  - it: frontend-search ServiceMonitor not rendered when frontend-search not enabled
+    set:
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: memcached/servicemonitor-memcached-frontend-search.yaml
+
+  - it: frontend-search ServiceMonitor not rendered when memcached exporter not enabled
+    set:
+      memcachedBloom.enabled: true
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: memcached/servicemonitor-memcached-frontend-search.yaml
+
   - it: frontend-search ServiceMonitor rendered with correct name when enabled
     set:
       memcachedFrontendSearch.enabled: true
+      memcachedExporter.enabled: true
       metaMonitoring.serviceMonitor.enabled: true
     asserts:
       - equal:
@@ -191,7 +245,6 @@ tests:
           path: kind
           value: ServiceMonitor
         template: memcached/servicemonitor-memcached-frontend-search.yaml
-
 
   - it: parquet-footer PDB not rendered when replicas is 1 (default)
     set:

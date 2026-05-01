@@ -1,1 +1,3 @@
+{{- if .Values.metricsGenerator.enabled }}
 {{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" "metrics-generator" "memberlist" true) }}
+{{- end }}

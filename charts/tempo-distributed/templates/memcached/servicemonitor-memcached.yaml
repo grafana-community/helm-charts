@@ -1,1 +1,3 @@
+{{- if and .Values.memcached.enabled .Values.memcachedExporter.enabled }}
 {{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" "memcached") }}
+{{- end }}
