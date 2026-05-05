@@ -47,6 +47,9 @@ disableWrite: false
 # -- Additional command line arguments
 extraArgs: []
 
+# -- Override the container entrypoint command
+command: []
+
 # -- Environment variables
 env: {}
 
