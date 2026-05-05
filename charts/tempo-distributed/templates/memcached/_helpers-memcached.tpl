@@ -26,7 +26,7 @@ spec:
   selector:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
-  serviceName: {{ $.component }}
+  serviceName: {{ include "tempo.resourceName" $dict }}
   template:
     metadata:
       {{- if or $.ctx.Values.tempo.podAnnotations $.memcachedConfig.podAnnotations }}
@@ -195,6 +195,8 @@ metadata:
     {{- tpl (toYaml . | nindent 4) $.ctx }}
   {{- end }}
 spec:
+  type: ClusterIP
+  clusterIP: None
   ipFamilies: {{ $.ctx.Values.tempo.service.ipFamilies }}
   ipFamilyPolicy: {{ $.ctx.Values.tempo.service.ipFamilyPolicy }}
   ports:
