@@ -1,10 +1,11 @@
-{{- if and .Values.rbac.create (not .Values.rbac.useExistingRole) -}}
-{{- range (append .Values.rbac.namespaces (include "grafana.namespace" .)) }}
+{{- if and (and .Values.rbac.create (not .Values.rbac.useExistingRole)) .Values.rbac.namespaced  -}}
+{{- range $namespace := (append .Values.rbac.namespaces (include "grafana.namespace" .)) }}
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: {{ include "grafana.fullname" $ }}
-  namespace: {{ . | quote }}
+  namespace: {{ $namespace | quote }}
   labels:
     {{- include "grafana.labels" $ | nindent 4 }}
   {{- with $.Values.annotations }}
@@ -17,7 +18,7 @@ rules:
   - apiGroups:      ['extensions']
     resources:      ['podsecuritypolicies']
     verbs:          ['use']
-    resourceNames:  [{{ include "grafana.fullname" . }}]
+    resourceNames:  [{{ include "grafana.fullname" $ }}]
   {{- end }}
   {{- if and $.Values.rbac.namespaced (or $.Values.sidecar.dashboards.enabled $.Values.sidecar.datasources.enabled $.Values.sidecar.plugins.enabled) }}
   - apiGroups: [""] # "" indicates the core API group
