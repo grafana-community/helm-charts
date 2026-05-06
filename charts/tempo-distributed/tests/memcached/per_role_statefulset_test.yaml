@@ -34,6 +34,15 @@ tests:
           value: StatefulSet
         template: memcached/statefulset-memcached-bloom.yaml
 
+  - it: bloom StatefulSet rendered with correct serviceName when enabled
+    set:
+      memcachedBloom.enabled: true
+    asserts:
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-tempo-memcached-bloom
+        template: memcached/statefulset-memcached-bloom.yaml
+
   - it: bloom StatefulSet uses memcached.image
     set:
       memcachedBloom.enabled: true
@@ -65,6 +74,19 @@ tests:
       - equal:
           path: kind
           value: Service
+        template: memcached/service-memcached-bloom.yaml
+
+  - it: bloom Service rendered as headless when enabled
+    set:
+      memcachedBloom.enabled: true
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+        template: memcached/service-memcached-bloom.yaml
+      - equal:
+          path: spec.clusterIP
+          value: None
         template: memcached/service-memcached-bloom.yaml
 
   - it: bloom ServiceMonitor not rendered when bloom not enabled
@@ -131,12 +153,30 @@ tests:
           value: RELEASE-NAME-tempo-memcached-parquet-footer
         template: memcached/statefulset-memcached-parquet-footer.yaml
 
+  - it: parquet-footer StatefulSet rendered with correct serviceName when enabled
+    set:
+      memcachedParquetFooter.enabled: true
+    asserts:
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-tempo-memcached-parquet-footer
+        template: memcached/statefulset-memcached-parquet-footer.yaml
+
   - it: frontend-search StatefulSet rendered with correct name when enabled
     set:
       memcachedFrontendSearch.enabled: true
     asserts:
       - equal:
           path: metadata.name
+          value: RELEASE-NAME-tempo-memcached-frontend-search
+        template: memcached/statefulset-memcached-frontend-search.yaml
+
+  - it: frontend-search StatefulSet rendered with correct serviceName when enabled
+    set:
+      memcachedFrontendSearch.enabled: true
+    asserts:
+      - equal:
+          path: spec.serviceName
           value: RELEASE-NAME-tempo-memcached-frontend-search
         template: memcached/statefulset-memcached-frontend-search.yaml
 
@@ -167,6 +207,19 @@ tests:
       - equal:
           path: kind
           value: Service
+        template: memcached/service-memcached-parquet-footer.yaml
+
+  - it: parquet-footer Service rendered as headless when enabled
+    set:
+      memcachedParquetFooter.enabled: true
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+        template: memcached/service-memcached-parquet-footer.yaml
+      - equal:
+          path: spec.clusterIP
+          value: None
         template: memcached/service-memcached-parquet-footer.yaml
 
   - it: parquet-footer ServiceMonitor not rendered when parquet-footer not enabled
@@ -212,6 +265,19 @@ tests:
       - equal:
           path: kind
           value: Service
+        template: memcached/service-memcached-frontend-search.yaml
+
+  - it: frontend-search Service rendered as headless when enabled
+    set:
+      memcachedFrontendSearch.enabled: true
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+        template: memcached/service-memcached-frontend-search.yaml
+      - equal:
+          path: spec.clusterIP
+          value: None
         template: memcached/service-memcached-frontend-search.yaml
 
   - it: frontend-search ServiceMonitor not rendered when frontend-search not enabled
