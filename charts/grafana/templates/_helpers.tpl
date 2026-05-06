@@ -301,3 +301,19 @@ sensitiveKeys:
 {{- end -}}
 {{- $healthPort | quote -}}
 {{- end -}}
+
+{{/*
+  Give health port for library panels sidecar
+*/}}
+{{- define "grafana.sidecar.librarypanels.healthPort" -}}
+{{- $healthPort := 8085 -}}
+{{- if hasKey .Values.sidecar.librarypanels "startupProbe" -}}
+  {{- if hasKey .Values.sidecar.librarypanels.startupProbe "httpGet" -}}
+    {{- if hasKey .Values.sidecar.librarypanels.startupProbe.httpGet "port" -}}
+      {{- $healthPort = .Values.sidecar.librarypanels.startupProbe.httpGet.port -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $healthPort | quote -}}
+{{- end -}}
+

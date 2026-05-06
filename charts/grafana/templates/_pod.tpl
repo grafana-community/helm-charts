@@ -859,6 +859,152 @@ containers:
       {{- toYaml . | trim | nindent 6 }}
       {{- end }}
 {{- end}}
+{{- if .Values.sidecar.librarypanels.enabled }}
+  - name: {{ include "grafana.name" . }}-sc-library-panels
+    {{- $registry := .Values.global.imageRegistry | default .Values.sidecar.image.registry -}}
+    {{- if .Values.sidecar.image.sha }}
+    image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}@sha256:{{ .Values.sidecar.image.sha }}"
+    {{- else }}
+    image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
+    {{- end }}
+    imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    env:
+      {{- range $key, $value := .Values.sidecar.librarypanels.env }}
+      - name: "{{ $key }}"
+        value: "{{ $value }}"
+      {{- end }}
+      {{- range $key, $value := .Values.sidecar.librarypanels.envValueFrom }}
+      - name: {{ $key | quote }}
+        valueFrom:
+          {{- tpl (toYaml $value) $ | nindent 10 }}
+      {{- end }}
+      - name: HEALTH_PORT
+        value: {{ include "grafana.sidecar.librarypanels.healthPort" . }}
+      {{- if .Values.sidecar.librarypanels.ignoreAlreadyProcessed }}
+      - name: IGNORE_ALREADY_PROCESSED
+        value: "true"
+      {{- end }}
+      - name: METHOD
+        value: {{ .Values.sidecar.librarypanels.watchMethod }}
+      - name: LABEL
+        value: "{{ tpl .Values.sidecar.librarypanels.label $root }}"
+      {{- with .Values.sidecar.librarypanels.labelValue }}
+      - name: LABEL_VALUE
+        value: {{ quote (tpl . $root) }}
+      {{- end }}
+      {{- if or .Values.sidecar.logLevel .Values.sidecar.librarypanels.logLevel }}
+      - name: LOG_LEVEL
+        value: {{ default .Values.sidecar.logLevel .Values.sidecar.librarypanels.logLevel }}
+      {{- end }}
+      - name: FOLDER
+        value: {{ .Values.sidecar.librarypanels.folder | quote }}
+      - name: LIBPANELS_DIR
+        value: {{ .Values.sidecar.librarypanels.folder | quote }}
+      - name: GRAFANA_URL
+        value: {{ tpl .Values.sidecar.librarypanels.grafanaURL $root | quote }}
+      - name: DELETE_ON_MISSING
+        value: {{ ternary "true" "false" .Values.sidecar.librarypanels.deleteOnMissing | quote }}
+      - name: LIBPANELS_STATE_FILE
+        value: {{ .Values.sidecar.librarypanels.stateFile | quote }}
+      - name: GRAFANA_WAIT_TIMEOUT
+        value: {{ .Values.sidecar.librarypanels.grafanaWaitTimeout | quote }}
+      - name: GRAFANA_WAIT_INTERVAL
+        value: {{ .Values.sidecar.librarypanels.grafanaWaitInterval | quote }}
+      - name: RESOURCE
+        value: {{ quote .Values.sidecar.librarypanels.resource }}
+      {{- if .Values.sidecar.librarypanels.resourceName }}
+      - name: RESOURCE_NAME
+        value: {{ quote .Values.sidecar.librarypanels.resourceName }}
+      {{- end }}
+      {{- with .Values.sidecar.enableUniqueFilenames }}
+      - name: UNIQUE_FILENAMES
+        value: "{{ . }}"
+      {{- end }}
+      {{- with .Values.sidecar.librarypanels.searchNamespace }}
+      - name: NAMESPACE
+        value: "{{ tpl (. | join ",") $root }}"
+      {{- end }}
+      {{- with .Values.sidecar.skipTlsVerify }}
+      - name: SKIP_TLS_VERIFY
+        value: "{{ . }}"
+      {{- end }}
+      - name: SCRIPT
+        value: {{ default "/etc/grafana/library_panels_sync.sh" .Values.sidecar.librarypanels.script | quote }}
+      {{- if and (not (hasKey .Values.sidecar.librarypanels.env "GRAFANA_TOKEN")) (not (hasKey .Values.sidecar.librarypanels.envValueFrom "GRAFANA_TOKEN")) (hasKey .Values.env "GF_SECURITY_ADMIN_USER") }}
+      - name: GRAFANA_USER
+        value: "{{ tpl (print .Values.env.GF_SECURITY_ADMIN_USER) $root }}"
+      {{- else if and (not (hasKey .Values.sidecar.librarypanels.env "GRAFANA_USER")) (not (hasKey .Values.sidecar.librarypanels.envValueFrom "GRAFANA_USER")) (not .Values.env.GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION) }}
+      - name: GRAFANA_USER
+        valueFrom:
+          secretKeyRef:
+            name: {{ (tpl .Values.admin.existingSecret .) | default (include "grafana.fullname" .) }}
+            key: {{ .Values.admin.userKey | default "admin-user" }}
+      {{- end }}
+      {{- if and (not (hasKey .Values.sidecar.librarypanels.env "GRAFANA_TOKEN")) (not (hasKey .Values.sidecar.librarypanels.envValueFrom "GRAFANA_TOKEN")) (hasKey .Values.env "GF_SECURITY_ADMIN_PASSWORD") }}
+      - name: GRAFANA_PASSWORD
+        value: "{{ tpl (print .Values.env.GF_SECURITY_ADMIN_PASSWORD) $root }}"
+      {{- else if and (not (hasKey .Values.sidecar.librarypanels.env "GRAFANA_PASSWORD")) (not (hasKey .Values.sidecar.librarypanels.envValueFrom "GRAFANA_PASSWORD")) (not .Values.env.GF_SECURITY_ADMIN_PASSWORD__FILE) (not .Values.env.GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION) }}
+      - name: GRAFANA_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: {{ (tpl .Values.admin.existingSecret .) | default (include "grafana.fullname" .) }}
+            key: {{ .Values.admin.passwordKey | default "admin-password" }}
+      {{- end }}
+      {{- if .Values.sidecar.librarypanels.watchServerTimeout }}
+      {{- if ne .Values.sidecar.librarypanels.watchMethod "WATCH" }}
+        {{- fail (printf "Cannot use .Values.sidecar.librarypanels.watchServerTimeout with .Values.sidecar.librarypanels.watchMethod %s" .Values.sidecar.librarypanels.watchMethod) }}
+      {{- end }}
+      - name: WATCH_SERVER_TIMEOUT
+        value: "{{ .Values.sidecar.librarypanels.watchServerTimeout }}"
+      {{- end }}
+      {{- if .Values.sidecar.librarypanels.watchClientTimeout }}
+      {{- if ne .Values.sidecar.librarypanels.watchMethod "WATCH" }}
+        {{- fail (printf "Cannot use .Values.sidecar.librarypanels.watchClientTimeout with .Values.sidecar.librarypanels.watchMethod %s" .Values.sidecar.librarypanels.watchMethod) }}
+      {{- end }}
+      - name: WATCH_CLIENT_TIMEOUT
+        value: {{ .Values.sidecar.librarypanels.watchClientTimeout | quote }}
+      {{- end }}
+      {{- if .Values.sidecar.librarypanels.maxTotalRetries }}
+      - name: REQ_RETRY_TOTAL
+        value: "{{ .Values.sidecar.librarypanels.maxTotalRetries }}"
+      {{- end }}
+      {{- if .Values.sidecar.librarypanels.maxConnectRetries }}
+      - name: REQ_RETRY_CONNECT
+        value: "{{ .Values.sidecar.librarypanels.maxConnectRetries }}"
+      {{- end }}
+      {{- if .Values.sidecar.librarypanels.maxReadRetries }}
+      - name: REQ_RETRY_READ
+        value: "{{ .Values.sidecar.librarypanels.maxReadRetries }}"
+      {{- end }}
+    {{- with .Values.sidecar.livenessProbe }}
+    livenessProbe:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.sidecar.readinessProbe }}
+    readinessProbe:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.sidecar.resources }}
+    resources:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.sidecar.securityContext }}
+    securityContext:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    volumeMounts:
+      - name: sc-library-panels-volume
+        mountPath: {{ .Values.sidecar.librarypanels.folder | quote }}
+      - name: config
+        mountPath: "/etc/grafana/library_panels_sync.sh"
+        subPath: library_panels_sync.sh
+      - name: config
+        mountPath: "/etc/grafana/library_panels_sync.py"
+        subPath: library_panels_sync.py
+      {{- with .Values.sidecar.librarypanels.extraMounts }}
+      {{- toYaml . | trim | nindent 6 }}
+      {{- end }}
+{{- end}}
 {{- if and .Values.sidecar.datasources.enabled (not .Values.sidecar.datasources.initDatasources) }}
   - name: {{ include "grafana.name" . }}-sc-datasources
     {{- $registry := .Values.global.imageRegistry | default .Values.sidecar.image.registry -}}
@@ -1642,6 +1788,17 @@ volumes:
     configMap:
       name: {{ include "grafana.fullname" . }}-config-dashboards
   {{- end }}
+  {{- end }}
+  {{- if .Values.sidecar.librarypanels.enabled }}
+  - name: sc-library-panels-volume
+    {{- if .Values.sidecar.librarypanels.sizeLimit }}
+    emptyDir:
+      {{- with .Values.sidecar.librarypanels.sizeLimit }}
+      sizeLimit: {{ . }}
+      {{- end }}
+    {{- else }}
+    emptyDir: {}
+    {{- end }}
   {{- end }}
   {{- if .Values.sidecar.datasources.enabled }}
   - name: sc-datasources-volume
