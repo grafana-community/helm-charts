@@ -3102,6 +3102,8 @@ gateway:
       main '$remote_addr - $remote_user [$time_local]  $status '
               '"$request" $body_bytes_sent "$http_referer" '
               '"$http_user_agent" "$http_x_forwarded_for"';
+    # -- Allows appending custom configuration to the main context
+    mainSnippet: ''
     # -- Allows appending custom configuration to the server block
     serverSnippet: ''
     # -- Allows appending custom configuration to the http block
@@ -3121,6 +3123,10 @@ gateway:
       error_log  /dev/stderr;
       pid        /tmp/nginx.pid;
       worker_rlimit_nofile 8192;
+
+      {{- with .Values.gateway.nginxConfig.mainSnippet }}
+      {{ . | nindent 0 }}
+      {{- end }}
 
       events {
         worker_connections  4096;  ## Default: 1024
