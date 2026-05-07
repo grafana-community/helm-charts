@@ -1,6 +1,6 @@
 {{/*
- Generate config map data
- */}}
+  Generate config map data
+*/}}
 {{- define "grafana.configData" -}}
 {{ include "grafana.assertNoLeakedSecrets" . }}
 {{- $files := .Files }}
@@ -166,8 +166,8 @@ library_panels_sync.py: |
 {{- end -}}
 
 {{/*
- Generate dashboard json config map data
- */}}
+  Generate dashboard json config map data
+*/}}
 {{- define "grafana.configDashboardProviderData" -}}
 provider.yaml: |-
   apiVersion: 1
