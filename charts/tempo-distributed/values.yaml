@@ -962,6 +962,33 @@ backendWorker:
     keda:
       # requires https://keda.sh/
       enabled: false
+      annotations: {}
+      #   scaledobject.keda.sh/transfer-hpa-ownership: "true" # Use to transfer an existing HPA ownership to this ScaledObject
+      #   validations.keda.sh/hpa-ownership: "true"           # Use to disable HPA ownership validation on this ScaledObject
+      #   autoscaling.keda.sh/paused: "true"                  # Use to pause autoscaling of objects explicitly
+      pollingInterval: null        # Optional. Default: 30 seconds
+      cooldownPeriod: null         # Optional. Default: 300 seconds
+      initialCooldownPeriod: null  # Optional. Default: 0 seconds
+      # Optional. Section to specify advanced options
+      advanced: {}
+      #   # Optional. Section to specify advanced options
+      #   horizontalPodAutoscalerConfig:
+      #     # Optional. Default: keda-hpa-{scaled-object-name}
+      #     name: null
+      #     # Optional. Use to modify HPA's scaling behavior
+      #     behavior: null
+      #       # scaleDown:
+      #       #   stabilizationWindowSeconds: 300
+      #   # Optional. Section to specify scaling modifiers
+      #   scalingModifiers:
+      #     target: null           # Mandatory. New target if metrics are anyhow composed together
+      #     activationTarget: null # Optional. New activation target if metrics are anyhow composed together
+      #     metricType:  null      # Optional. Metric type to be used if metrics are anyhow composed together
+      #     formula: null          # Mandatory. Formula for calculation
+      fallback: {}
+      #   failureThreshold: null # Mandatory if fallback section is included
+      #   replicas: null         # Mandatory if fallback section is included
+      #   behavior: null         # Optional. Default: "static"
       # -- List of autoscaling triggers for the compactor
       triggers: []
       # - name: tempo-outstanding-compaction-blocks
@@ -1157,6 +1184,33 @@ compactor:
     keda:
       # requires https://keda.sh/
       enabled: false
+      annotations: {}
+      #   scaledobject.keda.sh/transfer-hpa-ownership: "true" # Use to transfer an existing HPA ownership to this ScaledObject
+      #   validations.keda.sh/hpa-ownership: "true"           # Use to disable HPA ownership validation on this ScaledObject
+      #   autoscaling.keda.sh/paused: "true"                  # Use to pause autoscaling of objects explicitly
+      pollingInterval: null        # Optional. Default: 30 seconds
+      cooldownPeriod: null         # Optional. Default: 300 seconds
+      initialCooldownPeriod: null  # Optional. Default: 0 seconds
+      # Optional. Section to specify advanced options
+      advanced: {}
+      #   # Optional. Section to specify advanced options
+      #   horizontalPodAutoscalerConfig:
+      #     # Optional. Default: keda-hpa-{scaled-object-name}
+      #     name: null
+      #     # Optional. Use to modify HPA's scaling behavior
+      #     behavior: null
+      #       # scaleDown:
+      #       #   stabilizationWindowSeconds: 300
+      #   # Optional. Section to specify scaling modifiers
+      #   scalingModifiers:
+      #     target: null           # Mandatory. New target if metrics are anyhow composed together
+      #     activationTarget: null # Optional. New activation target if metrics are anyhow composed together
+      #     metricType:  null      # Optional. Metric type to be used if metrics are anyhow composed together
+      #     formula: null          # Mandatory. Formula for calculation
+      fallback: {}
+      #   failureThreshold: null # Mandatory if fallback section is included
+      #   replicas: null         # Mandatory if fallback section is included
+      #   behavior: null         # Optional. Default: "static"
       # -- List of autoscaling triggers for the compactor
       triggers: []
       # - type: prometheus

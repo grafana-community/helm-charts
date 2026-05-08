@@ -1,0 +1,131 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: compactor ScaledObject
+templates:
+  - lib/keda.tpl
+  - compactor/keda-scaledObject.yaml
+
+tests:
+  - it: ScaledObject is not rendered by default (autoscaling disabled)
+    template: compactor/keda-scaledObject.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: ScaledObject is rendered when autoscaling and keda are enabled and has triggers
+    template: compactor/keda-scaledObject.yaml
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.keda.enabled: true
+      compactor.autoscaling.keda.triggers:
+        - name: compactor-outstanding-blocks
+          type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            query: sum (tempodb_compaction_outstanding_blocks{container="compactor"}
+            threshold: "250"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: apiVersion
+          value: keda.sh/v1alpha1
+      - equal:
+          path: kind
+          value: ScaledObject
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-compactor
+      - equal:
+          path: spec.scaleTargetRef
+          value:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: RELEASE-NAME-tempo-compactor
+      - equal:
+          path: spec.triggers[0]
+          value:
+            type: prometheus
+            name: compactor-outstanding-blocks
+            metadata:
+              serverAddress: http://prometheus:9090
+              query: sum (tempodb_compaction_outstanding_blocks{container="compactor"}
+              threshold: "250"
+
+  - it: ScaledObject renders min/max replicas
+    template: compactor/keda-scaledObject.yaml
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.keda.enabled: true
+      compactor.autoscaling.keda.triggers:
+        - name: compactor-outstanding-blocks
+          type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            query: sum (tempodb_compaction_outstanding_blocks{container="compactor"}
+            threshold: "250"
+      compactor.autoscaling.minReplicas: 2
+      compactor.autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: spec.minReplicaCount
+          value: 2
+      - equal:
+          path: spec.maxReplicaCount
+          value: 10
+
+  - it: ScaledObject renders behavior block when set
+    template: compactor/keda-scaledObject.yaml
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.keda.enabled: true
+      compactor.autoscaling.keda.triggers:
+        - name: compactor-outstanding-blocks
+          type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            query: sum (tempodb_compaction_outstanding_blocks{container="compactor"}
+            threshold: "250"
+      compactor.autoscaling.keda.advanced.horizontalPodAutoscalerConfig.behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+    asserts:
+      - equal:
+          path: spec.advanced.horizontalPodAutoscalerConfig.behavior.scaleDown.stabilizationWindowSeconds
+          value: 300
+
+  - it: ScaledObject renders fallback block when set
+    template: compactor/keda-scaledObject.yaml
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.keda.enabled: true
+      compactor.autoscaling.keda.triggers:
+        - name: compactor-outstanding-blocks
+          type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            query: sum (tempodb_compaction_outstanding_blocks{container="compactor"}
+            threshold: "250"
+      compactor.autoscaling.keda.fallback:
+        failureThreshold: 3
+        replicas: 2
+        behavior: currentReplicasIfHigher
+    asserts:
+      - equal:
+          path: spec.fallback.failureThreshold
+          value: 3
+      - equal:
+          path: spec.fallback.replicas
+          value: 2
+      - equal:
+          path: spec.fallback.behavior
+          value: currentReplicasIfHigher
+
+  - it: ScaledObject is not rendered when backendScheduler is enabled
+    template: compactor/keda-scaledObject.yaml
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.hpa.enabled: true
+      backendScheduler.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0

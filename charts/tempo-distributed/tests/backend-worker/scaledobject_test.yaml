@@ -1,0 +1,135 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: backend-worker ScaledObject
+templates:
+  - lib/keda.tpl
+  - backend-worker/keda-scaledObject.yaml
+
+tests:
+  - it: ScaledObject is not rendered by default (autoscaling disabled)
+    template: backend-worker/keda-scaledObject.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: ScaledObject is rendered when autoscaling and keda are enabled and has triggers
+    template: backend-worker/keda-scaledObject.yaml
+    set:
+      backendScheduler.enabled: true
+      backendWorker.autoscaling.enabled: true
+      backendWorker.autoscaling.keda.enabled: true
+      backendWorker.autoscaling.keda.triggers:
+        - name: backend-scheduler-outstanding-blocks
+          type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            query: sum (tempodb_compaction_outstanding_blocks{container="backend-scheduler"}
+            threshold: "250"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: apiVersion
+          value: keda.sh/v1alpha1
+      - equal:
+          path: kind
+          value: ScaledObject
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-backend-worker
+      - equal:
+          path: spec.scaleTargetRef
+          value:
+            apiVersion: apps/v1
+            kind: StatefulSet
+            name: RELEASE-NAME-tempo-backend-worker
+      - equal:
+          path: spec.triggers[0]
+          value:
+            type: prometheus
+            name: backend-scheduler-outstanding-blocks
+            metadata:
+              serverAddress: http://prometheus:9090
+              query: sum (tempodb_compaction_outstanding_blocks{container="backend-scheduler"}
+              threshold: "250"
+
+  - it: ScaledObject renders min/max replicas
+    template: backend-worker/keda-scaledObject.yaml
+    set:
+      backendScheduler.enabled: true
+      backendWorker.autoscaling.enabled: true
+      backendWorker.autoscaling.keda.enabled: true
+      backendWorker.autoscaling.keda.triggers:
+        - name: backend-scheduler-outstanding-blocks
+          type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            query: sum (tempodb_compaction_outstanding_blocks{container="backend-scheduler"}
+            threshold: "250"
+      backendWorker.autoscaling.minReplicas: 2
+      backendWorker.autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: spec.minReplicaCount
+          value: 2
+      - equal:
+          path: spec.maxReplicaCount
+          value: 10
+
+  - it: ScaledObject renders behavior block when set
+    template: backend-worker/keda-scaledObject.yaml
+    set:
+      backendScheduler.enabled: true
+      backendWorker.autoscaling.enabled: true
+      backendWorker.autoscaling.keda.enabled: true
+      backendWorker.autoscaling.keda.triggers:
+        - name: backend-scheduler-outstanding-blocks
+          type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            query: sum (tempodb_compaction_outstanding_blocks{container="backend-scheduler"}
+            threshold: "250"
+      backendWorker.autoscaling.keda.advanced.horizontalPodAutoscalerConfig.behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+    asserts:
+      - equal:
+          path: spec.advanced.horizontalPodAutoscalerConfig.behavior.scaleDown.stabilizationWindowSeconds
+          value: 300
+
+  - it: ScaledObject renders fallback block when set
+    template: backend-worker/keda-scaledObject.yaml
+    set:
+      backendScheduler.enabled: true
+      backendWorker.autoscaling.enabled: true
+      backendWorker.autoscaling.keda.enabled: true
+      backendWorker.autoscaling.keda.triggers:
+        - name: backend-scheduler-outstanding-blocks
+          type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            query: sum (tempodb_compaction_outstanding_blocks{container="backend-scheduler"}
+            threshold: "250"
+      backendWorker.autoscaling.keda.fallback:
+        failureThreshold: 3
+        replicas: 2
+        behavior: currentReplicasIfHigher
+    asserts:
+      - equal:
+          path: spec.fallback.failureThreshold
+          value: 3
+      - equal:
+          path: spec.fallback.replicas
+          value: 2
+      - equal:
+          path: spec.fallback.behavior
+          value: currentReplicasIfHigher
+
+  - it: ScaledObject is not rendered when backendScheduler is disabled
+    template: backend-worker/keda-scaledObject.yaml
+    set:
+      backendScheduler.enabled: false
+      backendWorker.autoscaling.enabled: true
+      backendWorker.autoscaling.keda.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
