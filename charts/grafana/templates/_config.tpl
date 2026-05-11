@@ -1,6 +1,6 @@
 {{/*
- Generate config map data
- */}}
+  Generate config map data
+*/}}
 {{- define "grafana.configData" -}}
 {{ include "grafana.assertNoLeakedSecrets" . }}
 {{- $files := .Files }}
@@ -145,11 +145,29 @@ download_dashboards.sh: |
   {{- end }}
 {{- end }}
 {{- end }}
+{{- if .Values.sidecar.librarypanels.enabled }}
+library_panels_sync.sh: |
+  #!/usr/bin/env sh
+  set -eu
+
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN=python3
+  elif command -v python >/dev/null 2>&1; then
+    PYTHON_BIN=python
+  else
+    echo "library panels sync requires python or python3 in the sidecar image" >&2
+    exit 1
+  fi
+  exec "$PYTHON_BIN" /etc/grafana/library_panels_sync.py
+
+library_panels_sync.py: |
+{{- $files.Get "files/library_panels_sync.py" | nindent 2 }}
+{{- end }}
 {{- end -}}
 
 {{/*
- Generate dashboard json config map data
- */}}
+  Generate dashboard json config map data
+*/}}
 {{- define "grafana.configDashboardProviderData" -}}
 provider.yaml: |-
   apiVersion: 1

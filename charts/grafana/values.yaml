@@ -1223,6 +1223,104 @@ sidecar:
     extraMounts: []
     # Sets the size limit of the dashboard sidecar emptyDir volume
     sizeLimit: ""
+  librarypanels:
+    enabled: false
+    # Additional environment variables for the library panels sidecar.
+    # Useful when Grafana auth does not come from the chart-generated admin secret.
+    # Example for token auth:
+    # env:
+    #   GRAFANA_TOKEN: your-api-token
+    env: {}
+    ## "valueFrom" environment variable references that will be added to deployment pods. Name is templated.
+    ## ref: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#envvarsource-v1-core
+    ## Renders in container spec as:
+    ##   env:
+    ##     ...
+    ##     - name: <key>
+    ##       valueFrom:
+    ##         <value rendered as YAML>
+    envValueFrom: {}
+    #  GRAFANA_TOKEN:
+    #    secretKeyRef:
+    #      name: grafana-api-token
+    #      key: token
+    # Do not reprocess already processed unchanged resources on k8s API reconnect.
+    # ignoreAlreadyProcessed: true
+    # label that the configmaps with library panels are marked with (can be templated)
+    label: grafana_library_panel
+    # value of label that the configmaps with library panels are set to (can be templated)
+    labelValue: ""
+    # Log level. Can be one of: DEBUG, INFO, WARN, ERROR, CRITICAL.
+    # logLevel: INFO
+    # folder in the pod that should hold the collected library panel JSON files
+    folder: /tmp/library-panels
+    # If specified, the sidecar will search for library panel config-maps inside this namespace.
+    # Otherwise the namespace in which the sidecar is running will be used.
+    # It's also possible to specify ALL to search in all namespaces
+    searchNamespace: null
+    # Method to use to detect ConfigMap changes. With WATCH the sidecar will do a WATCH requests, with SLEEP it will list all ConfigMaps, then sleep for 60 seconds.
+    watchMethod: WATCH
+    # search in configmap, secret or both
+    resource: configmap
+    # resourceName: comma separated list of resource names to be fetched/checked by this sidecar.
+    # per default all resources of the type defined in {{ .Values.sidecar.librarypanels.resource }} will be checked.
+    # This e.g. allows stricter RBAC rules which are limited to the resources meant for the sidecars.
+    # resourceName: "configmap/library-panels-0"
+    resourceName: ""
+    # The Grafana base URL that receives library panel API requests.
+    grafanaURL: http://localhost:3000
+    # Enable deletion reconciliation. When true, the sidecar deletes only library panel UIDs
+    # Seconds to wait for Grafana to become ready before running the sync (0 = no wait).
+    grafanaWaitTimeout: 120
+    # Seconds between Grafana readiness poll attempts.
+    grafanaWaitInterval: 5
+    # that were previously managed by this sidecar and are no longer present in watched JSON files.
+    deleteOnMissing: false
+    # Local state file used to track managed library panel UIDs for safe delete reconciliation.
+    stateFile: /tmp/library-panels/.managed-uids.json
+    # watchServerTimeout: request to the server, asking it to cleanly close the connection after that.
+    # defaults to 60sec; much higher values like 3600 seconds (1h) are feasible for non-Azure K8S
+    # watchServerTimeout: 3600
+    #
+    # watchClientTimeout: is a client-side timeout, configuring your local socket.
+    # If you have a network outage dropping all packets with no RST/FIN,
+    # this is how long your client waits before realizing & dropping the connection.
+    # defaults to 66sec (sic!)
+    # watchClientTimeout: 60
+    #
+    # maxTotalRetries: Total number of retries to allow for any http request.
+    # Takes precedence over other counts. Applies to all requests to k8s api requests.
+    # Set to 0 to fail on the first retry.
+    # maxTotalRetries: 5
+    #
+    # maxConnectRetries: How many connection-related errors to retry on for any http request.
+    # These are errors raised before the request is sent to the remote server, which we assume has not triggered the server to process the request.
+    # Applies to all requests to k8s api requests.
+    # Set to 0 to fail on the first retry of this type.
+    # maxConnectRetries: 10
+    #
+    # maxReadRetries: How many times to retry on read errors for any http request
+    # These errors are raised after the request was sent to the server, so the request may have side-effects.
+    # Applies to all requests to k8s api requests.
+    # Set to 0 to fail on the first retry of this type.
+    # maxReadRetries: 5
+    # Absolute path to a script to execute after a configmap got reloaded.
+    # It runs after library panel files have been written to the watched folder.
+    script: /etc/grafana/library_panels_sync.sh
+    # Use native sidecar https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
+    # restartPolicy: Always
+    # # only applies to native sidecars
+    # startupProbe:
+    #   httpGet:
+    #     path: /healthz
+    #     port: 8085
+    #   initialDelaySeconds: 5
+    #   periodSeconds: 5
+    #   failureThreshold: 60 # 5 minutes
+    # Additional library panels sidecar volume mounts
+    extraMounts: []
+    # Sets the size limit of the library panels sidecar emptyDir volume
+    sizeLimit: ""
   datasources:
     enabled: false
     # Additional environment variables for the datasourcessidecar
