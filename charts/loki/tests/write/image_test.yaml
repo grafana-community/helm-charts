@@ -50,14 +50,14 @@ tests:
           value: registry.example.com/custom/loki-write:0.0.0
         template: write/statefulset.yaml
 
-  - it: should keep fully qualified write repository without global imageRegistry prefix
+  - it: should always prepend global imageRegistry even when repository contains a registry
     set:
       global.imageRegistry: registry.example.com
       write.image.repository: ghcr.io/custom/loki-write
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: ghcr.io/custom/loki-write:0.0.0
+          value: registry.example.com/ghcr.io/custom/loki-write:0.0.0
         template: write/statefulset.yaml
 
   - it: should support deprecated global.image.registry override

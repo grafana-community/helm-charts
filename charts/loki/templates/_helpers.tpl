@@ -174,8 +174,7 @@ Input parameters:
 
 {{/*
 Base template for building docker image reference
-Determines the final image name, respecting the global registry if defined, unless the local repository
-already contains a full registry (indicated by a dot '.') for backwards-compatibility.
+Always prepends the registry when one is configured (global or service-level).
 It also respects `.digest` as well as `.sha` (deprecated).
 
 Parameters:
@@ -208,10 +207,8 @@ Parameters:
 {{- $tagRef := printf ":%s" (coalesce $component.tag $default.tag $defaultVersion | toString) -}}
 {{- $ref := ternary $tagRef $digestRef (empty $digestRef) -}}
 
-{{- /* Keep backwards-compatible behavior: do not prefix fully-qualified repositories. */ -}}
 {{- $prefix := "" -}}
-{{- $firstRepositorySegment := (split "/" $repository)._0 -}}
-{{- if and $registry (not (contains "." $firstRepositorySegment)) -}}
+{{- if $registry -}}
 {{- $prefix = printf "%s/" $registry -}}
 {{- end -}}
 

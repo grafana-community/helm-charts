@@ -52,14 +52,14 @@ tests:
           value: registry.example.com/custom/memcached:1.6.41-alpine
         template: results-cache/statefulset.yaml
 
-  - it: should keep fully qualified memcached repository without global imageRegistry prefix
+  - it: should always prepend global imageRegistry even when repository contains a registry
     set:
       global.imageRegistry: registry.example.com
       memcached.image.repository: ghcr.io/custom/memcached
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: ghcr.io/custom/memcached:1.6.41-alpine
+          value: registry.example.com/ghcr.io/custom/memcached:1.6.41-alpine
         template: results-cache/statefulset.yaml
 
   - it: should support deprecated global.image.registry override for result-cache memcached
