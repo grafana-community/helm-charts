@@ -286,7 +286,7 @@ alibabacloud:
   {{- toYaml (mergeOverwrite dict
     (dict
       "bucket" $bucketName
-      "access_key_id" .secretAccessKey
+      "access_key_id" .accessKeyId
       "secret_access_key" .secretAccessKey
     )
     (omit . "bucket" "accessKeyId" "secretAccessKey")
