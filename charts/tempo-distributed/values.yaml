@@ -3102,6 +3102,8 @@ gateway:
       main '$remote_addr - $remote_user [$time_local]  $status '
               '"$request" $body_bytes_sent "$http_referer" '
               '"$http_user_agent" "$http_x_forwarded_for"';
+    # -- Allows appending custom configuration to the main context
+    mainSnippet: ''
     # -- Allows appending custom configuration to the server block
     serverSnippet: ''
     # -- Allows appending custom configuration to the http block
@@ -3121,6 +3123,10 @@ gateway:
       error_log  /dev/stderr;
       pid        /tmp/nginx.pid;
       worker_rlimit_nofile 8192;
+
+      {{- with .Values.gateway.nginxConfig.mainSnippet }}
+      {{ . | nindent 0 }}
+      {{- end }}
 
       events {
         worker_connections  4096;  ## Default: 1024
@@ -3377,7 +3383,7 @@ enterprise:
     # -- Grafana Enterprise Traces container image repository. Note: for Grafana Tempo use the value 'image.repository'
     repository: grafana/enterprise-traces
     # -- Grafana Enterprise Traces container image tag. Note: for Grafana Tempo use the value 'image.tag'
-    tag: v2.8.8
+    tag: v2.8.9
     # Note: pullPolicy and optional pullSecrets are set in toplevel 'image' section, not here
 
 # In order to use Grafana Enterprise Traces features, you will need to provide the contents of your Grafana Enterprise Traces

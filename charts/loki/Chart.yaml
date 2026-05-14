@@ -3,8 +3,8 @@ name: loki
 description: Helm chart for Grafana Loki supporting monolithic, simple scalable, and microservices modes.
 type: application
 # renovate: docker=docker.io/grafana/loki
-appVersion: 3.7.1
-version: 13.6.0
+appVersion: 3.7.2
+version: 13.7.1
 kubeVersion: ">=1.25.0-0"
 home: https://grafana-community.github.io/helm-charts
 sources:
@@ -21,7 +21,7 @@ dependencies:
   - name: rollout-operator
     alias: rollout_operator
     repository: https://grafana.github.io/helm-charts
-    version: 0.48.0
+    version: 0.49.0
     condition: rollout_operator.enabled
 maintainers:
   - name: Michael Timmerman
