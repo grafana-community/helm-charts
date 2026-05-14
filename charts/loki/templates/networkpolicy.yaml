@@ -134,7 +134,8 @@ spec:
     - Egress
   podSelector:
     matchLabels:
-      {{- include "loki.backendSelectorLabels" . | nindent 6 }}
+      {{- include "loki.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
   egress:
     - ports:
         - port: {{ .Values.networkPolicy.alertmanager.port }}

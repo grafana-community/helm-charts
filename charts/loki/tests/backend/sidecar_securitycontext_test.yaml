@@ -1,7 +1,7 @@
 # $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
 suite: backend sidecar securityContext
 templates:
-  - backend/statefulset.yaml
+  - backend/workload.yaml
   - config.yaml
 
 set:
@@ -16,7 +16,7 @@ set:
 tests:
   - it: should render sidecar with seccompProfile RuntimeDefault by default
     asserts:
-      - template: backend/statefulset.yaml
+      - template: backend/workload.yaml
         contains:
           path: spec.template.spec.containers
           content:
@@ -43,7 +43,7 @@ tests:
           type: Localhost
           localhostProfile: my-profile.json
     asserts:
-      - template: backend/statefulset.yaml
+      - template: backend/workload.yaml
         contains:
           path: spec.template.spec.containers
           content:
