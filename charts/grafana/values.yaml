@@ -24,6 +24,8 @@ rbac:
   pspEnabled: false
   pspUseAppArmor: false
   namespaced: false
+  # Only has an effect if namespaced: true is set
+  namespaces: []
   extraRoleRules: []
   # - apiGroups: []
   #   resources: []
