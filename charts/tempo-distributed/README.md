@@ -52,6 +52,36 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### From Chart versions < 2.17.10
+
+Version 2.17.10 change the memcached Services and Statefulsets spec.
+These changes cannot be done by patching the resources, causing an existing installation not to be upgradable without manual interaction.
+
+An upgrade will fail with a message like:
+```
+Error: UPGRADE FAILED: Service "tempo-memcached" is invalid: spec.clusterIPs[0]: Invalid value: ["None"]: may not change once set && StatefulSet.apps "tempo-memcached" is invalid: spec: Forbidden: updates to statefulset spec for fields other than 'replicas', 'ordinals', 'template', 'updateStrategy', 'revisionHistoryLimit', 'persistentVolumeClaimRetentionPolicy' and 'minReadySeconds' are forbidden
+````
+
+There are basically two options:
+
+#### Option 1
+Uninstall the old release and re-install the new one.
+
+#### Option 2
+Delete the affected Services and Statefulsets, and re-install the new ones.
+
+```
+kubectl -n <namespace> delete service --selector 'app.kubernetes.io/instance=<instance-name>,app.kubernetes.io/component in (memcached,memcached-bloom,memcached-parquet-footer,memcached-frontend-search)'
+```
+
+Perform a non-cascading deletion of the Statefulsets which will keep the pods running:
+
+```
+kubectl -n <namespace> delete statefulset --selector 'app.kubernetes.io/instance=<instance-name>,app.kubernetes.io/component in (memcached,memcached-bloom,memcached-parquet-footer,memcached-frontend-search)' --cascade=orphan
+```
+
+Perform a regular Helm upgrade on the existing release. The new Statefulsets will pick up the existing pods and perform a rolling upgrade.
+
 ### From Chart versions < 2.0.0
 
 The minimum required Kubernetes version is now 1.25. All references to deprecated APIs have been removed.
