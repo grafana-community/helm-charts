@@ -1096,7 +1096,7 @@ gateway:
     # -- The gateway image repository
     repository: nginxinc/nginx-unprivileged
     # -- The gateway image tag
-    tag: 1.30-alpine
+    tag: 1.31-alpine
     # -- Overrides the gateway image tag with an image digest
     digest: null
     # -- The gateway image pull policy
@@ -1369,7 +1369,7 @@ gateway:
     image:
       registry: ghcr.io
       repository: "jkroepke/access-log-exporter"
-      tag: "0.3.11"
+      tag: "0.3.12"
       pullPolicy: IfNotPresent
     resources:
       requests: {}
@@ -2165,8 +2165,20 @@ read:
 backend:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `SimpleScalable`.
   enabled: true
+  # -- Kind of backend workload. StatefulSet and Deployment are supported.
+  kind: StatefulSet
+  # -- Override for the backend fullname. By default, this is generated using the fullname template with "-backend"
+  fullnameOverride: '{{ include "loki.name" . }}-backend'
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the compactor StatefulSet when the compactor configuration is changed.
+  ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Number of replicas for the backend
   replicas: 3
+  # -- UpdateStrategy or Strategy for the backend.
+  strategy:
+    rollingUpdate:
+      partition: 0
   # -- Whether to enable the rules sidecar
   sidecar: true
   # -- Set this toggle to false to opt out of automounting API credentials for the service account
@@ -2313,6 +2325,8 @@ backend:
   podManagementPolicy: "Parallel"
   persistence:
     # -- Enable volume claims in pod spec
+    enabled: false
+    # -- Enable volume claims in pod spec. Deprecated in favor of `persistence.enabled`.
     volumeClaimsEnabled: true
     # -- Set access modes on the PersistentVolumeClaim
     accessModes:
@@ -2320,6 +2334,10 @@ backend:
     # -- Parameters used for the `data` volume when volumeClaimEnabled if false
     dataVolumeParameters:
       emptyDir: {}
+    # -- What to do with the volume when the StatefulSet is scaled down.
+    whenScaled: Delete
+    # -- What to do with the volumes when the StatefulSet is deleted.
+    whenDeleted: Delete
     # -- Enable StatefulSetAutoDeletePVC feature
     enableStatefulSetAutoDeletePVC: true
     # -- Size of persistent disk
@@ -5292,7 +5310,7 @@ sidecar:
     # -- The Docker registry and image for the k8s sidecar
     repository: kiwigrid/k8s-sidecar
     # -- Docker image tag
-    tag: 2.7.1
+    tag: 2.7.3
     # -- Docker image sha. If empty, no sha will be used
     sha: ""
     # -- Docker image pull policy

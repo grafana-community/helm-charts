@@ -1,0 +1,78 @@
+suite: rbac namespaced
+templates:
+  - role.yaml
+  - rolebinding.yaml
+  - clusterrole.yaml
+  - clusterrolebinding.yaml
+release:
+  namespace: grafana-rbac-namespaced-test
+set:
+  rbac:
+    namespaced: true
+    namespaces:
+      - one
+      - 2
+      - true
+tests:
+  - it: roles should be deployed to multiple namespaces
+    templates:
+      - role.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: "one"
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: "2"
+        documentIndex: 1
+      - equal:
+          path: metadata.namespace
+          value: "true"
+        documentIndex: 2
+      - equal:
+          path: metadata.namespace
+          value: grafana-rbac-namespaced-test
+        documentIndex: 3
+      - hasDocuments:
+          count: 4
+  - it: rolebindings should be deployed to multiple namespaces
+    templates:
+      - rolebinding.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: "one"
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: "2"
+        documentIndex: 1
+      - equal:
+          path: metadata.namespace
+          value: "true"
+        documentIndex: 2
+      - equal:
+          path: metadata.namespace
+          value: grafana-rbac-namespaced-test
+        documentIndex: 3
+      - hasDocuments:
+          count: 4
+  - it: clusterrole and clusterrolebinding should not be deployed
+    templates:
+      - clusterrole.yaml
+      - clusterrolebinding.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: roles should not be deployed when existing role option is true
+    templates:
+      - clusterrole.yaml
+      - clusterrolebinding.yaml
+      - role.yaml
+    set:
+      rbac:
+        useExistingRole: true
+    asserts:
+      - hasDocuments:
+          count: 0

@@ -53,6 +53,34 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### From 13.x to 14.0.0 ([#479](https://github.com/grafana-community/helm-charts/pull/479))
+
+The dot-based registry heuristic has been removed. Previously, if the `repository` value contained a dot (`.`) in its first path segment, the chart assumed it already included a registry and silently skipped prepending `global.imageRegistry` or the service-level `registry`. This caused configured registries to be ignored for image references like `mirror.gcr.io/grafana/loki` or `foo.com/loki-fips`.
+
+**This is now the expected behavior**: when a registry is configured (via `global.imageRegistry` or a component's `image.registry`), it is always prepended unconditionally.
+
+Actions required:
+- If you stored a fully-qualified image reference in `repository` (e.g. `repository: private.registry.com/grafana/loki`) and relied on the dot-heuristic to prevent double-prefixing, split the value into separate `registry` and `repository` fields:
+
+Before:
+
+```yaml
+loki:
+  image:
+    repository: private.registry.com/grafana/loki
+```
+
+After:
+
+```yaml
+loki:
+  image:
+    registry: private.registry.com
+    repository: grafana/loki
+```
+
+Users who only set `repository` to a plain path (e.g. `grafana/loki`) or who use `global.imageRegistry` / `image.registry` correctly are unaffected.
+
 ### From 12.x to 13.0.0 ([#258](https://github.com/grafana-community/helm-charts/pull/258))
 
 The persistence configuration for ephemeral volumes has been flattened.

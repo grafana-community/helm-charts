@@ -23,15 +23,15 @@ Workload helper
 apiVersion: apps/v1
 kind: {{ $component.kind }}
 metadata:
-  name: {{ $name | default $component.fullnameOverride | default (include "loki.resourceName" (dict "ctx" $ctx "component" $target)) }}
-  namespace: {{ include "loki.namespace" . }}
+  name: "{{ $name | default (tpl ($component.fullnameOverride | default "") $ctx) | default (include "loki.resourceName" (dict "ctx" $ctx "component" $target)) }}"
+  namespace: "{{ include "loki.namespace" . }}"
   labels:
     {{- include "loki.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ $target }}
     {{- with (mergeOverwrite (dict) .Values.defaults.labels $component.labels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with (mergeOverwrite (dict) .Values.defaults.annotations $component.annotations) }}
+  {{- with (mergeOverwrite (dict) .Values.defaults.annotations .Values.loki.annotations $component.annotations) }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
@@ -40,13 +40,13 @@ spec:
   replicas: {{ $component.replicas }}
 {{- end }}
   {{- if eq $component.kind "StatefulSet" }}
-  podManagementPolicy: Parallel
+  podManagementPolicy: {{ $component.podManagementPolicy | default "Parallel" }}
   {{- with $component.strategy }}
   updateStrategy:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   serviceName: {{ $headlessName | default (include "loki.resourceName" (dict "ctx" $ctx "component" $target "suffix" "headless")) }}
-  {{- if $component.persistence.enableStatefulSetAutoDeletePVC }}
+  {{- if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) $component.persistence.enableStatefulSetAutoDeletePVC }}
   persistentVolumeClaimRetentionPolicy:
     whenDeleted: {{ $component.persistence.whenDeleted }}
     whenScaled: {{ $component.persistence.whenScaled }}
@@ -64,11 +64,11 @@ spec:
       app.kubernetes.io/component: {{ $target }}
   template:
     {{- include "loki.podTemplate" (dict "target" $target "component" $component "ctx" $ctx "memberlist" $memberlist "args" $args) | nindent 4 }}
-  {{- if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq $component.persistence.type "pvc") }}
+  {{- if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq (dig "persistence" "type" "pvc" $component) "pvc") }}
     {{- if and (eq $component.kind "Deployment") (gt (int $component.replicas) 1) }}
       {{- fail "Persistence with PVC is not supported for Deployment with more than 1 replica. Please use StatefulSet or set replicas to 1." }}
     {{- end }}
-    {{- if and (eq $component.kind "StatefulSet") $component.persistence.enabled }}
+    {{- if and (eq $component.kind "StatefulSet") }}
   volumeClaimTemplates:
   {{- $dataClaimExists := false }}
   {{- range $component.persistence.claims }}
