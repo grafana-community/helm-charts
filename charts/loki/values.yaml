@@ -1451,17 +1451,17 @@ ingress:
   #    blackbox.monitoring.exclude: "true"
   paths:
     # -- Paths that are exposed by Loki Distributor.
-    # If deployment mode is Distributed, the requests are forwarded to the service: `{{"loki.distributorFullname"}}`.
-    # If deployment mode is SimpleScalable, the requests are forwarded to write k8s service: `{{"loki.writeFullname"}}`.
-    # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service: `{{"loki.fullname"}}`
+    # If deployment mode is Distributed, the requests are forwarded to the service:.
+    # If deployment mode is SimpleScalable, the requests are forwarded to write k8s service:.
+    # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service:
     distributor:
       - /api/prom/push
       - /loki/api/v1/push
       - /otlp/v1/logs
     # -- Paths that are exposed by Loki Query Frontend.
-    # If deployment mode is Distributed, the requests are forwarded to the service: `{{"loki.queryFrontendFullname"}}`.
-    # If deployment mode is SimpleScalable, the requests are forwarded to write k8s service: `{{"loki.readFullname"}}`.
-    # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service: `{{"loki.fullname"}}`
+    # If deployment mode is Distributed, the requests are forwarded to the service.
+    # If deployment mode is SimpleScalable, the requests are forwarded to write k8s service`.
+    # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service`
     queryFrontend:
       - /api/prom/query
       # this path covers labels and labelValues endpoints
@@ -1486,9 +1486,9 @@ ingress:
       # this path covers UI API
       - /ui
     # -- Paths that are exposed by Loki Ruler.
-    # If deployment mode is Distributed, the requests are forwarded to the service: `{{"loki.rulerFullname"}}`.
-    # If deployment mode is SimpleScalable, the requests are forwarded to k8s service: `{{"loki.backendFullname"}}`.
-    # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service: `{{"loki.fullname"}}`
+    # If deployment mode is Distributed, the requests are forwarded to the service.
+    # If deployment mode is SimpleScalable, the requests are forwarded to k8s service.
+    # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service
     ruler:
       - /api/prom/rules
       - /api/prom/api/v1/rules
@@ -1497,9 +1497,9 @@ ingress:
       - /prometheus/api/v1/rules
       - /prometheus/api/v1/alerts
     # -- Paths that are exposed by Loki Compactor.
-    # If deployment mode is Distributed, the requests are forwarded to the service: `{{"loki.compactorFullname"}}`.
-    # If deployment mode is SimpleScalable, the requests are forwarded to k8s service: `{{"loki.backendFullname"}}`.
-    # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service: `{{"loki.fullname"}}`
+    # If deployment mode is Distributed, the requests are forwarded to the service.
+    # If deployment mode is SimpleScalable, the requests are forwarded to k8s service.
+    # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service`
     compactor:
       - /loki/api/v1/delete
   # -- Hosts configuration for the ingress, passed through the `tpl` function to allow templating
@@ -1555,9 +1555,9 @@ route:
         - /loki/api/v1/push
         - /otlp/v1/logs
       # -- Paths that are exposed by Loki Query Frontend.
-      # If deployment mode is Distributed, the requests are forwarded to the service: `{{"loki.queryFrontendFullname"}}`.
-      # If deployment mode is SimpleScalable, the requests are forwarded to read k8s service: `{{"loki.readFullname"}}`.
-      # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service: `{{"loki.fullname"}}`
+      # If deployment mode is Distributed, the requests are forwarded to the service.
+      # If deployment mode is SimpleScalable, the requests are forwarded to read k8s service.
+      # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service`
       queryFrontend:
         - /api/prom/query
         # this path covers labels and labelValues endpoints
@@ -1582,9 +1582,9 @@ route:
         # this path covers UI API
         - /ui
       # -- Paths that are exposed by Loki Ruler.
-      # If deployment mode is Distributed, the requests are forwarded to the service: `{{"loki.rulerFullname"}}`.
-      # If deployment mode is SimpleScalable, the requests are forwarded to k8s service: `{{"loki.backendFullname"}}`.
-      # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service: `{{"loki.fullname"}}`
+      # If deployment mode is Distributed, the requests are forwarded to the service.
+      # If deployment mode is SimpleScalable, the requests are forwarded to k8s service.
+      # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service.
       ruler:
         - /api/prom/rules
         - /api/prom/api/v1/rules
@@ -1593,9 +1593,9 @@ route:
         - /prometheus/api/v1/rules
         - /prometheus/api/v1/alerts
       # -- Paths that are exposed by Loki Compactor.
-      # If deployment mode is Distributed, the requests are forwarded to the service: `{{"loki.compactorFullname"}}`.
-      # If deployment mode is SimpleScalable, the requests are forwarded to k8s service: `{{"loki.backendFullname"}}`.
-      # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service: `{{"loki.fullname"}}`
+      # If deployment mode is Distributed, the requests are forwarded to the service.
+      # If deployment mode is SimpleScalable, the requests are forwarded to k8s service.
+      # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service.
       compactor:
         - /loki/api/v1/delete
 
@@ -1827,8 +1827,20 @@ singleBinary:
 write:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `SimpleScalable`.
   enabled: true
+  # -- Kind of write workload. StatefulSet and Deployment are supported.
+  kind: StatefulSet
+  # -- Override for the write fullname. By default, this is generated using the fullname template with "-backend"
+  fullnameOverride: '{{ include "loki.name" . }}-write'
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the write StatefulSet when the compactor configuration is changed.
+  ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Number of replicas for the write
   replicas: 3
+  # -- UpdateStrategy or Strategy for the write.
+  strategy:
+    rollingUpdate:
+      partition: 0
   autoscaling:
     # -- Enable autoscaling for the write.
     enabled: false
@@ -2032,8 +2044,17 @@ write:
 read:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `SimpleScalable`.
   enabled: true
+  # -- Kind of read deployment. StatefulSet and Deployment are supported.
+  kind: Deployment
+  # -- Override for the read fullname. By default, this is generated using the fullname template with "-backend"
+  fullnameOverride: '{{ include "loki.name" . }}-read'
   # -- Number of replicas for the read
   replicas: 3
+  # -- UpdateStrategy or Strategy for the read.
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   autoscaling:
     # -- Enable autoscaling for the read, this is only used if `queryIndex.enabled: true`
     enabled: false
@@ -2206,7 +2227,7 @@ backend:
   kind: StatefulSet
   # -- Override for the backend fullname. By default, this is generated using the fullname template with "-backend"
   fullnameOverride: '{{ include "loki.name" . }}-backend'
-  # -- EXPERIMENTAL: Enable creating a Job to recreate the compactor StatefulSet when the compactor configuration is changed.
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the backend StatefulSet when the compactor configuration is changed.
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
@@ -2427,6 +2448,18 @@ backend:
 ingester:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: true
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: StatefulSet
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the ingester StatefulSet
+  ## Only applicable if `ingester.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
+  # -- UpdateStrategy or Strategy for the ingester.
+  strategy:
+    type: RollingUpdate
+  # -- PodManagementPolicy for the ingester StatefulSet. Only applicable if `compactor.kind` is StatefulSet.
+  ## OrderedReady and Parallel are supported.
+  podManagementPolicy: Parallel
   # -- Number of replicas for the ingester, when zoneAwareReplication.enabled is true, the total
   # number of replicas will match this value with each zone having 1/3rd of the total replicas.
   # Set to null to omit spec.replicas from the StatefulSet, allowing an external controller
@@ -2499,8 +2532,11 @@ ingester:
     tag: null
   # -- Command to execute instead of defined in Docker image
   command: null
-  labels: {}
   priorityClassName: null
+  # -- Labels for ingester
+  labels: {}
+  # -- Annotations for ingester
+  annotations: {}
   # -- Labels for ingester pods
   podLabels: {}
   # -- Annotations for ingester pods
@@ -2921,8 +2957,16 @@ distributor:
 querier:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: true
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: Deployment
   # -- Number of replicas for the querier
   replicas: 0
+  # -- Strategy for the querier.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   # -- hostAliases to add
   hostAliases: []
   #  - ip: 1.2.3.4
@@ -2999,6 +3043,10 @@ querier:
   command: null
   # -- The name of the PriorityClass for querier pods
   priorityClassName: null
+  # -- Labels for querier
+  labels: {}
+  # -- Annotations for querier
+  annotations: {}
   # -- Labels for querier pods
   podLabels: {}
   # -- Annotations for querier pods
@@ -3125,8 +3173,16 @@ querier:
 queryFrontend:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: true
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: Deployment
   # -- Number of replicas for the query-frontend
   replicas: 0
+  # -- Strategy for the querier.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   # -- hostAliases to add
   hostAliases: []
   #  - ip: 1.2.3.4
@@ -3194,6 +3250,10 @@ queryFrontend:
   command: null
   # -- The name of the PriorityClass for query-frontend pods
   priorityClassName: null
+  # -- Labels for query-frontend
+  labels: {}
+  # -- Annotations for query-frontend
+  annotations: {}
   # -- Labels for query-frontend pods
   podLabels: {}
   # -- Annotations for query-frontend pods
@@ -3310,10 +3370,18 @@ queryFrontend:
 queryScheduler:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: true
+  # -- Kind of query-scheduler deployment. StatefulSet and Deployment are supported.
+  kind: Deployment
   # -- Number of replicas for the query-scheduler.
   # It should be lower than `-querier.max-concurrent` to avoid generating back-pressure in queriers;
   # it's also recommended that this value evenly divides the latter
   replicas: 0
+  # -- Strategy for the query-scheduler.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   # -- DNSConfig for query-scheduler
   dnsConfig: {}
   # -- hostAliases to add
@@ -3332,6 +3400,10 @@ queryScheduler:
     tag: null
   # -- The name of the PriorityClass for query-scheduler pods
   priorityClassName: null
+  # -- Labels for query-scheduler
+  labels: {}
+  # -- Annotations for query-scheduler
+  annotations: {}
   # -- Labels for query-scheduler pods
   podLabels: {}
   # -- Annotations for query-scheduler pods
@@ -3443,6 +3515,12 @@ queryScheduler:
 indexGateway:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: true
+  # -- Kind of index-gateway deployment. StatefulSet and Deployment are supported.
+  kind: StatefulSet
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the compactor StatefulSet when the compactor configuration is changed.
+  ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Number of replicas for the index-gateway
   replicas: 0
   # -- Whether the index gateway should join the memberlist hashring
@@ -3465,6 +3543,10 @@ indexGateway:
     tag: null
   # -- The name of the PriorityClass for index-gateway pods
   priorityClassName: null
+  # -- Labels for index-gateway
+  labels: {}
+  # -- Annotations for index-gateway
+  annotations: {}
   # -- Labels for index-gateway pods
   podLabels: {}
   # -- Annotations for index-gateway pods
@@ -3588,8 +3670,8 @@ indexGateway:
     grpc: ""
   # -- trafficDistribution for index-gateway service
   trafficDistribution: ""
-  # -- UpdateStrategy for the indexGateway StatefulSet.
-  updateStrategy:
+  # -- UpdateStrategy for the index-gateway workload.
+  strategy:
     # -- One of  'OnDelete' or 'RollingUpdate'
     type: RollingUpdate
     # -- Optional for updateStrategy.type=RollingUpdate. See [Partitioned rolling updates](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#partitions) in the StatefulSet docs for details.
@@ -4339,8 +4421,18 @@ bloomBuilder:
 patternIngester:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: false
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: StatefulSet
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the compactor StatefulSet when the compactor configuration is changed.
+  ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Number of replicas for the pattern ingester
   replicas: 0
+  # -- UpdateStrategy or Strategy for the pattern ingester.
+  strategy:
+    rollingUpdate:
+      partition: 0
   # -- DNSConfig for pattern ingester pods
   dnsConfig: {}
   # -- hostAliases to add
@@ -4361,6 +4453,10 @@ patternIngester:
   command: null
   # -- The name of the PriorityClass for pattern ingester pods
   priorityClassName: null
+  # -- Labels for pattern ingester
+  labels: {}
+  # -- Annotations for pattern ingester
+  annotations: {}
   # -- Labels for pattern ingester pods
   podLabels: {}
   # -- Annotations for pattern ingester pods
@@ -4482,6 +4578,12 @@ patternIngester:
 ruler:
   # -- The ruler component is optional and can be disabled if desired.
   enabled: true
+  # -- Kind of ruler deployment. StatefulSet and Deployment are supported.
+  kind: StatefulSet
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the ruler StatefulSet when the ruler configuration is changed.
+  ## Only applicable if `ruler.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Whether to enable the rules sidecar
   sidecar: false
   # -- Number of replicas for the ruler
@@ -4504,7 +4606,11 @@ ruler:
   command: null
   # -- The name of the PriorityClass for ruler pods
   priorityClassName: null
-  # -- Labels for compactor pods
+  # -- Labels for ruler
+  labels: {}
+  # -- Annotations for ruler
+  annotations: {}
+  # -- Labels for ruler pods
   podLabels: {}
   # -- Annotations for ruler pods
   podAnnotations: {}
@@ -4701,6 +4807,8 @@ ruler:
 overridesExporter:
   # -- The overrides-exporter component is optional and can be disabled if desired.
   enabled: false
+  # -- Kind of backend workload. StatefulSet and Deployment are supported.
+  kind: Deployment
   # -- Number of replicas for the overrides-exporter
   replicas: 0
   # -- DNSConfig for overrides-exporter

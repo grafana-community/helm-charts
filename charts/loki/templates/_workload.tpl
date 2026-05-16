@@ -40,7 +40,9 @@ spec:
   replicas: {{ $component.replicas }}
 {{- end }}
   {{- if eq $component.kind "StatefulSet" }}
-  podManagementPolicy: {{ $component.podManagementPolicy | default "Parallel" }}
+  {{- with $component.podManagementPolicy }}
+  podManagementPolicy: {{ . }}
+  {{- end }}
   {{- with $component.strategy }}
   updateStrategy:
     {{- toYaml . | nindent 4 }}
@@ -155,12 +157,24 @@ spec:
     {{- $needsRecreation := false -}}
     {{- $templates := dict -}}
     {{- if and $currentStatefulset (eq $currentStatefulset.metadata.name $newStatefulSet.metadata.name) -}}
-      {{- if ne (len ($newStatefulSet.spec.volumeClaimTemplates | default list)) (len ($currentStatefulset.spec.volumeClaimTemplates | default list)) -}}
+      {{- $newPodManagementPolicy := dig "spec" "podManagementPolicy" "OrderedReady" $newStatefulSet -}}
+      {{- $currentPodManagementPolicy := dig "spec" "podManagementPolicy" "OrderedReady" $currentStatefulset -}}
+      {{- if ne $newPodManagementPolicy $currentPodManagementPolicy -}}
+        {{- $needsRecreation = true -}}
+      {{- end -}}
+      {{- $newServiceName := dig "spec" "serviceName" "" $newStatefulSet -}}
+      {{- $currentServiceName := dig "spec" "serviceName" "" $currentStatefulset -}}
+      {{- if ne $newServiceName $currentServiceName -}}
+        {{- $needsRecreation = true -}}
+      {{- end -}}
+      {{- $newVolumeClaimTemplates := dig "spec" "volumeClaimTemplates" (list) $newStatefulSet -}}
+      {{- $currentVolumeClaimTemplates := dig "spec" "volumeClaimTemplates" (list) $currentStatefulset -}}
+      {{- if ne (len $newVolumeClaimTemplates) (len $currentVolumeClaimTemplates) -}}
         {{- $needsRecreation = true -}}
       {{- else -}}
-        {{- range $index, $newVolumeClaimTemplate := $newStatefulSet.spec.volumeClaimTemplates -}}
+        {{- range $index, $newVolumeClaimTemplate := $newVolumeClaimTemplates -}}
           {{- $currentVolumeClaimTemplateSpec := dict -}}
-            {{- range $oldVolumeClaimTemplate := ($currentStatefulset.spec.volumeClaimTemplates | default list) -}}
+            {{- range $oldVolumeClaimTemplate := $currentVolumeClaimTemplates -}}
               {{- if eq $oldVolumeClaimTemplate.metadata.name $newVolumeClaimTemplate.metadata.name -}}
                 {{- $currentVolumeClaimTemplateSpec = $oldVolumeClaimTemplate.spec -}}
               {{- end -}}
@@ -224,6 +238,8 @@ spec:
             - statefulset
             - --namespace={{ $newStatefulSet.metadata.namespace }}
             - --cascade=orphan
+            - --wait=true
+            - --ignore-not-found=true
             - {{ $newStatefulSet.metadata.name }}
 ---
 apiVersion: v1

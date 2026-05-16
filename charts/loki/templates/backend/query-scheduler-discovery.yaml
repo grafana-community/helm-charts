@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "loki.querySchedulerFullname" . }}-discovery
+  name: {{ include "loki.resourceName" (dict "ctx" . "component" "query-scheduler" "suffix" "discovery") }}
   namespace: {{ include "loki.namespace" . }}
   labels:
     {{- include "loki.selectorLabels" . | nindent 4 }}

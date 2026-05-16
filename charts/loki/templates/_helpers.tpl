@@ -1201,3 +1201,10 @@ env:
       fieldRef:
         fieldPath: status.podIP
 {{- end -}}
+
+{{/*
+format rules dir
+*/}}
+{{- define "loki.rulerRulesDirName" -}}
+rules-{{ . | replace "_" "-" | trimSuffix "-" | lower }}
+{{- end }}

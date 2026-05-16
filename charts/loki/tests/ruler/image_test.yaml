@@ -1,7 +1,7 @@
 # $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
 suite: ruler image
 templates:
-  - ruler/statefulset.yaml
+  - ruler/workload.yaml
   - config.yaml
 set:
   deploymentMode: Distributed
@@ -17,7 +17,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: docker.io/grafana/loki:0.0.0
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should override repository and tag at ruler component level
     set:
@@ -27,7 +27,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: docker.io/custom/loki-ruler:custom-tag
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should override registry at ruler component level
     set:
@@ -37,7 +37,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: quay.io/custom/loki-ruler:0.0.0
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should let global imageRegistry override ruler and loki registries
     set:
@@ -48,7 +48,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: registry.example.com/custom/loki-ruler:0.0.0
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should always prepend global imageRegistry even when repository contains a registry
     set:
@@ -58,7 +58,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: registry.example.com/ghcr.io/custom/loki-ruler:0.0.0
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should support deprecated global.image.registry override
     set:
@@ -68,7 +68,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: deprecated.registry.example.com/custom/loki-ruler:0.0.0
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should support deprecated global.registry override
     set:
@@ -78,7 +78,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: deprecated2.registry.example.com/custom/loki-ruler:0.0.0
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should let ruler image tag override loki image tag
     set:
@@ -87,7 +87,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: docker.io/grafana/loki:ruler-tag
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should prefer ruler image digest over tag
     set:
@@ -98,7 +98,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: docker.io/custom/loki-ruler@sha256:d1g357
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should use ruler image sha as digest fallback when digest is not set
     set:
@@ -109,7 +109,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: docker.io/custom/loki-ruler@sha256:abcdef0123456789
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should prefer ruler digest over loki digest
     set:
@@ -120,7 +120,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: docker.io/custom/loki-ruler@sha256:component
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should prefer global.imageRegistry over deprecated global registry keys
     set:
@@ -132,7 +132,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: current.registry.example.com/custom/loki-ruler:0.0.0
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should prefer deprecated global.image.registry over deprecated global.registry when imageRegistry is unset
     set:
@@ -143,7 +143,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: preferred.registry.example.com/custom/loki-ruler:0.0.0
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should use default loki image digest when ruler image is not set
     set:
@@ -152,7 +152,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: docker.io/grafana/loki@sha256:defaultdigest
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
 
   - it: should use default loki image sha as digest fallback when digest is not set and ruler image is not set
     set:
@@ -161,4 +161,4 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: docker.io/grafana/loki@sha256:deadbeef01234567
-        template: ruler/statefulset.yaml
+        template: ruler/workload.yaml
