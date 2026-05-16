@@ -34,7 +34,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: {{ $kind }}
-    name: "{{ $targetName | default (tpl ($component.fullnameOverride | default "") $ctx) | default (include "loki.resourceName" (dict "ctx" $ctx "component" $target)) }}"
+    name: "{{ $targetName | default (include "loki.workloadResourceName" (dict "ctx" $ctx "component" $target "componentValues" $component)) }}"
   minReplicaCount: {{ $component.kedaAutoscaling.minReplicas }}
   maxReplicaCount: {{ $component.kedaAutoscaling.maxReplicas }}
   pollingInterval: {{
