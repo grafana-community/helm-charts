@@ -85,6 +85,109 @@ tests:
 - `skip`: only for temporary/unreleased behavior; prefer active assertions over skipped tests.
 - `postRenderer`: use only when chart behavior explicitly depends on post-render transforms.
 
+### Testing `lookup` with `kubernetesProvider`
+
+- Use `kubernetesProvider` whenever templates call `lookup`; without it, lookup returns empty and branch coverage is incomplete.
+- Register API kinds in `scheme` using the key format `"<group>/<version>/<Kind>"` or `"v1/<Kind>"` for core APIs.
+- Each scheme entry must define `gvr` (`group` optional for core APIs, plus `version`, `resource`) and `namespaced`.
+- Provide fixture resources in `objects`; test-level `kubernetesProvider.objects` can add scenario-specific fixtures without rewriting suite-wide defaults.
+
+```yaml
+templates:
+  - templates/lookup.yaml
+kubernetesProvider:
+  scheme:
+    "v1/Namespace":
+      gvr:
+        version: "v1"
+        resource: "namespaces"
+      namespaced: false
+    "v1/Pod":
+      gvr:
+        version: "v1"
+        resource: "pods"
+      namespaced: true
+    "networking.k8s.io/v1/Ingress":
+      gvr:
+        group: "networking.k8s.io"
+        version: "v1"
+        resource: "ingresses"
+      namespaced: true
+  objects:
+    - kind: Pod
+      apiVersion: v1
+      metadata:
+        name: exists
+        namespace: default
+    - kind: Ingress
+      apiVersion: networking.k8s.io/v1
+      metadata:
+        name: exists
+        namespace: default
+    - kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: exists
+    - kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: exists2
+tests:
+  - it: manifest should match snapshot
+    asserts:
+      - matchSnapshot: {}
+      - isNotNullOrEmpty:
+          path: pod_exists
+      - isNotNullOrEmpty:
+          path: ingress_exists
+      - isNotNullOrEmpty:
+          path: namespace_exists
+      - isNullOrEmpty:
+          path: pod_not_exists
+      - isNullOrEmpty:
+          path: ingress_not_exists
+      - isNullOrEmpty:
+          path: namespace_not_exists
+      - equal:
+          path: pod_exists.kind
+          value: Pod
+      - equal:
+          path: pod_exists.apiVersion
+          value: v1
+      - equal:
+          path: pod_exists.metadata.name
+          value: exists
+      - equal:
+          path: pod_exists.metadata.namespace
+          value: default
+      - lengthEqual:
+          path: namespaces.items
+          count: 2
+  - it: manifest should validate pod_not_exists due to additional object add in testjob
+    kubernetesProvider:
+      objects:
+        - kind: Pod
+          apiVersion: v1
+          metadata:
+            name: not-exists
+            namespace: default
+    asserts:
+      - isNotNullOrEmpty:
+          path: pod_not_exists
+      - equal:
+          path: pod_not_exists.kind
+          value: Pod
+      - equal:
+          path: pod_not_exists.apiVersion
+          value: v1
+      - equal:
+          path: pod_not_exists.metadata.name
+          value: not-exists
+      - equal:
+          path: pod_not_exists.metadata.namespace
+          value: default
+```
+
 ### Key Assertion Types
 
 | Assertion | Purpose |
@@ -95,6 +198,7 @@ tests:
 | `exists` | Path exists in rendered output |
 | `notExists` / `exists` | Path is absent/present |
 | `isEmpty` / `isNotEmpty` | Path is/isn't empty |
+| `isNullOrEmpty` / `isNotNullOrEmpty` | Path is null/empty or present with content |
 | `isKind` | Kubernetes resource kind check |
 | `isAPIVersion` | API version check |
 | `contains` | Array/map contains entry |
@@ -104,6 +208,7 @@ tests:
 | `failedTemplate` | Template should fail to render |
 | `notFailedTemplate` | Template should render successfully |
 | `isSubset` | Rendered output is superset of expected |
+| `lengthEqual` | Array/map length equals expected count |
 
 Use antonym assertions (`notEqual`, `notContains`, etc.) instead of relying on `not: true` unless needed for readability.
 

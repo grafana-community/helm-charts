@@ -1196,7 +1196,7 @@ env:
   {{- with $envList | uniq }}
   {{- toYaml . | nindent 2 }}
   {{- end }}
-  - name: HASH_RING_INSTANCE_ADDR
+  - name: POD_IP
     valueFrom:
       fieldRef:
         fieldPath: status.podIP

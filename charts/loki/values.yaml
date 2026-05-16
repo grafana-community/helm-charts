@@ -513,7 +513,6 @@ loki:
   # -- Extra memberlist configuration
   extraMemberlistConfig:
     abort_if_cluster_join_fails: true
-    advertise_addr: ${HASH_RING_INSTANCE_ADDR}
     advertise_port: 7946
     bind_port: 7946
     max_join_backoff: 1m
@@ -5238,6 +5237,14 @@ rollout_operator:
     runAsNonRoot: true
     seccompProfile:
       type: RuntimeDefault
+  webhooks:
+    # -- Enable the rollout-operator webhooks. See https://github.com/grafana/rollout-operator/#webhooks.
+    # Note that the webhooks require custom resource definitions. If upgrading, manually apply the files in the `crds` directory.
+    enabled: true
+    # -- Timeout in seconds for the prepare-downscale mutating webhook. Must be between 1 and 30.
+    timeoutSeconds: 10
+    # -- Validating and mutating webhook failure policy. `Ignore` or `Fail`.
+    failurePolicy: "Ignore"
 # -- Configuration for the minio subchart
 minio:
   enabled: false
