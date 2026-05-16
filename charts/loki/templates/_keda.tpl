@@ -18,6 +18,7 @@ Params: .component (values object), .name (string for error message)
   {{- $kind := .component.kind | default .kind | default "StatefulSet" }}
   {{- $ctx := .ctx }}
   {{- $component := .component }}
+  {{- $targetName := .targetName }}
   {{- $suffix := .suffix | default "" }}
   {{- with $ctx }}
 ---
@@ -33,7 +34,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: {{ $kind }}
-    name: {{ include "loki.resourceName" (dict "ctx" . "component" $target "suffix" $suffix) }}
+    name: "{{ $targetName | default (tpl ($component.fullnameOverride | default "") $ctx) | default (include "loki.resourceName" (dict "ctx" $ctx "component" $target)) }}"
   minReplicaCount: {{ $component.kedaAutoscaling.minReplicas }}
   maxReplicaCount: {{ $component.kedaAutoscaling.maxReplicas }}
   pollingInterval: {{
