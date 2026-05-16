@@ -28,7 +28,7 @@ tests:
           path: metadata.annotations.canary-annotation
           value: canary-value
 
-  - it: merges loki.annotations and lokiCanary.annotations on the DaemonSet metadata
+  - it: does not inherit loki.annotations into DaemonSet metadata
     set:
       loki.annotations:
         common-annotation: common-value
@@ -36,15 +36,14 @@ tests:
         canary-annotation: canary-value
     asserts:
       - template: loki-canary/daemonset.yaml
-        equal:
+        notExists:
           path: metadata.annotations.common-annotation
-          value: common-value
       - template: loki-canary/daemonset.yaml
         equal:
           path: metadata.annotations.canary-annotation
           value: canary-value
 
-  - it: loki.annotations takes precedence over lokiCanary.annotations on conflict
+  - it: does not override lokiCanary.annotations from loki.annotations on conflict
     set:
       loki.annotations:
         shared-annotation: from-loki
@@ -54,7 +53,7 @@ tests:
       - template: loki-canary/daemonset.yaml
         equal:
           path: metadata.annotations.shared-annotation
-          value: from-loki
+          value: from-canary
 
   - it: renders lokiCanary.podAnnotations on the pod template only
     set:
