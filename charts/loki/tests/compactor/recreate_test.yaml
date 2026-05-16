@@ -1,0 +1,384 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: compactor StatefulSet recreate job
+templates:
+  - templates/compactor/workload.yaml
+  - templates/config.yaml
+
+# Common base values for all tests in this suite
+set:
+  deploymentMode: Distributed
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  compactor.enabled: true
+  compactor.kind: StatefulSet
+  compactor.replicas: 1
+  compactor.statefulSetRecreateJob.enabled: true
+
+tests:
+  - it: should render only StatefulSet when upgrade=true but no existing StatefulSet is found (lookup returns empty)
+    release:
+      upgrade: true
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: StatefulSet
+        template: templates/compactor/workload.yaml
+
+    # Regression test for: "len of nil pointer" when the existing StatefulSet has no spec.volumeClaimTemplates
+  # and the new deployment adds PVCs (statefulSetRecreateJob.enabled=true).
+  # Error: loki/templates/_workload.tpl:158: executing "loki.component.workload.recreate"
+  #        at <len $currentStatefulset.spec.volumeClaimTemplates>: error calling len: len of nil pointer
+  - it: should render StatefulSet and recreate Job when existing StatefulSet has no volumeClaimTemplates but new one does
+    release:
+      upgrade: true
+    set:
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 10Gi
+          accessModes:
+            - ReadWriteOnce
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-loki-compactor
+            namespace: NAMESPACE
+          spec:
+            # spec.volumeClaimTemplates intentionally absent (nil) — the bug scenario
+            podManagementPolicy: Parallel
+    asserts:
+      - hasDocuments:
+          count: 5
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: StatefulSet
+        template: templates/compactor/workload.yaml
+        documentIndex: 0
+      - isKind:
+          of: Job
+        template: templates/compactor/workload.yaml
+        documentIndex: 1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-compactor-recreate
+        template: templates/compactor/workload.yaml
+        documentIndex: 1
+
+  - it: should render only StatefulSet when upgrade has no VCT changes (no recreation needed)
+    release:
+      upgrade: true
+    set:
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 10Gi
+          accessModes:
+            - ReadWriteOnce
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-loki-compactor
+            namespace: NAMESPACE
+          spec:
+            podManagementPolicy: Parallel
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: "10Gi"
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: StatefulSet
+        template: templates/compactor/workload.yaml
+
+  - it: should render StatefulSet and recreate Job when existing VCT storage size changed
+    release:
+      upgrade: true
+    set:
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 20Gi
+          accessModes:
+            - ReadWriteOnce
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-loki-compactor
+            namespace: NAMESPACE
+          spec:
+            podManagementPolicy: Parallel
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: "10Gi"
+    asserts:
+      - hasDocuments:
+          count: 5
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: Job
+        template: templates/compactor/workload.yaml
+        documentIndex: 1
+
+  - it: should not render recreate Job when statefulSetRecreateJob is disabled even if upgrade=true
+    release:
+      upgrade: true
+    set:
+      compactor.statefulSetRecreateJob.enabled: false
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 10Gi
+          accessModes:
+            - ReadWriteOnce
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-loki-compactor
+            namespace: NAMESPACE
+          spec:
+            # statefulSetRecreateJob is disabled so lookup is not called;
+            # mock included to confirm no Job is emitted even when a StatefulSet exists
+            podManagementPolicy: Parallel
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: StatefulSet
+        template: templates/compactor/workload.yaml
+
+  - it: should not render recreate resources on install even if PVC size changed
+    set:
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 20Gi
+          accessModes:
+            - ReadWriteOnce
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-loki-compactor
+            namespace: NAMESPACE
+          spec:
+            podManagementPolicy: Parallel
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: "10Gi"
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: StatefulSet
+        template: templates/compactor/workload.yaml
+
+  - it: should not render recreate resources when kind is Deployment
+    release:
+      upgrade: true
+    set:
+      compactor.kind: Deployment
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 20Gi
+          accessModes:
+            - ReadWriteOnce
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: Deployment
+        template: templates/compactor/workload.yaml
+
+  - it: should render recreate hook resources and patch PVC initContainers for each replica
+    release:
+      upgrade: true
+    set:
+      compactor.replicas: 2
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 20Gi
+          accessModes:
+            - ReadWriteOnce
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-loki-compactor
+            namespace: NAMESPACE
+          spec:
+            replicas: "2"
+            podManagementPolicy: Parallel
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: "10Gi"
+    asserts:
+      - hasDocuments:
+          count: 5
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: Job
+        template: templates/compactor/workload.yaml
+        documentIndex: 1
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: pre-upgrade
+        template: templates/compactor/workload.yaml
+        documentIndex: 1
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: patch-pvc-data-0
+        template: templates/compactor/workload.yaml
+        documentIndex: 1
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: patch-pvc-data-1
+        template: templates/compactor/workload.yaml
+        documentIndex: 1
+      - equal:
+          path: rules[1].resources[0]
+          value: persistentvolumeclaims
+        template: templates/compactor/workload.yaml
+        documentIndex: 3
+      - equal:
+          path: rules[1].resourceNames[0]
+          value: data-RELEASE-NAME-loki-compactor-0
+        template: templates/compactor/workload.yaml
+        documentIndex: 3
+      - equal:
+          path: rules[1].resourceNames[1]
+          value: data-RELEASE-NAME-loki-compactor-1
+        template: templates/compactor/workload.yaml
+        documentIndex: 3
+
+  - it: should not render patch initContainers when defaults.statefulSetRecreateJob.patchPVC is false
+    release:
+      upgrade: true
+    set:
+      defaults.statefulSetRecreateJob.patchPVC: false
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 20Gi
+          accessModes:
+            - ReadWriteOnce
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-loki-compactor
+            namespace: NAMESPACE
+          spec:
+            replicas: "1"
+            podManagementPolicy: Parallel
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: "10Gi"
+    asserts:
+      - hasDocuments:
+          count: 5
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: Job
+        template: templates/compactor/workload.yaml
+        documentIndex: 1
+      - notExists:
+          path: spec.template.spec.initContainers[0]
+        template: templates/compactor/workload.yaml
+        documentIndex: 1

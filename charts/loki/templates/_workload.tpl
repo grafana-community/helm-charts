@@ -155,12 +155,12 @@ spec:
     {{- $needsRecreation := false -}}
     {{- $templates := dict -}}
     {{- if and $currentStatefulset (eq $currentStatefulset.metadata.name $newStatefulSet.metadata.name) -}}
-      {{- if ne (len $newStatefulSet.spec.volumeClaimTemplates) (len $currentStatefulset.spec.volumeClaimTemplates) -}}
+      {{- if ne (len ($newStatefulSet.spec.volumeClaimTemplates | default list)) (len ($currentStatefulset.spec.volumeClaimTemplates | default list)) -}}
         {{- $needsRecreation = true -}}
       {{- else -}}
         {{- range $index, $newVolumeClaimTemplate := $newStatefulSet.spec.volumeClaimTemplates -}}
           {{- $currentVolumeClaimTemplateSpec := dict -}}
-            {{- range $oldVolumeClaimTemplate := $currentStatefulset.spec.volumeClaimTemplates -}}
+            {{- range $oldVolumeClaimTemplate := ($currentStatefulset.spec.volumeClaimTemplates | default list) -}}
               {{- if eq $oldVolumeClaimTemplate.metadata.name $newVolumeClaimTemplate.metadata.name -}}
                 {{- $currentVolumeClaimTemplateSpec = $oldVolumeClaimTemplate.spec -}}
               {{- end -}}

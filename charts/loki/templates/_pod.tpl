@@ -210,7 +210,7 @@ spec:
       args:
         {{- if ne $target "canary" }}
         - -config.file=/etc/loki/config/config.yaml
-        - -config.expand-env=true
+        - -memberlist.advertise-addr=$(POD_IP)
         - -target={{ replace "single-binary" "all" $target }}{{- if and .Values.loki.ui.enabled (has $target (list "single-binary" "read" "query-frontend" "querier")) }},ui{{- end }}
         {{- end }}
         {{- with $args }}
