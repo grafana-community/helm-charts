@@ -23,7 +23,7 @@ Workload helper
 apiVersion: apps/v1
 kind: {{ $component.kind }}
 metadata:
-  name: "{{ $name | default (tpl ($component.fullnameOverride | default "") $ctx) | default (include "loki.resourceName" (dict "ctx" $ctx "component" $target)) }}"
+  name: "{{ $name | default (include "loki.workloadResourceName" (dict "ctx" $ctx "component" $target "componentValues" $component)) }}"
   namespace: "{{ include "loki.namespace" . }}"
   labels:
     {{- include "loki.labels" . | nindent 4 }}

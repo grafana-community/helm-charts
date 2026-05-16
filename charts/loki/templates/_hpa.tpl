@@ -8,6 +8,7 @@ HPA helper
   {{- $kind := .component.kind | default .kind | default "StatefulSet" }}
   {{- $ctx := .ctx }}
   {{- $component := .component }}
+  {{- $targetName := .targetName }}
   {{- $suffix := .suffix | default "" }}
   {{- with $ctx }}
 ---
@@ -23,7 +24,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: {{ $kind }}
-    name: {{ include "loki.resourceName" (dict "ctx" . "component" $target "suffix" $suffix) }}
+    name: "{{ $targetName | default (include "loki.workloadResourceName" (dict "ctx" $ctx "component" $target "componentValues" $component)) }}"
   minReplicas: {{ $component.autoscaling.minReplicas }}
   maxReplicas: {{ $component.autoscaling.maxReplicas }}
   {{- $behavior := $component.autoscaling.behavior | default dict }}

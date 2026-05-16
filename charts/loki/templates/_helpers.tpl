@@ -57,6 +57,19 @@ Allow the release namespace to be overridden for multi-namespace deployments in 
 {{- end -}}
 
 {{/*
+Resource workload name template
+Params:
+  ctx = . context
+  componentValues = component values
+  component = component name (optional)
+  rolloutZoneName = rollout zone name (optional)
+  suffix = component suffix (optional)
+*/}}
+{{- define "loki.workloadResourceName" -}}
+{{- (tpl (.componentValues.fullnameOverride | default "") .ctx) | default (include "loki.resourceName" .) }}
+{{- end -}}
+
+{{/*
 Resource name template
 Params:
   ctx = . context

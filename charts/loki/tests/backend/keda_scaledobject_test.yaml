@@ -50,6 +50,12 @@ tests:
       - isKind:
           of: ScaledObject
       - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-backend
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: loki-backend
+      - equal:
           path: spec.minReplicaCount
           value: 3
       - equal:

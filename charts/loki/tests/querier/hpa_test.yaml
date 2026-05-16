@@ -15,9 +15,12 @@ tests:
     asserts:
       - isKind:
           of: HorizontalPodAutoscaler
-      - matchRegex:
+      - equal:
           path: metadata.name
-          pattern: ".*-querier$"
+          value: RELEASE-NAME-loki-querier
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-loki-querier
       - equal:
           path: spec.minReplicas
           value: 2
