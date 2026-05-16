@@ -53,7 +53,7 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
-### From 15.x to 16.0.0
+### From 15.x to 16.0.0 ([#499](https://github.com/grafana-community/helm-charts/pull/499))
 
 The `loki-canary` workload no longer uses the shared Loki pod template. This change isolates canary rendering from Loki component configuration after users reported that shared settings were unintentionally inherited by canary and could break canary startup.
 
