@@ -898,13 +898,6 @@ backendScheduler:
           max_time_per_tenant: 5m
           # -- Number of tenants to process in parallel during retention
           retention_concurrency: 10
-          # -- v2 was removed in Tempo 2.1.x but they haven't been removed from Tempo
-          # -- Amount of data to buffer from input blocks
-          v2_in_buffer_bytes: 5242880
-          # -- Flush data to backend when buffer is this large
-          v2_out_buffer_bytes: 20971520
-          # -- Number of traces to buffer in memory during compaction
-          v2_prefetch_traces_count: 1000
         # -- Maximum number of compaction jobs to create per tenant
         max_compaction_level: 0
         # -- Maximum number of blocks to compact together
