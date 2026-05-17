@@ -1,30 +1,32 @@
 {{- if .Values.lokiCanary.enabled -}}
-{{- $component := set .Values.lokiCanary "extraEnv" (concat (list (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name"))))) }}
 ---
 apiVersion: apps/v1
 kind: {{ .Values.lokiCanary.kind }}
 metadata:
-  name: {{ include "loki-canary.fullname" $ }}
+  name: {{ include "loki.resourceName" (dict "ctx" . "component" "canary") }}
   namespace: {{ include "loki.namespace" $ }}
   labels:
-    {{- include "loki-canary.labels" $ | nindent 4 }}
-  {{- if or (not (empty .Values.loki.annotations)) (not (empty .Values.lokiCanary.annotations)) }}
-  annotations:
-    {{- with merge (dict) .Values.loki.annotations .Values.lokiCanary.annotations }}
+    {{- include "loki.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: canary
+    {{- with .Values.lokiCanary.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  {{- with .Values.lokiCanary.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
   selector:
     matchLabels:
-      {{- include "loki-canary.selectorLabels" $ | nindent 6 }}
+      {{- include "loki.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: canary
   {{- if eq .Values.lokiCanary.kind "Deployment" }}
   replicas: {{ .Values.lokiCanary.replicas }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
-  revisionHistoryLimit: {{ $.Values.loki.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ .Values.lokiCanary.revisionHistoryLimit }}
   {{- else }}
   {{- with .Values.lokiCanary.updateStrategy }}
   updateStrategy:
@@ -32,5 +34,113 @@ spec:
   {{- end }}
   {{- end }}
   template:
-    {{- include "loki.podTemplate" (dict "target" "canary" "component" $component "ctx" . "args" (include "loki-canary.args" . | fromYamlArray) "memberlist" false) | nindent 4 }}
+    metadata:
+      {{- with .Values.lokiCanary.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "loki.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: canary
+        {{- with .Values.lokiCanary.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "loki.serviceAccountName" (dict "ctx" . "component" .Values.lokiCanary "target" "canary") }}
+      {{- if (kindIs "bool" .Values.lokiCanary.automountServiceAccountToken) }}
+      automountServiceAccountToken: {{ .Values.lokiCanary.automountServiceAccountToken }}
+      {{- end }}
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.lokiCanary.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- if (kindIs "bool" .Values.lokiCanary.hostUsers) }}
+      hostUsers: {{ .Values.lokiCanary.hostUsers }}
+      {{- end }}
+      {{- with .Values.lokiCanary.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: canary
+          image: {{ include "loki.image" (dict "ctx" $ "component" $.Values.lokiCanary.image "defaultVersion" $.Chart.AppVersion) }}
+          imagePullPolicy: {{ $.Values.lokiCanary.image.pullPolicy }}
+          args:
+            - -addr={{- default (include "loki.host" $) .Values.lokiCanary.lokiurl }}
+            - -labelname={{ .Values.lokiCanary.labelname }}
+            - -labelvalue=$(POD_NAME)
+            {{- if $.Values.loki.auth_enabled }}
+            - -user={{ dig "selfMonitoring" "tenant" "name" $.Values.lokiCanary.tenant.name $.Values.monitoring }}
+            - -tenant-id={{ dig "selfMonitoring" "tenant" "name" $.Values.lokiCanary.tenant.name $.Values.monitoring }}
+            - -pass={{ dig "selfMonitoring" "tenant" "password" $.Values.lokiCanary.tenant.password $.Values.monitoring }}
+            {{- end }}
+            {{- if .Values.lokiCanary.push }}
+            - -push=true
+            {{- end }}
+            {{- with .Values.lokiCanary.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.lokiCanary.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.lokiCanary.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http-metrics
+              containerPort: 3500
+              protocol: TCP
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            {{- with .Values.lokiCanary.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.lokiCanary.extraEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.lokiCanary.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.lokiCanary.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.lokiCanary.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.lokiCanary.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.lokiCanary.dnsConfig }}
+      dnsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.lokiCanary.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.lokiCanary.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.lokiCanary.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.lokiCanary.extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 {{- end }}

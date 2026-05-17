@@ -19,12 +19,15 @@ global:
   # -- configures DNS service namespace
   dnsNamespace: "kube-system"
   # -- Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order)
+  # (deprecated, use defaults.extraArgs)
   # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraArgs: []
   # -- Common environment variables to add to all pods directly managed by this chart.
+  # (deprecated, use defaults.extraEnv)
   # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraEnv: []
   # -- Common source of environment injections to add to all pods directly managed by this chart.
+  # (deprecated, use defaults.extraEnvFrom)
   # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   # For example to inject values from a Secret, use:
   # extraEnvFrom:
@@ -32,9 +35,11 @@ global:
   #       name: mysecret
   extraEnvFrom: []
   # -- Common volumes to add to all pods directly managed by this chart.
+  # (deprecated, use defaults.extraVolumes)
   # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraVolumes: []
   # -- Common mount points to add to all pods directly managed by this chart.
+  # (deprecated, use defaults.extraVolumeMounts)
   # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraVolumeMounts: []
 # -- Overrides the chart's name
@@ -63,8 +68,7 @@ commonLabels: {}
 
 ######################################################################################################################
 #
-# Defaults applied to all loki configurations
-# Current supported scope: backend, bloom-builder, distributor
+# Defaults applied to all loki components, including loki-canary.
 #
 ######################################################################################################################
 defaults:
@@ -807,10 +811,14 @@ lokiCanary:
   labelname: pod
   # -- Additional annotations for the `loki-canary` Daemonset
   annotations: {}
+  # -- Additional labels for the `loki-canary` Daemonset
+  labels: {}
   # -- Additional annotations for each `loki-canary` pod
   podAnnotations: {}
   # -- Additional labels for each `loki-canary` pod
   podLabels: {}
+  # -- The number of old ReplicaSets to retain to allow rollback
+  revisionHistoryLimit: 10
   service:
     # -- Annotations for loki-canary Service
     annotations: {}
@@ -925,6 +933,7 @@ lokiCanary:
     labels: {}
     # -- Set this toggle to false to opt out of automounting API credentials for the service account
     automountServiceAccountToken: false
+
 ######################################################################################################################
 #
 # Service Accounts and Kubernetes RBAC
@@ -944,6 +953,7 @@ serviceAccount:
   labels: {}
   # -- Set this toggle to false to opt out of automounting API credentials for the service account
   automountServiceAccountToken: true
+
 # RBAC configuration
 rbac:
   # -- For OpenShift set sccEnabled to 'true' to use the SecurityContextConstraints.
@@ -952,6 +962,7 @@ rbac:
   sccAllowHostDirVolumePlugin: false
   # -- Whether to install RBAC in the namespace only or cluster-wide. Useful if you want to watch ConfigMap globally.
   namespaced: false
+
 ######################################################################################################################
 #
 # Network Policy configuration

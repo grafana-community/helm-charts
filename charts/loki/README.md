@@ -53,6 +53,47 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### From 15.x to 16.0.0 ([#499](https://github.com/grafana-community/helm-charts/pull/499))
+
+The `loki-canary` workload no longer uses the shared Loki pod template. This change isolates canary rendering from Loki component configuration after users reported that shared settings were unintentionally inherited by canary and could break canary startup.
+
+What changed:
+- `loki-canary` no longer inherits metadata from `loki.*` values such as `loki.annotations`, `loki.serviceAnnotations`, and `loki.serviceLabels`.
+- Canary pod annotations are now sourced only from `lokiCanary.podAnnotations`.
+- Canary pod API token mount behavior is now controlled explicitly by `lokiCanary.automountServiceAccountToken`.
+
+Actions required:
+- Move canary-specific metadata from `loki.*` keys to `lokiCanary.*` keys.
+- If you previously relied on inherited settings, set the canary values explicitly.
+
+Before:
+
+```yaml
+loki:
+  annotations:
+    team: observability
+  serviceAnnotations:
+    prometheus.io/scrape: "true"
+  serviceLabels:
+    app: loki
+```
+
+After:
+
+```yaml
+lokiCanary:
+  annotations:
+    team: observability
+  podAnnotations:
+    team: observability
+  service:
+    annotations:
+      prometheus.io/scrape: "true"
+    labels:
+      app: loki-canary
+  automountServiceAccountToken: false
+```
+
 ### From 14.x to 15.0.0 ([#413](https://github.com/grafana-community/helm-charts/pull/413))
 
 Support for Cilium-specific network policies has been removed from this chart.
