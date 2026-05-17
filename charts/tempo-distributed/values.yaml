@@ -898,13 +898,6 @@ backendScheduler:
           max_time_per_tenant: 5m
           # -- Number of tenants to process in parallel during retention
           retention_concurrency: 10
-          # -- v2 was removed in Tempo 2.1.x but they haven't been removed from Tempo
-          # -- Amount of data to buffer from input blocks
-          v2_in_buffer_bytes: 5242880
-          # -- Flush data to backend when buffer is this large
-          v2_out_buffer_bytes: 20971520
-          # -- Number of traces to buffer in memory during compaction
-          v2_prefetch_traces_count: 1000
         # -- Maximum number of compaction jobs to create per tenant
         max_compaction_level: 0
         # -- Maximum number of blocks to compact together
@@ -1105,16 +1098,6 @@ backendWorker:
     compaction: {}
     # -- Timeout for finishing the current job before shutting down the worker
     finish_on_shutdown_timeout: 30s
-    # -- Maximum number of compaction jobs to create per tenant
-    max_jobs_per_tenant: 1000
-    # -- Minimum number of blocks required for compaction
-    min_input_blocks: 2
-    # -- Maximum number of blocks to compact together
-    max_input_blocks: 4
-    # -- Maximum compaction level (0 means no limit)
-    max_compaction_level: 0
-    # -- Minimum time between compaction cycles for a tenant
-    min_cycle_interval: 30s
   service:
     # -- Annotations for backend-worker service
     annotations: {}
