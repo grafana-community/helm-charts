@@ -76,7 +76,7 @@ expects a dict
 }
 */}}
 {{- define "loki.ingester.maxUnavailable" -}}
-{{- ceil (mulf .replicas (divf (int .ctx.Values.ingester.zoneAwareReplication.maxUnavailablePct) 100)) -}}
+{{- max 1 (ceil (mulf .replicas (divf (int .ctx.Values.ingester.zoneAwareReplication.maxUnavailablePct) 100))) -}}
 {{- end -}}
 
 {{/*
