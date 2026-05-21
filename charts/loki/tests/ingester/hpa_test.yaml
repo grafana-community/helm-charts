@@ -1,0 +1,179 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ingester HPA
+templates:
+  - ingester/hpa.yaml
+
+tests:
+  - it: should not render HPA when autoscaling is disabled
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      ingester.autoscaling.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render HPA in non-distributed mode
+    set:
+      deploymentMode: SimpleScalable
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 2
+      ingester.autoscaling.maxReplicas: 10
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render single HPA when zone-aware replication is disabled
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 1
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: false
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 2
+      ingester.autoscaling.maxReplicas: 10
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-loki-ingester
+
+  - it: should render three HPAs when zone-aware replication is enabled
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 3
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 2
+      ingester.autoscaling.maxReplicas: 10
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  - it: should name zone-a HPA with zone-a suffix
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 3
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 2
+      ingester.autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-ingester-zone-a
+        documentIndex: 0
+
+  - it: should name zone-b HPA with zone-b suffix
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 3
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 2
+      ingester.autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-ingester-zone-b
+        documentIndex: 1
+
+  - it: should name zone-c HPA with zone-c suffix
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 3
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 2
+      ingester.autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-ingester-zone-c
+        documentIndex: 2
+
+  - it: should set scaleTargetRef.name to zone-a StatefulSet for zone-a HPA
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 3
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 2
+      ingester.autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-loki-ingester-zone-a
+        documentIndex: 0
+
+  - it: should set scaleTargetRef.name to zone-b StatefulSet for zone-b HPA
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 3
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 2
+      ingester.autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-loki-ingester-zone-b
+        documentIndex: 1
+
+  - it: should set scaleTargetRef.name to zone-c StatefulSet for zone-c HPA
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 3
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 2
+      ingester.autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-loki-ingester-zone-c
+        documentIndex: 2
+
+  - it: should set scaleTargetRef.kind to StatefulSet for zone HPAs
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 3
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 2
+      ingester.autoscaling.maxReplicas: 10
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.kind
+          value: StatefulSet
+
+  - it: should set minReplicas and maxReplicas correctly for zone HPAs
+    set:
+      deploymentMode: Distributed
+      loki.commonConfig.replication_factor: 3
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: true
+      ingester.autoscaling.minReplicas: 3
+      ingester.autoscaling.maxReplicas: 15
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 3
+      - equal:
+          path: spec.maxReplicas
+          value: 15
