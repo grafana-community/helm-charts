@@ -143,6 +143,12 @@ defaults:
     # -- trafficDistribution for services
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
     trafficDistribution: ""
+    # -- ipFamilyPolicy for all services
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for all services
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
   # -- KEDA autoscaling shared configuration for all components that support KEDA
   kedaAutoscaling:
     # -- Prometheus server address for KEDA triggers
@@ -547,6 +553,12 @@ loki:
     # -- trafficDistribution for services
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
     trafficDistribution: ""
+    # -- ipFamilyPolicy for all services
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for all services
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
   # -- Limits config
   limits_config:
     reject_old_samples: true
@@ -1202,6 +1214,12 @@ gateway:
     sessionAffinity: ""
     # -- Session affinity config for gateway Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for gateway Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for gateway Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
   serviceAccount:
     # -- Specifies whether a ServiceAccount should be created
     create: true
@@ -1707,6 +1725,12 @@ singleBinary:
     sessionAffinity: ""
     # -- Session affinity config for single binary Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for single binary Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for single binary Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the single binary service. This allows single binary to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -1883,6 +1907,12 @@ write:
     sessionAffinity: ""
     # -- Session affinity config for write Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for write Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for write Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the write service. This allows write to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2082,6 +2112,12 @@ read:
     sessionAffinity: ""
     # -- Session affinity config for read Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for read Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for read Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the read service. This allows read to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2262,6 +2298,12 @@ backend:
     sessionAffinity: ""
     # -- Session affinity config for backend Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for backend Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for backend Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the backend service. This allows backend to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2484,6 +2526,12 @@ ingester:
     sessionAffinity: ""
     # -- Session affinity config for ingester Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for ingester Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for ingester Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2782,6 +2830,12 @@ distributor:
     sessionAffinity: ""
     # -- Session affinity config for distributor Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for distributor Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for distributor Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -2969,6 +3023,12 @@ querier:
     sessionAffinity: ""
     # -- Session affinity config for querier Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for querier Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for querier Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -3158,6 +3218,12 @@ queryFrontend:
     sessionAffinity: ""
     # -- Session affinity config for query-frontend Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for query-frontend Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for query-frontend Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the query-frontend service. This allows query-frontend to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -3290,6 +3356,12 @@ queryScheduler:
     sessionAffinity: ""
     # -- Session affinity config for query-scheduler Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for query-scheduler Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for query-scheduler Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the query-scheduler service. This allows query-scheduler to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -3417,6 +3489,12 @@ indexGateway:
     sessionAffinity: ""
     # -- Session affinity config for index-gateway Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for index-gateway Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for index-gateway Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the index-gateway service. This allows index-gateway to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -3611,6 +3689,12 @@ compactor:
     sessionAffinity: ""
     # -- Session affinity config for compactor Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for compactor Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for compactor Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the compactor service. This allows compactor to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -3779,6 +3863,12 @@ bloomGateway:
     sessionAffinity: ""
     # -- Session affinity config for bloom-gateway Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for bloom-gateway Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for bloom-gateway Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the bloom-gateway service. This allows bloom-gateway to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -3931,6 +4021,12 @@ bloomPlanner:
     sessionAffinity: ""
     # -- Session affinity config for bloom-planner Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for bloom-planner Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for bloom-planner Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the bloom-planner service. This allows bloom-planner to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -4130,6 +4226,12 @@ bloomBuilder:
     sessionAffinity: ""
     # -- Session affinity config for bloom-builder Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for bloom-builder Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for bloom-builder Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the bloom-builder service. This allows bloom-builder to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -4423,6 +4525,12 @@ ruler:
     sessionAffinity: ""
     # -- Session affinity config for ruler Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for ruler Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for ruler Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the ruler service. This allows ruler to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -4636,6 +4744,12 @@ overridesExporter:
     sessionAffinity: ""
     # -- Session affinity config for overrides-exporter Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for overrides-exporter Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for overrides-exporter Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the overrides-exporter service. This allows overrides-exporter to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -5546,6 +5660,12 @@ tableManager:
     sessionAffinity: ""
     # -- Session affinity config for table-manager Service
     sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for table-manager Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for table-manager Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
     # -- Adds the appProtocol field to the table-manager service. This allows table-manager to work with istio protocol selection.
     appProtocol:
       # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"

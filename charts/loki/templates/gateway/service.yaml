@@ -41,4 +41,18 @@ spec:
 {{- with .Values.gateway.service.trafficDistribution | default .Values.loki.service.trafficDistribution }}
   trafficDistribution: {{ . }}
 {{- end }}
+{{- with .Values.gateway.service.sessionAffinity }}
+  sessionAffinity: {{ . }}
+{{- end }}
+{{- with .Values.gateway.service.sessionAffinityConfig }}
+  sessionAffinityConfig:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- with (coalesce .Values.gateway.service.ipFamilyPolicy .Values.defaults.service.ipFamilyPolicy) }}
+  ipFamilyPolicy: {{ . }}
+{{- end }}
+{{- with (coalesce .Values.gateway.service.ipFamilies .Values.defaults.service.ipFamilies) }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
 {{- end }}

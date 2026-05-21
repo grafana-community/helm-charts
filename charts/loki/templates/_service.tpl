@@ -70,6 +70,13 @@ spec:
   sessionAffinityConfig:
     {{- toYaml . | nindent 4 }}
 {{- end }}
+{{- with (coalesce $component.service.ipFamilyPolicy .Values.defaults.service.ipFamilyPolicy) }}
+  ipFamilyPolicy: {{ . }}
+{{- end }}
+{{- with (coalesce $component.service.ipFamilies .Values.defaults.service.ipFamilies) }}
+  ipFamilies:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
 {{- end }}
 {{- if $headlessServiceEnabled }}
 ---
