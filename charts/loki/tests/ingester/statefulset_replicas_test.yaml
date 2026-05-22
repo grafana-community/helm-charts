@@ -1,0 +1,139 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ingester replicas and rollout-max-unavailable
+templates:
+  - ingester/statefulset-zone.yaml
+  - ingester/statefulset.yaml
+  - config.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: should omit spec.replicas from zone StatefulSets when ingester.replicas is null
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: false
+      ingester.replicas: null
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: ingester/statefulset-zone.yaml
+
+  - it: should set rollout-max-unavailable to 1 on zone StatefulSets when ingester.replicas is null
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: false
+      ingester.replicas: null
+    asserts:
+      - equal:
+          path: metadata.annotations["rollout-max-unavailable"]
+          value: "1"
+        template: ingester/statefulset-zone.yaml
+
+  - it: should set spec.replicas to 1 per zone when ingester.replicas is 3
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: false
+      ingester.replicas: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+        template: ingester/statefulset-zone.yaml
+
+  - it: should set rollout-max-unavailable to 1 when ingester.replicas is 3
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: false
+      ingester.replicas: 3
+    asserts:
+      - equal:
+          path: metadata.annotations["rollout-max-unavailable"]
+          value: "1"
+        template: ingester/statefulset-zone.yaml
+
+  - it: should set spec.replicas to 7 per zone when ingester.replicas is 21
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: false
+      ingester.replicas: 21
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 7
+        template: ingester/statefulset-zone.yaml
+
+  - it: should set rollout-max-unavailable to 3 when ingester.replicas is 21
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.autoscaling.enabled: false
+      ingester.replicas: 21
+    asserts:
+      - equal:
+          path: metadata.annotations["rollout-max-unavailable"]
+          value: "3"
+        template: ingester/statefulset-zone.yaml
+
+  - it: should omit spec.replicas from zone StatefulSets when autoscaling is enabled
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.replicas: 9
+      ingester.autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: ingester/statefulset-zone.yaml
+
+  - it: should omit spec.replicas from zone StatefulSets when kedaAutoscaling is enabled
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.replicas: 9
+      ingester.kedaAutoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: ingester/statefulset-zone.yaml
+
+  - it: should omit spec.replicas from non-zone StatefulSet when ingester.replicas is null
+    set:
+      ingester.zoneAwareReplication.enabled: false
+      ingester.autoscaling.enabled: false
+      ingester.replicas: null
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: ingester/statefulset.yaml
+
+  - it: should render spec.replicas on non-zone StatefulSet when ingester.replicas is set
+    set:
+      ingester.zoneAwareReplication.enabled: false
+      ingester.autoscaling.enabled: false
+      ingester.replicas: 5
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 5
+        template: ingester/statefulset.yaml
+
+  - it: should omit spec.replicas from non-zone StatefulSet when autoscaling is enabled
+    set:
+      ingester.zoneAwareReplication.enabled: false
+      ingester.replicas: 5
+      ingester.autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: ingester/statefulset.yaml
+
+  - it: should omit spec.replicas from non-zone StatefulSet when kedaAutoscaling is enabled
+    set:
+      ingester.zoneAwareReplication.enabled: false
+      ingester.replicas: 5
+      ingester.kedaAutoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: ingester/statefulset.yaml
