@@ -103,6 +103,7 @@ tests:
             namespace: NAMESPACE
           spec:
             podManagementPolicy: Parallel
+            serviceName: RELEASE-NAME-loki-compactor-headless
             volumeClaimTemplates:
               - metadata:
                   name: data
@@ -156,6 +157,102 @@ tests:
       - hasDocuments:
           count: 5
         template: templates/compactor/workload.yaml
+      - isKind:
+          of: Job
+        template: templates/compactor/workload.yaml
+        documentIndex: 1
+
+  - it: should render StatefulSet and recreate Job when existing StatefulSet serviceName changed
+    release:
+      upgrade: true
+    set:
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 10Gi
+          accessModes:
+            - ReadWriteOnce
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-loki-compactor
+            namespace: NAMESPACE
+          spec:
+            podManagementPolicy: Parallel
+            serviceName: RELEASE-NAME-loki-compactor-headless-old
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: "10Gi"
+    asserts:
+      - hasDocuments:
+          count: 5
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: StatefulSet
+        template: templates/compactor/workload.yaml
+        documentIndex: 0
+      - isKind:
+          of: Job
+        template: templates/compactor/workload.yaml
+        documentIndex: 1
+
+  - it: should render StatefulSet and recreate Job when existing StatefulSet podManagementPolicy changed
+    release:
+      upgrade: true
+    set:
+      compactor.persistence.enabled: true
+      compactor.persistence.type: pvc
+      compactor.persistence.claims:
+        - name: data
+          size: 10Gi
+          accessModes:
+            - ReadWriteOnce
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-loki-compactor
+            namespace: NAMESPACE
+          spec:
+            podManagementPolicy: OrderedReady
+            serviceName: RELEASE-NAME-loki-compactor-headless
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: "10Gi"
+    asserts:
+      - hasDocuments:
+          count: 5
+        template: templates/compactor/workload.yaml
+      - isKind:
+          of: StatefulSet
+        template: templates/compactor/workload.yaml
+        documentIndex: 0
       - isKind:
           of: Job
         template: templates/compactor/workload.yaml
