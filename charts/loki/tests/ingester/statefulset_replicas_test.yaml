@@ -2,7 +2,7 @@
 suite: ingester replicas and rollout-max-unavailable
 templates:
   - ingester/statefulset-zone.yaml
-  - ingester/statefulset.yaml
+  - ingester/workload.yaml
   - config.yaml
 set:
   deploymentMode: Distributed
@@ -105,7 +105,7 @@ tests:
     asserts:
       - notExists:
           path: spec.replicas
-        template: ingester/statefulset.yaml
+        template: ingester/workload.yaml
 
   - it: should render spec.replicas on non-zone StatefulSet when ingester.replicas is set
     set:
@@ -116,7 +116,7 @@ tests:
       - equal:
           path: spec.replicas
           value: 5
-        template: ingester/statefulset.yaml
+        template: ingester/workload.yaml
 
   - it: should omit spec.replicas from non-zone StatefulSet when autoscaling is enabled
     set:
@@ -126,7 +126,7 @@ tests:
     asserts:
       - notExists:
           path: spec.replicas
-        template: ingester/statefulset.yaml
+        template: ingester/workload.yaml
 
   - it: should omit spec.replicas from non-zone StatefulSet when kedaAutoscaling is enabled
     set:
@@ -136,4 +136,4 @@ tests:
     asserts:
       - notExists:
           path: spec.replicas
-        template: ingester/statefulset.yaml
+        template: ingester/workload.yaml
