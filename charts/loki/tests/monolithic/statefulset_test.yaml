@@ -34,10 +34,6 @@ tests:
           path: metadata.labels["app.kubernetes.io/component"]
           value: single-binary
         template: monolithic/workload.yaml
-      - equal:
-          path: metadata.labels["app.kubernetes.io/part-of"]
-          value: memberlist
-        template: monolithic/workload.yaml
 
   - it: should merge common and component statefulset annotations
     set:

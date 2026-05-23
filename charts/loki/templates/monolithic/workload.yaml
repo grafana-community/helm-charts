@@ -4,5 +4,5 @@
 {{- if .Values.singleBinary.persistence.enabled }}
 {{ $component = set .Values.singleBinary "podAnnotations" (mergeOverwrite (dict "storage/size" .Values.singleBinary.persistence.size) .Values.singleBinary.podAnnotations) }}
 {{- end }}
-{{- include "loki.component" (dict "ctx" . "component" $component "target" "single-binary" "name" (include "loki.fullname" .) "headlessName" (printf "%s-headless" (include "loki.name" . ))) }}
+{{- include "loki.component" (dict "ctx" . "component" $component "target" "single-binary" "name" (include "loki.fullname" .) "headlessName" (printf "%s-headless" (include "loki.fullname" .))) }}
 {{- end }}

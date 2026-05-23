@@ -1208,3 +1208,15 @@ format rules dir
 {{- define "loki.rulerRulesDirName" -}}
 rules-{{ . | replace "_" "-" | trimSuffix "-" | lower }}
 {{- end }}
+
+{{/*
+monolithic replicas calculation
+*/}}
+{{- define "loki.monolithicReplicas" -}}
+{{- $replicas := 1 }}
+{{- $usingObjectStorage := eq (include "loki.isUsingObjectStorage" .) "true" }}
+{{- if and $usingObjectStorage (gt (int .Values.singleBinary.replicas) 1)}}
+{{- $replicas = int .Values.singleBinary.replicas -}}
+{{- end }}
+{{- printf "%d" $replicas }}
+{{- end }}
