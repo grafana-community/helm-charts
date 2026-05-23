@@ -106,7 +106,7 @@ spec:
     - apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
-        name: data
+        name: {{ eq $target "single-binary" | ternary "storage" "data" }}
         {{- with $component.persistence.annotations }}
         annotations:
           {{- toYaml . | nindent 10 }}
