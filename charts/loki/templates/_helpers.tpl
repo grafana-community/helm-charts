@@ -83,8 +83,7 @@ Params:
 {{- if and (not .component) .rolloutZoneName -}}{{- printf "Component name cannot be empty if rolloutZoneName (%s) is set" .rolloutZoneName | fail -}}{{- end -}}
 {{- if .rolloutZoneName -}}{{- $resourceName = printf "%s-%s" $resourceName .rolloutZoneName -}}{{- end -}}
 {{- if .suffix -}}{{- $resourceName = printf "%s-%s" $resourceName .suffix -}}{{- end -}}
-{{- if gt (len $resourceName) 253 -}}{{- printf "Resource name (%s) exceeds kubernetes limit of 253 character. To fix: shorten release name if this will be a fresh install, shorten zone names (e.g. \"a\" instead of \"zone-a\") if using zone-awareness or suffix if used for component." $resourceName | fail -}}{{- end -}}
-{{- $resourceName -}}
+{{- $resourceName | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
