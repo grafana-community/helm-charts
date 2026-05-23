@@ -16,8 +16,9 @@ maintainers:
   - name: Aviv Guiser
     email: avivguiser@gmail.com
     url: https://github.com/KyriosGN0
+kubeVersion: ^1.25.0-0
 name: synthetic-monitoring-agent
 sources:
   - https://github.com/grafana/synthetic-monitoring-agent
 type: application
-version: 1.10.2
+version: 1.11.0
