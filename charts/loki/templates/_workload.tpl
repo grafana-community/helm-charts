@@ -36,7 +36,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-{{- if and (not (dig "autoscaling" "enabled" false $component)) (not (dig "kedaAutoscaling" "enabled" false $component)) }}
+{{- if and (not (dig "autoscaling" "enabled" false $component)) (not (dig "kedaAutoscaling" "enabled" false $component)) (not (kindIs "invalid" $component.replicas)) }}
   replicas: {{ $component.replicas }}
 {{- end }}
   {{- if eq $component.kind "StatefulSet" }}
