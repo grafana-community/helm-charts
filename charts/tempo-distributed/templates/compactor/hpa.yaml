@@ -1,37 +1,3 @@
-{{- if and (not .Values.backendScheduler.enabled) .Values.compactor.autoscaling.enabled .Values.compactor.autoscaling.hpa.enabled }}
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: {{ include "tempo.resourceName" (dict "ctx" . "component" "compactor") }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "tempo.labels" (dict "ctx" . "component" "compactor") | nindent 4 }}
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: {{ include "tempo.resourceName" (dict "ctx" . "component" "compactor") }}
-  minReplicas: {{ .Values.compactor.autoscaling.minReplicas }}
-  maxReplicas: {{ .Values.compactor.autoscaling.maxReplicas }}
-  {{- with .Values.compactor.autoscaling.hpa.behavior }}
-  behavior:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  metrics:
-  {{- with .Values.compactor.autoscaling.hpa.targetMemoryUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: {{ . }}
-  {{- end }}
-  {{- with .Values.compactor.autoscaling.hpa.targetCPUUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: {{ . }}
-  {{- end }}
+{{- if not .Values.backendScheduler.enabled }}
+{{- include "tempo.lib.hpa" (dict "ctx" $ "component" .Values.compactor "target" "compactor") }}
 {{- end }}
