@@ -66,9 +66,11 @@ Actions required:
 - Existing Grafana dashboard URLs that encode the `cluster` variable in the URL will need to be updated.
 - If you run Loki across multiple Kubernetes clusters, enable `monitoring.dashboards.multiCluster.enabled` and set `monitoring.dashboards.multiCluster.clusterName` to restore the `cluster` label with a per-cluster value.
 
+**To restore the old `cluster` label behavior (not recommended), you can set `monitoring.appInstanceLabelName` to `cluster`. However, this is not recommended as it may cause confusion in multi-cluster environments and does not align with upstream conventions.**
+
 #### `clusterLabelOverride` and `monitoring.serviceMonitor.clusterLabel` removed
 
-The top-level `clusterLabelOverride` value and `monitoring.serviceMonitor.clusterLabel` have been removed. Use `monitoring.serviceMonitor.appInstanceLabel` instead, which accepts Helm template syntax and defaults to `{{ include "loki.fullname" . }}`.
+The top-level `clusterLabelOverride` value and `monitoring.serviceMonitor.clusterLabel` have been removed. Use `monitoring.appInstanceLabel` instead, which accepts Helm template syntax and defaults to `{{ include "loki.fullname" . }}`.
 
 #### Recording rule names changed
 
@@ -89,7 +91,7 @@ monitoring:
     keepFiringFor: ""
 ```
 
-Note: `lookbackPeriod` and `threshold` are not carried forward as they did not generalise to all PromQL alert expressions.
+Note: `lookbackPeriod` and `threshold` are not carried forward as they did not generalize to all PromQL alert expressions.
 
 #### Per-section namespace values consolidated
 

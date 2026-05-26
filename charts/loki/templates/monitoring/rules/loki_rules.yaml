@@ -7,7 +7,7 @@ https://github.com/grafana-community/helm-charts/tree/main/charts/loki/hack
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: {{ printf "%s-%s" (include "loki.fullname" .) "loki-rules" | trunc 63 | trimSuffix "-" }}
+  name: {{ include "loki.resourceName" (dict "ctx" $ "component" "loki-rules") }}
   namespace: {{ .Values.monitoring.namespace | default (include "loki.namespace" $) }}
   labels:
     {{- include "loki.labels" $ | nindent 4 }}
@@ -22,180 +22,162 @@ spec:
   groups:
   - name: loki_rules
     rules:
-    - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, app_instance, job))
-      record: app_instance_job:loki_request_duration_seconds:99quantile
+    - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, {{ $.Values.monitoring.appInstanceLabelName }}, job))
+      record: cluster_job:loki_request_duration_seconds:99quantile
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, app_instance, job))
-      record: app_instance_job:loki_request_duration_seconds:50quantile
+    - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, {{ $.Values.monitoring.appInstanceLabelName }}, job))
+      record: cluster_job:loki_request_duration_seconds:50quantile
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, job) / sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, job)
-      record: app_instance_job:loki_request_duration_seconds:avg
+    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, job) / sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, job)
+      record: cluster_job:loki_request_duration_seconds:avg
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, app_instance, job)
-      record: app_instance_job:loki_request_duration_seconds_bucket:sum_rate
+    - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, {{ $.Values.monitoring.appInstanceLabelName }}, job)
+      record: cluster_job:loki_request_duration_seconds_bucket:sum_rate
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, job)
-      record: app_instance_job:loki_request_duration_seconds_sum:sum_rate
+    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, job)
+      record: cluster_job:loki_request_duration_seconds_sum:sum_rate
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, job)
-      record: app_instance_job:loki_request_duration_seconds_count:sum_rate
+    - expr: sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, job)
+      record: cluster_job:loki_request_duration_seconds_count:sum_rate
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, app_instance, job, route))
-      record: app_instance_job_route:loki_request_duration_seconds:99quantile
+    - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, {{ $.Values.monitoring.appInstanceLabelName }}, job, route))
+      record: cluster_job_route:loki_request_duration_seconds:99quantile
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, app_instance, job, route))
-      record: app_instance_job_route:loki_request_duration_seconds:50quantile
+    - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, {{ $.Values.monitoring.appInstanceLabelName }}, job, route))
+      record: cluster_job_route:loki_request_duration_seconds:50quantile
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, job, route) / sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, job, route)
-      record: app_instance_job_route:loki_request_duration_seconds:avg
+    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, job, route) / sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, job, route)
+      record: cluster_job_route:loki_request_duration_seconds:avg
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, app_instance, job, route)
-      record: app_instance_job_route:loki_request_duration_seconds_bucket:sum_rate
+    - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, {{ $.Values.monitoring.appInstanceLabelName }}, job, route)
+      record: cluster_job_route:loki_request_duration_seconds_bucket:sum_rate
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, job, route)
-      record: app_instance_job_route:loki_request_duration_seconds_sum:sum_rate
+    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, job, route)
+      record: cluster_job_route:loki_request_duration_seconds_sum:sum_rate
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, job, route)
-      record: app_instance_job_route:loki_request_duration_seconds_count:sum_rate
+    - expr: sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, job, route)
+      record: cluster_job_route:loki_request_duration_seconds_count:sum_rate
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, app_instance, namespace, job, route))
-      record: app_instance_namespace_job_route:loki_request_duration_seconds:99quantile
+    - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, {{ $.Values.monitoring.appInstanceLabelName }}, namespace, job, route))
+      record: cluster_namespace_job_route:loki_request_duration_seconds:99quantile
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, app_instance, namespace, job, route))
-      record: app_instance_namespace_job_route:loki_request_duration_seconds:50quantile
+    - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, {{ $.Values.monitoring.appInstanceLabelName }}, namespace, job, route))
+      record: cluster_namespace_job_route:loki_request_duration_seconds:50quantile
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, namespace, job, route) / sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, namespace, job, route)
-      record: app_instance_namespace_job_route:loki_request_duration_seconds:avg
+    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, namespace, job, route) / sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, namespace, job, route)
+      record: cluster_namespace_job_route:loki_request_duration_seconds:avg
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, app_instance, namespace, job, route)
-      record: app_instance_namespace_job_route:loki_request_duration_seconds_bucket:sum_rate
+    - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}le, {{ $.Values.monitoring.appInstanceLabelName }}, namespace, job, route)
+      record: cluster_namespace_job_route:loki_request_duration_seconds_bucket:sum_rate
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, namespace, job, route)
-      record: app_instance_namespace_job_route:loki_request_duration_seconds_sum:sum_rate
+    - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, namespace, job, route)
+      record: cluster_namespace_job_route:loki_request_duration_seconds_sum:sum_rate
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}
         {{- with .Values.monitoring.rules.additionalRuleLabels }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-    - expr: sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}app_instance, namespace, job, route)
-      record: app_instance_namespace_job_route:loki_request_duration_seconds_count:sum_rate
+    - expr: sum(rate(loki_request_duration_seconds_count[1m])) by ({{ range $.Values.monitoring.rules.additionalAggregationLabels }}{{ . }},{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}, namespace, job, route)
+      record: cluster_namespace_job_route:loki_request_duration_seconds_count:sum_rate
       labels:
-        app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
         {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
         cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
         {{- end }}

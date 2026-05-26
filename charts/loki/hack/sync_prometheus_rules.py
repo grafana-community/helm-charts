@@ -32,7 +32,7 @@ refs = {
     'ref.loki': 'v3.7.1',
 }
 
-_mixin_config = "per_cluster_label: 'app_instance', horizontally_scalable_compactor_enabled: false, internal_components: false, meta_monitoring+: { enabled: true }, promtail+: { enabled: false }, ssd+: { enabled: false, pod_prefix_matcher: 'loki.*' }"
+_mixin_config = "horizontally_scalable_compactor_enabled: false, internal_components: false, meta_monitoring+: { enabled: true }, promtail+: { enabled: false }, ssd+: { enabled: false, pod_prefix_matcher: 'loki.*' }"
 
 # Source files list
 charts = [
@@ -65,7 +65,14 @@ condition_map = {}
 
 alert_condition_map = {}
 
-replacement_map = {}
+replacement_map = {
+    '$labels.cluster': {
+        'replacement': '$labels.{{ $.Values.monitoring.appInstanceLabelName }}',
+    },
+    'cluster,': {
+        'replacement': '{{ $.Values.monitoring.appInstanceLabelName }},',
+    },
+}
 
 # standard header
 header = '''{{- /*
@@ -77,7 +84,7 @@ https://github.com/grafana-community/helm-charts/tree/main/charts/loki/hack
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: {{ printf "%%s-%%s" (include "loki.fullname" .) "%(name)s" | trunc 63 | trimSuffix "-" }}
+  name: {{ include "loki.resourceName" (dict "ctx" $ "component" "%(name)s") }}
   namespace: {{ .Values.monitoring.namespace | default (include "loki.namespace" $) }}
   labels:
     {{- include "loki.labels" $ | nindent 4 }}
@@ -173,7 +180,6 @@ def add_rules_conditions(rules, rules_map, indent=4):
                     break
     return rules
 
-
 def add_rules_conditions_from_condition_map(rules, indent=4):
     """Add if wrapper for rules, listed in alert_condition_map"""
     rules = add_rules_conditions(rules, alert_condition_map, indent)
@@ -196,7 +202,6 @@ def add_custom_labels(rules_str, group, indent=4, label_indent=2, monitoring_pat
     rule_group_labels = get_rule_group_condition(condition_map.get(group['name'], ''), 'additionalRuleGroupLabels')
 
     additional_rule_labels = textwrap.indent("""
-app_instance: "{{ tpl .Values.monitoring.serviceMonitor.appInstanceLabel $ }}"
 {{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
 cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
 {{- end }}
@@ -362,7 +367,7 @@ def write_group_to_file(group, url, destination, monitoring_path='monitoring.rul
     for line in replacement_map:
         if group_name in replacement_map[line].get('limitGroup', [group_name]) and line in rules:
             rules = rules.replace(line, replacement_map[line]['replacement'])
-            if replacement_map[line]['init']:
+            if line in rules and replacement_map[line].get('init'):
                 init_line += '\n' + replacement_map[line]['init']
     # append per-alert rules
     rules = add_custom_labels(rules, group, monitoring_path=monitoring_path)

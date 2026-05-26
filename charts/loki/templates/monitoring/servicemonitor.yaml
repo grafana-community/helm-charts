@@ -44,11 +44,11 @@ spec:
           replacement: {{ print (tpl . $) "$1" | quote }}
           targetLabel: "job"
         {{- end }}
-        - action: replace
-          replacement: "{{ tpl .appInstanceLabel $ }}"
-          targetLabel: app_instance
+        - action: "replace"
+          replacement: {{ tpl $.Values.monitoring.appInstanceLabelValue $ | quote }}
+          targetLabel: {{ $.Values.monitoring.appInstanceLabelName | quote }}
         {{- if and $.Values.monitoring.dashboards.multiCluster.enabled $.Values.monitoring.dashboards.multiCluster.clusterName }}
-        - action: replace
+        - action: "replace"
           replacement: "{{ tpl $.Values.monitoring.dashboards.multiCluster.clusterName $ }}"
           targetLabel: cluster
         {{- end }}

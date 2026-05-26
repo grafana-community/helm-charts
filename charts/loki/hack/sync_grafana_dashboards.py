@@ -37,7 +37,7 @@ charts = [
     {
         'git': 'https://github.com/grafana/loki.git',
         'branch': refs['ref.loki'],
-        'content': "(import 'dashboards.libsonnet') + (import 'config.libsonnet') + {_config+:: { horizontally_scalable_compactor_enabled: false, internal_components: false, meta_monitoring+: { enabled: true }, per_cluster_label: 'app_instance', promtail+: { enabled: false }, ssd+: { enabled: false, pod_prefix_matcher: 'loki.*' }}}",
+        'content': "(import 'dashboards.libsonnet') + (import 'config.libsonnet') + {_config+:: { horizontally_scalable_compactor_enabled: false, internal_components: false, meta_monitoring+: { enabled: true }, promtail+: { enabled: false }, ssd+: { enabled: false, pod_prefix_matcher: 'loki.*' }}}",
         'cwd': 'production/loki-mixin',
         'destination': '../templates/monitoring/dashboards',
         'type': 'jsonnet_mixin',
@@ -108,6 +108,15 @@ replacement_map = {
     },
     'loki-single-binary': {
         'replacement': '`}}{{ include "loki.resourceName" (dict "ctx" $) }}{{`',
+    },
+    '"label":"cluster","multi":false,"name":"cluster"': {
+        'replacement': '"label":"Instance","multi":false,"name":"instance"',
+    },
+    'cluster=~\\"$cluster\\"': {
+        'replacement': '`}}{{ $.Values.monitoring.appInstanceLabelName }}{{`=~\\"$instance\\"',
+    },
+    'cluster)': {
+        'replacement': '`}}{{ $.Values.monitoring.appInstanceLabelName }}{{`)',
     },
 }
 

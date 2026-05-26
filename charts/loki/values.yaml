@@ -5645,6 +5645,12 @@ monitoring:
   # Defaults to the release namespace.
   namespace: null
 
+  # -- Label name for the app_instance label injected into scraped metrics and recording rules.
+  appInstanceLabelName: 'app_instance'
+  # -- Value for the app_instance label injected into scraped metrics and recording rules.
+  # Supports Helm templating.
+  appInstanceLabelValue: '{{ include "loki.fullname" . }}'
+
   # Dashboards for monitoring Loki
   dashboards:
     # -- If enabled, create configmap resources with dashboards for monitoring Loki
@@ -5752,9 +5758,6 @@ monitoring:
   serviceMonitor:
     # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
     enabled: false
-    # -- Value for the app_instance label injected into scraped metrics and recording rules.
-    # Supports Helm templating.
-    appInstanceLabel: '{{ include "loki.fullname" . }}'
     # -- Namespace selector for ServiceMonitor resources
     namespaceSelector: {}
     # -- ServiceMonitor annotations
