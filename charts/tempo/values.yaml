@@ -44,6 +44,7 @@ tempo:
   #    cpu: 2000m
   #    memory: 6Gi
 
+  streamOverHttpEnabled: false
   memBallastSizeMbs: 1024
   multitenancyEnabled: false
   # -- If true, Tempo will report anonymous usage data about the shape of a deployment to Grafana Labs
@@ -203,6 +204,7 @@ tempo:
 # -- Tempo configuration file contents
 # @default -- Dynamically generated tempo configmap
 config: |
+    stream_over_http_enabled: {{ .Values.tempo.streamOverHttpEnabled }}
     memberlist:
       cluster_label: "{{ .Release.Name }}.{{ .Release.Namespace }}"
     multitenancy_enabled: {{ .Values.tempo.multitenancyEnabled }}
