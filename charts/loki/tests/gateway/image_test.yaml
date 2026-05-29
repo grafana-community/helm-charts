@@ -32,3 +32,28 @@ tests:
           path: spec.template.spec.containers[1].image
           value: registry.example.com/custom/access-log-exporter:metrics-tag
         template: gateway/deployment.yaml
+
+  - it: should prefer global.imageRegistry over deprecated global registry keys for gateway image
+    set:
+      global.imageRegistry: current.registry.example.com
+      global.image.registry: deprecated.registry.example.com
+      global.registry: deprecated2.registry.example.com
+      gateway.image.repository: custom/nginx-unprivileged
+      gateway.image.tag: custom-tag
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: current.registry.example.com/custom/nginx-unprivileged:custom-tag
+        template: gateway/deployment.yaml
+
+  - it: should prefer deprecated global.image.registry over deprecated global.registry for gateway metrics image when imageRegistry is unset
+    set:
+      global.image.registry: preferred.registry.example.com
+      global.registry: fallback.registry.example.com
+      gateway.metrics.image.repository: custom/access-log-exporter
+      gateway.metrics.image.tag: metrics-tag
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: preferred.registry.example.com/custom/access-log-exporter:metrics-tag
+        template: gateway/deployment.yaml
