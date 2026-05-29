@@ -4,7 +4,7 @@
 {{- $component := .component }}
 {{- $name := .name }}
 {{- with $ctx }}
-{{- if $component.serviceAccount.create -}}
+{{- if and $ctx.Values.serviceAccount.create $component.serviceAccount.create -}}
 ---
 apiVersion: v1
 kind: ServiceAccount

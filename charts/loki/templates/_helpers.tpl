@@ -173,7 +173,7 @@ Input parameters:
 {{- define "loki.serviceAccountName" -}}
 {{- if .component.serviceAccount.name }}
   {{- tpl .component.serviceAccount.name .ctx }}
-{{- else if .component.serviceAccount.create -}}
+{{- else if and .ctx.Values.serviceAccount.create .component.serviceAccount.create -}}
   {{- include "loki.resourceName" (dict "ctx" .ctx "component" .target) }}
 {{- else if .ctx.Values.serviceAccount.name }}
   {{- tpl .ctx.Values.serviceAccount.name .ctx }}
