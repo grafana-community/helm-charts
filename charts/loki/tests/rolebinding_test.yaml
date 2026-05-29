@@ -66,6 +66,53 @@ tests:
           path: subjects[0].name
           value: my-custom-sa
 
+  - it: includes component service accounts when sccEnabled=true
+    set:
+      rbac.sccEnabled: true
+    asserts:
+      - contains:
+          path: subjects
+          content:
+            kind: ServiceAccount
+            name: RELEASE-NAME-loki
+            namespace: NAMESPACE
+          any: true
+      - contains:
+          path: subjects
+          content:
+            kind: ServiceAccount
+            name: RELEASE-NAME-loki-gateway
+            namespace: NAMESPACE
+          any: true
+      - contains:
+          path: subjects
+          content:
+            kind: ServiceAccount
+            name: RELEASE-NAME-loki-memcached
+            namespace: NAMESPACE
+          any: true
+
+  - it: includes custom component service account names when sccEnabled=true
+    set:
+      rbac.sccEnabled: true
+      gateway.serviceAccount.name: custom-gateway-sa
+      memcached.serviceAccount.name: custom-memcached-sa
+    asserts:
+      - contains:
+          path: subjects
+          content:
+            kind: ServiceAccount
+            name: custom-gateway-sa
+            namespace: NAMESPACE
+          any: true
+      - contains:
+          path: subjects
+          content:
+            kind: ServiceAccount
+            name: custom-memcached-sa
+            namespace: NAMESPACE
+          any: true
+
   - it: roleRef references the loki role by name
     set:
       rbac.namespaced: true

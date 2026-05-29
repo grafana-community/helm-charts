@@ -11,7 +11,11 @@ roleRef:
   kind: Role
   name: {{ include "loki.name" . }}
 subjects:
+{{- if .Values.rbac.sccEnabled }}
+  {{- include "loki.sccServiceAccountSubjects" . | nindent 2 }}
+{{- else }}
   - kind: ServiceAccount
     name: {{ include "loki.serviceAccountName" (dict "ctx" . "component" .Values "target" "") }}
     namespace: {{ include "loki.namespace" $ }}
+{{- end }}
 {{- end }}

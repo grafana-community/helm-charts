@@ -185,6 +185,53 @@ Input parameters:
 {{- end -}}
 
 {{/*
+Create the list of ServiceAccount subjects that should be allowed to use the Loki OpenShift SCC.
+
+Input parameters:
+  . = root context
+*/}}
+{{- define "loki.sccServiceAccountSubjects" -}}
+{{- $ctx := . -}}
+{{- $isScalable := eq (include "loki.deployment.isScalable" $ctx) "true" -}}
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" $ctx) "true" -}}
+{{- $seen := dict -}}
+{{- $subjects := list -}}
+{{- $serviceAccounts := list
+  (dict "target" "" "component" .Values "enabled" true)
+  (dict "target" "gateway" "component" .Values.gateway "enabled" .Values.gateway.enabled)
+  (dict "target" "memcached" "component" .Values.memcached "enabled" (or .Values.memcached.enabled .Values.chunksCache.enabled))
+  (dict "target" "canary" "component" .Values.lokiCanary "enabled" .Values.lokiCanary.enabled)
+  (dict "target" "write" "component" .Values.write "enabled" (and $isScalable .Values.write.enabled))
+  (dict "target" "read" "component" .Values.read "enabled" (and $isScalable .Values.read.enabled))
+  (dict "target" "backend" "component" .Values.backend "enabled" (and $isScalable .Values.backend.enabled))
+  (dict "target" "ingester" "component" .Values.ingester "enabled" (and $isDistributed .Values.ingester.enabled))
+  (dict "target" "distributor" "component" .Values.distributor "enabled" (and $isDistributed .Values.distributor.enabled))
+  (dict "target" "querier" "component" .Values.querier "enabled" (and $isDistributed .Values.querier.enabled))
+  (dict "target" "query-frontend" "component" .Values.queryFrontend "enabled" (and $isDistributed .Values.queryFrontend.enabled))
+  (dict "target" "query-scheduler" "component" .Values.queryScheduler "enabled" (and $isDistributed .Values.queryScheduler.enabled))
+  (dict "target" "index-gateway" "component" .Values.indexGateway "enabled" (and $isDistributed .Values.indexGateway.enabled))
+  (dict "target" "compactor" "component" .Values.compactor "enabled" (and $isDistributed .Values.compactor.enabled))
+  (dict "target" "ruler" "component" .Values.ruler "enabled" (and $isDistributed .Values.ruler.enabled))
+  (dict "target" "overrides-exporter" "component" .Values.overridesExporter "enabled" (and $isDistributed .Values.overridesExporter.enabled))
+  (dict "target" "pattern-ingester" "component" .Values.patternIngester "enabled" (and $isDistributed .Values.patternIngester.enabled))
+  (dict "target" "bloom-planner" "component" .Values.bloomPlanner "enabled" (and $isDistributed .Values.bloomPlanner.enabled))
+  (dict "target" "bloom-builder" "component" .Values.bloomBuilder "enabled" (and $isDistributed .Values.bloomBuilder.enabled))
+  (dict "target" "bloom-gateway" "component" .Values.bloomGateway "enabled" (and $isDistributed .Values.bloomGateway.enabled))
+  (dict "target" "table-manager" "component" .Values.tableManager "enabled" .Values.tableManager.enabled)
+-}}
+{{- range $serviceAccounts -}}
+{{- if .enabled -}}
+{{- $name := include "loki.serviceAccountName" (dict "ctx" $ctx "component" .component "target" .target) -}}
+{{- if not (hasKey $seen $name) -}}
+{{- $_ := set $seen $name true -}}
+{{- $subjects = append $subjects (dict "kind" "ServiceAccount" "name" $name "namespace" (include "loki.namespace" $ctx)) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- toYaml $subjects -}}
+{{- end -}}
+
+{{/*
 Base template for building docker image reference
 Always prepends the registry when one is configured (global or service-level).
 It also respects `.digest` as well as `.sha` (deprecated).
