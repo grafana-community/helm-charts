@@ -516,7 +516,7 @@ initChownData:
     capabilities:
       add:
         - CHOWN
-        - DAC_OVERRIDE
+        - DAC_READ_SEARCH
       drop:
         - ALL
 
