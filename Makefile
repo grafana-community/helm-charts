@@ -1,7 +1,7 @@
 MAKEFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 # renovate: docker=helmunittest/helm-unittest
-HELM_UNITTEST_TAG := 3.19.0-1.0.3
+HELM_UNITTEST_TAG := 4.1.4-1.0.3
 
 # Chart(s) to target (glob pattern, e.g. HELM_UNITTEST_CHART=loki)
 HELM_UNITTEST_CHART ?= *
