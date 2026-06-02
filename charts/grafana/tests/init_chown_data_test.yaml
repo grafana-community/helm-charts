@@ -5,10 +5,10 @@ set:
   persistence:
     enabled: true
 tests:
-  - it: should include DAC_OVERRIDE in init-chown-data by default
+  - it: should include DAC_READ_SEARCH in init-chown-data by default
     asserts:
       - equal:
           path: spec.template.spec.initContainers[0].securityContext.capabilities.add
           value:
             - CHOWN
-            - DAC_OVERRIDE
+            - DAC_READ_SEARCH
