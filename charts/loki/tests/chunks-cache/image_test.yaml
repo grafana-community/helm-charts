@@ -124,6 +124,18 @@ tests:
           path: spec.template.spec.containers[0].image
           value: current.registry.example.com/custom/memcached:1.6.41-alpine
         template: chunks-cache/statefulset.yaml
+  - it: should prefer global.imageRegistry over deprecated global keys and memcached registry for chunks-cache
+    set:
+      global.imageRegistry: current.registry.example.com
+      global.image.registry: deprecated.registry.example.com
+      global.registry: deprecated2.registry.example.com
+      memcached.image.registry: quay.io
+      memcached.image.repository: custom/memcached
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: current.registry.example.com/custom/memcached:1.6.41-alpine
+        template: chunks-cache/statefulset.yaml
 
   - it: should prefer deprecated global.image.registry over deprecated global.registry for chunks-cache memcached when imageRegistry is unset
     set:
