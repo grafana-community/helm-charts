@@ -11,6 +11,15 @@ tests:
       - hasDocuments:
           count: 0
 
+  - it: ScaledObject is not rendered when autoscaling.enabled but keda.enabled is false
+    template: compactor/keda-scaledObject.yaml
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.keda.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
   - it: ScaledObject is rendered when autoscaling and keda are enabled and has triggers
     template: compactor/keda-scaledObject.yaml
     set:
@@ -73,6 +82,40 @@ tests:
           path: spec.maxReplicaCount
           value: 10
 
+  - it: ScaledObject renders pollingInterval when set
+    template: compactor/keda-scaledObject.yaml
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.keda.enabled: true
+      compactor.autoscaling.keda.pollingInterval: 30
+      compactor.autoscaling.keda.triggers:
+        - type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            threshold: "250"
+            query: sum(rate(http_requests_total[1m]))
+    asserts:
+      - equal:
+          path: spec.pollingInterval
+          value: 30
+
+  - it: ScaledObject renders cooldownPeriod when set
+    template: compactor/keda-scaledObject.yaml
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.keda.enabled: true
+      compactor.autoscaling.keda.cooldownPeriod: 300
+      compactor.autoscaling.keda.triggers:
+        - type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            threshold: "250"
+            query: sum(rate(http_requests_total[1m]))
+    asserts:
+      - equal:
+          path: spec.cooldownPeriod
+          value: 300
+
   - it: ScaledObject renders behavior block when set
     template: compactor/keda-scaledObject.yaml
     set:
@@ -120,11 +163,27 @@ tests:
           path: spec.fallback.behavior
           value: currentReplicasIfHigher
 
-  - it: ScaledObject is not rendered when backendScheduler is enabled
+  - it: ScaledObject fails when both HPA and KEDA are enabled
     template: compactor/keda-scaledObject.yaml
     set:
       compactor.autoscaling.enabled: true
       compactor.autoscaling.hpa.enabled: true
+      compactor.autoscaling.keda.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: Cannot enable both HPA and Keda based autoscaling for compactor at the same time.
+
+  - it: ScaledObject is not rendered when backendScheduler is enabled
+    template: compactor/keda-scaledObject.yaml
+    set:
+      compactor.autoscaling.enabled: true
+      compactor.autoscaling.keda.enabled: true
+      compactor.autoscaling.keda.triggers:
+        - type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            threshold: "250"
+            query: sum(rate(http_requests_total[1m]))
       backendScheduler.enabled: true
     asserts:
       - hasDocuments:
