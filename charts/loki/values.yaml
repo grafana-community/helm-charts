@@ -5,10 +5,12 @@
 kubeVersionOverride: ""
 
 global:
-  # -- Overrides the Docker registry globally for all images (standard format)
+  # -- Overrides the Docker registry globally for all images (standard format).
+  # This has the highest precedence and overrides every component-level image.registry value.
   imageRegistry: null
   image:
-    # -- Overrides the Docker registry globally for all images (deprecated, use global.imageRegistry)
+    # -- Overrides the Docker registry globally for all images (deprecated, use global.imageRegistry).
+    # This has lower precedence than global.imageRegistry, but higher precedence than component-level image.registry values.
     registry: null
   # -- Overrides the priorityClassName for all pods
   priorityClassName: null
@@ -1388,7 +1390,7 @@ gateway:
     image:
       registry: ghcr.io
       repository: "jkroepke/access-log-exporter"
-      tag: "0.3.15"
+      tag: "0.3.17"
       pullPolicy: IfNotPresent
     resources:
       requests: {}
