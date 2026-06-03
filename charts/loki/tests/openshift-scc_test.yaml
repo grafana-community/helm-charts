@@ -1,4 +1,4 @@
-suite: openshift-scc
+suite: Openshift SecurityContextConstraints
 templates:
   - openshift-scc.yaml
 
@@ -6,10 +6,8 @@ tests:
   # ============================================================================
   # Test: SCC resource disabled by default
   # ============================================================================
-  - it: should not render when SCC is disabled (rbac.sccEnabled=false, openshift.sccEnabled=false)
+  - it: should not render when SCC is disabled (openshift.sccEnabled=false)
     set:
-      rbac:
-        sccEnabled: false
       openshift:
         sccEnabled: false
     asserts:
@@ -17,11 +15,11 @@ tests:
           count: 0
 
   # ============================================================================
-  # Test: SCC resource creation - enabled via rbac.sccEnabled
+  # Test: SCC resource creation - enabled via openshift.sccEnabled
   # ============================================================================
-  - it: should render SCC when rbac.sccEnabled is true
+  - it: should render SCC when openshift.sccEnabled is true
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - isKind:
@@ -56,7 +54,7 @@ tests:
   # ============================================================================
   - it: should set correct SCC defaults
     set:
-      rbac:
+      openshift:
         sccEnabled: true
         sccAllowHostDirVolumePlugin: false
     asserts:
@@ -102,7 +100,7 @@ tests:
   # ============================================================================
   - it: should set correct security context types
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - equal:
@@ -127,7 +125,7 @@ tests:
   # ============================================================================
   - it: should drop ALL capabilities
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - equal:
@@ -140,7 +138,7 @@ tests:
   # ============================================================================
   - it: should include standard volumes without hostPath when hostPath not allowed
     set:
-      rbac:
+      openshift:
         sccEnabled: true
         sccAllowHostDirVolumePlugin: false
     asserts:
@@ -158,9 +156,9 @@ tests:
   # ============================================================================
   # Test: SecurityContextConstraints volumes - with hostPath
   # ============================================================================
-  - it: should include hostPath in volumes when rbac.sccAllowHostDirVolumePlugin is true
+  - it: should include hostPath in volumes when openshift.sccAllowHostDirVolumePlugin is true
     set:
-      rbac:
+      openshift:
         sccEnabled: true
         sccAllowHostDirVolumePlugin: true
     asserts:
@@ -190,7 +188,7 @@ tests:
   # ============================================================================
   - it: should allow all seccomp profiles
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - equal:
@@ -203,7 +201,7 @@ tests:
   # ============================================================================
   - it: should have correct labels on SCC
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - isNotEmpty:
@@ -215,7 +213,7 @@ tests:
   # ============================================================================
   - it: should create Role for SCC use
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - isKind:
@@ -231,7 +229,7 @@ tests:
   # ============================================================================
   - it: should have correct Role rules for SCC usage
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - equal:
@@ -252,7 +250,7 @@ tests:
   # ============================================================================
   - it: should create RoleBinding for SCC
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - isKind:
@@ -268,7 +266,7 @@ tests:
   # ============================================================================
   - it: should bind to correct Role
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - equal:
@@ -285,7 +283,7 @@ tests:
   # ============================================================================
   - it: should bind to loki service account in Monolithic mode
     set:
-      rbac:
+      openshift:
         sccEnabled: true
       deploymentMode: Monolithic
     asserts:
@@ -298,7 +296,7 @@ tests:
   # ============================================================================
   - it: should bind to service accounts in SimpleScalable mode
     set:
-      rbac:
+      openshift:
         sccEnabled: true
       deploymentMode: SimpleScalable
       write:
@@ -320,7 +318,7 @@ tests:
   # ============================================================================
   - it: should bind to component service accounts in Distributed mode
     set:
-      rbac:
+      openshift:
         sccEnabled: true
       deploymentMode: Distributed
       ingester:
@@ -343,7 +341,7 @@ tests:
   # ============================================================================
   - it: should include subjects when gateway is enabled
     set:
-      rbac:
+      openshift:
         sccEnabled: true
       gateway:
         enabled: true
@@ -357,7 +355,7 @@ tests:
   # ============================================================================
   - it: should include subjects when loki-canary is enabled
     set:
-      rbac:
+      openshift:
         sccEnabled: true
       lokiCanary:
         enabled: true
@@ -371,7 +369,7 @@ tests:
   # ============================================================================
   - it: should include subjects when memcached is enabled
     set:
-      rbac:
+      openshift:
         sccEnabled: true
       memcached:
         enabled: true
@@ -385,7 +383,7 @@ tests:
   # ============================================================================
   - it: should place all resources in correct namespace
     set:
-      rbac:
+      openshift:
         sccEnabled: true
       namespaceOverride: custom-namespace
     asserts:
@@ -403,7 +401,7 @@ tests:
   # ============================================================================
   - it: should apply common labels to all resources
     set:
-      rbac:
+      openshift:
         sccEnabled: true
       commonLabels:
         environment: test
@@ -422,12 +420,10 @@ tests:
         documentIndex: 2
 
   # ============================================================================
-  # Test: Both rbac and openshift flags - both render
+  # Test: Both openshift flags - both render
   # ============================================================================
-  - it: should render when both rbac.sccEnabled and openshift.sccEnabled are true
+  - it: should render when both openshift.sccEnabled and openshift.forceRunAsUser are true
     set:
-      rbac:
-        sccEnabled: true
       openshift:
         sccEnabled: true
     asserts:
@@ -439,10 +435,8 @@ tests:
   # ============================================================================
   - it: should render SCC using openshift.sccAllowHostDirVolumePlugin flag
     set:
-      rbac:
-        sccEnabled: true
-        sccAllowHostDirVolumePlugin: false
       openshift:
+        sccEnabled: true
         sccAllowHostDirVolumePlugin: true
     asserts:
       - equal:
@@ -455,7 +449,7 @@ tests:
   # ============================================================================
   - it: should have consistent naming between Role and RoleBinding
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - isNotEmpty:
@@ -470,7 +464,7 @@ tests:
   # ============================================================================
   - it: should include all optional components in Distributed mode
     set:
-      rbac:
+      openshift:
         sccEnabled: true
       deploymentMode: Distributed
       ingester:
@@ -511,7 +505,7 @@ tests:
   # ============================================================================
   - it: should set correct groups value and have priority field
     set:
-      rbac:
+      openshift:
         sccEnabled: true
     asserts:
       - equal:
