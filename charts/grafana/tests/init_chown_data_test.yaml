@@ -11,4 +11,4 @@ tests:
           path: spec.template.spec.initContainers[0].securityContext.capabilities.add
           value:
             - CHOWN
-            - DAC_READ_SEARCH
+            - DAC_OVERRIDE
