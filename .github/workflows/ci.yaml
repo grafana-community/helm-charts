@@ -88,6 +88,12 @@ jobs:
             fi
           done
 
+      - name: Provision Kafka for integration tests
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          kubectl apply -f .github/ci/kafka.yaml
+          kubectl rollout status deployment/kafka -n kafka-ci --timeout=300s
+
       - name: Run chart-testing (install)
         if: steps.list-changed.outputs.changed == 'true'
         run: ct install --config .github/linters/ct.yaml
