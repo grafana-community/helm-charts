@@ -44,10 +44,6 @@ spec:
               value: "0"
             - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
               value: "true"
-          resources:
-            requests:
-              cpu: 100m
-              memory: 512Mi
           volumeMounts:
             - name: data
               mountPath: /var/lib/kafka/data

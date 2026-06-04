@@ -20,7 +20,3 @@ spec:
               /opt/kafka/bin/kafka-topics.sh \
                 --bootstrap-server "kafka.($namespace).svc.cluster.local:9092" \
                 --list
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
