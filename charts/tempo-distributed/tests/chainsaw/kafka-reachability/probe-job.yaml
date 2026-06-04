@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-probe
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: probe
+          # renovate: docker=docker.io/apache/kafka
+          image: apache/kafka:4.0.0
+          command:
+            - sh
+            - -c
+            - |
+              /opt/kafka/bin/kafka-topics.sh \
+                --bootstrap-server "kafka.($namespace).svc.cluster.local:9092" \
+                --create --topic probe --if-not-exists &&
+              /opt/kafka/bin/kafka-topics.sh \
+                --bootstrap-server "kafka.($namespace).svc.cluster.local:9092" \
+                --list
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi

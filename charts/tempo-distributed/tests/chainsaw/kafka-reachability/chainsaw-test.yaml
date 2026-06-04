@@ -1,0 +1,49 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: kafka-reachability
+spec:
+  # template: true allows ($namespace) to be substituted in applied manifests,
+  # so the Kafka advertised listener and probe bootstrap address use the
+  # chainsaw-managed ephemeral namespace rather than a hard-coded one.
+  template: true
+  steps:
+    - name: provision-kafka
+      try:
+        - apply:
+            file: kafka.yaml
+        - assert:
+            resource:
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: kafka
+              status:
+                availableReplicas: 1
+      catch:
+        - describe:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: kafka
+        - podLogs:
+            selector: app=kafka
+
+    - name: verify-reachability
+      try:
+        - apply:
+            file: probe-job.yaml
+        - assert:
+            resource:
+              apiVersion: batch/v1
+              kind: Job
+              metadata:
+                name: kafka-probe
+              status:
+                succeeded: 1
+      catch:
+        - describe:
+            apiVersion: batch/v1
+            kind: Job
+            name: kafka-probe
+        - podLogs:
+            selector: job-name=kafka-probe
