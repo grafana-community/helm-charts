@@ -12,8 +12,9 @@ spec:
         - script:
             timeout: 10m
             content: |
-              helm dependency update ./charts/tempo-distributed
-              helm install tempo-distributed ./charts/tempo-distributed \
+              REPO_ROOT="$(git rev-parse --show-toplevel)"
+              helm dependency update "$REPO_ROOT/charts/tempo-distributed"
+              helm install tempo-distributed "$REPO_ROOT/charts/tempo-distributed" \
                 --namespace "$NAMESPACE" \
                 --set backendScheduler.enabled=true \
                 --set blockBuilder.enabled=true \
