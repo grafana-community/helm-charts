@@ -82,6 +82,12 @@ kubectl -n <namespace> delete statefulset --selector 'app.kubernetes.io/instance
 
 Perform a regular Helm upgrade on the existing release. The new Statefulsets will pick up the existing pods and perform a rolling upgrade.
 
+### From Chart versions < 3.0.0
+
+Tempo 3.0 replaces the ingester-based write path with a Kafka-backed architecture. This is a breaking change for microservices-mode deployments.
+
+See [UPGRADE.md](UPGRADE.md) for the full migration guide, including the parallel-deployment path, Kafka configuration, and the `tempo-cli migrate config` command.
+
 ### From Chart versions < 2.0.0
 
 The minimum required Kubernetes version is now 1.25. All references to deprecated APIs have been removed.
@@ -307,25 +313,24 @@ The memcached default args are removed and should be provided manually. The sett
 ## Components
 
 The chart supports the components shown in the following table.
-Ingester, distributor, querier, query-frontend, and compactor are always installed.
+Distributor, querier, and query-frontend are always installed.
 The other components are optional and must be explicitly enabled.
 
-| Component | Optional |
-| --- | --- |
-| ingester | no |
-| distributor | no |
-| querier | no |
-| query-frontend | no |
-| compactor | no |
-| metrics-generator | yes |
-| memcached | yes |
-| memcached-exporter | yes |
-| gateway | yes |
-| federation-frontend | yes |
-| rollout-operator | yes |
-| minio | yes |
-| admin-api | yes |
-| enterprise-gateway | yes |
+| Component | Optional | Notes |
+| --- | --- | --- |
+| distributor | no | Writes spans to Kafka in Tempo 3.0 |
+| querier | no | |
+| query-frontend | no | |
+| backend-scheduler | yes (`backendScheduler.enabled`) | Required for compaction and retention |
+| backend-worker | yes (enabled with backend-scheduler) | Executes compaction jobs |
+| block-builder | yes (`blockBuilder.enabled`) | Consumes from Kafka, writes blocks to object storage |
+| live-store | yes (`liveStore.enabled`) | Consumes from Kafka, serves recent-data queries |
+| metrics-generator | yes | |
+| memcached | yes | |
+| memcached-exporter | yes | |
+| gateway | yes | |
+| rollout-operator | yes | |
+| minio | yes | |
 
 ## [Configuration](https://grafana.com/docs/tempo/latest/configuration/)
 
@@ -388,57 +393,39 @@ global_overrides:
 ### Example configuration using S3 for storage
 
 ```yaml
-config: |
-  multitenancy_enabled: false
-  compactor:
-    compaction:
-      block_retention: 48h
-    ring:
-      kvstore:
-        store: memberlist
-  distributor:
-    receivers:
-      jaeger:
-        protocols:
-          grpc:
-            endpoint: 0.0.0.0:14250
-          thrift_binary:
-            endpoint: 0.0.0.0:6832
-          thrift_compact:
-            endpoint: 0.0.0.0:6831
-          thrift_http:
-            endpoint: 0.0.0.0:14268
-  querier:
-    frontend_worker:
-      frontend_address: {{ include "tempo.resourceName" (dict "ctx" . "component" "query-frontend") }}:9095
-  ingester:
-    lifecycler:
-      ring:
-        replication_factor: 1
-  memberlist:
-    abort_if_cluster_join_fails: false
-    join_members:
-      - {{ include "tempo.fullname" . }}-memberlist
-  server:
-    http_listen_port: 3100
-  storage:
-    trace:
-      backend: s3
-      s3:
-        access_key: tempo
-        bucket: <your s3 bucket>
-        endpoint: minio:9000
-        insecure: true
-        secret_key: supersecret
-      pool:
-        queue_depth: 2000
-      wal:
-        path: /var/tempo/wal
-      memcached:
-        consistent_hash: true
-        host: a-tempo-distributed-memcached
-        service: memcached-client
-        timeout: 500ms
+storage:
+  trace:
+    backend: s3
+    s3:
+      access_key: tempo
+      bucket: <your-s3-bucket>
+      endpoint: s3.amazonaws.com
+      secret_key: <your-secret>
+    wal:
+      path: /var/tempo/wal
+
+ingest:
+  kafka:
+    address: <kafka-broker>:9092
+    topic: tempo-traces
+
+blockBuilder:
+  enabled: true
+  replicas: 3  # must equal Kafka partition count
+
+liveStore:
+  enabled: true
+  replicas: 3  # must equal Kafka partition count
+
+backendScheduler:
+  enabled: true
+
+traces:
+  otlp:
+    http:
+      enabled: true
+    grpc:
+      enabled: true
 ```
 
 ### Memcached cache configuration

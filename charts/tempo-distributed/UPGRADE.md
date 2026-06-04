@@ -12,6 +12,22 @@ chart. Enterprise templates (`admin-api`, `enterprise-gateway`, `provisioner`,
 `tokengen`) have been removed. For enterprise deployments, use the
 [grafana/helm-charts](https://github.com/grafana/helm-charts) repository.
 
+### Config migration tool
+
+The `tempo-cli migrate config` command converts a Tempo 2.x config file to 3.0
+format — it removes the `ingester`, `compactor`, and `metrics_generator_client`
+blocks and adds the `ingest:` block:
+
+```bash
+tempo-cli migrate config \
+  --kafka-address=<KAFKA_BROKER_ADDRESS> \
+  --kafka-topic=<KAFKA_TOPIC> \
+  old-config.yaml > new-config.yaml
+```
+
+Review the output before deploying. For the full list of options see the
+[Tempo CLI reference](https://grafana.com/docs/tempo/latest/operations/tempo_cli/#migrate-config-command).
+
 ### Architecture changes
 
 | Component | Status in 3.0 |
