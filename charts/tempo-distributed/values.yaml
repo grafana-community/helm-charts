@@ -188,9 +188,10 @@ rbac:
 
 # Configuration for the ingester
 ingester:
-  # -- Enable the ingester. Set to false when using the Tempo 3.0 block-builder/live-store
-  # write path. Ingesters are not part of the Tempo 3.0 microservices architecture.
-  enabled: true
+  # -- Enable the ingester. Disabled by default in Tempo 3.0 — ingesters are replaced
+  # by block-builder and live-store. Set to true only when running Tempo 2.x or during
+  # the parallel-deployment migration window.
+  enabled: false
   # -- Annotations for the ingester StatefulSet
   annotations: {}
   # -- Labels for the ingester StatefulSet
@@ -759,7 +760,7 @@ distributor:
 backendScheduler:
   # -- Specifies whether a backend-scheduler and backend-worker
   # -- should be deployed. When enabled the compactor is disabled
-  enabled: false
+  enabled: true
   # -- Annotations for backend-scheduler StatefulSet
   annotations: {}
   # -- Labels for the backend-scheduler StatefulSet
@@ -1347,7 +1348,7 @@ ingest:
 # One replica per Kafka partition — replica count must equal ingest.kafka.auto_create_topic_default_partitions.
 blockBuilder:
   # -- Enable the block-builder. Requires ingest.kafka.address to be set.
-  enabled: false
+  enabled: true
   # -- Number of replicas. Must equal the Kafka partition count.
   replicas: 3
   # -- Annotations for the block-builder StatefulSet
@@ -1434,7 +1435,7 @@ blockBuilder:
 # One replica per Kafka partition — replica count must equal ingest.kafka.auto_create_topic_default_partitions.
 liveStore:
   # -- Enable the live-store. Requires ingest.kafka.address to be set.
-  enabled: false
+  enabled: true
   # -- Number of replicas. Must equal the Kafka partition count.
   replicas: 3
   # -- Annotations for the live-store StatefulSet
