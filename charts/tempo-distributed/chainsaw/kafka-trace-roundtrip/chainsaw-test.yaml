@@ -73,4 +73,8 @@ spec:
             name: query-trace
         - podLogs:
             selector: job-name=query-trace
+      finally:
+        - script:
+            content: |
+              helm uninstall tempo-distributed --namespace "$NAMESPACE" --wait --timeout 120s || true
 
