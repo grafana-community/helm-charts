@@ -1,3 +1,8 @@
+ingest:
+  kafka:
+    address: "kafka.kafka-ci.svc.cluster.local:9092"
+    auto_create_topic_default_partitions: 1
+
 storage:
   trace:
     block:
