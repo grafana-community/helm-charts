@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: query-trace
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: query
+          # renovate: docker=docker.io/curlimages/curl
+          image: curlimages/curl:8.13.0
+          command:
+            - sh
+            - -c
+            - |
+              # The live-store serves recent traces directly from Kafka — no block flush needed.
+              # Retry for up to 2 minutes to allow the live-store to receive the trace.
+              TRACE_ID="0af7651916cd43dd8448eb211c80319c"
+              for i in $(seq 1 60); do
+                result=$(curl -sf \
+                  "http://tempo-distributed-query-frontend:3200/api/traces/$TRACE_ID" \
+                  2>/dev/null)
+                if [ -n "$result" ] && echo "$result" | grep -q "chainsaw-trace-roundtrip"; then
+                  echo "Trace $TRACE_ID found in query-frontend"
+                  exit 0
+                fi
+                echo "Attempt $i: trace not yet available, retrying in 2s..."
+                sleep 2
+              done
+              echo "Trace $TRACE_ID not found after 2 minutes"
+              exit 1

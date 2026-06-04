@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: push-trace
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: push
+          # renovate: docker=docker.io/curlimages/curl
+          image: curlimages/curl:8.13.0
+          command:
+            - sh
+            - -c
+            - |
+              curl -sS --fail-with-body -X POST \
+                http://tempo-distributed-distributor:4318/v1/traces \
+                -H 'Content-Type: application/json' \
+                -d '{
+                  "resourceSpans": [{
+                    "scopeSpans": [{
+                      "spans": [{
+                        "traceId": "0af7651916cd43dd8448eb211c80319c",
+                        "spanId": "b7ad6b7169203331",
+                        "name": "chainsaw-trace-roundtrip",
+                        "kind": 1,
+                        "startTimeUnixNano": "1000000000",
+                        "endTimeUnixNano": "2000000000",
+                        "status": {}
+                      }]
+                    }]
+                  }]
+                }'

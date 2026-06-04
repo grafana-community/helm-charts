@@ -1,0 +1,74 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: kafka-trace-roundtrip
+spec:
+  # Chainsaw creates and manages this namespace; the chart is installed here.
+  # Kafka is pre-provisioned in kafka-ci by the CI workflow and reachable
+  # cross-namespace at kafka.kafka-ci.svc.cluster.local:9092.
+  steps:
+    - name: install-chart
+      try:
+        - script:
+            timeout: 10m
+            content: |
+              helm dependency update ./charts/tempo-distributed
+              helm install tempo-distributed ./charts/tempo-distributed \
+                --namespace "$NAMESPACE" \
+                --set backendScheduler.enabled=true \
+                --set blockBuilder.enabled=true \
+                --set blockBuilder.replicas=1 \
+                --set liveStore.enabled=true \
+                --set liveStore.replicas=1 \
+                --set ingester.enabled=false \
+                --set ingest.kafka.address=kafka.kafka-ci.svc.cluster.local:9092 \
+                --set ingest.kafka.auto_create_topic_default_partitions=1 \
+                --set traces.otlp.http.enabled=true \
+                --wait --timeout 600s
+      catch:
+        - describe:
+            apiVersion: apps/v1
+            kind: StatefulSet
+        - podLogs: {}
+
+    - name: push-trace
+      try:
+        - apply:
+            file: push-trace-job.yaml
+        - assert:
+            timeout: 2m
+            resource:
+              apiVersion: batch/v1
+              kind: Job
+              metadata:
+                name: push-trace
+              status:
+                succeeded: 1
+      catch:
+        - describe:
+            apiVersion: batch/v1
+            kind: Job
+            name: push-trace
+        - podLogs:
+            selector: job-name=push-trace
+
+    - name: query-trace
+      try:
+        - apply:
+            file: query-trace-job.yaml
+        - assert:
+            timeout: 3m
+            resource:
+              apiVersion: batch/v1
+              kind: Job
+              metadata:
+                name: query-trace
+              status:
+                succeeded: 1
+      catch:
+        - describe:
+            apiVersion: batch/v1
+            kind: Job
+            name: query-trace
+        - podLogs:
+            selector: job-name=query-trace

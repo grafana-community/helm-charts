@@ -25,3 +25,4 @@
 ci/
 tests/
 *.gotmpl
+chainsaw/
