@@ -22249,6 +22249,45 @@ entries:
         - name: Upstream Project
           url: https://github.com/grafana/mcp-grafana
     apiVersion: v2
+    appVersion: 0.15.2
+    created: "2026-06-04T15:41:22.241039701Z"
+    description: MCP server for Grafana.
+    digest: cb0de4480174d52f1281b9bbf7180a596a040907a97a3aac0cf83781ee97c8bd
+    home: https://grafana.com
+    icon: https://artifacthub.io/image/b4fed1a7-6c8f-4945-b99d-096efa3e4116
+    keywords:
+    - monitoring
+    - mcp
+    kubeVersion: ^1.25.0-0
+    maintainers:
+    - email: sheikhabubaker761@gmail.com
+      name: Mohammad Abubaker
+      url: https://github.com/Sheikh-Abubaker
+    - email: github@jkroepke.de
+      name: Jan-Otto Kröpke
+      url: https://github.com/jkroepke
+    - email: avivguiser@gmail.com
+      name: Aviv Guiser
+      url: https://github.com/KyriosGN0
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    name: grafana-mcp
+    sources:
+    - https://github.com/grafana/mcp-grafana
+    - https://github.com/grafana-community/helm-charts
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/grafana-mcp-0.16.0/grafana-mcp-0.16.0.tgz
+    version: 0.16.0
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/grafana-community/helm-charts
+        - name: Upstream Project
+          url: https://github.com/grafana/mcp-grafana
+    apiVersion: v2
     appVersion: 0.14.0
     created: "2026-05-12T20:10:23.839015227Z"
     description: MCP server for Grafana.
@@ -56881,4 +56920,4 @@ entries:
     urls:
     - https://github.com/grafana-community/helm-charts/releases/download/tempo-vulture-0.1.0/tempo-vulture-0.1.0.tgz
     version: 0.1.0
-generated: "2026-06-04T15:30:32.931862976Z"
+generated: "2026-06-04T15:41:22.242760375Z"
