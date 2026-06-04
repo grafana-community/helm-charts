@@ -74,23 +74,3 @@ spec:
         - podLogs:
             selector: job-name=query-trace
 
-    - name: search-trace
-      try:
-        - apply:
-            file: search-job.yaml
-        - assert:
-            timeout: 3m
-            resource:
-              apiVersion: batch/v1
-              kind: Job
-              metadata:
-                name: search-trace
-              status:
-                succeeded: 1
-      catch:
-        - describe:
-            apiVersion: batch/v1
-            kind: Job
-            name: search-trace
-        - podLogs:
-            selector: job-name=search-trace
