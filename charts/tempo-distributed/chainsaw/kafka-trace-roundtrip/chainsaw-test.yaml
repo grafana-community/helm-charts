@@ -3,10 +3,35 @@ kind: Test
 metadata:
   name: kafka-trace-roundtrip
 spec:
-  # Chainsaw creates and manages this namespace; the chart is installed here.
-  # Kafka is pre-provisioned in kafka-ci by the CI workflow and reachable
-  # cross-namespace at kafka.kafka-ci.svc.cluster.local:9092.
+  # Fixed namespace so the Kafka broker persists at
+  # kafka.kafka-ci.svc.cluster.local:9092 after this test completes.
+  # ct install's kafka-ingest-values.yaml scenario reuses it without needing
+  # a separate workflow provisioning step.
+  namespace: kafka-ci
+  skipDelete: true
   steps:
+    - name: provision-kafka
+      try:
+        - apply:
+            file: kafka.yaml
+        - assert:
+            timeout: 5m
+            resource:
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: kafka
+                namespace: kafka-ci
+              status:
+                availableReplicas: 1
+      catch:
+        - describe:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: kafka
+        - podLogs:
+            selector: app=kafka
+
     - name: install-chart
       try:
         - script:
@@ -52,7 +77,7 @@ spec:
         - podLogs:
             selector: job-name=push-trace
 
-    - name: query-trace
+    - name: query-trace-by-id
       try:
         - apply:
             file: query-trace-job.yaml
@@ -72,3 +97,24 @@ spec:
             name: query-trace
         - podLogs:
             selector: job-name=query-trace
+
+    - name: search-trace
+      try:
+        - apply:
+            file: search-job.yaml
+        - assert:
+            timeout: 3m
+            resource:
+              apiVersion: batch/v1
+              kind: Job
+              metadata:
+                name: search-trace
+              status:
+                succeeded: 1
+      catch:
+        - describe:
+            apiVersion: batch/v1
+            kind: Job
+            name: search-trace
+        - podLogs:
+            selector: job-name=search-trace
