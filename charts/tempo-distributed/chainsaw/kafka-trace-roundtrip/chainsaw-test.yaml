@@ -3,35 +3,10 @@ kind: Test
 metadata:
   name: kafka-trace-roundtrip
 spec:
-  # Fixed namespace so the Kafka broker persists at
-  # kafka.kafka-ci.svc.cluster.local:9092 after this test completes.
-  # ct install's kafka-ingest-values.yaml scenario reuses it without needing
-  # a separate workflow provisioning step.
-  namespace: kafka-ci
-  skipDelete: true
+  # Kafka is pre-provisioned at kafka.kafka-ci.svc.cluster.local:9092 by the
+  # CI workflow step in PR #548 (.github/ci/kafka.yaml) before chainsaw runs.
+  # For local runs: kubectl apply -f .github/ci/kafka.yaml first.
   steps:
-    - name: provision-kafka
-      try:
-        - apply:
-            file: kafka.yaml
-        - assert:
-            timeout: 5m
-            resource:
-              apiVersion: apps/v1
-              kind: Deployment
-              metadata:
-                name: kafka
-                namespace: kafka-ci
-              status:
-                availableReplicas: 1
-      catch:
-        - describe:
-            apiVersion: apps/v1
-            kind: Deployment
-            name: kafka
-        - podLogs:
-            selector: app=kafka
-
     - name: install-chart
       try:
         - script:
