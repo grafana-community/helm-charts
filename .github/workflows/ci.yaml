@@ -71,6 +71,12 @@ jobs:
           #renovate: github=kedacore/keda
           KEDA_VERSION: 2.20.0
 
+      - name: Provision Kafka for integration tests
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          kubectl apply -f .github/ci/kafka.yaml
+          kubectl rollout status deployment/kafka -n kafka-ci --timeout=300s
+
       - name: Install chainsaw
         if: steps.list-changed.outputs.changed == 'true'
         uses: kyverno/action-install-chainsaw@1223ef75bedeb59c4e7b5455463d4316e76dff01 # v0.2.15
