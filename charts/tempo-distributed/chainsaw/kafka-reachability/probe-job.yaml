@@ -15,8 +15,8 @@ spec:
             - -c
             - |
               /opt/kafka/bin/kafka-topics.sh \
-                --bootstrap-server "kafka.($namespace).svc.cluster.local:9092" \
+                --bootstrap-server "kafka.kafka-ci.svc.cluster.local:9092" \
                 --create --topic probe --if-not-exists &&
               /opt/kafka/bin/kafka-topics.sh \
-                --bootstrap-server "kafka.($namespace).svc.cluster.local:9092" \
+                --bootstrap-server "kafka.kafka-ci.svc.cluster.local:9092" \
                 --list

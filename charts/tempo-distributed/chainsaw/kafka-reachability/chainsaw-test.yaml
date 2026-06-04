@@ -3,10 +3,12 @@ kind: Test
 metadata:
   name: kafka-reachability
 spec:
-  # template: true allows ($namespace) to be substituted in applied manifests,
-  # so the Kafka advertised listener and probe bootstrap address use the
-  # chainsaw-managed ephemeral namespace rather than a hard-coded one.
-  template: true
+  # Fixed namespace so the Kafka broker is reachable at
+  # kafka.kafka-ci.svc.cluster.local:9092 by ct install scenarios
+  # that run after this test completes.
+  namespace: kafka-ci
+  # Keep the namespace so Kafka is still running when ct install executes.
+  skipDelete: true
   steps:
     - name: provision-kafka
       try:
