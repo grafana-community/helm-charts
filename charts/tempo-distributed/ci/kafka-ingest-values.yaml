@@ -1,0 +1,26 @@
+# CT install scenario for the Kafka-based ingest path (block-builder + live-store).
+# Requires:
+#   - PR #548 merged: Kafka provisioned in kafka-ci namespace before ct install
+#   - PR A merged: block-builder and live-store templates present
+#
+# Replica count must equal the Kafka partition count
+# (auto_create_topic_default_partitions below).
+
+ingester:
+  enabled: false
+
+backendScheduler:
+  enabled: true
+
+blockBuilder:
+  enabled: true
+  replicas: 1
+
+liveStore:
+  enabled: true
+  replicas: 1
+
+ingest:
+  kafka:
+    address: "kafka.kafka-ci.svc.cluster.local:9092"
+    auto_create_topic_default_partitions: 1
