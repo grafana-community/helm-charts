@@ -1,3 +1,4 @@
+{{- if .Values.ingester.enabled }}
 {{- if and (gt (int .Values.ingester.replicas) 1) .Values.ingester.podDisruptionBudget.enabled }}
 {{ $dict := dict "ctx" . "component" "ingester" "memberlist" true }}
 apiVersion: policy/v1
@@ -15,4 +16,5 @@ spec:
   {{- with .Values.ingester.podDisruptionBudget.unhealthyPodEvictionPolicy }}
   unhealthyPodEvictionPolicy: {{ . }}
   {{- end }}
+{{- end }}
 {{- end }}

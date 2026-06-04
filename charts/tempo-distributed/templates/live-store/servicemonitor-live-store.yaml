@@ -1,0 +1,3 @@
+{{- if .Values.liveStore.enabled }}
+{{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" "live-store" "memberlist" true) }}
+{{- end }}
