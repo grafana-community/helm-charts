@@ -1,3 +1,8 @@
+blockBuilder:
+  enabled: false
+liveStore:
+  enabled: false
+
 traces:
   otlp:
     http:
@@ -26,12 +31,6 @@ gateway:
             port: 4318
           - path: /distributor/ring
             pathType: PathPrefix
-        ingester:
-          - path: /flush
-            pathType: PathPrefix
         query-frontend:
           - path: /api
-            pathType: PathPrefix
-        compactor:
-          - path: /compactor/ring
             pathType: PathPrefix
