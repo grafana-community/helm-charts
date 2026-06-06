@@ -50,7 +50,7 @@ spec:
 EOF
 
 echo "Waiting for integration tests to complete..."
-DEADLINE=$(( $(date +%s) + 600 ))
+DEADLINE=$(($(date +%s) + 600))
 PHASE=""
 while true; do
   PHASE=$(kubectl get pods -l job-name=bats-integration-test \
