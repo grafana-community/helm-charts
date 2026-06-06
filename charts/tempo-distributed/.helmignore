@@ -25,4 +25,4 @@
 ci/
 tests/
 *.gotmpl
-chainsaw/
+integration-tests/
