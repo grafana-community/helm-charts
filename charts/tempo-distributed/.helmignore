@@ -25,4 +25,3 @@
 ci/
 tests/
 *.gotmpl
-integration-tests/
