@@ -75,9 +75,9 @@ jobs:
         if: steps.list-changed.outputs.changed == 'true'
         run: |
           for chart in $(ct list-changed --config .github/linters/ct.yaml); do
-            if [ -f "$chart/tests/integration/it-prerequisites.yaml" ]; then
+            if [ -f "$chart/ci/integration/it-prerequisites.yaml" ]; then
               echo "Provisioning prerequisites for $chart"
-              kubectl apply -f "$chart/tests/integration/it-prerequisites.yaml"
+              kubectl apply -f "$chart/ci/integration/it-prerequisites.yaml"
             fi
           done
           kubectl wait pod -l ci-managed=true -A \

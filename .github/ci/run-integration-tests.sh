@@ -16,7 +16,7 @@ kubectl create namespace "$NAMESPACE"
 helm dependency update "$CHART"
 helm install "$CHART_NAME" "$CHART" \
   --namespace "$NAMESPACE" \
-  --values "$CHART/tests/integration/values.yaml" \
+  --values "$CHART/ci/integration/values.yaml" \
   --wait --timeout 600s
 
 kubectl create configmap bats-tests \
