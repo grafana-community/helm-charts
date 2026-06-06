@@ -16,12 +16,12 @@ kubectl create namespace "$NAMESPACE"
 helm dependency update "$CHART"
 helm install "$CHART_NAME" "$CHART" \
   --namespace "$NAMESPACE" \
-  --values "$CHART/integration-tests/values.yaml" \
+  --values "$CHART/tests/integration/values.yaml" \
   --wait --timeout 600s
 
 kubectl create configmap bats-tests \
   --namespace "$NAMESPACE" \
-  --from-file="$CHART/integration-tests/"
+  --from-file="$CHART/tests/integration/"
 
 kubectl apply --namespace "$NAMESPACE" -f - <<'EOF'
 apiVersion: batch/v1
