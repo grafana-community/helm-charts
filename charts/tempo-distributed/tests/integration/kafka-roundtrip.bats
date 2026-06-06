@@ -21,46 +21,49 @@ TRACE_PAYLOAD='{
 }'
 
 setup_file() {
-  curl -sS --fail-with-body -X POST \
-    "${DISTRIBUTOR}/v1/traces" \
-    -H 'Content-Type: application/json' \
-    -d "${TRACE_PAYLOAD}"
+	curl -sS --fail-with-body -X POST \
+		"${DISTRIBUTOR}/v1/traces" \
+		-H 'Content-Type: application/json' \
+		-d "${TRACE_PAYLOAD}"
 }
 
 @test "distributor accepts OTLP/HTTP push" {
-  run curl -sS --fail-with-body -X POST \
-    "${DISTRIBUTOR}/v1/traces" \
-    -H 'Content-Type: application/json' \
-    -d "${TRACE_PAYLOAD}"
-  [ "$status" -eq 0 ]
+	run curl -sS --fail-with-body -X POST \
+		"${DISTRIBUTOR}/v1/traces" \
+		-H 'Content-Type: application/json' \
+		-d "${TRACE_PAYLOAD}"
+	[ "$status" -eq 0 ]
 }
 
 @test "live-store serves trace by ID" {
-  local result
-  for i in $(seq 1 60); do
-    result=$(curl -sf "${QUERY_FRONTEND}/api/traces/${TRACE_ID}" 2>/dev/null || true)
-    if echo "${result}" | grep -q "kafka-roundtrip"; then
-      return 0
-    fi
-    sleep 2
-  done
-  echo "trace ${TRACE_ID} not found after 2 minutes" >&3
-  echo "last response: ${result}" >&3
-  return 1
+	local result
+	# shellcheck disable=SC2034
+	for _ in $(seq 1 60); do
+		result=$(curl -sf "${QUERY_FRONTEND}/api/traces/${TRACE_ID}" 2>/dev/null || true)
+		if echo "${result}" | grep -q "kafka-roundtrip"; then
+			return 0
+		fi
+		sleep 2
+	done
+	echo "trace ${TRACE_ID} not found after 2 minutes" >&3
+	echo "last response: ${result}" >&3
+	return 1
 }
 
+# shellcheck disable=SC2317
 @test "live-store returns trace via TraceQL search" {
-  local result
-  for i in $(seq 1 60); do
-    result=$(curl -sf "${QUERY_FRONTEND}/api/search" \
-      --get --data-urlencode 'q={name="kafka-roundtrip"}' \
-      2>/dev/null || true)
-    if echo "${result}" | grep -q "kafka-roundtrip"; then
-      return 0
-    fi
-    sleep 2
-  done
-  echo 'TraceQL {name="kafka-roundtrip"} returned no results after 2 minutes' >&3
-  echo "last response: ${result}" >&3
-  return 1
+	local result
+	# shellcheck disable=SC2034
+	for _ in $(seq 1 60); do
+		result=$(curl -sf "${QUERY_FRONTEND}/api/search" \
+			--get --data-urlencode 'q={name="kafka-roundtrip"}' \
+			2>/dev/null || true)
+		if echo "${result}" | grep -q "kafka-roundtrip"; then
+			return 0
+		fi
+		sleep 2
+	done
+	echo 'TraceQL {name="kafka-roundtrip"} returned no results after 2 minutes' >&3
+	echo "last response: ${result}" >&3
+	return 1
 }
