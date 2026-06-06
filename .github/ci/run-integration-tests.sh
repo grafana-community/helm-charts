@@ -35,11 +35,11 @@ spec:
       restartPolicy: Never
       containers:
         - name: bats
-          image: alpine:3.21
+          # renovate: docker=docker.io/bats/bats
+          image: bats/bats:1.11.1
           command:
-            - sh
-            - -c
-            - apk add --no-cache bash bats curl && bats /tests/*.bats
+            - bats
+            - /tests
           volumeMounts:
             - name: tests
               mountPath: /tests
