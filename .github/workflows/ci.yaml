@@ -71,20 +71,17 @@ jobs:
           #renovate: github=kedacore/keda
           KEDA_VERSION: 2.20.0
 
-      - name: Provision Kafka for integration tests
+      - name: Provision integration test prerequisites
         if: steps.list-changed.outputs.changed == 'true'
         run: |
-          needs_kafka=false
           for chart in $(ct list-changed --config .github/linters/ct.yaml); do
-            if [ -d "$chart/integration-tests" ]; then
-              needs_kafka=true
-              break
+            if [ -f "$chart/integration-tests/prerequisites.yaml" ]; then
+              echo "Provisioning prerequisites for $chart"
+              kubectl apply -f "$chart/integration-tests/prerequisites.yaml"
             fi
           done
-          if [ "$needs_kafka" = "true" ]; then
-            kubectl apply -f .github/ci/kafka.yaml
-            kubectl rollout status deployment/kafka -n kafka-ci --timeout=300s
-          fi
+          kubectl wait pod -l ci-managed=true -A \
+            --for=condition=ready --timeout=300s 2>/dev/null || true
 
       - name: Run integration tests
         if: steps.list-changed.outputs.changed == 'true'
