@@ -21,17 +21,17 @@ TRACE_PAYLOAD='{
 }'
 
 setup_file() {
-	curl -sS --fail-with-body -X POST \
-		"${DISTRIBUTOR}/v1/traces" \
-		-H 'Content-Type: application/json' \
-		-d "${TRACE_PAYLOAD}"
+	wget -q -O- \
+		--header 'Content-Type: application/json' \
+		--post-data "${TRACE_PAYLOAD}" \
+		"${DISTRIBUTOR}/v1/traces"
 }
 
 @test "distributor accepts OTLP/HTTP push" {
-	run curl -sS --fail-with-body -X POST \
-		"${DISTRIBUTOR}/v1/traces" \
-		-H 'Content-Type: application/json' \
-		-d "${TRACE_PAYLOAD}"
+	run wget -q -O- \
+		--header 'Content-Type: application/json' \
+		--post-data "${TRACE_PAYLOAD}" \
+		"${DISTRIBUTOR}/v1/traces"
 	[ "$status" -eq 0 ]
 }
 
@@ -39,7 +39,7 @@ setup_file() {
 	local result
 	# shellcheck disable=SC2034
 	for _ in $(seq 1 60); do
-		result=$(curl -sf "${QUERY_FRONTEND}/api/traces/${TRACE_ID}" 2>/dev/null || true)
+		result=$(wget -q -O- "${QUERY_FRONTEND}/api/traces/${TRACE_ID}" 2>/dev/null || true)
 		if echo "${result}" | grep -q "kafka-roundtrip"; then
 			return 0
 		fi
@@ -55,9 +55,8 @@ setup_file() {
 	local result
 	# shellcheck disable=SC2034
 	for _ in $(seq 1 60); do
-		result=$(curl -sf "${QUERY_FRONTEND}/api/search" \
-			--get --data-urlencode 'q={name="kafka-roundtrip"}' \
-			2>/dev/null || true)
+		# q={name="kafka-roundtrip"} URL-encoded
+		result=$(wget -q -O- "${QUERY_FRONTEND}/api/search?q=%7Bname%3D%22kafka-roundtrip%22%7D" 2>/dev/null || true)
 		if echo "${result}" | grep -q "kafka-roundtrip"; then
 			return 0
 		fi
