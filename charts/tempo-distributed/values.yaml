@@ -529,7 +529,7 @@ distributor:
 # Configuration for the backend-scheduler
 backendScheduler:
   # -- Specifies whether a backend-scheduler and backend-worker
-  # -- should be deployed. When enabled the compactor is disabled
+  # -- should be deployed.
   enabled: true
   # -- Annotations for backend-scheduler StatefulSet
   annotations: {}
@@ -1745,8 +1745,6 @@ config: |
       backend_worker:
         url: http://{{ template "tempo.fullname" . }}-backend-worker.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
       {{- end }}
-      compactor:
-        url: http://{{ template "tempo.fullname" . }}-compactor.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
       default:
         url: http://{{ template "tempo.fullname" . }}-admin-api.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
       distributor:
@@ -1755,8 +1753,6 @@ config: |
           url: h2c://{{ template "tempo.fullname" . }}-distributor.{{ .Release.Namespace }}.svc:4317
         otlp/http:
           url: http://{{ template "tempo.fullname" . }}-distributor.{{ .Release.Namespace }}.svc:4318
-      ingester:
-        url: http://{{ template "tempo.fullname" . }}-ingester.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
       querier:
         url: http://{{ template "tempo.fullname" . }}-querier.{{ .Release.Namespace }}.svc:{{ include "tempo.serverHttpListenPort" . }}
       query_frontend:
@@ -1828,24 +1824,6 @@ config: |
     {{- toYaml . | nindent 4 }}
     {{- end }}
   {{- end }}
-  {{- if not .Values.backendScheduler.enabled }}
-  compactor:
-    compaction:
-      block_retention: {{ .Values.compactor.config.compaction.block_retention }}
-      compacted_block_retention: {{ .Values.compactor.config.compaction.compacted_block_retention }}
-      compaction_window: {{ .Values.compactor.config.compaction.compaction_window }}
-      max_compaction_objects: {{ .Values.compactor.config.compaction.max_compaction_objects }}
-      max_block_bytes: {{ .Values.compactor.config.compaction.max_block_bytes }}
-      retention_concurrency: {{ .Values.compactor.config.compaction.retention_concurrency }}
-      max_time_per_tenant: {{ .Values.compactor.config.compaction.max_time_per_tenant }}
-      compaction_cycle: {{ .Values.compactor.config.compaction.compaction_cycle }}
-      v2_in_buffer_bytes: {{ .Values.compactor.config.compaction.v2_in_buffer_bytes }}
-      v2_out_buffer_bytes: {{ .Values.compactor.config.compaction.v2_out_buffer_bytes }}
-      v2_prefetch_traces_count: {{ .Values.compactor.config.compaction.v2_prefetch_traces_count }}
-    ring:
-      kvstore:
-        store: memberlist
-    # {{- end }}
   {{- if and .Values.enterprise.enabled .Values.enterpriseFederationFrontend.enabled }}
   federation:
     proxy_targets:
