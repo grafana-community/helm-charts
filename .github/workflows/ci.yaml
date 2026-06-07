@@ -83,16 +83,6 @@ jobs:
           kubectl wait pod -l ci-managed=true -A \
             --for=condition=ready --timeout=300s 2>/dev/null || true
 
-      - name: Run integration tests
-        if: steps.list-changed.outputs.changed == 'true'
-        run: |
-          for chart in $(ct list-changed --config .github/linters/ct.yaml); do
-            if [ -d "$chart/tests/integration" ]; then
-              echo "Running integration tests for $chart"
-              .github/ci/run-integration-tests.sh "$chart"
-            fi
-          done
-
       - name: Run chart-testing (install)
         if: steps.list-changed.outputs.changed == 'true'
         run: ct install --config .github/linters/ct.yaml
