@@ -23,5 +23,6 @@
 .vscode/
 # Helm plugin tooling
 ci/
-tests/
+*_test.yaml
+__snapshot__/
 *.gotmpl

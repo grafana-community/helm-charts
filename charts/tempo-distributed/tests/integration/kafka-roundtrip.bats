@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 
 TRACE_ID="0af7651916cd43dd8448eb211c80319c"
-DISTRIBUTOR="http://tempo-distributed-distributor:4318"
-QUERY_FRONTEND="http://tempo-distributed-query-frontend:3200"
+DISTRIBUTOR="${DISTRIBUTOR_URL:?DISTRIBUTOR_URL env var is required}"
+QUERY_FRONTEND="${QUERY_FRONTEND_URL:?QUERY_FRONTEND_URL env var is required}"
 
 TRACE_PAYLOAD='{
   "resourceSpans": [{

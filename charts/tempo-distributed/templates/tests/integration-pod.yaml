@@ -1,0 +1,34 @@
+{{- if .Values.tests.integration.enabled }}
+{{- $dict := dict "ctx" . "component" "integration-tests" }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "tempo.resourceName" $dict }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.labels" $dict | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  restartPolicy: Never
+  containers:
+    - name: bats
+      # renovate: docker=docker.io/bats/bats
+      image: bats/bats:1.11.1
+      command:
+        - bats
+        - /tests
+      env:
+        - name: DISTRIBUTOR_URL
+          value: "http://{{ include "tempo.resourceName" (dict "ctx" . "component" "distributor") }}:4318"
+        - name: QUERY_FRONTEND_URL
+          value: "http://{{ include "tempo.resourceName" (dict "ctx" . "component" "query-frontend") }}:3200"
+      volumeMounts:
+        - name: tests
+          mountPath: /tests
+  volumes:
+    - name: tests
+      configMap:
+        name: {{ include "tempo.resourceName" $dict }}
+{{- end }}
