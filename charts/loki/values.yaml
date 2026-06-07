@@ -50,8 +50,6 @@ nameOverride: ""
 fullnameOverride: ""
 # -- Overrides the chart's namespace
 namespaceOverride: ""
-# -- Overrides the chart's cluster label
-clusterLabelOverride: ""
 # -- Image pull secrets for Docker images
 imagePullSecrets: []
 # -- Deployment mode lets you specify how to deploy Loki.
@@ -5645,82 +5643,129 @@ sidecar:
 
 # -- Monitoring section determines which monitoring features to enable
 monitoring:
+  # -- Alternative namespace to deploy all monitoring resources (ServiceMonitor, PrometheusRule, ConfigMap dashboards) in.
+  # Defaults to the release namespace.
+  namespace: null
+
+  # -- Label name for the app_instance label injected into scraped metrics and recording rules.
+  appInstanceLabelName: 'app_instance'
+  # -- Value for the app_instance label injected into scraped metrics and recording rules.
+  # Supports Helm templating.
+  appInstanceLabelValue: '{{ include "loki.fullname" . }}'
+
   # Dashboards for monitoring Loki
   dashboards:
-    # -- If enabled, create configmap with dashboards for monitoring Loki
+    # -- If enabled, create configmap resources with dashboards for monitoring Loki
     enabled: false
-    # -- Alternative namespace to create dashboards ConfigMap in
-    namespace: null
-    # -- Additional annotations for the dashboards ConfigMap
+    # -- Additional annotations for the dashboards ConfigMap resources
     annotations: {}
-    # -- Labels for the dashboards ConfigMap
+    # -- Labels for the dashboards ConfigMap resources
     labels:
       grafana_dashboard: "1"
+    multiCluster:
+      # -- When enabled, adds a 'cluster' label to scraped metrics and recording
+      # rules, and shows the cluster variable in dashboards. Intended for
+      # environments with multiple Kubernetes clusters. Set clusterName to the
+      # name of the Kubernetes cluster this Loki release is running in.
+      enabled: false
+      # -- Value for the 'cluster' label. Supports Helm templating.
+      # e.g. clusterName: '{{ .Values.global.clusterName }}'
+      clusterName: ""
+
+    # -- Timezone for the default dashboards
+    defaultDashboardsTimezone: utc
+
+    # -- Editable flag for the default dashboards
+    defaultDashboardsEditable: true
+
+    # -- Default interval for Grafana dashboards
+    defaultDashboardsInterval: 1m
+
+    grafanaOperator:
+      # -- If enabled, GrafanaOperator resources for Grafana Operator are created to deploy the dashboards.
+      enabled: false
+
+      # -- Additional annotations for the GrafanaOperator resources
+      annotations: {}
+
+      # -- Additional labels for the GrafanaOperator resources
+      labels: {}
+
+      # -- How frequently the operator should resync resources (in duration format)
+      resyncPeriod: 10m
+
+      # -- Which folder contains all dashboards in Grafana
+      ## This folder will be created on the Root level
+      ## Only one of 'folder', 'folderUID' or 'folderRef' can be set
+      ##
+      folder: General
+
+      # -- Which UID of the target folder contains all dashboards in Grafana
+      ## This allows you to use subfolder hierarchy
+      ## Only one of 'folder', 'folderUID' or 'folderRef' can be set
+      ##
+      folderUID: null
+
+      # -- Which GrafanaFolder reference contains all dashboards in Grafana
+      ## This allows you to use subfolder hierarchy.
+      ## Only one of 'folder', 'folderUID' or 'folderRef' can be set
+      ##
+      folderRef: null
   # -- Recording rules for monitoring Loki, required for some dashboards
   rules:
-    # -- If enabled, create PrometheusRule resources with Loki recording rules
+    # -- If enabled, create a PrometheusRule resource with Loki recording rules
     enabled: false
-
-    configs:
-      LokiRequestErrors:
-        enabled: true
-        for: 15m
-        lookbackPeriod: 2m
-        severity: critical
-        threshold: 10
-      LokiRequestPanics:
-        enabled: true
-        lookbackPeriod: 10m
-        severity: critical
-        threshold: 0
-      LokiRequestLatency:
-        enabled: true
-        for: 15m
-        severity: critical
-        threshold: 1
-      LokiTooManyCompactorsRunning:
-        enabled: true
-        for: 5m
-        severity: warning
-      LokiCanaryLatency:
-        enabled: true
-        for: 15m
-        lookbackPeriod: 5m
-        severity: warning
-        threshold: 5
-
-    # -- Alternative namespace to create PrometheusRule resources in
-    namespace: null
-    # -- Additional annotations for the rules PrometheusRule resource
-    annotations: {}
-    # -- Additional labels for the rules PrometheusRule resource
+    # -- Additional labels for the PrometheusRule resource
     labels: {}
-    # -- Additional annotations for PrometheusRule alerts
-    additionalRuleAnnotations: {}
-    # e.g.:
-    # additionalRuleAnnotations:
-    #   runbook_url: "https://runbooks.example.com/oncall/loki"
-    #   summary: "What this alert means and how to respond"
-    # -- Additional labels for PrometheusRule alerts
+    # -- Additional annotations for the PrometheusRule resource
+    annotations: {}
+    # -- Additional labels applied to all individual recording rules
     additionalRuleLabels: {}
-    # -- Additional groups to add to the rules file
-    additionalGroups: []
-    # - name: additional-loki-rules
-    #   rules:
-    #     - record: job:loki_request_duration_seconds_bucket:sum_rate
-    #       expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job)
-    #     - record: job_route:loki_request_duration_seconds_bucket:sum_rate
-    #       expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job, route)
-    #     - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
-    #       expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)
+    # -- Additional annotations applied to all individual recording rules
+    additionalRuleAnnotations: {}
+    # -- Extra label dimensions added to all by() aggregation clauses in recording rules
+    additionalAggregationLabels: []
+
+  # -- Alert rules for monitoring Loki
+  alerts:
+    # -- If enabled, create a PrometheusRule resource with Loki alert rules
+    enabled: false
+    # -- Additional labels for the alerts PrometheusRule resource
+    labels: {}
+    # -- Additional annotations for the alerts PrometheusRule resource
+    annotations: {}
+    # -- Selectively disable individual alerts by name.
+    # e.g.: disabled: { LokiRequestErrors: true }
+    disabled: {}
+    # -- Override for/severity on individual alerts.
+    # e.g.: overrides: { LokiRequestErrors: { for: 5m, severity: warning } }
+    overrides: {}
+    # -- Global keepFiringFor applied to all alert rules
+    keepFiringFor: ""
+    # -- Additional labels applied to all individual alert rules
+    additionalRuleLabels: {}
+    # -- Additional annotations applied to all individual alert rules
+    additionalRuleAnnotations: {}
+    # -- Extra label dimensions added to all by() aggregation clauses in alert expressions
+    additionalAggregationLabels: []
+
+  # -- Additional PrometheusRule objects to create alongside the chart-managed ones.
+  # Each key becomes the resource name suffix; the value must contain a 'groups' key
+  # with standard Prometheus rule groups. Can contain both recording rules and alerts.
+  # e.g.:
+  # additionalPrometheusRules:
+  #   my-alerts:
+  #     groups:
+  #       - name: my-loki-alerts
+  #         rules:
+  #           - alert: MyLokiAlert
+  #             expr: 'up{job="loki"} == 0'
+  additionalPrometheusRules: {}
+
   # -- ServiceMonitor configuration
   serviceMonitor:
     # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
     enabled: false
-    # -- To disable setting a 'cluster' label in metrics, set to 'null'.
-    # To overwrite the 'cluster' label with your own value, set to a non-empty string.
-    # Keep empty string "" to have the default value in the 'cluster' label, which is the helm release name for Loki.
-    clusterLabel: ""
     # -- Namespace selector for ServiceMonitor resources
     namespaceSelector: {}
     # -- ServiceMonitor annotations

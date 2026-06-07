@@ -147,6 +147,9 @@ jobs:
           #renovate: github=kedacore/keda
           KEDA_VERSION: 2.20.0
 
+      - name: Apply Prometheus Operator CRDs
+        run: |
+          helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds
 
       - name: Run diff for value file
         env:
