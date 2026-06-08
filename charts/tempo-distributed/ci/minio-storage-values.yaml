@@ -1,0 +1,18 @@
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: tempo-traces
+      endpoint: minio.minio-ci.svc.cluster.local:9000
+      access_key: grafana-tempo
+      secret_key: supersecret
+      insecure: true
+
+traces:
+  otlp:
+    http:
+      enabled: true
+
+tests:
+  integration:
+    enabled: true
