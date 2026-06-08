@@ -2418,6 +2418,7 @@ config: |
       throughput_bytes_slo: {{ .Values.queryFrontend.config.metrics.throughput_bytes_slo }}
   {{- with .Values.ingest.kafka.address }}
   ingest:
+    enabled: true
     kafka:
       address: {{ . }}
       topic: {{ $.Values.ingest.kafka.topic }}

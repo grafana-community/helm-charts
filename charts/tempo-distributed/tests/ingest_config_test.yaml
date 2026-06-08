@@ -1,0 +1,19 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ingest config generation
+templates:
+  - configmap-tempo.yaml
+
+tests:
+  - it: sets ingest.enabled=true when kafka address is configured
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "enabled: true"
+
+  - it: omits ingest block when no kafka address is configured
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "^  ingest:"
