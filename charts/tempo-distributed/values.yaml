@@ -2371,6 +2371,12 @@ config: |
     {{- if not (eq .Values.distributor.config.max_attribute_bytes nil) }}
     max_attribute_bytes: {{ .Values.distributor.config.max_attribute_bytes }}
     {{- end }}
+    {{- if .Values.ingest.kafka.address }}
+    kafka_write_path_enabled: true
+    {{- if not .Values.ingester.enabled }}
+    ingester_write_path_enabled: false
+    {{- end }}
+    {{- end }}
   querier:
     frontend_worker:
       frontend_address: {{ include "tempo.resourceName" (dict "ctx" . "component" "query-frontend-discovery") }}:9095
