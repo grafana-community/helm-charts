@@ -21,8 +21,7 @@ TRACE_PAYLOAD='{
 }'
 
 setup_file() {
-	local i
-	for i in $(seq 1 30); do
+	for _ in $(seq 1 30); do
 		if wget -q -O- \
 			--header 'Content-Type: application/json' \
 			--post-data "${TRACE_PAYLOAD}" \
