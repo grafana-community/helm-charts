@@ -71,8 +71,19 @@ jobs:
           #renovate: github=kedacore/keda
           KEDA_VERSION: 2.20.0
 
-      - name: Run chart-testing (install)
+      - name: Provision integration test prerequisites
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          for chart in $(ct list-changed --config .github/linters/ct.yaml); do
+            if [ -f "$chart/ci/integration/it-prerequisites.yaml" ]; then
+              echo "Provisioning prerequisites for $chart"
+              kubectl apply -f "$chart/ci/integration/it-prerequisites.yaml"
+            fi
+          done
+          kubectl wait pod -l ci-managed=true -A \
+            --for=condition=ready --timeout=300s 2>/dev/null || true
 
+      - name: Run chart-testing (install)
         if: steps.list-changed.outputs.changed == 'true'
         run: ct install --config .github/linters/ct.yaml
 
