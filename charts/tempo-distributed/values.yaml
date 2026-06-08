@@ -2208,6 +2208,9 @@ config: |
           max_compaction_objects: {{ .Values.backendScheduler.config.provider.compaction.compaction.max_compaction_objects }}
           max_time_per_tenant: {{ .Values.backendScheduler.config.provider.compaction.compaction.max_time_per_tenant }}
           retention_concurrency: {{ .Values.backendScheduler.config.provider.compaction.compaction.retention_concurrency }}
+          v2_in_buffer_bytes: {{ .Values.backendScheduler.config.provider.compaction.compaction.v2_in_buffer_bytes }}
+          v2_out_buffer_bytes: {{ .Values.backendScheduler.config.provider.compaction.compaction.v2_out_buffer_bytes }}
+          v2_prefetch_traces_count: {{ .Values.backendScheduler.config.provider.compaction.compaction.v2_prefetch_traces_count }}
         max_jobs_per_tenant: {{ .Values.backendScheduler.config.provider.compaction.max_jobs_per_tenant }}
         min_input_blocks: {{ .Values.backendScheduler.config.provider.compaction.min_input_blocks }}
         max_input_blocks: {{ .Values.backendScheduler.config.provider.compaction.max_input_blocks }}
@@ -2259,6 +2262,9 @@ config: |
       retention_concurrency: {{ .Values.compactor.config.compaction.retention_concurrency }}
       max_time_per_tenant: {{ .Values.compactor.config.compaction.max_time_per_tenant }}
       compaction_cycle: {{ .Values.compactor.config.compaction.compaction_cycle }}
+      v2_in_buffer_bytes: {{ .Values.compactor.config.compaction.v2_in_buffer_bytes }}
+      v2_out_buffer_bytes: {{ .Values.compactor.config.compaction.v2_out_buffer_bytes }}
+      v2_prefetch_traces_count: {{ .Values.compactor.config.compaction.v2_prefetch_traces_count }}
     ring:
       kvstore:
         store: memberlist
