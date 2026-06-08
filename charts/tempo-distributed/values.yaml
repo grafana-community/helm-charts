@@ -1517,6 +1517,9 @@ liveStore:
     ring:
       kvstore:
         store: memberlist
+    partition_ring:
+      kvstore:
+        store: memberlist
 
 # Configuration for the querier
 querier:
@@ -2240,6 +2243,9 @@ config: |
     ring:
       kvstore:
         store: memberlist
+  {{- end }}
+  {{- if and .Values.blockBuilder.enabled .Values.liveStore.enabled }}
+  partition_ring_live_store: true
   {{- end }}
   {{- if .Values.blockBuilder.enabled }}
   block_builder:
