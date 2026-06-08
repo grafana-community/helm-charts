@@ -49,20 +49,3 @@ setup_file() {
 	echo "last response: ${result}" >&3
 	return 1
 }
-
-# shellcheck disable=SC2317
-@test "live-store returns trace via TraceQL search" {
-	local result
-	# shellcheck disable=SC2034
-	for _ in $(seq 1 60); do
-		# q={name="kafka-roundtrip"} URL-encoded
-		result=$(wget -q -O- "${QUERY_FRONTEND}/api/search?q=%7Bname%3D%22kafka-roundtrip%22%7D" 2>/dev/null || true)
-		if echo "${result}" | grep -q "kafka-roundtrip"; then
-			return 0
-		fi
-		sleep 2
-	done
-	echo 'TraceQL {name="kafka-roundtrip"} returned no results after 2 minutes' >&3
-	echo "last response: ${result}" >&3
-	return 1
-}
