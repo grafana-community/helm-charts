@@ -3,6 +3,10 @@ blockBuilder:
 liveStore:
   enabled: false
 
+ingest:
+  kafka:
+    address: "kafka.kafka-ci.svc.cluster.local:9092"
+
 traces:
   otlp:
     http:
