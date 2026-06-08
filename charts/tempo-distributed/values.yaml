@@ -2450,6 +2450,14 @@ config: |
     {{- if .Values.ingester.config.flush_all_on_shutdown }}
     flush_all_on_shutdown: {{ .Values.ingester.config.flush_all_on_shutdown }}
     {{- end }}
+  {{- else if .Values.liveStore.enabled }}
+  ingester:
+    lifecycler:
+      ring:
+        replication_factor: 1
+        kvstore:
+          store: memberlist
+      tokens_file_path: /var/tempo/tokens.json
   {{- end }}
   memberlist:
     {{- with .Values.memberlist }}
