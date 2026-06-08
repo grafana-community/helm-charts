@@ -49,4 +49,3 @@ setup_file() {
 	echo "last response: ${result}" >&3
 	return 1
 }
-
