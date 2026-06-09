@@ -1,0 +1,28 @@
+---
+newConfig: true
+config:
+  common:
+    replication_factor: 3
+  schema_config:
+    configs:
+      - from: 2024-04-01
+        store: tsdb
+        object_store: 'filesystem'
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+
+extraConfig: |
+  common:
+    replication_factor: 1
+  chunk_store_config:
+    chunk_cache_config:
+      default_validity: 0s
+
+read:
+  replicas: 1
+write:
+  replicas: 1
+backend:
+  replicas: 1

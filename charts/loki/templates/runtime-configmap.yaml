@@ -7,4 +7,8 @@ metadata:
     {{- include "loki.labels" . | nindent 4 }}
 data:
   runtime-config.yaml: |
+    {{- if .Values.newConfig }}
+    {{- tpl (toYaml .Values.runtimeConfig) . | nindent 4 }}
+    {{- else }}
     {{- tpl (toYaml .Values.loki.runtimeConfig) . | nindent 4 }}
+    {{- end }}

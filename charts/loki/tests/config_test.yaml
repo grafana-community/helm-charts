@@ -1,0 +1,365 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: config configmap/secret
+templates:
+  - config.yaml
+# Minimal values needed by the old loki.config template (storage bucket names + schema).
+set:
+  deploymentMode: SingleBinary
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+
+  ############################################################
+  # Document-level existence / kind
+  ############################################################
+
+  - it: renders exactly one document by default
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: is a ConfigMap by default (old config syntax)
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - isAPIVersion:
+          of: v1
+
+  - it: renders no document when generatedConfigObjectName is empty
+    set:
+      loki.generatedConfigObjectName: ""
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a Secret when configStorageType is Secret
+    set:
+      loki.configStorageType: Secret
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Secret
+      - isAPIVersion:
+          of: v1
+
+  ############################################################
+  # Metadata
+  ############################################################
+
+  - it: name defaults to the configured generated config object name
+    asserts:
+      - equal:
+          path: metadata.name
+          value: loki
+
+  - it: namespace is the release namespace by default
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: NAMESPACE
+
+  - it: uses a custom name from generatedConfigObjectName
+    set:
+      loki.generatedConfigObjectName: my-custom-loki-config
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-custom-loki-config
+
+  - it: namespaceOverride is respected in metadata
+    set:
+      namespaceOverride: custom-ns
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: custom-ns
+
+  - it: has standard Helm selector labels
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: loki
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
+
+  - it: includes the helm.sh/chart label
+    asserts:
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+      - matchRegex:
+          path: metadata.labels["helm.sh/chart"]
+          pattern: "^loki-"
+
+  - it: propagates commonLabels to the ConfigMap
+    set:
+      commonLabels:
+        team: platform
+    asserts:
+      - equal:
+          path: metadata.labels.team
+          value: platform
+
+  ############################################################
+  # Data key presence
+  ############################################################
+
+  - it: data contains a config.yaml key (ConfigMap)
+    asserts:
+      - isNotNullOrEmpty:
+          path: data["config.yaml"]
+
+  - it: data contains a config.yaml key (Secret, base64-encoded)
+    set:
+      loki.configStorageType: Secret
+    asserts:
+      - isNotNullOrEmpty:
+          path: data["config.yaml"]
+
+  ############################################################
+  # Old config syntax — loki.config template string
+  ############################################################
+
+  - it: old config - auth_enabled is true by default
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "auth_enabled: true"
+
+  - it: old config - server section contains http_listen_port 3100
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "http_listen_port: 3100"
+
+  - it: old config - limits_config section is present
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "reject_old_samples: true"
+
+  - it: old config - runtime_config points to the expected file
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "file: /etc/loki/runtime-config/runtime-config.yaml"
+
+  - it: old config - memberlist join_members references the loki memberlist service
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "RELEASE-NAME-loki-memberlist"
+
+  - it: old config - schema_config is included when useTestSchema is true
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "schema_config:"
+
+  ############################################################
+  # Old config syntax — structuredConfig override
+  ############################################################
+
+  - it: structuredConfig overrides auth_enabled to false
+    set:
+      loki.structuredConfig:
+        auth_enabled: false
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "auth_enabled: false"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "auth_enabled: true"
+
+  - it: structuredConfig can add extra top-level sections
+    set:
+      loki.structuredConfig:
+        compactor:
+          working_directory: /var/loki/compactor
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "working_directory: /var/loki/compactor"
+
+  - it: structuredConfig can override limits_config values
+    set:
+      loki.structuredConfig:
+        limits_config:
+          reject_old_samples: false
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "reject_old_samples: false"
+
+  ############################################################
+  # New config syntax — newConfig: true (top-level config: dict)
+  ############################################################
+
+  - it: new config - renders a ConfigMap
+    set:
+      newConfig: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+
+  - it: new config - auth_enabled is true from top-level config dict
+    set:
+      newConfig: true
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "auth_enabled: true"
+
+  - it: new config - server http_listen_port is present
+    set:
+      newConfig: true
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "http_listen_port: 3100"
+
+  - it: new config - top-level config values can be overridden via set
+    set:
+      newConfig: true
+      config.auth_enabled: false
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "auth_enabled: false"
+
+  - it: new config - chunksCache injects templated memcached client addresses
+    set:
+      newConfig: true
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "chunk_cache_config:"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "dnssrvnoa\+_memcached-client\._tcp\.RELEASE-NAME-loki-chunks-cache\.NAMESPACE\.svc\.cluster\.local"
+
+  - it: new config - disabling chunksCache removes injected chunk cache config
+    set:
+      newConfig: true
+      chunksCache.enabled: false
+    asserts:
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "chunk_cache_config:"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "chunk_cache_config_l2:"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "l2_chunk_cache_handoff:"
+
+  - it: new config - chunksCache l2 injects templated memcached client addresses and handoff
+    set:
+      newConfig: true
+      chunksCache.l2.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "l2_chunk_cache_handoff: 345600s"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "chunk_cache_config_l2:"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "dnssrvnoa\+_memcached-client\._tcp\.RELEASE-NAME-loki-chunks-cache-l2\.NAMESPACE\.svc\.cluster\.local"
+
+  - it: new config - resultsCache injects templated memcached client addresses
+    set:
+      newConfig: true
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "cache_results: true"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "results_cache:"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "dnssrvnoa\+_memcached-client\._tcp\.RELEASE-NAME-loki-results-cache\.NAMESPACE\.svc\.cluster\.local"
+
+  - it: new config - disabling resultsCache removes injected results cache config
+    set:
+      newConfig: true
+      resultsCache.enabled: false
+    asserts:
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "results_cache:"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "cache_results: true"
+
+  ############################################################
+  # New config syntax — extraConfig merge
+  ############################################################
+
+  - it: new config - extraConfig is merged into the generated config
+    set:
+      newConfig: true
+      extraConfig: |
+        compactor:
+          working_directory: /var/loki/compactor
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "working_directory: /var/loki/compactor"
+
+  - it: new config - extraConfig can add new top-level sections
+    set:
+      newConfig: true
+      extraConfig: |
+        analytics:
+          reporting_enabled: false
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "reporting_enabled: false"
+
+  - it: new config - extraConfig values override conflicting keys in config dict
+    set:
+      newConfig: true
+      extraConfig: |
+        auth_enabled: false
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "auth_enabled: false"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "auth_enabled: true"
+
+  ############################################################
+  # Secret — base64-encoded config content
+  ############################################################
+
+  - it: Secret - decoded config.yaml contains auth_enabled (old config syntax)
+    set:
+      loki.configStorageType: Secret
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "auth_enabled: true"
+          decodeBase64: true
+
+  - it: Secret - decoded config.yaml contains server port (new config syntax)
+    set:
+      newConfig: true
+      loki.configStorageType: Secret
+    asserts:
+      - isKind:
+          of: Secret
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "http_listen_port: 3100"
+          decodeBase64: true
