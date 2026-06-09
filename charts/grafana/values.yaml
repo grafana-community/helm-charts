@@ -1021,7 +1021,7 @@ sidecar:
   # logLevel: INFO
   alerts:
     enabled: false
-    # Additional arguemnts
+    # Additional arguments
     args: []
     # Additional environment variables for the alerts sidecar
     env: {}
@@ -1116,7 +1116,7 @@ sidecar:
     sizeLimit: ""
   dashboards:
     enabled: false
-    # Additional arguemnts
+    # Additional arguments
     args: []
     # Additional environment variables for the dashboards sidecar
     env: {}
@@ -1237,7 +1237,7 @@ sidecar:
     sizeLimit: ""
   datasources:
     enabled: false
-    # Additional arguemnts
+    # Additional arguments
     args: []
     # Additional environment variables for the datasourcessidecar
     env: {}
@@ -1332,7 +1332,7 @@ sidecar:
     sizeLimit: ""
   plugins:
     enabled: false
-    # Additional arguemnts
+    # Additional arguments
     args: []
     # Additional environment variables for the plugins sidecar
     env: {}
@@ -1404,7 +1404,7 @@ sidecar:
     sizeLimit: ""
   notifiers:
     enabled: false
-    # Additional arguemnts
+    # Additional arguments
     args: []
     # Additional environment variables for the notifierssidecar
     env: {}
