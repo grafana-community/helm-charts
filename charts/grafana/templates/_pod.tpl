@@ -124,6 +124,12 @@ initContainers:
     image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    {{- if .Values.sidecar.alerts.args }}
+    args:
+    {{- range .Values.sidecar.alerts.args }}
+      - {{ . | quote }}
+    {{- end }}
+    {{- end }}
     {{- if .Values.sidecar.alerts.restartPolicy }}
     restartPolicy: {{ .Values.sidecar.alerts.restartPolicy }}
     {{- with .Values.sidecar.alerts.startupProbe }}
@@ -221,6 +227,12 @@ initContainers:
     image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    {{- if .Values.sidecar.datasources.args }}
+    args:
+    {{- range .Values.sidecar.datasources.args }}
+      - {{ . | quote }}
+    {{- end }}
+    {{- end }}
     {{- if .Values.sidecar.datasources.restartPolicy }}
     restartPolicy: {{ .Values.sidecar.datasources.restartPolicy }}
     {{- with .Values.sidecar.datasources.startupProbe }}
@@ -363,6 +375,12 @@ initContainers:
     image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    {{- if .Values.sidecar.notifiers.args }}
+    args:
+    {{- range .Values.sidecar.notifiers.args }}
+      - {{ . | quote }}
+    {{- end }}
+    {{- end }}
     {{- if .Values.sidecar.notifiers.restartPolicy }}
     restartPolicy: {{ .Values.sidecar.notifiers.restartPolicy }}
     {{- with .Values.sidecar.notifiers.startupProbe }}
@@ -455,6 +473,12 @@ initContainers:
     image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    {{- if .Values.sidecar.dashboards.args }}
+    args:
+    {{- range .Values.sidecar.dashboards.args }}
+      - {{ . | quote }}
+    {{- end }}
+    {{- end }}
     {{- if .Values.sidecar.dashboards.restartPolicy }}
     restartPolicy: {{ .Values.sidecar.dashboards.restartPolicy }}
     {{- with .Values.sidecar.dashboards.startupProbe }}
@@ -612,6 +636,12 @@ containers:
     image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    {{- if .Values.sidecar.alerts.args }}
+    args:
+    {{- range .Values.sidecar.alerts.args }}
+      - {{ . | quote }}
+    {{- end }}
+    {{- end }}
     env:
       {{- range $key, $value := .Values.sidecar.alerts.env }}
       - name: "{{ $key }}"
@@ -741,6 +771,12 @@ containers:
     image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    {{- if .Values.sidecar.dashboards.args }}
+    args:
+    {{- range .Values.sidecar.dashboards.args }}
+      - {{ . | quote }}
+    {{- end }}
+    {{- end }}
     env:
       {{- range $key, $value := .Values.sidecar.dashboards.env }}
       - name: "{{ $key }}"
@@ -874,6 +910,12 @@ containers:
     image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    {{- if .Values.sidecar.datasources.args }}
+    args:
+    {{- range .Values.sidecar.datasources.args }}
+      - {{ . | quote }}
+    {{- end }}
+    {{- end }}
     env:
       {{- range $key, $value := .Values.sidecar.datasources.env }}
       - name: "{{ $key }}"
@@ -1003,6 +1045,12 @@ containers:
     image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    {{- if .Values.sidecar.notifiers.args }}
+    args:
+    {{- range .Values.sidecar.notifiers.args }}
+      - {{ . | quote }}
+    {{- end }}
+    {{- end }}
     env:
       {{- range $key, $value := .Values.sidecar.notifiers.env }}
       - name: "{{ $key }}"
@@ -1127,6 +1175,12 @@ containers:
     image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    {{- if .Values.sidecar.plugins.args }}
+    args:
+    {{- range .Values.sidecar.plugins.args }}
+      - {{ . | quote }}
+    {{- end }}
+    {{- end }}
     env:
       {{- range $key, $value := .Values.sidecar.plugins.env }}
       - name: "{{ $key }}"

@@ -1,0 +1,245 @@
+suite: sidecar args
+templates:
+  - deployment.yaml
+tests:
+  # alerts sidecar
+  - it: shouldn't render any args for alerts sidecar by default
+    set:
+      sidecar:
+        alerts:
+          enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-alerts")].args
+
+  - it: should render args for alerts sidecar
+    set:
+      sidecar:
+        alerts:
+          enabled: true
+          args:
+            - "--custom"
+            - "value"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-alerts")].args[0]
+          value: "--custom"
+      - equal:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-alerts")].args[1]
+          value: "value"
+
+  # alerts sidecar init container
+  - it: shouldn't render any args for alerts sidecar init container by default
+    set:
+      sidecar:
+        alerts:
+          enabled: true
+          initAlerts: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-alerts")].args
+
+  - it: should render args for alerts sidecar init container
+    set:
+      sidecar:
+        alerts:
+          enabled: true
+          initAlerts: true
+          args:
+            - "--custom"
+            - "value"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-alerts")].args[0]
+          value: "--custom"
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-alerts")].args[1]
+          value: "value"
+
+  # dashboards sidecar
+  - it: shouldn't render any args for dashboards sidecar by default
+    set:
+      sidecar:
+        dashboards:
+          enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-dashboard")].args
+
+  - it: should render args for dashboards sidecar
+    set:
+      sidecar:
+        dashboards:
+          enabled: true
+          args:
+            - "--custom"
+            - "value"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-dashboard")].args[0]
+          value: "--custom"
+      - equal:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-dashboard")].args[1]
+          value: "value"
+
+  # dashboards sidecar init container
+  - it: shouldn't render any args for dashboards sidecar init container by default
+    set:
+      sidecar:
+        dashboards:
+          enabled: true
+          initAlerts: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-dashboard")].args
+
+  - it: should render args for dashboards sidecar init container
+    set:
+      sidecar:
+        dashboards:
+          enabled: true
+          initDashboards: true
+          args:
+            - "--custom"
+            - "value"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-dashboard")].args[0]
+          value: "--custom"
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-dashboard")].args[1]
+          value: "value"
+
+  # datasources sidecar
+  - it: shouldn't render any args for datasources sidecar by default
+    set:
+      sidecar:
+        datasources:
+          enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-datasources")].args
+
+  - it: should render args for datasources sidecar
+    set:
+      sidecar:
+        datasources:
+          enabled: true
+          args:
+            - "--custom"
+            - "value"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-datasources")].args[0]
+          value: "--custom"
+      - equal:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-datasources")].args[1]
+          value: "value"
+
+  # datasources sidecar init container
+  - it: shouldn't render any args for datasources sidecar init container by default
+    set:
+      sidecar:
+        datasources:
+          enabled: true
+          initDatasources: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-datasources")].args
+
+  - it: should render args for datasources sidecar init container
+    set:
+      sidecar:
+        datasources:
+          enabled: true
+          initDatasources: true
+          args:
+            - "--custom"
+            - "value"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-datasources")].args[0]
+          value: "--custom"
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-datasources")].args[1]
+          value: "value"
+
+  # plugins sidecar
+  - it: shouldn't render any args for plugins sidecar by default
+    set:
+      sidecar:
+        plugins:
+          enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-plugins")].args
+
+  - it: should render args for plugins sidecar
+    set:
+      sidecar:
+        plugins:
+          enabled: true
+          args:
+            - "--custom"
+            - "value"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-plugins")].args[0]
+          value: "--custom"
+      - equal:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-plugins")].args[1]
+          value: "value"
+
+  # notifiers sidecar
+  - it: shouldn't render any args for notifiers sidecar by default
+    set:
+      sidecar:
+        notifiers:
+          enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-notifiers")].args
+
+  - it: should render args for notifiers sidecar
+    set:
+      sidecar:
+        notifiers:
+          enabled: true
+          args:
+            - "--custom"
+            - "value"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-notifiers")].args[0]
+          value: "--custom"
+      - equal:
+          path: spec.template.spec.containers[?(@.name=="grafana-sc-notifiers")].args[1]
+          value: "value"
+
+  # notifiers sidecar init container
+  - it: shouldn't render any args for notifiers sidecar init container by default
+    set:
+      sidecar:
+        notifiers:
+          enabled: true
+          initnotifiers: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-notifiers")].args
+
+  - it: should render args for notifiers sidecar init container
+    set:
+      sidecar:
+        notifiers:
+          enabled: true
+          initNotifiers: true
+          args:
+            - "--custom"
+            - "value"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-notifiers")].args[0]
+          value: "--custom"
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="grafana-init-sc-notifiers")].args[1]
+          value: "value"
