@@ -1,0 +1,106 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: monolithic rbac
+templates:
+  - monolithic/rbac.yaml
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: renders ClusterRole and ClusterRoleBinding in Monolithic mode by default
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: ClusterRole
+        documentIndex: 0
+      - isKind:
+          of: ClusterRoleBinding
+        documentIndex: 1
+
+  - it: does not render when deploymentMode is SimpleScalable
+    set:
+      deploymentMode: SimpleScalable
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders in SingleBinary mode
+    set:
+      deploymentMode: SingleBinary
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: does not render when rbac.enabled=false
+    set:
+      rbac.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when sidecar.rules.enabled=false
+    set:
+      sidecar.rules.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when singleBinary.sidecar=false
+    set:
+      singleBinary.sidecar: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: ClusterRole has correct name
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-single-binary
+        documentIndex: 0
+
+  - it: ClusterRoleBinding references correct ClusterRole
+    asserts:
+      - equal:
+          path: roleRef.name
+          value: RELEASE-NAME-loki-single-binary
+        documentIndex: 1
+      - equal:
+          path: roleRef.kind
+          value: ClusterRole
+        documentIndex: 1
+
+  - it: renders Role and RoleBinding when namespaced=true
+    set:
+      rbac.namespaced: true
+    asserts:
+      - isKind:
+          of: Role
+        documentIndex: 0
+      - isKind:
+          of: RoleBinding
+        documentIndex: 1
+      - equal:
+          path: roleRef.kind
+          value: Role
+        documentIndex: 1
+
+  - it: subject uses global service account by default
+    asserts:
+      - equal:
+          path: subjects[0].name
+          value: RELEASE-NAME-loki
+        documentIndex: 1
+
+  - it: subject uses custom serviceAccount.name when set
+    set:
+      serviceAccount.name: my-custom-sa
+    asserts:
+      - equal:
+          path: subjects[0].name
+          value: my-custom-sa
+        documentIndex: 1

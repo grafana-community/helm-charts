@@ -331,6 +331,39 @@
         }
       }
     },
+    "rbac": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "namespaced": {
+          "type": "boolean"
+        },
+        "sccEnabled": {
+          "type": "boolean"
+        },
+        "sccAllowHostDirVolumePlugin": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "openshift": {
+      "type": "object",
+      "properties": {
+        "forceRunAsUser": {
+          "type": "boolean"
+        },
+        "sccEnabled": {
+          "type": "boolean"
+        },
+        "sccAllowHostDirVolumePlugin": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
     "networkPolicy": {
       "type": "object",
       "properties": {

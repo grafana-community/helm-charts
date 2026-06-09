@@ -61,8 +61,10 @@ spec:
       hostUsers: {{ .Values.gateway.hostUsers }}
       {{- end }}
       {{- include "loki.gatewayPriorityClassName" . | nindent 6 }}
+      {{- with .Values.gateway.podSecurityContext }}
       securityContext:
-        {{- toYaml .Values.gateway.podSecurityContext | nindent 8 }}
+        {{- include "loki.podSecurityContext" (dict "ctx" $ "securityContext" .) | nindent 8 }}
+      {{- end }}
       terminationGracePeriodSeconds: {{ .Values.gateway.terminationGracePeriodSeconds }}
       containers:
         - name: nginx

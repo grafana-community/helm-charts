@@ -57,6 +57,29 @@ Allow the release namespace to be overridden for multi-namespace deployments in 
 {{- end -}}
 
 {{/*
+Return true if the detected platform is Openshift
+*/}}
+{{- define "loki.isOpenshift" -}}
+{{- if .Capabilities.APIVersions.Has "security.openshift.io/v1" -}}
+{{- true -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "loki.podSecurityContext" -}}
+{{ $ctx := .ctx }}
+{{ $securityContext := .securityContext }}
+{{- if and (include "loki.isOpenshift" $ctx) ($ctx.Values.openshift.forceRunAsUser) -}}
+  {{/* Remove incompatible user/group values that do not work in Openshift out of the box */}}
+  {{- $securityContext = omit $securityContext "fsGroup" "runAsUser" "runAsGroup" -}}
+  {{- if not $securityContext.seLinuxOptions -}}
+    {{/* If it is an empty object, we remove it from the resulting context because it causes validation issues */}}
+    {{- $securityContext = omit $securityContext "seLinuxOptions" -}}
+  {{- end -}}
+{{- end -}}
+{{- $securityContext | toYaml -}}
+{{- end -}}
+
+{{/*
 Resource workload name template
 Params:
   ctx = . context
@@ -1130,13 +1153,6 @@ azure:
 storage_prefix: {{ .storage_prefix }}
 {{- end }}
 {{- end }}
-
-{{/*
-Pod security context
-*/}}
-{{- define "loki.podSecurityContext" -}}
-{{- toYaml .Values.loki.podSecurityContext }}
-{{- end -}}
 
 {{- define "loki.memoryToMiB" -}}
 {{- $mem := . | toString -}}

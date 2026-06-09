@@ -53,6 +53,48 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### From 17.x to 18.0.0
+
+This release refactors all OpenShift-related configuration into a dedicated top-level `openshift:` key and adds
+automatic OpenShift detection.
+
+#### Breaking value renames
+
+The following values moved out of `rbac:` into the new `openshift:` section:
+
+| Old value                          | New value                               |
+|------------------------------------|-----------------------------------------|
+| `rbac.sccEnabled`                  | `openshift.sccEnabled`                  |
+| `rbac.sccAllowHostDirVolumePlugin` | `openshift.sccAllowHostDirVolumePlugin` |
+
+If you were using either of these, update your `values.yaml` accordingly:
+
+```yaml
+# Before (17.x)
+rbac:
+  sccEnabled: true
+  sccAllowHostDirVolumePlugin: false
+
+# After (18.0.0)
+openshift:
+  sccEnabled: true
+  sccAllowHostDirVolumePlugin: false
+```
+
+#### Automatic OpenShift detection and pod security context
+
+The chart now automatically detects OpenShift by checking for the `security.openshift.io/v1` API version.
+When running on OpenShift, the new `openshift.forceRunAsUser` flag (default: `false`) controls whether
+`runAsUser`, `fsGroup`, and `runAsGroup` are stripped from pod security contexts to comply with the
+restricted SCC:
+
+```yaml
+openshift:
+  # Set to true to remove runAsUser/fsGroup/runAsGroup from all pod security contexts.
+  # Required when using the OpenShift restricted SCC.
+  forceRunAsUser: false
+```
+
 ### From 16.x to 17.0.0 ([#366](https://github.com/grafana-community/helm-charts/pull/366))
 
 The built-in MinIO subchart is now **officially deprecated**. Enabling `minio.enabled=true` now fails chart rendering by default.

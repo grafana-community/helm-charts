@@ -1,0 +1,514 @@
+suite: Openshift SecurityContextConstraints
+templates:
+  - openshift-scc.yaml
+
+tests:
+  # ============================================================================
+  # Test: SCC resource disabled by default
+  # ============================================================================
+  - it: should not render when SCC is disabled (openshift.sccEnabled=false)
+    set:
+      openshift:
+        sccEnabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # ============================================================================
+  # Test: SCC resource creation - enabled via openshift.sccEnabled
+  # ============================================================================
+  - it: should render SCC when openshift.sccEnabled is true
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - isKind:
+          of: SecurityContextConstraints
+        documentIndex: 0
+      - isNotEmpty:
+          path: metadata.name
+        documentIndex: 0
+      - equal:
+          path: apiVersion
+          value: security.openshift.io/v1
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: SCC resource creation - enabled via openshift.sccEnabled
+  # ============================================================================
+  - it: should render SCC when openshift.sccEnabled is true
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - isKind:
+          of: SecurityContextConstraints
+        documentIndex: 0
+      - equal:
+          path: apiVersion
+          value: security.openshift.io/v1
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: SecurityContextConstraints defaults
+  # ============================================================================
+  - it: should set correct SCC defaults
+    set:
+      openshift:
+        sccEnabled: true
+        sccAllowHostDirVolumePlugin: false
+    asserts:
+      - equal:
+          path: allowHostDirVolumePlugin
+          value: false
+        documentIndex: 0
+      - equal:
+          path: allowHostIPC
+          value: false
+        documentIndex: 0
+      - equal:
+          path: allowHostNetwork
+          value: false
+        documentIndex: 0
+      - equal:
+          path: allowHostPID
+          value: false
+        documentIndex: 0
+      - equal:
+          path: allowHostPorts
+          value: false
+        documentIndex: 0
+      - equal:
+          path: allowPrivilegeEscalation
+          value: false
+        documentIndex: 0
+      - equal:
+          path: allowPrivilegedContainer
+          value: false
+        documentIndex: 0
+      - equal:
+          path: allowedCapabilities
+          value: []
+        documentIndex: 0
+      - equal:
+          path: readOnlyRootFilesystem
+          value: false
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: SecurityContextConstraints fsGroup, runAsUser, seLinuxContext
+  # ============================================================================
+  - it: should set correct security context types
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - equal:
+          path: fsGroup.type
+          value: RunAsAny
+        documentIndex: 0
+      - equal:
+          path: runAsUser.type
+          value: RunAsAny
+        documentIndex: 0
+      - equal:
+          path: seLinuxContext.type
+          value: MustRunAs
+        documentIndex: 0
+      - equal:
+          path: supplementalGroups.type
+          value: RunAsAny
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: SecurityContextConstraints requiredDropCapabilities
+  # ============================================================================
+  - it: should drop ALL capabilities
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - equal:
+          path: requiredDropCapabilities
+          value: ["ALL"]
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: SecurityContextConstraints volumes - without hostPath
+  # ============================================================================
+  - it: should include standard volumes without hostPath when hostPath not allowed
+    set:
+      openshift:
+        sccEnabled: true
+        sccAllowHostDirVolumePlugin: false
+    asserts:
+      - equal:
+          path: volumes
+          value:
+            - configMap
+            - downwardAPI
+            - emptyDir
+            - persistentVolumeClaim
+            - projected
+            - secret
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: SecurityContextConstraints volumes - with hostPath
+  # ============================================================================
+  - it: should include hostPath in volumes when openshift.sccAllowHostDirVolumePlugin is true
+    set:
+      openshift:
+        sccEnabled: true
+        sccAllowHostDirVolumePlugin: true
+    asserts:
+      - exists:
+          path: volumes
+        documentIndex: 0
+      - equal:
+          path: volumes[3]
+          value: hostPath
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: SecurityContextConstraints volumes - with hostPath (openshift flag)
+  # ============================================================================
+  - it: should include hostPath in volumes when openshift.sccAllowHostDirVolumePlugin is true
+    set:
+      openshift:
+        sccEnabled: true
+        sccAllowHostDirVolumePlugin: true
+    asserts:
+      - exists:
+          path: volumes
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: seccompProfiles
+  # ============================================================================
+  - it: should allow all seccomp profiles
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - equal:
+          path: seccompProfiles
+          value: ["*"]
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: SCC labels
+  # ============================================================================
+  - it: should have correct labels on SCC
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - isNotEmpty:
+          path: metadata.labels
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: Role creation and RBAC configuration
+  # ============================================================================
+  - it: should create Role for SCC use
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - isKind:
+          of: Role
+        documentIndex: 1
+      - equal:
+          path: apiVersion
+          value: rbac.authorization.k8s.io/v1
+        documentIndex: 1
+
+  # ============================================================================
+  # Test: Role rules for SCC
+  # ============================================================================
+  - it: should have correct Role rules for SCC usage
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - equal:
+          path: rules[0].apiGroups
+          value: ["security.openshift.io"]
+        documentIndex: 1
+      - equal:
+          path: rules[0].resources
+          value: ["securitycontextconstraints"]
+        documentIndex: 1
+      - equal:
+          path: rules[0].verbs
+          value: ["use"]
+        documentIndex: 1
+
+  # ============================================================================
+  # Test: RoleBinding creation
+  # ============================================================================
+  - it: should create RoleBinding for SCC
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - isKind:
+          of: RoleBinding
+        documentIndex: 2
+      - equal:
+          path: apiVersion
+          value: rbac.authorization.k8s.io/v1
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: RoleBinding roleRef
+  # ============================================================================
+  - it: should bind to correct Role
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - equal:
+          path: roleRef.apiGroup
+          value: rbac.authorization.k8s.io
+        documentIndex: 2
+      - equal:
+          path: roleRef.kind
+          value: Role
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: RoleBinding subjects - Monolithic mode
+  # ============================================================================
+  - it: should bind to loki service account in Monolithic mode
+    set:
+      openshift:
+        sccEnabled: true
+      deploymentMode: Monolithic
+    asserts:
+      - isNotEmpty:
+          path: subjects
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: RoleBinding subjects - SimpleScalable mode
+  # ============================================================================
+  - it: should bind to service accounts in SimpleScalable mode
+    set:
+      openshift:
+        sccEnabled: true
+      deploymentMode: SimpleScalable
+      write:
+        enabled: true
+      read:
+        enabled: true
+      backend:
+        enabled: true
+    asserts:
+      - isNotEmpty:
+          path: subjects
+        documentIndex: 2
+      - exists:
+          path: subjects[0]
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: RoleBinding subjects - Distributed mode
+  # ============================================================================
+  - it: should bind to component service accounts in Distributed mode
+    set:
+      openshift:
+        sccEnabled: true
+      deploymentMode: Distributed
+      ingester:
+        enabled: true
+      distributor:
+        enabled: true
+      querier:
+        enabled: true
+      queryFrontend:
+        enabled: true
+      compactor:
+        enabled: true
+    asserts:
+      - isNotEmpty:
+          path: subjects
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: RoleBinding subjects - Gateway
+  # ============================================================================
+  - it: should include subjects when gateway is enabled
+    set:
+      openshift:
+        sccEnabled: true
+      gateway:
+        enabled: true
+    asserts:
+      - isNotEmpty:
+          path: subjects
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: RoleBinding subjects - Canary
+  # ============================================================================
+  - it: should include subjects when loki-canary is enabled
+    set:
+      openshift:
+        sccEnabled: true
+      lokiCanary:
+        enabled: true
+    asserts:
+      - isNotEmpty:
+          path: subjects
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: RoleBinding subjects - Memcached
+  # ============================================================================
+  - it: should include subjects when memcached is enabled
+    set:
+      openshift:
+        sccEnabled: true
+      memcached:
+        enabled: true
+    asserts:
+      - isNotEmpty:
+          path: subjects
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: All resources in correct namespace
+  # ============================================================================
+  - it: should place all resources in correct namespace
+    set:
+      openshift:
+        sccEnabled: true
+      namespaceOverride: custom-namespace
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: custom-namespace
+        documentIndex: 1
+      - equal:
+          path: metadata.namespace
+          value: custom-namespace
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: All resources have correct labels
+  # ============================================================================
+  - it: should apply common labels to all resources
+    set:
+      openshift:
+        sccEnabled: true
+      commonLabels:
+        environment: test
+    asserts:
+      - equal:
+          path: metadata.labels.environment
+          value: test
+        documentIndex: 0
+      - equal:
+          path: metadata.labels.environment
+          value: test
+        documentIndex: 1
+      - equal:
+          path: metadata.labels.environment
+          value: test
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: Both openshift flags - both render
+  # ============================================================================
+  - it: should render when both openshift.sccEnabled and openshift.forceRunAsUser are true
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  # ============================================================================
+  # Test: openshift flag takes precedence
+  # ============================================================================
+  - it: should render SCC using openshift.sccAllowHostDirVolumePlugin flag
+    set:
+      openshift:
+        sccEnabled: true
+        sccAllowHostDirVolumePlugin: true
+    asserts:
+      - equal:
+          path: allowHostDirVolumePlugin
+          value: true
+        documentIndex: 0
+
+  # ============================================================================
+  # Test: Role and RoleBinding naming
+  # ============================================================================
+  - it: should have consistent naming between Role and RoleBinding
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - isNotEmpty:
+          path: metadata.name
+        documentIndex: 1
+      - isNotEmpty:
+          path: metadata.name
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: RoleBinding subjects for Distributed mode with all components
+  # ============================================================================
+  - it: should include all optional components in Distributed mode
+    set:
+      openshift:
+        sccEnabled: true
+      deploymentMode: Distributed
+      ingester:
+        enabled: true
+      distributor:
+        enabled: true
+      querier:
+        enabled: true
+      queryFrontend:
+        enabled: true
+      queryScheduler:
+        enabled: true
+      indexGateway:
+        enabled: true
+      compactor:
+        enabled: true
+      ruler:
+        enabled: true
+      overridesExporter:
+        enabled: true
+      patternIngester:
+        enabled: true
+      bloomPlanner:
+        enabled: true
+      bloomBuilder:
+        enabled: true
+      bloomGateway:
+        enabled: true
+      tableManager:
+        enabled: true
+    asserts:
+      - isNotEmpty:
+          path: subjects
+        documentIndex: 2
+
+  # ============================================================================
+  # Test: SCC groups and priority fields
+  # ============================================================================
+  - it: should set correct groups value and have priority field
+    set:
+      openshift:
+        sccEnabled: true
+    asserts:
+      - equal:
+          path: groups
+          value: []
+        documentIndex: 0

@@ -62,7 +62,7 @@ spec:
       {{- end }}
       {{- with .Values.lokiCanary.podSecurityContext }}
       securityContext:
-        {{- toYaml . | nindent 8 }}
+        {{- include "loki.podSecurityContext" (dict "ctx" $ "securityContext" .) | nindent 8 }}
       {{- end }}
       containers:
         - name: canary

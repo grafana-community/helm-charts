@@ -44,6 +44,7 @@ global:
   # (deprecated, use defaults.extraVolumeMounts)
   # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraVolumeMounts: []
+
 # -- Overrides the chart's name
 nameOverride: ""
 # -- Overrides the chart's computed fullname
@@ -970,12 +971,19 @@ serviceAccount:
 
 # RBAC configuration
 rbac:
+  # -- Specifies whether RBAC resources should be created
+  enabled: true
+  # -- Whether to install RBAC in the namespace only or cluster-wide. Useful if you want to watch ConfigMap globally.
+  namespaced: false
+
+openshift:
+  # -- By default, the chart will detect if it's running on OpenShift and adjust security settings accordingly.
+  # Setting this to true forces Vanilla security settings, which are not compatible with OpenShift restricted SCC.
+  forceRunAsUser: false
   # -- For OpenShift set sccEnabled to 'true' to use the SecurityContextConstraints.
   sccEnabled: false
   # -- Toggle this to true to allow the use of hostPath volumes on OpenShift
   sccAllowHostDirVolumePlugin: false
-  # -- Whether to install RBAC in the namespace only or cluster-wide. Useful if you want to watch ConfigMap globally.
-  namespaced: false
 
 ######################################################################################################################
 #

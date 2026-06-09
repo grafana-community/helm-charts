@@ -46,7 +46,7 @@ jobs:
 
       - name: install helm unittest plugin
         if: steps.list-changed.outputs.changed == 'true'
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version 1.0.3 --verify=false
+        run: helm plugin install oci://ghcr.io/helm-unittest/helm-unittest/unittest:latest --verify=false
 
       - name: Run chart-testing (lint)
         run: ct lint --config .github/linters/ct.yaml

@@ -1,0 +1,63 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: gateway pod security context
+templates:
+  - gateway/deployment.yaml
+  - gateway/configmap.yaml
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: renders pod security context with runAsUser by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 101
+        template: gateway/deployment.yaml
+
+  - it: renders pod security context with fsGroup by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 101
+        template: gateway/deployment.yaml
+
+  - it: renders pod security context with runAsGroup by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 101
+        template: gateway/deployment.yaml
+
+  - it: renders pod security context with runAsNonRoot=true by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+        template: gateway/deployment.yaml
+
+  - it: does not omit runAsUser when openshift.forceRunAsUser=true but OpenShift is not detected
+    set:
+      openshift.forceRunAsUser: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 101
+        template: gateway/deployment.yaml
+
+  - it: renders custom pod security context when set
+    set:
+      gateway.podSecurityContext.runAsUser: 9999
+      gateway.podSecurityContext.fsGroup: 9999
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 9999
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 9999
+        template: gateway/deployment.yaml

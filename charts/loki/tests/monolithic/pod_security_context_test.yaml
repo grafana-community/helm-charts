@@ -1,0 +1,74 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: monolithic pod security context
+templates:
+  - monolithic/workload.yaml
+  - config.yaml
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: renders pod security context with runAsUser by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 10001
+        template: monolithic/workload.yaml
+
+  - it: renders pod security context with fsGroup by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 10001
+        template: monolithic/workload.yaml
+
+  - it: renders pod security context with runAsGroup by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 10001
+        template: monolithic/workload.yaml
+
+  - it: renders pod security context with runAsNonRoot=true by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+        template: monolithic/workload.yaml
+
+  - it: does not omit runAsUser when openshift.forceRunAsUser=true but OpenShift is not detected
+    set:
+      openshift.forceRunAsUser: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 10001
+        template: monolithic/workload.yaml
+
+  - it: component podSecurityContext takes precedence over global loki.podSecurityContext
+    set:
+      singleBinary.podSecurityContext.runAsUser: 5555
+      singleBinary.podSecurityContext.fsGroup: 5555
+      loki.podSecurityContext.runAsUser: 9999
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 5555
+        template: monolithic/workload.yaml
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 5555
+        template: monolithic/workload.yaml
+
+  - it: renders custom pod security context via loki.podSecurityContext
+    set:
+      loki.podSecurityContext.runAsUser: 7777
+      loki.podSecurityContext.fsGroup: 7777
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 7777
+        template: monolithic/workload.yaml

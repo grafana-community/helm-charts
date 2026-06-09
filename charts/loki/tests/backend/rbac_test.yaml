@@ -1,0 +1,138 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: backend rbac
+templates:
+  - backend/rbac.yaml
+
+set:
+  deploymentMode: SimpleScalable
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: does not render when deploymentMode is not SimpleScalable
+    set:
+      deploymentMode: Monolithic
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders ClusterRole and ClusterRoleBinding by default
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: ClusterRole
+        documentIndex: 0
+      - isKind:
+          of: ClusterRoleBinding
+        documentIndex: 1
+
+  - it: renders Role and RoleBinding when namespaced=true
+    set:
+      rbac.namespaced: true
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: Role
+        documentIndex: 0
+      - isKind:
+          of: RoleBinding
+        documentIndex: 1
+
+  - it: does not render when rbac.enabled=false
+    set:
+      rbac.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when sidecar.rules.enabled=false
+    set:
+      sidecar.rules.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when backend.sidecar=false
+    set:
+      backend.sidecar: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: ClusterRole has correct name
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-backend
+        documentIndex: 0
+
+  - it: ClusterRoleBinding has correct name
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-backend
+        documentIndex: 1
+
+  - it: ClusterRoleBinding references correct ClusterRole
+    asserts:
+      - equal:
+          path: roleRef.name
+          value: RELEASE-NAME-loki-backend
+        documentIndex: 1
+      - equal:
+          path: roleRef.kind
+          value: ClusterRole
+        documentIndex: 1
+
+  - it: RoleBinding references correct Role when namespaced=true
+    set:
+      rbac.namespaced: true
+    asserts:
+      - equal:
+          path: roleRef.name
+          value: RELEASE-NAME-loki-backend
+        documentIndex: 1
+      - equal:
+          path: roleRef.kind
+          value: Role
+        documentIndex: 1
+
+  - it: subject uses global service account by default
+    asserts:
+      - equal:
+          path: subjects[0].name
+          value: RELEASE-NAME-loki
+        documentIndex: 1
+
+  - it: subject uses backend generated service account name when backend account is created
+    set:
+      backend.serviceAccount.create: true
+    asserts:
+      - equal:
+          path: subjects[0].name
+          value: RELEASE-NAME-loki-backend
+        documentIndex: 1
+
+  - it: subject uses custom serviceAccount.name when set
+    set:
+      serviceAccount.name: my-custom-sa
+    asserts:
+      - equal:
+          path: subjects[0].name
+          value: my-custom-sa
+        documentIndex: 1
+
+  - it: ClusterRole grants access to configmaps and secrets
+    asserts:
+      - equal:
+          path: rules[0].resources
+          value: ["configmaps", "secrets"]
+        documentIndex: 0
+      - equal:
+          path: rules[0].verbs
+          value: ["get", "watch", "list"]
+        documentIndex: 0

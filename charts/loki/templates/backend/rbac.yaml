@@ -1,0 +1,4 @@
+{{- $isSimpleScalable := eq (include "loki.deployment.isScalable" .) "true" -}}
+{{- if $isSimpleScalable }}
+{{- include "loki.rbac.sidecar" (dict "target" "backend" "component" .Values.backend "ctx" .) }}
+{{- end }}

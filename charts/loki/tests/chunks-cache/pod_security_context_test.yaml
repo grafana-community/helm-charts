@@ -1,0 +1,56 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: memcached pod security context
+templates:
+  - chunks-cache/statefulset.yaml
+
+set:
+  chunksCache.enabled: true
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: renders pod security context with runAsUser by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 10001
+
+  - it: renders pod security context with fsGroup by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 10001
+
+  - it: renders pod security context with runAsGroup by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 10001
+
+  - it: renders pod security context with runAsNonRoot=true by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+
+  - it: does not omit runAsUser when openshift.forceRunAsUser=true but OpenShift is not detected
+    set:
+      openshift.forceRunAsUser: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 10001
+
+  - it: renders custom pod security context via loki.podSecurityContext
+    set:
+      loki.podSecurityContext.runAsUser: 7777
+      loki.podSecurityContext.fsGroup: 7777
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 7777
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 7777

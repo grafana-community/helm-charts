@@ -71,7 +71,7 @@ spec:
   {{- end }}
   {{- with (coalesce $component.podSecurityContext .Values.defaults.podSecurityContext .Values.loki.podSecurityContext) }}
   securityContext:
-    {{- toYaml . | nindent 4 }}
+    {{- include "loki.podSecurityContext" (dict "ctx" $ctx "securityContext" .) | nindent 4 }}
   {{- end }}
   {{- with (coalesce $component.terminationGracePeriodSeconds .Values.defaults.terminationGracePeriodSeconds .Values.loki.terminationGracePeriodSeconds) }}
   terminationGracePeriodSeconds: {{ . }}

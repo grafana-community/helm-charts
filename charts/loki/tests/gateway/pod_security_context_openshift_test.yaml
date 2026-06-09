@@ -1,0 +1,56 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: gateway pod security context (OpenShift)
+templates:
+  - gateway/deployment.yaml
+  - gateway/configmap.yaml
+
+capabilities:
+  apiVersions:
+    - security.openshift.io/v1
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: retains runAsUser when OpenShift is detected but forceRunAsUser=false
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 101
+        template: gateway/deployment.yaml
+
+  - it: omits runAsUser when OpenShift is detected and forceRunAsUser=true
+    set:
+      openshift.forceRunAsUser: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.securityContext.runAsUser
+        template: gateway/deployment.yaml
+
+  - it: omits fsGroup when OpenShift is detected and forceRunAsUser=true
+    set:
+      openshift.forceRunAsUser: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.securityContext.fsGroup
+        template: gateway/deployment.yaml
+
+  - it: omits runAsGroup when OpenShift is detected and forceRunAsUser=true
+    set:
+      openshift.forceRunAsUser: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.securityContext.runAsGroup
+        template: gateway/deployment.yaml
+
+  - it: retains runAsNonRoot when OpenShift is detected and forceRunAsUser=true
+    set:
+      openshift.forceRunAsUser: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+        template: gateway/deployment.yaml

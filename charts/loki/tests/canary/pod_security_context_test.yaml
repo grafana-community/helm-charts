@@ -1,0 +1,65 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: canary pod security context
+templates:
+  - loki-canary/daemonset.yaml
+  - config.yaml
+
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  lokiCanary.image.tag: 0.0.0
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: renders pod security context with runAsUser by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 10001
+        template: loki-canary/daemonset.yaml
+
+  - it: renders pod security context with fsGroup by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 10001
+        template: loki-canary/daemonset.yaml
+
+  - it: renders pod security context with runAsGroup by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 10001
+        template: loki-canary/daemonset.yaml
+
+  - it: renders pod security context with runAsNonRoot=true by default
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+        template: loki-canary/daemonset.yaml
+
+  - it: does not omit runAsUser when openshift.forceRunAsUser=true but OpenShift is not detected
+    set:
+      openshift.forceRunAsUser: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 10001
+        template: loki-canary/daemonset.yaml
+
+  - it: renders custom pod security context when set
+    set:
+      lokiCanary.podSecurityContext.runAsUser: 9999
+      lokiCanary.podSecurityContext.fsGroup: 9999
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 9999
+        template: loki-canary/daemonset.yaml
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 9999
+        template: loki-canary/daemonset.yaml

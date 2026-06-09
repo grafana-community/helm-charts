@@ -59,8 +59,10 @@ spec:
       {{- if and (semverCompare ">=1.33-0" (include "loki.kubeVersion" $.ctx)) (kindIs "bool" .hostUsers) }}
       hostUsers: {{ .hostUsers }}
       {{- end }}
+      {{- with $.ctx.Values.loki.podSecurityContext }}
       securityContext:
-        {{- toYaml $.ctx.Values.memcached.podSecurityContext | nindent 8 }}
+        {{- include "loki.podSecurityContext" (dict "ctx" $.ctx "securityContext" .) | nindent 8 }}
+      {{- end }}
       {{- with .dnsConfig | default $.ctx.Values.loki.dnsConfig }}
       dnsConfig:
         {{- toYaml . | nindent 8 }}

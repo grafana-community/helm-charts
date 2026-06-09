@@ -1,0 +1,4 @@
+{{- $isMonolithic := eq (include "loki.deployment.isMonolithic" .) "true" -}}
+{{- if $isMonolithic -}}
+{{- include "loki.rbac.sidecar" (dict "target" "single-binary" "component" .Values.singleBinary "ctx" .) }}
+{{- end }}
