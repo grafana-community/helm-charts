@@ -69,7 +69,7 @@ jobs:
         run: kubectl apply --server-side -f "https://github.com/kedacore/keda/releases/download/v${KEDA_VERSION}/keda-${KEDA_VERSION}-crds.yaml"
         env:
           #renovate: github=kedacore/keda
-          KEDA_VERSION: 2.20.0
+          KEDA_VERSION: 2.20.1
 
       - name: Provision integration test prerequisites
         if: steps.list-changed.outputs.changed == 'true'

@@ -394,6 +394,151 @@ tests:
         documentIndex: 0
         template: ingester/statefulset-zone.yaml
 
+  # ── Per-zone storageClass ────────────────────────────────────────────────────
+
+  - it: should not set storageClassName on any zone when no storageClass is configured
+    set:
+      ingester.persistence.enabled: true
+    asserts:
+      - notExists:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+        documentIndex: 0
+        template: ingester/statefulset-zone.yaml
+      - notExists:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+        documentIndex: 1
+        template: ingester/statefulset-zone.yaml
+      - notExists:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+        documentIndex: 2
+        template: ingester/statefulset-zone.yaml
+
+  - it: should apply claim-level storageClass to every zone when no per-zone override is set
+    set:
+      ingester.persistence.enabled: true
+      ingester.persistence.claims:
+        - name: data
+          accessModes:
+            - ReadWriteOnce
+          size: 10Gi
+          storageClass: shared-class
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: shared-class
+        documentIndex: 0
+        template: ingester/statefulset-zone.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: shared-class
+        documentIndex: 1
+        template: ingester/statefulset-zone.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: shared-class
+        documentIndex: 2
+        template: ingester/statefulset-zone.yaml
+
+  - it: should let per-zone storageClass override the claim-level storageClass per zone
+    set:
+      ingester.persistence.enabled: true
+      ingester.persistence.claims:
+        - name: data
+          accessModes:
+            - ReadWriteOnce
+          size: 10Gi
+          storageClass: shared-class
+      ingester.zoneAwareReplication.zoneA.persistence.storageClass: zone-a-sc
+      ingester.zoneAwareReplication.zoneB.persistence.storageClass: zone-b-sc
+      ingester.zoneAwareReplication.zoneC.persistence.storageClass: zone-c-sc
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: zone-a-sc
+        documentIndex: 0
+        template: ingester/statefulset-zone.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: zone-b-sc
+        documentIndex: 1
+        template: ingester/statefulset-zone.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: zone-c-sc
+        documentIndex: 2
+        template: ingester/statefulset-zone.yaml
+
+  - it: should override only the zone that sets storageClass and leave others on the claim default
+    set:
+      ingester.persistence.enabled: true
+      ingester.persistence.claims:
+        - name: data
+          accessModes:
+            - ReadWriteOnce
+          size: 10Gi
+          storageClass: shared-class
+      ingester.zoneAwareReplication.zoneB.persistence.storageClass: zone-b-sc
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: shared-class
+        documentIndex: 0
+        template: ingester/statefulset-zone.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: zone-b-sc
+        documentIndex: 1
+        template: ingester/statefulset-zone.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: shared-class
+        documentIndex: 2
+        template: ingester/statefulset-zone.yaml
+
+  - it: should set storageClassName to "" when per-zone storageClass is "-" (disable dynamic provisioning)
+    set:
+      ingester.persistence.enabled: true
+      ingester.persistence.claims:
+        - name: data
+          accessModes:
+            - ReadWriteOnce
+          size: 10Gi
+          storageClass: shared-class
+      ingester.zoneAwareReplication.zoneA.persistence.storageClass: "-"
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: ""
+        documentIndex: 0
+        template: ingester/statefulset-zone.yaml
+
+  - it: should apply the per-zone storageClass to every claim in that zone
+    set:
+      ingester.persistence.enabled: true
+      ingester.persistence.claims:
+        - name: data
+          accessModes:
+            - ReadWriteOnce
+          size: 10Gi
+          storageClass: shared-class
+        - name: wal
+          accessModes:
+            - ReadWriteOnce
+          size: 5Gi
+          storageClass: shared-class
+      ingester.zoneAwareReplication.zoneA.persistence.storageClass: zone-a-sc
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: zone-a-sc
+        documentIndex: 0
+        template: ingester/statefulset-zone.yaml
+      - equal:
+          path: spec.volumeClaimTemplates[1].spec.storageClassName
+          value: zone-a-sc
+        documentIndex: 0
+        template: ingester/statefulset-zone.yaml
+
   # ── Migration mode ───────────────────────────────────────────────────────────
 
   - it: should still render zone StatefulSets when migration is enabled
