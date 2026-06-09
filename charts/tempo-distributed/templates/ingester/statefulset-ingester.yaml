@@ -1,3 +1,4 @@
+{{- if .Values.ingester.enabled }}
 {{- $dict := dict "ctx" . "component" "ingester" "memberlist" true -}}
 {{- $zonesMap := include "ingester.zoneAwareReplicationMap" $dict | fromYaml -}}
 {{- range $zoneName, $rolloutZone := $zonesMap -}}
@@ -225,3 +226,4 @@ spec:
 ---
 {{ end }}
 {{ end }}
+{{- end }}

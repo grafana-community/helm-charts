@@ -188,6 +188,9 @@ rbac:
 
 # Configuration for the ingester
 ingester:
+  # -- Enable the ingester. Set to false when using the Tempo 3.0 block-builder/live-store
+  # write path. Ingesters are not part of the Tempo 3.0 microservices architecture.
+  enabled: true
   # -- Annotations for the ingester StatefulSet
   annotations: {}
   # -- Labels for the ingester StatefulSet
@@ -1323,6 +1326,198 @@ compactor:
         - name: ndots
           value: "3"    # This is required for Azure Kubernetes Service (AKS) https://github.com/grafana/tempo/issues/1462
 
+# -- Ingest configuration. Sets the top-level `ingest:` block in tempo.yaml.
+# Required for Tempo 3.0 microservices mode. Distributors write spans to Kafka;
+# block-builders and live-stores consume from it.
+# The number of block-builder and live-store replicas must equal the Kafka partition count.
+ingest:
+  kafka:
+    # -- Kafka broker address (e.g. "kafka.kafka-namespace.svc.cluster.local:9092")
+    address: ""
+    # -- Kafka topic name for trace data
+    topic: tempo-traces
+    # -- Automatically create the topic if it does not exist
+    auto_create_topic_enabled: true
+    # -- Number of partitions for the auto-created topic.
+    # Block-builder and live-store replica count must match this value.
+    auto_create_topic_default_partitions: 3
+
+# Configuration for the block-builder (Tempo 3.0+)
+# Consumes spans from Kafka and writes blocks to object storage.
+# One replica per Kafka partition — replica count must equal ingest.kafka.auto_create_topic_default_partitions.
+blockBuilder:
+  # -- Enable the block-builder. Requires ingest.kafka.address to be set.
+  enabled: false
+  # -- Number of replicas. Must equal the Kafka partition count.
+  replicas: 3
+  # -- Annotations for the block-builder StatefulSet
+  annotations: {}
+  # -- Labels for the block-builder StatefulSet
+  labels: {}
+  # -- hostAliases to add
+  hostAliases: []
+  # -- Init containers to add to the block-builder pod
+  initContainers: []
+  image:
+    # -- The Docker registry for the block-builder image. Overrides `tempo.image.registry`
+    registry: null
+    # -- Optional list of imagePullSecrets. Overrides `tempo.image.pullSecrets`
+    pullSecrets: []
+    # -- Docker image repository for the block-builder image. Overrides `tempo.image.repository`
+    repository: null
+    # -- Docker image tag for the block-builder image. Overrides `tempo.image.tag`
+    tag: null
+  # -- The name of the PriorityClass for block-builder pods
+  priorityClassName: null
+  # -- Labels for block-builder pods
+  podLabels: {}
+  # -- Annotations for block-builder pods
+  podAnnotations: {}
+  # -- Additional CLI args for the block-builder
+  extraArgs: []
+  # -- Environment variables to add to the block-builder pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to the block-builder pods
+  extraEnvFrom: []
+  # -- Additional ports to expose on the block-builder container
+  extraPorts: []
+  # -- Liveness probe for block-builder pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for block-builder pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
+  # -- Resource requests and limits for the block-builder
+  resources: {}
+  # -- Grace period to allow the block-builder to flush its WAL before being killed
+  terminationGracePeriodSeconds: 300
+  # -- topologySpread for block-builder pods. Passed through `tpl`.
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "block-builder") | nindent 6 }}
+  # -- Affinity for block-builder pods. Passed through `tpl`.
+  affinity: |
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "block-builder") | nindent 12 }}
+            topologyKey: kubernetes.io/hostname
+  # -- Node selector for block-builder pods
+  nodeSelector: {}
+  # -- Tolerations for block-builder pods
+  tolerations: []
+  # -- Extra volumes for block-builder pods
+  extraVolumeMounts: []
+  # -- Extra volumes for block-builder StatefulSet
+  extraVolumes: []
+  # -- Containers to add to the block-builder pods
+  extraContainers: []
+  # -- updateStrategy of the block-builder StatefulSet
+  statefulStrategy:
+    rollingUpdate:
+      partition: 0
+  service:
+    # -- Annotations for block-builder service
+    annotations: {}
+  config:
+    # -- Number of Kafka partitions each block-builder instance consumes.
+    # Each pod consumes this many partitions starting from its ordinal * partitions_per_instance.
+    partitions_per_instance: 1
+
+# Configuration for the live-store (Tempo 3.0+)
+# Consumes spans from Kafka and serves recent-data queries (last ~30 minutes).
+# One replica per Kafka partition — replica count must equal ingest.kafka.auto_create_topic_default_partitions.
+liveStore:
+  # -- Enable the live-store. Requires ingest.kafka.address to be set.
+  enabled: false
+  # -- Number of replicas. Must equal the Kafka partition count.
+  replicas: 3
+  # -- Annotations for the live-store StatefulSet
+  annotations: {}
+  # -- Labels for the live-store StatefulSet
+  labels: {}
+  # -- hostAliases to add
+  hostAliases: []
+  # -- Init containers to add to the live-store pod
+  initContainers: []
+  image:
+    # -- The Docker registry for the live-store image. Overrides `tempo.image.registry`
+    registry: null
+    # -- Optional list of imagePullSecrets. Overrides `tempo.image.pullSecrets`
+    pullSecrets: []
+    # -- Docker image repository for the live-store image. Overrides `tempo.image.repository`
+    repository: null
+    # -- Docker image tag for the live-store image. Overrides `tempo.image.tag`
+    tag: null
+  # -- The name of the PriorityClass for live-store pods
+  priorityClassName: null
+  # -- Labels for live-store pods
+  podLabels: {}
+  # -- Annotations for live-store pods
+  podAnnotations: {}
+  # -- Additional CLI args for the live-store
+  extraArgs: []
+  # -- Environment variables to add to the live-store pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to the live-store pods
+  extraEnvFrom: []
+  # -- Additional ports to expose on the live-store container
+  extraPorts: []
+  # -- Liveness probe for live-store pods. Uses `tempo.livenessProbe` as default if not set.
+  livenessProbe: {}
+  # -- Readiness probe for live-store pods. Uses `tempo.readinessProbe` as default if not set.
+  readinessProbe: {}
+  # -- Resource requests and limits for the live-store
+  resources: {}
+  # -- Grace period to allow the live-store to shut down before being killed
+  terminationGracePeriodSeconds: 60
+  # -- topologySpread for live-store pods. Passed through `tpl`.
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "live-store") | nindent 6 }}
+  # -- Affinity for live-store pods. Passed through `tpl`.
+  affinity: |
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "live-store") | nindent 12 }}
+            topologyKey: kubernetes.io/hostname
+  # -- Node selector for live-store pods
+  nodeSelector: {}
+  # -- Tolerations for live-store pods
+  tolerations: []
+  # -- Extra volumes for live-store pods
+  extraVolumeMounts: []
+  # -- Extra volumes for live-store StatefulSet
+  extraVolumes: []
+  # -- Containers to add to the live-store pods
+  extraContainers: []
+  # -- updateStrategy of the live-store StatefulSet
+  statefulStrategy:
+    rollingUpdate:
+      partition: 0
+  service:
+    # -- Annotations for live-store service
+    annotations: {}
+  # -- Extra live-store configuration. Merged verbatim into the `live_store:` config block.
+  # See https://grafana.com/docs/tempo/latest/configuration/#live-store for available fields.
+  config:
+    ring:
+      kvstore:
+        store: memberlist
+
 # Configuration for the querier
 querier:
   # -- Number of replicas for the querier
@@ -2045,20 +2240,31 @@ config: |
     ring:
       kvstore:
         store: memberlist
-  {{- else }}
+  {{- end }}
+  {{- if .Values.blockBuilder.enabled }}
+  block_builder:
+    partitions_per_instance: {{ .Values.blockBuilder.config.partitions_per_instance }}
+  {{- end }}
+  {{- if .Values.liveStore.enabled }}
+  live_store:
+    {{- with .Values.liveStore.config }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  {{- if not .Values.backendScheduler.enabled }}
   compactor:
     compaction:
       block_retention: {{ .Values.compactor.config.compaction.block_retention }}
       compacted_block_retention: {{ .Values.compactor.config.compaction.compacted_block_retention }}
       compaction_window: {{ .Values.compactor.config.compaction.compaction_window }}
-      v2_in_buffer_bytes: {{ .Values.compactor.config.compaction.v2_in_buffer_bytes }}
-      v2_out_buffer_bytes: {{ .Values.compactor.config.compaction.v2_out_buffer_bytes }}
       max_compaction_objects: {{ .Values.compactor.config.compaction.max_compaction_objects }}
       max_block_bytes: {{ .Values.compactor.config.compaction.max_block_bytes }}
       retention_concurrency: {{ .Values.compactor.config.compaction.retention_concurrency }}
-      v2_prefetch_traces_count: {{ .Values.compactor.config.compaction.v2_prefetch_traces_count }}
       max_time_per_tenant: {{ .Values.compactor.config.compaction.max_time_per_tenant }}
       compaction_cycle: {{ .Values.compactor.config.compaction.compaction_cycle }}
+      v2_in_buffer_bytes: {{ .Values.compactor.config.compaction.v2_in_buffer_bytes }}
+      v2_out_buffer_bytes: {{ .Values.compactor.config.compaction.v2_out_buffer_bytes }}
+      v2_prefetch_traces_count: {{ .Values.compactor.config.compaction.v2_prefetch_traces_count }}
     ring:
       kvstore:
         store: memberlist
@@ -2201,6 +2407,15 @@ config: |
       interval: {{ .Values.queryFrontend.config.metrics.interval }}
       duration_slo: {{ .Values.queryFrontend.config.metrics.duration_slo }}
       throughput_bytes_slo: {{ .Values.queryFrontend.config.metrics.throughput_bytes_slo }}
+  {{- with .Values.ingest.kafka.address }}
+  ingest:
+    kafka:
+      address: {{ . }}
+      topic: {{ $.Values.ingest.kafka.topic }}
+      auto_create_topic_enabled: {{ $.Values.ingest.kafka.auto_create_topic_enabled }}
+      auto_create_topic_default_partitions: {{ $.Values.ingest.kafka.auto_create_topic_default_partitions }}
+  {{- end }}
+  {{- if .Values.ingester.enabled }}
   ingester:
     lifecycler:
       ring:
@@ -2229,6 +2444,7 @@ config: |
     {{- if .Values.ingester.config.flush_all_on_shutdown }}
     flush_all_on_shutdown: {{ .Values.ingester.config.flush_all_on_shutdown }}
     {{- end }}
+  {{- end }}
   memberlist:
     {{- with .Values.memberlist }}
       {{- toYaml . | nindent 2 }}
