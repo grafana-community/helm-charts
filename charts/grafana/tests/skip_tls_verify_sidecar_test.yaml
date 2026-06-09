@@ -1,0 +1,232 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana sidecar skipTlsVerify
+templates:
+  - deployment.yaml
+
+tests:
+  - it: should set SKIP_TLS_VERIFY when alert-specific skipTlsVerify is enabled
+    set:
+      sidecar.alerts.enabled: true
+      sidecar.alerts.initAlerts: true
+      sidecar.alerts.skipTlsVerify: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+
+  - it: should fallback to global sidecar.skipTlsVerify for alerts when alert-specific value is unset
+    set:
+      sidecar.alerts.enabled: true
+      sidecar.alerts.initAlerts: true
+      sidecar.skipTlsVerify: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+
+  - it: should not render SKIP_TLS_VERIFY for alerts when neither global nor per-sidecar skipTlsVerify is set
+    set:
+      sidecar.alerts.enabled: true
+      sidecar.alerts.initAlerts: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+
+  - it: should set SKIP_TLS_VERIFY for datasources when datasources.skipTlsVerify is enabled
+    set:
+      sidecar.datasources.enabled: true
+      sidecar.datasources.initDatasources: true
+      sidecar.datasources.skipTlsVerify: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+
+  - it: should fallback to global sidecar.skipTlsVerify for datasources when per-sidecar value is unset
+    set:
+      sidecar.datasources.enabled: true
+      sidecar.datasources.initDatasources: true
+      sidecar.skipTlsVerify: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+
+  - it: should not render SKIP_TLS_VERIFY for datasources when neither global nor per-sidecar skipTlsVerify is set
+    set:
+      sidecar.datasources.enabled: true
+      sidecar.datasources.initDatasources: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+
+  - it: should set SKIP_TLS_VERIFY for notifiers when notifiers.skipTlsVerify is enabled
+    set:
+      sidecar.notifiers.enabled: true
+      sidecar.notifiers.initNotifiers: true
+      sidecar.notifiers.skipTlsVerify: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+
+  - it: should fallback to global sidecar.skipTlsVerify for notifiers when per-sidecar value is unset
+    set:
+      sidecar.notifiers.enabled: true
+      sidecar.notifiers.initNotifiers: true
+      sidecar.skipTlsVerify: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+
+  - it: should not render SKIP_TLS_VERIFY for notifiers when neither global nor per-sidecar skipTlsVerify is set
+    set:
+      sidecar.notifiers.enabled: true
+      sidecar.notifiers.initNotifiers: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+
+  - it: should set SKIP_TLS_VERIFY for dashboards when dashboards.skipTlsVerify is enabled
+    set:
+      sidecar.dashboards.enabled: true
+      sidecar.dashboards.initDashboards: true
+      sidecar.dashboards.skipTlsVerify: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+
+  - it: should fallback to global sidecar.skipTlsVerify for dashboards when per-sidecar value is unset
+    set:
+      sidecar.dashboards.enabled: true
+      sidecar.dashboards.initDashboards: true
+      sidecar.skipTlsVerify: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+
+  - it: should not render SKIP_TLS_VERIFY for dashboards when neither global nor per-sidecar skipTlsVerify is set
+    set:
+      sidecar.dashboards.enabled: true
+      sidecar.dashboards.initDashboards: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+
+  - it: should set SKIP_TLS_VERIFY for plugins when plugins.skipTlsVerify is enabled
+    set:
+      sidecar.plugins.enabled: true
+      sidecar.plugins.skipTlsVerify: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+
+  - it: should fallback to global sidecar.skipTlsVerify for plugins when per-sidecar value is unset
+    set:
+      sidecar.plugins.enabled: true
+      sidecar.skipTlsVerify: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
+            value: "true"
+
+  - it: should not render SKIP_TLS_VERIFY for plugins when neither global nor per-sidecar skipTlsVerify is set
+    set:
+      sidecar.plugins.enabled: true
+    asserts:
+      - template: deployment.yaml
+        hasDocuments:
+          count: 1
+      - template: deployment.yaml
+        notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SKIP_TLS_VERIFY
