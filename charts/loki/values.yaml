@@ -2734,6 +2734,14 @@ ingester:
       annotations: {}
       # -- Specific annotations to add to zone A pods
       podAnnotations: {}
+      # -- Persistence overrides applied only to the zone A StatefulSet.
+      persistence:
+        # -- Storage class to use for every PVC in zone A. Overrides the `storageClass` of each entry in
+        # `ingester.persistence.claims` for this zone only. Use this when you have one StorageClass per
+        # availability zone (for example a topology-pinned EBS/PD StorageClass). If null, the
+        # claim-level `storageClass` is used as before, preserving existing behavior.
+        # If set to "-", `storageClassName: ""` is rendered, which disables dynamic provisioning.
+        storageClass: null
     zoneB:
       # -- optionally define a node selector for this zone
       nodeSelector: null
@@ -2744,6 +2752,12 @@ ingester:
       annotations: {}
       # -- Specific annotations to add to zone B pods
       podAnnotations: {}
+      # -- Persistence overrides applied only to the zone B StatefulSet.
+      persistence:
+        # -- Storage class to use for every PVC in zone B. See
+        # `ingester.zoneAwareReplication.zoneA.persistence.storageClass` for details. If null, the
+        # claim-level `storageClass` is used as before.
+        storageClass: null
     zoneC:
       # -- optionally define a node selector for this zone
       nodeSelector: null
@@ -2754,6 +2768,12 @@ ingester:
       annotations: {}
       # -- Specific annotations to add to zone C pods
       podAnnotations: {}
+      # -- Persistence overrides applied only to the zone C StatefulSet.
+      persistence:
+        # -- Storage class to use for every PVC in zone C. See
+        # `ingester.zoneAwareReplication.zoneA.persistence.storageClass` for details. If null, the
+        # claim-level `storageClass` is used as before.
+        storageClass: null
     # -- The migration block allows migrating non zone aware ingesters to zone aware ingesters.
     migration:
       enabled: false
