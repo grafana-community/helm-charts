@@ -4861,6 +4861,10 @@ overridesExporter:
   command: null
   # -- The name of the PriorityClass for overrides-exporter pods
   priorityClassName: null
+  # -- Labels for overrides-exporter
+  labels: {}
+  # -- Annotations for overrides-exporter
+  annotations: {}
   # -- Labels for overrides-exporter pods
   podLabels: {}
   # -- Annotations for overrides-exporter pods
