@@ -80,9 +80,5 @@
   protocol: TCP
   targetPort: 4318
 {{- end }}
-- name: tempo-opencensus
-  port: 55678
-  protocol: TCP
-  targetPort: 55678
 {{- /* end of define */}}
 {{- end  }}

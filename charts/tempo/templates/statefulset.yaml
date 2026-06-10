@@ -93,8 +93,6 @@ spec:
           name: otlp-httplegacy
         - containerPort: 4318
           name: otlp-http
-        - containerPort: 55678
-          name: opencensus
         livenessProbe:
           {{- toYaml .Values.tempo.livenessProbe | nindent 12 }}
         readinessProbe:
