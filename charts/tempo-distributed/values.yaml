@@ -1923,9 +1923,7 @@ config: |
     {{- end }}
     {{- if .Values.ingest.kafka.address }}
     kafka_write_path_enabled: true
-    {{- if not .Values.ingester.enabled }}
     ingester_write_path_enabled: false
-    {{- end }}
     {{- end }}
   querier:
     frontend_worker:
