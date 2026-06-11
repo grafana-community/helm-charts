@@ -128,3 +128,102 @@ spec:
     - name: s3
       port: 9000
       targetPort: 9000
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rustfs-ci
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rustfs
+  namespace: rustfs-ci
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rustfs
+  template:
+    metadata:
+      labels:
+        app: rustfs
+        ci-managed: "true"
+    spec:
+      containers:
+        - name: rustfs
+          # renovate: docker=docker.io/rustfs/rustfs
+          image: rustfs/rustfs:1.0.0-beta.8
+          ports:
+            - containerPort: 9000
+              name: s3
+          env:
+            - name: RUSTFS_ACCESS_KEY
+              value: "rustfsadmin"
+            - name: RUSTFS_SECRET_KEY
+              value: "rustfsadmin"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs
+  namespace: rustfs-ci
+spec:
+  selector:
+    app: rustfs
+  ports:
+    - name: s3
+      port: 9000
+      targetPort: 9000
+---
+# Waits for RustFS to be ready, creates the tempo-traces bucket, then stays alive.
+# The readinessProbe gates kubectl wait: ct install only starts after the bucket exists.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rustfs-bucket-init
+  namespace: rustfs-ci
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rustfs-bucket-init
+  template:
+    metadata:
+      labels:
+        app: rustfs-bucket-init
+        ci-managed: "true"
+    spec:
+      containers:
+        - name: mc
+          # renovate: docker=docker.io/minio/mc
+          image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+          command:
+            - sh
+            - -ec
+            - |
+              until mc alias set rustfs http://rustfs.rustfs-ci.svc.cluster.local:9000 rustfsadmin rustfsadmin 2>/dev/null; do
+                sleep 2
+              done
+              mc mb rustfs/tempo-traces --ignore-existing
+              while true; do sleep 3600; done
+          readinessProbe:
+            exec:
+              command:
+                - mc
+                - ls
+                - rustfs/tempo-traces
+            initialDelaySeconds: 5
+            periodSeconds: 5
