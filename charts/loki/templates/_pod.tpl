@@ -332,19 +332,19 @@ rules sidecar
     {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- with .Values.sidecar.livenessProbe }}
-    {{- if (dig "enabled" true .) }}
+    {{- if .enabled }}
   livenessProbe:
     {{- toYaml (omit . "enabled") | nindent 8 }}
     {{- end }}
   {{- end }}
   {{- with .Values.sidecar.readinessProbe }}
-    {{- if (dig "enabled" true .) }}
+    {{- if .enabled }}
   readinessProbe:
     {{- toYaml (omit . "enabled") | nindent 8 }}
     {{- end }}
   {{- end }}
   {{- with .Values.sidecar.startupProbe }}
-    {{- if (dig "enabled" true .) }}
+    {{- if .enabled }}
   startupProbe:
     {{- toYaml (omit . "enabled") | nindent 8 }}
     {{- end }}
