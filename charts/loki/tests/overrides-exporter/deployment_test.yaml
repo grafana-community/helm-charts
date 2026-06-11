@@ -1,0 +1,22 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: override workload
+templates:
+  - overrides-exporter/workload.yaml
+  - config.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+  overridesExporter.enabled: true
+
+tests:
+  - it: should render one Deployment in distributed mode
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: overrides-exporter/workload.yaml
+      - isKind:
+          of: Deployment
+        template: overrides-exporter/workload.yaml

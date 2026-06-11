@@ -21,10 +21,17 @@ TRACE_PAYLOAD='{
 }'
 
 setup_file() {
-	wget -q -O- \
-		--header 'Content-Type: application/json' \
-		--post-data "${TRACE_PAYLOAD}" \
-		"${DISTRIBUTOR}/v1/traces"
+	for _ in $(seq 1 30); do
+		if wget -q -O- \
+			--header 'Content-Type: application/json' \
+			--post-data "${TRACE_PAYLOAD}" \
+			"${DISTRIBUTOR}/v1/traces" 2>/dev/null; then
+			return 0
+		fi
+		sleep 2
+	done
+	echo "distributor at ${DISTRIBUTOR} not ready after 60s" >&3
+	return 1
 }
 
 @test "distributor accepts OTLP/HTTP push" {
