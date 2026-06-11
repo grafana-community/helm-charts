@@ -117,6 +117,28 @@ block temporarily and migrate using
 `tempo-cli migrate overrides-config`. See the
 [overrides configuration reference](https://grafana.com/docs/tempo/latest/configuration/#overrides).
 
+### Built-in MinIO subchart deprecated
+
+`minio.enabled: true` now causes a hard chart-render failure. Deploy MinIO (or
+any S3-compatible store) externally and reference it via `storage.trace.s3`:
+
+```yaml
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: tempo-traces
+      endpoint: <minio-host>:9000
+      access_key: <key>
+      secret_key: <secret>
+      insecure: true
+
+minio:
+  enabled: false
+```
+
+The built-in subchart will be removed entirely in chart v4.0.0.
+
 ### Removed config fields
 
 The following fields are no longer emitted in `tempo.yaml`:
