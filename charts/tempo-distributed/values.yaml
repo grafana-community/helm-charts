@@ -1921,10 +1921,6 @@ config: |
     {{- if not (eq .Values.distributor.config.max_attribute_bytes nil) }}
     max_attribute_bytes: {{ .Values.distributor.config.max_attribute_bytes }}
     {{- end }}
-    {{- if .Values.ingest.kafka.address }}
-    kafka_write_path_enabled: true
-    ingester_write_path_enabled: false
-    {{- end }}
   querier:
     frontend_worker:
       frontend_address: {{ include "tempo.resourceName" (dict "ctx" . "component" "query-frontend-discovery") }}:9095
@@ -1937,9 +1933,6 @@ config: |
     search:
       query_timeout: {{ .Values.querier.config.search.query_timeout }}
     max_concurrent_queries: {{ .Values.querier.config.max_concurrent_queries }}
-    {{- if .Values.liveStore.enabled }}
-    query_live_store: true
-    {{- end }}
   query_frontend:
     {{- if not .Values.enterprise.enabled }}
     mcp_server:
