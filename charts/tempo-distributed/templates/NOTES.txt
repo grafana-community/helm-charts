@@ -5,14 +5,27 @@
 ***********************************************************************
 
 Installed components:
+{{- if .Values.ingester.enabled }}
 * ingester
+{{- end }}
 * distributor
 * querier
 * query-frontend
+{{- if .Values.liveStore.enabled }}
+* live-store
+{{- end }}
+{{- if .Values.blockBuilder.enabled }}
+* block-builder
+{{- end }}
+{{- if .Values.backendScheduler.enabled }}
+* backend-scheduler
+* backend-worker
+{{- else }}
+* compactor
+{{- end }}
 {{- if .Values.enterpriseFederationFrontend.enabled }}
 * federation-frontend
 {{- end }}
-* compactor
 {{- if .Values.metricsGenerator.enabled }}
 * metrics-generator
 {{- end }}
