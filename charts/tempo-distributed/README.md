@@ -52,6 +52,41 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### MinIO subchart deprecation
+
+The built-in MinIO subchart (`minio.enabled: true`) is deprecated as of chart v2.26.0 and will be
+removed in v4.0.0 (targeting Tempo 4.x, ~mid-2027).
+
+The subchart was convenient for quick-start setups but its service name embeds the Helm release name,
+which makes it incompatible with static CI values files and complicates upgrades. The recommended
+approach is to deploy MinIO (or any S3-compatible store) externally and reference it via
+`storage.trace.s3`.
+
+**Migrating to an external MinIO:**
+
+```yaml
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: tempo-traces
+      endpoint: minio.minio-namespace.svc.cluster.local:9000
+      access_key: <access-key>
+      secret_key: <secret-key>
+      insecure: true  # remove if TLS is configured
+
+minio:
+  enabled: false
+```
+
+To keep using the built-in subchart until you migrate, set:
+
+```yaml
+ignoreMinioDeprecation: true
+minio:
+  enabled: true
+```
+
 ### From Chart versions < 2.17.10
 
 Version 2.17.10 change the memcached Services and Statefulsets spec.

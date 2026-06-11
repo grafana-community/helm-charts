@@ -32,6 +32,11 @@ Installed components:
 {{- end }}
 {{- if .Values.minio.enabled }}
 * minio
+
+DEPRECATION WARNING: The built-in MinIO subchart is deprecated and will be
+removed in chart v4.0.0 (targeting Tempo 4.x, ~mid-2027). Deploy MinIO
+externally and configure storage.trace.s3 to point at it. See the chart
+README for migration guidance.
 {{- end }}
 {{- if .Values.rollout_operator.enabled }}
 * rollout-operator
