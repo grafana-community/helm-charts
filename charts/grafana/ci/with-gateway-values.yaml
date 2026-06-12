@@ -36,3 +36,15 @@ route:
     hostnames:
       - grafana.example.com
     httpsRedirect: true
+
+listenerSet:
+  main:
+    enabled: true
+    parentRef:
+      name: my-gateway
+      namespace: default
+    listeners:
+      - name: https
+        port: 443
+        protocol: HTTPS
+        hostname: grafana.example.com
