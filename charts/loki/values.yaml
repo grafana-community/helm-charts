@@ -5608,8 +5608,9 @@ sidecar:
   disableX509StrictVerification: false
   # -- Ensure that rule files aren't conflicting and being overwritten by prefixing their name with the namespace they are defined in.
   enableUniqueFilenames: false
-  # -- Readiness probe definition. Probe is disabled on the sidecar by default.
+  # -- Readiness probe definition. Probe is enabled on the sidecar by default.
   readinessProbe:
+    enabled: true
     httpGet:
       path: /healthz
       port: http-sidecar
@@ -5618,8 +5619,9 @@ sidecar:
     successThreshold: 1
     failureThreshold: 3
     timeoutSeconds: 1
-  # -- Liveness probe definition. Probe is disabled on the sidecar by default.
+  # -- Liveness probe definition. Probe is enabled on the sidecar by default.
   livenessProbe:
+    enabled: true
     httpGet:
       path: /healthz
       port: http-sidecar
@@ -5629,7 +5631,8 @@ sidecar:
     failureThreshold: 3
     timeoutSeconds: 1
   # -- Startup probe definition. Probe is disabled on the sidecar by default.
-  startupProbe: {}
+  startupProbe:
+    enabled: false
   rules:
     # -- Whether or not to create a sidecar to ingest rule from specific ConfigMaps and/or Secrets.
     enabled: true
