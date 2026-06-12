@@ -1,3 +1,0 @@
-{{- if .Values.ingester.enabled }}
-{{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" "ingester" "memberlist" true) }}
-{{- end }}

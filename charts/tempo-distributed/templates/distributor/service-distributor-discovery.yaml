@@ -76,11 +76,5 @@ spec:
       appProtocol: {{ .Values.distributor.appProtocol.grpc }}
       {{- end }}
     {{- end }}
-    {{- if .Values.traces.opencensus.enabled }}
-    - name: distributor-opencensus
-      port: 55678
-      protocol: TCP
-      targetPort: opencensus
-    {{- end }}
   selector:
     {{- include "tempo.selectorLabels" $dict | nindent 4 }}

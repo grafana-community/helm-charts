@@ -1,0 +1,65 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: live-store StatefulSet
+templates:
+  - live-store/statefulset-live-store.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: renders a StatefulSet with correct name and kind by default
+    template: live-store/statefulset-live-store.yaml
+    asserts:
+      - equal:
+          path: kind
+          value: StatefulSet
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-live-store
+
+  - it: does not render when disabled
+    template: live-store/statefulset-live-store.yaml
+    set:
+      liveStore.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: replica count matches liveStore.replicas
+    template: live-store/statefulset-live-store.yaml
+    set:
+      liveStore.replicas: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: renders memberlist and http-metrics ports
+    template: live-store/statefulset-live-store.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 7946
+            name: http-memberlist
+            protocol: TCP
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 3200
+            name: http-metrics
+            protocol: TCP
+
+  - it: uses tempo.podSecurityContext when no component override is set
+    template: live-store/statefulset-live-store.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+
+  - it: global.priorityClassName is used when no component override
+    template: live-store/statefulset-live-store.yaml
+    set:
+      global.priorityClassName: high-priority
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: high-priority

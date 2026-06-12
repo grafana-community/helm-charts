@@ -162,7 +162,7 @@ spec:
         annotations:
           {{- toYaml . | nindent 10 }}
         {{- end }}
-        {{- with .Values.ingester.persistence.labels }}
+        {{- with .Values.metricsGenerator.persistence.labels }}
         labels:
           {{- toYaml . | nindent 10 }}
         {{- end }}
