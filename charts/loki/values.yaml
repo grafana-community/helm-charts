@@ -1390,7 +1390,7 @@ gateway:
     image:
       registry: ghcr.io
       repository: "jkroepke/access-log-exporter"
-      tag: "0.3.18"
+      tag: "0.3.19"
       pullPolicy: IfNotPresent
     resources:
       requests: {}
