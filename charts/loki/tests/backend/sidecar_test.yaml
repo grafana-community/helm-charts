@@ -205,6 +205,31 @@ tests:
           content:
             name: sc-rules-volume
 
+  - it: should allow disabling sidecar probes with enabled=false
+    set:
+      sidecar.livenessProbe.enabled: false
+      sidecar.readinessProbe.enabled: false
+      sidecar.startupProbe.enabled: false
+    asserts:
+      - template: backend/workload.yaml
+        hasDocuments:
+          count: 1
+      - template: backend/workload.yaml
+        contains:
+          path: spec.template.spec.containers
+          content:
+            name: loki-sc-rules
+          any: true
+      - template: backend/workload.yaml
+        notExists:
+          path: spec.template.spec.containers[1].livenessProbe
+      - template: backend/workload.yaml
+        notExists:
+          path: spec.template.spec.containers[1].readinessProbe
+      - template: backend/workload.yaml
+        notExists:
+          path: spec.template.spec.containers[1].startupProbe
+
   - it: should not add the sidecar container or shared volume when disabled via backend.sidecar
     set:
       backend.sidecar: false
