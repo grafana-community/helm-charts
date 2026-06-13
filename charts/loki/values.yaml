@@ -70,7 +70,7 @@ commonLabels: {}
 
 ######################################################################################################################
 #
-# Defaults applied to all loki components, including loki-canary.
+# Defaults applied to loki components only. Not applied to loki-canary, memcache, gateway/nginx or other components.
 #
 ######################################################################################################################
 defaults:
@@ -1390,7 +1390,7 @@ gateway:
     image:
       registry: ghcr.io
       repository: "jkroepke/access-log-exporter"
-      tag: "0.3.18"
+      tag: "0.3.20"
       pullPolicy: IfNotPresent
     resources:
       requests: {}
