@@ -1021,6 +1021,8 @@ sidecar:
   # logLevel: INFO
   alerts:
     enabled: false
+    # Additional arguments
+    args: []
     # Additional environment variables for the alerts sidecar
     env: {}
     ## "valueFrom" environment variable references that will be added to deployment pods. Name is templated.
@@ -1114,6 +1116,8 @@ sidecar:
     sizeLimit: ""
   dashboards:
     enabled: false
+    # Additional arguments
+    args: []
     # Additional environment variables for the dashboards sidecar
     env: {}
     ## "valueFrom" environment variable references that will be added to deployment pods. Name is templated.
@@ -1233,6 +1237,8 @@ sidecar:
     sizeLimit: ""
   datasources:
     enabled: false
+    # Additional arguments
+    args: []
     # Additional environment variables for the datasourcessidecar
     env: {}
     ## "valueFrom" environment variable references that will be added to deployment pods. Name is templated.
@@ -1326,6 +1332,8 @@ sidecar:
     sizeLimit: ""
   plugins:
     enabled: false
+    # Additional arguments
+    args: []
     # Additional environment variables for the plugins sidecar
     env: {}
     # Do not reprocess already processed unchanged resources on k8s API reconnect.
@@ -1396,6 +1404,8 @@ sidecar:
     sizeLimit: ""
   notifiers:
     enabled: false
+    # Additional arguments
+    args: []
     # Additional environment variables for the notifierssidecar
     env: {}
     # Do not reprocess already processed unchanged resources on k8s API reconnect.
