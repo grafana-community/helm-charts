@@ -12,6 +12,21 @@ set:
   loki.storage.bucketNames.admin: admin
 
 tests:
+  - it: should set resizePolicy for canary
+    set:
+      lokiCanary.resizePolicy:
+        - resourceName: memory
+          restartPolicy: NotRequired
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[0].resourceName
+          value: memory
+        template: loki-canary/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[0].restartPolicy
+          value: NotRequired
+        template: loki-canary/daemonset.yaml
+
   - it: should use canary image defaults when lokiCanary image is not set
     asserts:
       - equal:
