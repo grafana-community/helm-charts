@@ -46,7 +46,17 @@ jobs:
 
       - name: install helm unittest plugin
         if: steps.list-changed.outputs.changed == 'true'
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version 1.0.3 --verify=false
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version "${VERSION}" --verify=false
+        env:
+          # renovate: github=helm-unittest/helm-unittest
+          VERSION: 1.0.3
+
+      - name: install helm values-schema plugin
+        if: steps.list-changed.outputs.changed == 'true'
+        run: helm plugin install https://github.com/losisin/helm-values-schema-json.git --version "${VERSION}" --verify=false
+        env:
+          # renovate: github=losisin/helm-values-schema-json
+          VERSION: 2.5.0
 
       - name: Run chart-testing (lint)
         run: ct lint --config .github/linters/ct.yaml
