@@ -312,13 +312,13 @@ make helm-unittest
 Run tests for a single chart (useful during active test development):
 
 ```bash
-make helm-unittest HELM_UNITTEST_CHART=<chart-name>
+make helm-unittest HELM_CHART=<chart-name>
 ```
 
 Run a specific test file only (for targeted debugging):
 
 ```bash
-make helm-unittest HELM_UNITTEST_CHART=<chart-name> HELM_UNITTEST_FILE='tests/<subdir>/<file>_test.yaml'
+make helm-unittest HELM_CHART=<chart-name> HELM_UNITTEST_FILE='tests/<subdir>/<file>_test.yaml'
 ```
 
 ## Test File Organization

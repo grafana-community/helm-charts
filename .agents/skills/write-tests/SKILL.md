@@ -87,5 +87,5 @@ After the user answers, summarise the agreed scope in one short paragraph, then 
 When writing tests directly (not delegating), follow the conventions in the test-writer subagent:
 - Test files mirror the template path: `charts/<chart>/tests/<component>/<template>.yaml` (convention: `<template>_test.yaml`, but any `.yaml` filename is valid — the repository uses `--file 'tests/**/*.yaml'`)
 - Always set deployment-mode-style flags explicitly — never rely on defaults when a chart has conditional rendering modes
-- Run `make helm-unittest HELM_UNITTEST_CHART=<chart>` after each file to validate before moving on
+- Run `make helm-unittest HELM_CHART=<chart>` after each file to validate before moving on
 - Prefer `equal` and `contains` over `exists` — specific assertions catch regressions

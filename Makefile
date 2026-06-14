@@ -5,6 +5,8 @@ HELM_UNITTEST_TAG := 4.2.0-1.1.0
 
 # Chart(s) to target (glob pattern, e.g. HELM_CHART=loki)
 HELM_CHART ?= *
+# Test file pattern within the chart (e.g. HELM_UNITTEST_FILE='tests/ingester/*_test.yaml')
+HELM_UNITTEST_FILE  ?= tests/**/*.yaml
 
 .PHONY: helm-unittest
 helm-unittest:
