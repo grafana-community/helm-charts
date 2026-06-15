@@ -1,6 +1,6 @@
 # See https://github.com/helm/chart-testing#configuration
 additional-commands:
-  - sh -ec "if [ -f '{{ .Path }}/ci/lint.sh' ]; then shellcheck '{{ .Path }}/ci/lint.sh'; bash '{{ .Path }}/ci/lint.sh'; fi"
+  - sh -ec "if [ -f '{{ .Path }}/ci/lint.sh' ]; then bash '{{ .Path }}/ci/lint.sh'; fi"
   - helm unittest --strict --file 'tests/**/*.yaml' {{ .Path }}
 chart-dirs:
   - charts

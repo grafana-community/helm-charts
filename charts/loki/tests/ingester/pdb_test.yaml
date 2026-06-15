@@ -84,3 +84,22 @@ tests:
       - equal:
           path: spec.maxUnavailable
           value: 2
+
+  - it: should use podDisruptionBudget.minAvailable when set to 0
+    set:
+      ingester.maxUnavailable: null
+      ingester.podDisruptionBudget.minAvailable: 0
+      ingester.podDisruptionBudget.maxUnavailable: null
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: 0
+      - notExists:
+          path: spec.maxUnavailable
+
+  - it: should omit podDisruptionBudget.minAvailable when set to null
+    set:
+      ingester.podDisruptionBudget.minAvailable: null
+    asserts:
+      - notExists:
+          path: spec.minAvailable

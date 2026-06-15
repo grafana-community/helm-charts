@@ -321,6 +321,15 @@ tests:
       compactor.extraEnvFrom:
         - secretRef:
             name: compactor-env
+      global.extraEnv:
+        - name: GLOBAL_ENV
+          value: global
+      defaults.extraEnv:
+        - name: DEFAULTS_ENV
+          value: defaults
+      compactor.extraEnv:
+        - name: COMPACTOR_ENV
+          value: compactor
       global.extraVolumes:
         - name: global-volume
           emptyDir: {}
@@ -404,6 +413,36 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].envFrom[2].secretRef.name
           value: compactor-env
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[0]
+          value:
+            name: GLOBAL_ENV
+            value: global
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[1]
+          value:
+            name: DEFAULTS_ENV
+            value: defaults
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[2]
+          value:
+            name: COMPACTOR_ENV
+            value: compactor
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[3]
+          value:
+            name: GOMEMLIMIT
+            value: 217MiB
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[4]
+          value:
+            name: GOGC
+            value: "80"
         template: templates/compactor/workload.yaml
       - equal:
           path: spec.template.spec.containers[0].livenessProbe.httpGet.path

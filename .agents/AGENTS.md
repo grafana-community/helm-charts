@@ -19,7 +19,7 @@ Each chart follows standard Helm structure (`Chart.yaml`, `values.yaml`, `templa
 Pull Requests against this repository require that all charts which implement helm-unittests(https://github.com/helm-unittest/helm-unittest) must pass all of their unittests.  This can be done via a single command run from the repository root:
 
 ```bash
-make helm-unittest HELM_UNITTEST_CHART=<chart-name>
+make helm-unittest HELM_CHART=<chart-name>
 ```
 
 ## Contributing Conventions
