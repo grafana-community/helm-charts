@@ -1,0 +1,105 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: workload replicas
+templates:
+  - backend/workload.yaml
+  - bloom-builder/workload.yaml
+  - compactor/workload.yaml
+  - distributor/workload.yaml
+  - index-gateway/workload.yaml
+  - ingester/workload.yaml
+  - monolithic/workload.yaml
+  - overrides-exporter/workload.yaml
+  - pattern-ingester/workload.yaml
+  - querier/workload.yaml
+  - query-frontend/workload.yaml
+  - query-scheduler/workload.yaml
+  - read/workload.yaml
+  - ruler/workload.yaml
+  - write/workload.yaml
+  - config.yaml
+  - validate.yaml
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: should omit spec.replicas for single binary when replicas is null
+    set:
+      deploymentMode: SingleBinary
+      singleBinary.replicas: null
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: monolithic/workload.yaml
+
+  - it: should omit spec.replicas for simple scalable workloads when replicas is null
+    set:
+      deploymentMode: SimpleScalable
+      backend.replicas: null
+      read.replicas: null
+      write.replicas: null
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: backend/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: read/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: write/workload.yaml
+
+  - it: should omit spec.replicas for distributed workloads when replicas is null
+    set:
+      deploymentMode: Distributed
+      bloomBuilder.enabled: true
+      bloomBuilder.replicas: null
+      compactor.replicas: null
+      distributor.replicas: null
+      indexGateway.replicas: null
+      ingester.zoneAwareReplication.enabled: false
+      ingester.replicas: null
+      overridesExporter.enabled: true
+      overridesExporter.replicas: null
+      patternIngester.enabled: true
+      patternIngester.replicas: null
+      querier.replicas: null
+      queryFrontend.replicas: null
+      queryScheduler.replicas: null
+      ruler.replicas: null
+    asserts:
+      - notExists:
+          path: spec.replicas
+        template: bloom-builder/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: compactor/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: distributor/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: index-gateway/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: ingester/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: overrides-exporter/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: pattern-ingester/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: querier/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: query-frontend/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: query-scheduler/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: ruler/workload.yaml

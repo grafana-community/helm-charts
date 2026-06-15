@@ -355,8 +355,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the backend",
-                    "type": "integer"
+                    "description": "Number of replicas for the backend. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the backend",
@@ -868,8 +871,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the bloom-builder",
-                    "type": "integer"
+                    "description": "Number of replicas for the bloom-builder. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the bloom-builder",
@@ -2667,8 +2673,11 @@
                     "additionalProperties": true
                 },
                 "replicas": {
-                    "description": "Number of replicas for the compactor",
-                    "type": "integer"
+                    "description": "Number of replicas for the compactor. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the compactor",
@@ -3376,8 +3385,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the distributor",
-                    "type": "integer"
+                    "description": "Number of replicas for the distributor. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the distributor",
@@ -4710,8 +4722,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the index-gateway",
-                    "type": "integer"
+                    "description": "Number of replicas for the index-gateway. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the index-gateway",
@@ -5260,7 +5275,10 @@
                 },
                 "replicas": {
                     "description": "Number of replicas for the ingester, when zoneAwareReplication.enabled is true, the total number of replicas will match this value with each zone having 1/3rd of the total replicas. Set to null to omit spec.replicas from the StatefulSet, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
-                    "type": "integer"
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the ingester",
@@ -7262,8 +7280,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the overrides-exporter",
-                    "type": "integer"
+                    "description": "Number of replicas for the overrides-exporter. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the overrides-exporter",
@@ -7696,8 +7717,11 @@
                     "additionalProperties": true
                 },
                 "replicas": {
-                    "description": "Number of replicas for the pattern ingester",
-                    "type": "integer"
+                    "description": "Number of replicas for the pattern ingester. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the pattern ingester",
@@ -8141,8 +8165,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the querier",
-                    "type": "integer"
+                    "description": "Number of replicas for the querier. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the querier",
@@ -8636,8 +8663,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the query-frontend",
-                    "type": "integer"
+                    "description": "Number of replicas for the query-frontend. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the query-frontend",
@@ -8989,8 +9019,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the query-scheduler. It should be lower than `-querier.max-concurrent` to avoid generating back-pressure in queriers; it's also recommended that this value evenly divides the latter",
-                    "type": "integer"
+                    "description": "Number of replicas for the query-scheduler. It should be lower than `-querier.max-concurrent` to avoid generating back-pressure in queriers; it's also recommended that this value evenly divides the latter Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the query-scheduler",
@@ -9437,8 +9470,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the read",
-                    "type": "integer"
+                    "description": "Number of replicas for the read. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the read",
@@ -10204,8 +10240,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the ruler",
-                    "type": "integer"
+                    "description": "Number of replicas for the ruler. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the ruler",
@@ -10932,8 +10971,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the single binary",
-                    "type": "integer"
+                    "description": "Number of replicas for the single binary. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the single binary",
@@ -11746,8 +11788,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the write",
-                    "type": "integer"
+                    "description": "Number of replicas for the write. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resources": {
                     "description": "Resource requests and limits for the write",

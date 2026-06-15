@@ -1851,7 +1851,9 @@ singleBinary:
   enabled: true
     # -- Kind of read deployment. StatefulSet and Deployment are supported.
   kind: StatefulSet
-  # -- Number of replicas for the single binary
+  # @schema type:[integer, null]
+  # -- Number of replicas for the single binary. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # -- EXPERIMENTAL: Enable creating a Job to recreate the write StatefulSet when the compactor configuration is changed.
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
@@ -2102,7 +2104,9 @@ write:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the write
+  # @schema type:[integer, null]
+  # -- Number of replicas for the write. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 3
   # @schema skipProperties:true;additionalProperties:true
   # -- UpdateStrategy or Strategy for the write.
@@ -2356,7 +2360,9 @@ read:
   kind: Deployment
   # -- Override for the read fullname. By default, this is generated using the fullname template with "-backend"
   fullnameOverride: '{{ include "loki.name" . }}-read'
-  # -- Number of replicas for the read
+  # @schema type:[integer, null]
+  # -- Number of replicas for the read. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 3
   # @schema skipProperties:true;additionalProperties:true
   # -- UpdateStrategy or Strategy for the read.
@@ -2583,7 +2589,9 @@ backend:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the backend
+  # @schema type:[integer, null]
+  # -- Number of replicas for the backend. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 3
   # @schema skipProperties:true;additionalProperties:true
   # -- UpdateStrategy or Strategy for the backend.
@@ -2859,6 +2867,7 @@ ingester:
   # -- PodManagementPolicy for the ingester StatefulSet. Only applicable if `compactor.kind` is StatefulSet.
   ## OrderedReady and Parallel are supported.
   podManagementPolicy: Parallel
+  # @schema type:[integer, null]
   # -- Number of replicas for the ingester, when zoneAwareReplication.enabled is true, the total
   # number of replicas will match this value with each zone having 1/3rd of the total replicas.
   # Set to null to omit spec.replicas from the StatefulSet, allowing an external controller
@@ -3246,7 +3255,9 @@ ingester:
 distributor:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: true
-  # -- Number of replicas for the distributor
+  # @schema type:[integer, null]
+  # -- Number of replicas for the distributor. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
   kind: Deployment
@@ -3492,7 +3503,9 @@ querier:
   enabled: true
   # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
   kind: Deployment
-  # -- Number of replicas for the querier
+  # @schema type:[integer, null]
+  # -- Number of replicas for the querier. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema skipProperties:true;additionalProperties:true
   # -- Strategy for the querier.
@@ -3756,7 +3769,9 @@ queryFrontend:
   enabled: true
   # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
   kind: Deployment
-  # -- Number of replicas for the query-frontend
+  # @schema type:[integer, null]
+  # -- Number of replicas for the query-frontend. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema skipProperties:true;additionalProperties:true
   # -- Strategy for the querier.
@@ -3999,9 +4014,12 @@ queryScheduler:
   enabled: true
   # -- Kind of query-scheduler deployment. StatefulSet and Deployment are supported.
   kind: Deployment
+  # @schema type:[integer, null]
   # -- Number of replicas for the query-scheduler.
   # It should be lower than `-querier.max-concurrent` to avoid generating back-pressure in queriers;
   # it's also recommended that this value evenly divides the latter
+  # Set to null to omit spec.replicas from the workload, allowing an external controller
+  # (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema skipProperties:true;additionalProperties:true
   # -- Strategy for the query-scheduler.
@@ -4187,7 +4205,9 @@ indexGateway:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the index-gateway
+  # @schema type:[integer, null]
+  # -- Number of replicas for the index-gateway. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # -- Whether the index gateway should join the memberlist hashring
   joinMemberlist: true
@@ -4410,7 +4430,9 @@ compactor:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the compactor
+  # @schema type:[integer, null]
+  # -- Number of replicas for the compactor. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema skipProperties:true;additionalProperties:true
   # -- UpdateStrategy or Strategy for the compactor.
@@ -5040,7 +5062,9 @@ bloomBuilder:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the bloom-builder
+  # @schema type:[integer, null]
+  # -- Number of replicas for the bloom-builder. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # -- hostAliases to add
   hostAliases: []
@@ -5305,7 +5329,9 @@ patternIngester:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the pattern ingester
+  # @schema type:[integer, null]
+  # -- Number of replicas for the pattern ingester. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema skipProperties:true;additionalProperties:true
   # -- UpdateStrategy or Strategy for the pattern ingester.
@@ -5503,7 +5529,9 @@ ruler:
     enabled: false
   # -- Whether to enable the rules sidecar
   sidecar: false
-  # -- Number of replicas for the ruler
+  # @schema type:[integer, null]
+  # -- Number of replicas for the ruler. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # -- hostAliases to add
   hostAliases: []
@@ -5766,7 +5794,9 @@ overridesExporter:
   enabled: false
   # -- Kind of backend workload. StatefulSet and Deployment are supported.
   kind: Deployment
-  # -- Number of replicas for the overrides-exporter
+  # @schema type:[integer, null]
+  # -- Number of replicas for the overrides-exporter. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema additionalProperties:true
   # -- DNSConfig for overrides-exporter
