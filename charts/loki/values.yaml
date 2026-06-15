@@ -128,13 +128,13 @@ defaults:
   # @schema skipProperties:true;additionalProperties:true
   # -- The SecurityContext for Loki containers for loki pods
   containerSecurityContext: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Configures the liveness probe for loki pods
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Configures the readiness probe for loki pods
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Configures the startup probe for loki pods
   startupProbe: {}
   # @schema additionalProperties:true
@@ -215,7 +215,7 @@ defaults:
 # -- Configuration for running Loki
 # @default -- See values.yaml
 loki:
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # Configures the liveness probe for all of the Loki pods
   livenessProbe:
     httpGet:
@@ -225,7 +225,7 @@ loki:
     successThreshold: 1
     failureThreshold: 10
     timeoutSeconds: 1
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # Configures the readiness probe for all of the Loki pods
   readinessProbe:
     httpGet:
@@ -236,7 +236,7 @@ loki:
     successThreshold: 1
     failureThreshold: 3
     timeoutSeconds: 1
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # Configures the startup probe for all of the Loki pods
   startupProbe: {}
   image:
@@ -1041,7 +1041,7 @@ lokiCanary:
     digest: null
     # -- Docker image pull policy
     pullPolicy: IfNotPresent
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Liveness probe
   livenessProbe:
     httpGet:
@@ -1049,7 +1049,7 @@ lokiCanary:
       port: http-metrics
     initialDelaySeconds: 15
     timeoutSeconds: 1
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Readiness probe
   readinessProbe:
     httpGet:
@@ -1057,7 +1057,7 @@ lokiCanary:
       port: http-metrics
     initialDelaySeconds: 15
     timeoutSeconds: 1
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Startup probe
   startupProbe: {}
   # @schema skipProperties:true;additionalProperties:true
@@ -1222,6 +1222,7 @@ gateway:
     # @schema type:[number, null]
     # -- Target memory utilisation percentage for the gateway
     targetMemoryUtilizationPercentage: null
+    # @schema skipProperties:true;additionalProperties:true
     # -- See `kubectl explain deployment.spec.strategy` for more
     # -- ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
     # -- Behavior policies while scaling.
@@ -1256,7 +1257,7 @@ gateway:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -1538,10 +1539,10 @@ gateway:
       filters: []
       # -- Timeouts for the default rule
       timeouts: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe for the nginx container in the gateway pods.
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # Configures the readiness probe for the gateway
   readinessProbe:
     httpGet:
@@ -1549,7 +1550,7 @@ gateway:
       port: http
     initialDelaySeconds: 15
     timeoutSeconds: 1
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe for the nginx container in the gateway pods.
   startupProbe: {}
   nginxConfig:
@@ -1616,7 +1617,7 @@ gateway:
       runAsGroup: 65532
     # -- Extra args to add to the exporter container.
     extraArgs: []
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Liveness probe for memcached exporter
     livenessProbe:
       httpGet:
@@ -1626,7 +1627,7 @@ gateway:
       periodSeconds: 10
       timeoutSeconds: 5
       failureThreshold: 3
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Readiness probe for memcached exporter
     readinessProbe:
       httpGet:
@@ -1636,7 +1637,7 @@ gateway:
       periodSeconds: 5
       timeoutSeconds: 3
       failureThreshold: 3
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Startup probe for memcached exporter
     startupProbe: {}
     service:
@@ -1888,6 +1889,7 @@ singleBinary:
     #     target:
     #       type: AverageValue
     #       averageValue: 10k
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -1914,7 +1916,7 @@ singleBinary:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -2126,6 +2128,7 @@ write:
     # @schema type:[number, null]
     # -- Target memory utilization percentage for the write.
     targetMemoryUtilizationPercentage: null
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior policies while scaling.
     behavior:
       # -- see https://github.com/grafana/loki/blob/main/docs/sources/operations/storage/wal.md#how-to-scale-updown for scaledown details
@@ -2158,7 +2161,7 @@ write:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -2385,6 +2388,7 @@ read:
     # @schema type:[number, null]
     # -- Target memory utilisation percentage for the read
     targetMemoryUtilizationPercentage: null
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior policies while scaling.
     behavior: {}
     #  scaleUp:
@@ -2417,7 +2421,7 @@ read:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -2499,10 +2503,10 @@ read:
   # @schema additionalProperties:true
   # -- Resource requests and limits for the read
   resources: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for read pods. If empty, applies no livenessProbe
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe for the read pods. If empty, applies no startupProbe
   startupProbe: {}
   # -- Grace period to allow the read to shutdown before it is killed
@@ -2615,6 +2619,7 @@ backend:
     # @schema type:[number, null]
     # -- Target memory utilization percentage for the backend.
     targetMemoryUtilizationPercentage: null
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior policies while scaling.
     behavior: {}
     #    scaleUp:
@@ -2647,7 +2652,7 @@ backend:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -2906,6 +2911,7 @@ ingester:
     #     target:
     #       type: AverageValue
     #       averageValue: 10k
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -2932,7 +2938,7 @@ ingester:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -3084,13 +3090,13 @@ ingester:
   nodeSelector: {}
   # -- Tolerations for ingester pods
   tolerations: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- readiness probe settings for ingester pods. If empty, use `loki.readinessProbe`
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for ingester pods. If empty use `loki.livenessProbe`
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe settings for ingester pods. If empty use `loki.startupProbe`
   startupProbe: {}
   # @schema skipProperties:true;additionalProperties:true
@@ -3302,6 +3308,7 @@ distributor:
     #     target:
     #       type: AverageValue
     #       averageValue: 10k
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -3328,7 +3335,7 @@ distributor:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -3546,6 +3553,7 @@ querier:
     #     target:
     #       type: AverageValue
     #       averageValue: 12
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -3572,7 +3580,7 @@ querier:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -3812,6 +3820,7 @@ queryFrontend:
     #     target:
     #       type: AverageValue
     #       averageValue: 100
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -3838,7 +3847,7 @@ queryFrontend:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -4542,13 +4551,13 @@ compactor:
   extraVolumeMounts: []
   # -- Volumes to add to the compactor pods
   extraVolumes: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- readiness probe settings for compactor pods. If empty, use `loki.readinessProbe`
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for compactor pods. If empty use `loki.livenessProbe`
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for ingester pods. If empty use `loki.livenessProbe`
   startupProbe: {}
   # @schema additionalProperties:true
@@ -4752,13 +4761,13 @@ bloomGateway:
   extraVolumeMounts: []
   # -- Volumes to add to the bloom-gateway pods
   extraVolumes: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- readiness probe settings for bloom-gateway pods. If empty, use `loki.readinessProbe`
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for bloom-gateway pods. If empty use `loki.livenessProbe`
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe settings for bloom-gateway pods. If empty, use `loki.startupProbe`
   startupProbe: {}
   # @schema additionalProperties:true
@@ -4950,13 +4959,13 @@ bloomPlanner:
   extraVolumeMounts: []
   # -- Volumes to add to the bloom-planner pods
   extraVolumes: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- readiness probe settings for bloom-planner pods. If empty, use `loki.readinessProbe`
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for bloom-planner pods. If empty use `loki.livenessProbe`
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe settings for bloom-planner pods. If empty use `loki.startupProbe`
   startupProbe: {}
   # @schema additionalProperties:true
@@ -5099,6 +5108,7 @@ bloomBuilder:
     #     target:
     #       type: AverageValue
     #       averageValue: 100
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -5125,7 +5135,7 @@ bloomBuilder:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -5404,13 +5414,13 @@ patternIngester:
   extraVolumeMounts: []
   # -- Volumes to add to the pattern ingester pods
   extraVolumes: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- readiness probe settings for pattern ingester pods. If empty, use `loki.readinessProbe`
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for pattern ingester pods. If empty use `loki.livenessProbe`
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe settings for pattern ingester pods. If empty use `loki.startupProbe`
   startupProbe: {}
   # @schema additionalProperties:true
@@ -5994,7 +6004,7 @@ memcached:
     runAsNonRoot: true
     seccompProfile:
       type: RuntimeDefault
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Readiness probe for memcached pods (probe port defaults to container port)
   readinessProbe:
     tcpSocket:
@@ -6003,7 +6013,7 @@ memcached:
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 6
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Liveness probe for memcached pods
   livenessProbe:
     tcpSocket:
@@ -6012,7 +6022,7 @@ memcached:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Startup probe for memcached pods
   startupProbe: {}
 
@@ -6067,7 +6077,7 @@ memcachedExporter:
   #   memcached.tls.insecure-skip-verify: false
   #   memcached.tls.server-name: memcached
   extraArgs: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Liveness probe for memcached exporter
   livenessProbe:
     httpGet:
@@ -6077,7 +6087,7 @@ memcachedExporter:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Readiness probe for memcached exporter
   readinessProbe:
     httpGet:
@@ -6087,7 +6097,7 @@ memcachedExporter:
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Startup probe for memcached exporter
   startupProbe: {}
 
@@ -6701,9 +6711,10 @@ sidecar:
   disableX509StrictVerification: false
   # -- Ensure that rule files aren't conflicting and being overwritten by prefixing their name with the namespace they are defined in.
   enableUniqueFilenames: false
-  # @schema additionalProperties:true
-  # -- Readiness probe definition. Probe is disabled on the sidecar by default.
+  # @schema skipProperties:true;additionalProperties:true
+  # -- Readiness probe definition.
   readinessProbe:
+    enabled: true
     httpGet:
       path: /healthz
       port: http-sidecar
@@ -6712,9 +6723,10 @@ sidecar:
     successThreshold: 1
     failureThreshold: 3
     timeoutSeconds: 1
-  # @schema additionalProperties:true
-  # -- Liveness probe definition. Probe is disabled on the sidecar by default.
+  # @schema skipProperties:true;additionalProperties:true
+  # -- Liveness probe definition.
   livenessProbe:
+    enabled: true
     httpGet:
       path: /healthz
       port: http-sidecar
@@ -6723,9 +6735,10 @@ sidecar:
     successThreshold: 1
     failureThreshold: 3
     timeoutSeconds: 1
-  # @schema additionalProperties:true
-  # -- Startup probe definition. Probe is disabled on the sidecar by default.
-  startupProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- Startup probe definition.
+  startupProbe:
+    enabled: false
   rules:
     # -- Whether or not to create a sidecar to ingest rule from specific ConfigMaps and/or Secrets.
     enabled: true
