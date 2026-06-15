@@ -28,7 +28,8 @@
                     "properties": {
                         "behavior": {
                             "description": "Behavior policies while scaling.",
-                            "type": "object"
+                            "type": "object",
+                            "additionalProperties": true
                         },
                         "enabled": {
                             "description": "Enable autoscaling for the backend.",
@@ -538,20 +539,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -3101,20 +3089,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -3566,7 +3541,8 @@
                     "properties": {
                         "behavior": {
                             "description": "See `kubectl explain deployment.spec.strategy` for more",
-                            "type": "object"
+                            "type": "object",
+                            "additionalProperties": true
                         },
                         "enabled": {
                             "description": "Enable autoscaling for the gateway",
@@ -3876,61 +3852,11 @@
                         "livenessProbe": {
                             "description": "Liveness probe for memcached exporter",
                             "type": "object",
-                            "properties": {
-                                "failureThreshold": {
-                                    "type": "integer"
-                                },
-                                "httpGet": {
-                                    "type": "object",
-                                    "properties": {
-                                        "path": {
-                                            "type": "string"
-                                        },
-                                        "port": {
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "initialDelaySeconds": {
-                                    "type": "integer"
-                                },
-                                "periodSeconds": {
-                                    "type": "integer"
-                                },
-                                "timeoutSeconds": {
-                                    "type": "integer"
-                                }
-                            },
                             "additionalProperties": true
                         },
                         "readinessProbe": {
                             "description": "Readiness probe for memcached exporter",
                             "type": "object",
-                            "properties": {
-                                "failureThreshold": {
-                                    "type": "integer"
-                                },
-                                "httpGet": {
-                                    "type": "object",
-                                    "properties": {
-                                        "path": {
-                                            "type": "string"
-                                        },
-                                        "port": {
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "initialDelaySeconds": {
-                                    "type": "integer"
-                                },
-                                "periodSeconds": {
-                                    "type": "integer"
-                                },
-                                "timeoutSeconds": {
-                                    "type": "integer"
-                                }
-                            },
                             "additionalProperties": true
                         },
                         "resources": {
@@ -4114,25 +4040,6 @@
                 },
                 "readinessProbe": {
                     "type": "object",
-                    "properties": {
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "replicas": {
@@ -4911,20 +4818,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -5854,31 +5748,6 @@
                 },
                 "livenessProbe": {
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "successThreshold": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "memberlistConfig": {
@@ -5932,34 +5801,6 @@
                 },
                 "readinessProbe": {
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "successThreshold": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "revisionHistoryLimit": {
@@ -6167,25 +6008,6 @@
                 "livenessProbe": {
                     "description": "Liveness probe",
                     "type": "object",
-                    "properties": {
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "lokiurl": {
@@ -6277,25 +6099,6 @@
                 "readinessProbe": {
                     "description": "Readiness probe",
                     "type": "object",
-                    "properties": {
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "replicas": {
@@ -6460,28 +6263,6 @@
                 "livenessProbe": {
                     "description": "Liveness probe for memcached pods",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "tcpSocket": {
-                            "type": "object",
-                            "properties": {
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "podSecurityContext": {
@@ -6499,28 +6280,6 @@
                 "readinessProbe": {
                     "description": "Readiness probe for memcached pods (probe port defaults to container port)",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "tcpSocket": {
-                            "type": "object",
-                            "properties": {
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "serviceAccount": {
@@ -6609,61 +6368,11 @@
                 "livenessProbe": {
                     "description": "Liveness probe for memcached exporter",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "readinessProbe": {
                     "description": "Readiness probe for memcached exporter",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "resources": {
@@ -7829,20 +7538,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -8361,20 +8057,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -9181,7 +8864,8 @@
                     "properties": {
                         "behavior": {
                             "description": "Behavior policies while scaling.",
-                            "type": "object"
+                            "type": "object",
+                            "additionalProperties": true
                         },
                         "enabled": {
                             "description": "Enable autoscaling for the read, this is only used if `queryIndex.enabled: true`",
@@ -10439,69 +10123,13 @@
                     }
                 },
                 "livenessProbe": {
-                    "description": "Liveness probe definition. Probe is disabled on the sidecar by default.",
+                    "description": "Liveness probe definition.",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "successThreshold": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "readinessProbe": {
-                    "description": "Readiness probe definition. Probe is disabled on the sidecar by default.",
+                    "description": "Readiness probe definition.",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "successThreshold": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "resources": {
@@ -10585,7 +10213,7 @@
                     "type": "boolean"
                 },
                 "startupProbe": {
-                    "description": "Startup probe definition. Probe is disabled on the sidecar by default.",
+                    "description": "Startup probe definition.",
                     "type": "object",
                     "additionalProperties": true
                 }
@@ -10612,20 +10240,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -11374,56 +10989,7 @@
                         "behavior": {
                             "description": "Behavior policies while scaling.",
                             "type": "object",
-                            "properties": {
-                                "scaleDown": {
-                                    "type": "object",
-                                    "properties": {
-                                        "policies": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "periodSeconds": {
-                                                        "type": "integer"
-                                                    },
-                                                    "type": {
-                                                        "type": "string"
-                                                    },
-                                                    "value": {
-                                                        "type": "integer"
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        "stabilizationWindowSeconds": {
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "scaleUp": {
-                                    "description": "see https://github.com/grafana/loki/blob/main/docs/sources/operations/storage/wal.md#how-to-scale-updown for scaledown details",
-                                    "type": "object",
-                                    "properties": {
-                                        "policies": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "periodSeconds": {
-                                                        "type": "integer"
-                                                    },
-                                                    "type": {
-                                                        "type": "string"
-                                                    },
-                                                    "value": {
-                                                        "type": "integer"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "enabled": {
                             "description": "Enable autoscaling for the write.",
