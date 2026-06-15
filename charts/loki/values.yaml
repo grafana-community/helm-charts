@@ -6347,7 +6347,7 @@ resultsCache:
   # @schema additionalProperties:true
   # -- Resource requests and limits for the results-cache
   # By default a safe memory limit will be requested based on allocatedMemory value (floor (* 1.2 allocatedMemory)).
-  resources: null
+  resources: {}
   # -- Container resize policy for the results-cache
   # Example:
   # resizePolicy:
@@ -6356,7 +6356,6 @@ resultsCache:
   #   - resourceName: memory
   #     restartPolicy: RestartContainer
   resizePolicy: []
-  resources: {}
   # -- Service annotations and labels
   service:
     # @schema additionalProperties:{"type":"string"}
@@ -6510,7 +6509,7 @@ chunksCache:
   # @schema additionalProperties:true
   # -- Resource requests and limits for the chunks-cache
   # By default a safe memory limit will be requested based on allocatedMemory value (floor (* 1.2 allocatedMemory)).
-  resources: null
+  resources: {}
   # -- Container resize policy for the chunks-cache
   # Example:
   # resizePolicy:
@@ -6519,7 +6518,6 @@ chunksCache:
   #   - resourceName: memory
   #     restartPolicy: RestartContainer
   resizePolicy: []
-  resources: {}
   # -- Service annotations and labels
   service:
     # @schema additionalProperties:{"type":"string"}
@@ -6669,7 +6667,7 @@ chunksCache:
     # @schema additionalProperties:true
     # -- Resource requests and limits for the chunks-cache-l2
     # By default a safe memory limit will be requested based on allocatedMemory value (floor (* 1.2 allocatedMemory)).
-    resources: null
+    resources: {}
     # -- Container resize policy for the chunks-cache-l2
     # Example:
     # resizePolicy:
@@ -6678,7 +6676,6 @@ chunksCache:
     #   - resourceName: memory
     #     restartPolicy: RestartContainer
     resizePolicy: []
-    resources: {}
     # -- Service annotations and labels
     service:
       # @schema additionalProperties:{"type":"string"}
