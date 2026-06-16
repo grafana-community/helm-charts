@@ -371,6 +371,9 @@ tests:
         limits:
           cpu: 200m
           memory: 256Mi
+      compactor.resizePolicy:
+        - resourceName: memory
+          restartPolicy: NotRequired
       compactor.livenessProbe:
         enabled: true
         httpGet:
@@ -472,6 +475,14 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.limits.memory
           value: 256Mi
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[0].resourceName
+          value: memory
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[0].restartPolicy
+          value: NotRequired
         template: templates/compactor/workload.yaml
       - equal:
           path: spec.template.spec.containers[1].name

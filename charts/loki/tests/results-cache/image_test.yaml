@@ -14,6 +14,24 @@ set:
   memcached.image.tag: 1.6.41-alpine
 
 tests:
+  - it: should set resizePolicy for memcached and exporter containers
+    set:
+      resultsCache.resizePolicy:
+        - resourceName: memory
+          restartPolicy: NotRequired
+      memcachedExporter.resizePolicy:
+        - resourceName: cpu
+          restartPolicy: NotRequired
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[0].resourceName
+          value: memory
+        template: results-cache/statefulset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resizePolicy[0].resourceName
+          value: cpu
+        template: results-cache/statefulset.yaml
+
   - it: should use memcached image defaults for result-cache
     asserts:
       - equal:

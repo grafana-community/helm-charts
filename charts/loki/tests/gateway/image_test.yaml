@@ -9,6 +9,24 @@ set:
   gateway.metrics.enabled: true
 
 tests:
+  - it: should set resizePolicy for gateway and metrics containers
+    set:
+      gateway.resizePolicy:
+        - resourceName: memory
+          restartPolicy: NotRequired
+      gateway.metrics.resizePolicy:
+        - resourceName: cpu
+          restartPolicy: NotRequired
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[0].resourceName
+          value: memory
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resizePolicy[0].resourceName
+          value: cpu
+        template: gateway/deployment.yaml
+
   - it: should prepend global imageRegistry to gateway image when set
     set:
       global.imageRegistry: registry.example.com
