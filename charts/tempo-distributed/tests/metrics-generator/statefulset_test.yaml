@@ -1,0 +1,48 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: metrics-generator StatefulSet
+templates:
+  - metrics-generator/statefulset-metrics-generator.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: renders a StatefulSet with correct name and kind when kind is StatefulSet
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      metricsGenerator.persistence.enabled: true
+    asserts:
+      - equal:
+          path: kind
+          value: StatefulSet
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-metrics-generator
+
+  - it: volumeClaimTemplate uses metricsGenerator persistence labels, not ingester labels
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      metricsGenerator.persistence.enabled: true
+      metricsGenerator.persistence.labels:
+        storage-tier: fast
+      ingester.persistence.labels:
+        storage-tier: wrong
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.labels
+          value:
+            storage-tier: fast
+
+  - it: volumeClaimTemplate has no labels when metricsGenerator persistence labels are empty
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      metricsGenerator.persistence.enabled: true
+      ingester.persistence.labels:
+        storage-tier: should-not-appear
+    asserts:
+      - isNull:
+          path: spec.volumeClaimTemplates[0].metadata.labels
