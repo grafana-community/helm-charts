@@ -289,6 +289,11 @@ ingester:
   extraVolumeMounts: []
   # -- Extra volumes for ingester deployment
   extraVolumes: []
+  # -- Extra ports to add to the ingester container. The grpc port is included by default.
+  extraPorts:
+    - containerPort: 9095
+      name: grpc
+      protocol: TCP
   # -- Containers to add to the ingester pods
   extraContainers: []
   # -- Persistence configuration for ingester
