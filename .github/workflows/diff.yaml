@@ -147,6 +147,18 @@ jobs:
           #renovate: github=kedacore/keda
           KEDA_VERSION: 2.20.1
 
+      - name: Provision integration test prerequisites
+        env:
+          value_file: "${{ matrix.valuefile }}"
+        run: |
+          chart="$(basename "$(dirname "$(dirname "$value_file")")")"
+          prereq="charts/$chart/ci/integration/it-prerequisites.yaml"
+          if [ -f "$prereq" ]; then
+            echo "Provisioning prerequisites for $chart"
+            kubectl apply -f "$prereq"
+            kubectl wait pod -l ci-managed=true -A \
+              --for=condition=ready --timeout=300s
+          fi
 
       - name: Run diff for value file
         env:
