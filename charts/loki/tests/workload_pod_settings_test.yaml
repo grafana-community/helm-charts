@@ -1,0 +1,456 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: workload pod settings
+templates:
+  - monolithic/workload.yaml
+  - read/workload.yaml
+  - write/workload.yaml
+  - backend/workload.yaml
+  - ingester/workload.yaml
+  - distributor/workload.yaml
+  - querier/workload.yaml
+  - query-frontend/workload.yaml
+  - query-scheduler/workload.yaml
+  - index-gateway/workload.yaml
+  - compactor/workload.yaml
+  - bloom-gateway/statefulset.yaml
+  - bloom-planner/statefulset.yaml
+  - bloom-builder/workload.yaml
+  - pattern-ingester/workload.yaml
+  - ruler/workload.yaml
+  - overrides-exporter/workload.yaml
+  - gateway/deployment.yaml
+  - gateway/configmap.yaml
+  - loki-canary/daemonset.yaml
+  - table-manager/deployment.yaml
+  - results-cache/statefulset.yaml
+  - chunks-cache/statefulset.yaml
+  - config.yaml
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: should render pod settings for the monolithic component
+    set:
+      deploymentMode: Monolithic
+      singleBinary.replicas: 1
+      singleBinary.persistence.enabled: false
+      singleBinary.resources: &resources
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+      singleBinary.dnsConfig: &dnsConfig
+        options:
+          - name: ndots
+            value: "2"
+      singleBinary.affinity: &affinity
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - zone-a
+      singleBinary.nodeSelector: &nodeSelector
+        disktype: ssd
+      singleBinary.tolerations: &tolerations
+        - key: dedicated
+          operator: Equal
+          value: logs
+          effect: NoSchedule
+    asserts:
+      - equal: &resourcesAssert
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+        template: monolithic/workload.yaml
+      - equal: &dnsAssert
+          path: spec.template.spec.dnsConfig.options[0].name
+          value: ndots
+        template: monolithic/workload.yaml
+      - equal: &affinityAssert
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values[0]
+          value: zone-a
+        template: monolithic/workload.yaml
+      - equal: &nodeSelectorAssert
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+        template: monolithic/workload.yaml
+      - equal: &tolerationsAssert
+          path: spec.template.spec.tolerations[0].value
+          value: logs
+        template: monolithic/workload.yaml
+
+  - it: should render pod settings for simple scalable components
+    set:
+      deploymentMode: SimpleScalable
+      read.legacyReadTarget: false
+      write.resources: *resources
+      write.dnsConfig: *dnsConfig
+      write.affinity: *affinity
+      write.nodeSelector: *nodeSelector
+      write.tolerations: *tolerations
+      read.resources: *resources
+      read.dnsConfig: *dnsConfig
+      read.affinity: *affinity
+      read.nodeSelector: *nodeSelector
+      read.tolerations: *tolerations
+      backend.resources: *resources
+      backend.dnsConfig: *dnsConfig
+      backend.affinity: *affinity
+      backend.nodeSelector: *nodeSelector
+      backend.tolerations: *tolerations
+    asserts:
+      - equal: *resourcesAssert
+        template: write/workload.yaml
+      - equal: *dnsAssert
+        template: write/workload.yaml
+      - equal: *affinityAssert
+        template: write/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: write/workload.yaml
+      - equal: *tolerationsAssert
+        template: write/workload.yaml
+      - equal: *resourcesAssert
+        template: read/workload.yaml
+      - equal: *dnsAssert
+        template: read/workload.yaml
+      - equal: *affinityAssert
+        template: read/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: read/workload.yaml
+      - equal: *tolerationsAssert
+        template: read/workload.yaml
+      - equal: *resourcesAssert
+        template: backend/workload.yaml
+      - equal: *dnsAssert
+        template: backend/workload.yaml
+      - equal: *affinityAssert
+        template: backend/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: backend/workload.yaml
+      - equal: *tolerationsAssert
+        template: backend/workload.yaml
+
+  - it: should render pod settings for distributed components
+    set:
+      deploymentMode: Distributed
+      ingester.zoneAwareReplication.enabled: false
+      ingester.resources: *resources
+      ingester.dnsConfig: *dnsConfig
+      ingester.affinity: *affinity
+      ingester.nodeSelector: *nodeSelector
+      ingester.tolerations: *tolerations
+      distributor.resources: *resources
+      distributor.dnsConfig: *dnsConfig
+      distributor.affinity: *affinity
+      distributor.nodeSelector: *nodeSelector
+      distributor.tolerations: *tolerations
+      querier.resources: *resources
+      querier.dnsConfig: *dnsConfig
+      querier.affinity: *affinity
+      querier.nodeSelector: *nodeSelector
+      querier.tolerations: *tolerations
+      queryFrontend.resources: *resources
+      queryFrontend.dnsConfig: *dnsConfig
+      queryFrontend.affinity: *affinity
+      queryFrontend.nodeSelector: *nodeSelector
+      queryFrontend.tolerations: *tolerations
+      queryScheduler.resources: *resources
+      queryScheduler.dnsConfig: *dnsConfig
+      queryScheduler.affinity: *affinity
+      queryScheduler.nodeSelector: *nodeSelector
+      queryScheduler.tolerations: *tolerations
+      indexGateway.resources: *resources
+      indexGateway.dnsConfig: *dnsConfig
+      indexGateway.affinity: *affinity
+      indexGateway.nodeSelector: *nodeSelector
+      indexGateway.tolerations: *tolerations
+      compactor.resources: *resources
+      compactor.dnsConfig: *dnsConfig
+      compactor.affinity: *affinity
+      compactor.nodeSelector: *nodeSelector
+      compactor.tolerations: *tolerations
+      bloomGateway.replicas: 1
+      bloomGateway.resources: *resources
+      bloomGateway.dnsConfig: *dnsConfig
+      bloomGateway.affinity: *affinity
+      bloomGateway.nodeSelector: *nodeSelector
+      bloomGateway.tolerations: *tolerations
+      bloomPlanner.replicas: 1
+      bloomPlanner.resources: *resources
+      bloomPlanner.dnsConfig: *dnsConfig
+      bloomPlanner.affinity: *affinity
+      bloomPlanner.nodeSelector: *nodeSelector
+      bloomPlanner.tolerations: *tolerations
+      bloomBuilder.enabled: true
+      bloomBuilder.resources: *resources
+      bloomBuilder.dnsConfig: *dnsConfig
+      bloomBuilder.affinity: *affinity
+      bloomBuilder.nodeSelector: *nodeSelector
+      bloomBuilder.tolerations: *tolerations
+      patternIngester.enabled: true
+      patternIngester.resources: *resources
+      patternIngester.dnsConfig: *dnsConfig
+      patternIngester.affinity: *affinity
+      patternIngester.nodeSelector: *nodeSelector
+      patternIngester.tolerations: *tolerations
+      ruler.replicas: 1
+      ruler.resources: *resources
+      ruler.dnsConfig: *dnsConfig
+      ruler.affinity: *affinity
+      ruler.nodeSelector: *nodeSelector
+      ruler.tolerations: *tolerations
+      overridesExporter.enabled: true
+      overridesExporter.resources: *resources
+      overridesExporter.dnsConfig: *dnsConfig
+      overridesExporter.affinity: *affinity
+      overridesExporter.nodeSelector: *nodeSelector
+      overridesExporter.tolerations: *tolerations
+    asserts:
+      - equal: *resourcesAssert
+        template: ingester/workload.yaml
+      - equal: *dnsAssert
+        template: ingester/workload.yaml
+      - equal: *affinityAssert
+        template: ingester/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: ingester/workload.yaml
+      - equal: *tolerationsAssert
+        template: ingester/workload.yaml
+      - equal: *resourcesAssert
+        template: distributor/workload.yaml
+      - equal: *dnsAssert
+        template: distributor/workload.yaml
+      - equal: *affinityAssert
+        template: distributor/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: distributor/workload.yaml
+      - equal: *tolerationsAssert
+        template: distributor/workload.yaml
+      - equal: *resourcesAssert
+        template: querier/workload.yaml
+      - equal: *dnsAssert
+        template: querier/workload.yaml
+      - equal: *affinityAssert
+        template: querier/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: querier/workload.yaml
+      - equal: *tolerationsAssert
+        template: querier/workload.yaml
+      - equal: *resourcesAssert
+        template: query-frontend/workload.yaml
+      - equal: *dnsAssert
+        template: query-frontend/workload.yaml
+      - equal: *affinityAssert
+        template: query-frontend/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: query-frontend/workload.yaml
+      - equal: *tolerationsAssert
+        template: query-frontend/workload.yaml
+      - equal: *resourcesAssert
+        template: query-scheduler/workload.yaml
+      - equal: *dnsAssert
+        template: query-scheduler/workload.yaml
+      - equal: *affinityAssert
+        template: query-scheduler/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: query-scheduler/workload.yaml
+      - equal: *tolerationsAssert
+        template: query-scheduler/workload.yaml
+      - equal: *resourcesAssert
+        template: index-gateway/workload.yaml
+      - equal: *dnsAssert
+        template: index-gateway/workload.yaml
+      - equal: *affinityAssert
+        template: index-gateway/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: index-gateway/workload.yaml
+      - equal: *tolerationsAssert
+        template: index-gateway/workload.yaml
+      - equal: *resourcesAssert
+        template: compactor/workload.yaml
+      - equal: *dnsAssert
+        template: compactor/workload.yaml
+      - equal: *affinityAssert
+        template: compactor/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: compactor/workload.yaml
+      - equal: *tolerationsAssert
+        template: compactor/workload.yaml
+      - equal: *resourcesAssert
+        template: bloom-gateway/statefulset.yaml
+      - equal: *dnsAssert
+        template: bloom-gateway/statefulset.yaml
+      - equal: *affinityAssert
+        template: bloom-gateway/statefulset.yaml
+      - equal: *nodeSelectorAssert
+        template: bloom-gateway/statefulset.yaml
+      - equal: *tolerationsAssert
+        template: bloom-gateway/statefulset.yaml
+      - equal: *resourcesAssert
+        template: bloom-planner/statefulset.yaml
+      - equal: *dnsAssert
+        template: bloom-planner/statefulset.yaml
+      - equal: *affinityAssert
+        template: bloom-planner/statefulset.yaml
+      - equal: *nodeSelectorAssert
+        template: bloom-planner/statefulset.yaml
+      - equal: *tolerationsAssert
+        template: bloom-planner/statefulset.yaml
+      - equal: *resourcesAssert
+        template: bloom-builder/workload.yaml
+      - equal: *dnsAssert
+        template: bloom-builder/workload.yaml
+      - equal: *affinityAssert
+        template: bloom-builder/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: bloom-builder/workload.yaml
+      - equal: *tolerationsAssert
+        template: bloom-builder/workload.yaml
+      - equal: *resourcesAssert
+        template: pattern-ingester/workload.yaml
+      - equal: *dnsAssert
+        template: pattern-ingester/workload.yaml
+      - equal: *affinityAssert
+        template: pattern-ingester/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: pattern-ingester/workload.yaml
+      - equal: *tolerationsAssert
+        template: pattern-ingester/workload.yaml
+      - equal: *resourcesAssert
+        template: ruler/workload.yaml
+      - equal: *dnsAssert
+        template: ruler/workload.yaml
+      - equal: *affinityAssert
+        template: ruler/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: ruler/workload.yaml
+      - equal: *tolerationsAssert
+        template: ruler/workload.yaml
+      - equal: *resourcesAssert
+        template: overrides-exporter/workload.yaml
+      - equal: *dnsAssert
+        template: overrides-exporter/workload.yaml
+      - equal: *affinityAssert
+        template: overrides-exporter/workload.yaml
+      - equal: *nodeSelectorAssert
+        template: overrides-exporter/workload.yaml
+      - equal: *tolerationsAssert
+        template: overrides-exporter/workload.yaml
+
+  - it: should render pod settings for gateway canary and table-manager
+    set:
+      gateway.resources: *resources
+      gateway.dnsConfig: *dnsConfig
+      gateway.affinity: *affinity
+      gateway.nodeSelector: *nodeSelector
+      gateway.tolerations: *tolerations
+      lokiCanary.resources: *resources
+      lokiCanary.dnsConfig: *dnsConfig
+      lokiCanary.affinity: *affinity
+      lokiCanary.nodeSelector: *nodeSelector
+      lokiCanary.tolerations: *tolerations
+      tableManager.enabled: true
+      tableManager.resources: *resources
+      tableManager.dnsConfig: *dnsConfig
+      tableManager.affinity: *affinity
+      tableManager.nodeSelector: *nodeSelector
+      tableManager.tolerations: *tolerations
+    asserts:
+      - equal: *resourcesAssert
+        template: gateway/deployment.yaml
+      - equal: *dnsAssert
+        template: gateway/deployment.yaml
+      - equal: *affinityAssert
+        template: gateway/deployment.yaml
+      - equal: *nodeSelectorAssert
+        template: gateway/deployment.yaml
+      - equal: *tolerationsAssert
+        template: gateway/deployment.yaml
+      - equal: *resourcesAssert
+        template: loki-canary/daemonset.yaml
+      - equal: *dnsAssert
+        template: loki-canary/daemonset.yaml
+      - equal: *affinityAssert
+        template: loki-canary/daemonset.yaml
+      - equal: *nodeSelectorAssert
+        template: loki-canary/daemonset.yaml
+      - equal: *tolerationsAssert
+        template: loki-canary/daemonset.yaml
+      - equal: *resourcesAssert
+        template: table-manager/deployment.yaml
+      - equal: *dnsAssert
+        template: table-manager/deployment.yaml
+      - equal: *affinityAssert
+        template: table-manager/deployment.yaml
+      - equal: *nodeSelectorAssert
+        template: table-manager/deployment.yaml
+      - equal: *tolerationsAssert
+        template: table-manager/deployment.yaml
+
+  - it: should render pod settings for cache components
+    set:
+      resultsCache.resources: *resources
+      resultsCache.dnsConfig: *dnsConfig
+      resultsCache.affinity: *affinity
+      resultsCache.nodeSelector: *nodeSelector
+      resultsCache.tolerations: *tolerations
+      chunksCache.resources: *resources
+      chunksCache.dnsConfig: *dnsConfig
+      chunksCache.affinity: *affinity
+      chunksCache.nodeSelector: *nodeSelector
+      chunksCache.tolerations: *tolerations
+      chunksCache.l2.enabled: true
+      chunksCache.l2.resources: *resources
+      chunksCache.l2.dnsConfig: *dnsConfig
+      chunksCache.l2.affinity: *affinity
+      chunksCache.l2.nodeSelector: *nodeSelector
+      chunksCache.l2.tolerations: *tolerations
+    asserts:
+      - equal: *resourcesAssert
+        template: results-cache/statefulset.yaml
+      - equal: *dnsAssert
+        template: results-cache/statefulset.yaml
+      - equal: *affinityAssert
+        template: results-cache/statefulset.yaml
+      - equal: *nodeSelectorAssert
+        template: results-cache/statefulset.yaml
+      - equal: *tolerationsAssert
+        template: results-cache/statefulset.yaml
+      - equal: *resourcesAssert
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 0
+      - equal: *dnsAssert
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 0
+      - equal: *affinityAssert
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 0
+      - equal: *nodeSelectorAssert
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 0
+      - equal: *tolerationsAssert
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 0
+      - equal: *resourcesAssert
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 1
+      - equal: *dnsAssert
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 1
+      - equal: *affinityAssert
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 1
+      - equal: *nodeSelectorAssert
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 1
+      - equal: *tolerationsAssert
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 1

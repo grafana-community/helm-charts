@@ -1,0 +1,24 @@
+# $schema=https://github.com/losisin/helm-values-schema-json/raw/refs/heads/main/config.schema.json
+
+values:
+  - values.yaml
+
+draft: 7
+indent: 4
+output: values.schema.json
+
+bundle: true
+bundleRoot: ""
+bundleWithoutID: true
+
+k8sSchemaURL: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/{{ .K8sSchemaVersion }}/
+k8sSchemaVersion: "v1.36.1"
+
+useHelmDocs: true
+
+noAdditionalProperties: false
+noDefaultGlobal: false
+
+schemaRoot:
+  id: https://github.com/grafana-community/helm-charts
+  additionalProperties: true
