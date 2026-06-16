@@ -28,7 +28,8 @@
                     "properties": {
                         "behavior": {
                             "description": "Behavior policies while scaling.",
-                            "type": "object"
+                            "type": "object",
+                            "additionalProperties": true
                         },
                         "enabled": {
                             "description": "Enable autoscaling for the backend.",
@@ -355,8 +356,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the backend",
-                    "type": "integer"
+                    "description": "Number of replicas for the backend. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the backend Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -542,20 +546,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -872,8 +863,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the bloom-builder",
-                    "type": "integer"
+                    "description": "Number of replicas for the bloom-builder. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the bloom-builder Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -2691,8 +2685,11 @@
                     "additionalProperties": true
                 },
                 "replicas": {
-                    "description": "Number of replicas for the compactor",
-                    "type": "integer"
+                    "description": "Number of replicas for the compactor. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the compactor Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -3129,20 +3126,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -3404,8 +3388,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the distributor",
-                    "type": "integer"
+                    "description": "Number of replicas for the distributor. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the distributor Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -3598,7 +3585,8 @@
                     "properties": {
                         "behavior": {
                             "description": "See `kubectl explain deployment.spec.strategy` for more",
-                            "type": "object"
+                            "type": "object",
+                            "additionalProperties": true
                         },
                         "enabled": {
                             "description": "Enable autoscaling for the gateway",
@@ -3908,61 +3896,11 @@
                         "livenessProbe": {
                             "description": "Liveness probe for memcached exporter",
                             "type": "object",
-                            "properties": {
-                                "failureThreshold": {
-                                    "type": "integer"
-                                },
-                                "httpGet": {
-                                    "type": "object",
-                                    "properties": {
-                                        "path": {
-                                            "type": "string"
-                                        },
-                                        "port": {
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "initialDelaySeconds": {
-                                    "type": "integer"
-                                },
-                                "periodSeconds": {
-                                    "type": "integer"
-                                },
-                                "timeoutSeconds": {
-                                    "type": "integer"
-                                }
-                            },
                             "additionalProperties": true
                         },
                         "readinessProbe": {
                             "description": "Readiness probe for memcached exporter",
                             "type": "object",
-                            "properties": {
-                                "failureThreshold": {
-                                    "type": "integer"
-                                },
-                                "httpGet": {
-                                    "type": "object",
-                                    "properties": {
-                                        "path": {
-                                            "type": "string"
-                                        },
-                                        "port": {
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "initialDelaySeconds": {
-                                    "type": "integer"
-                                },
-                                "periodSeconds": {
-                                    "type": "integer"
-                                },
-                                "timeoutSeconds": {
-                                    "type": "integer"
-                                }
-                            },
                             "additionalProperties": true
                         },
                         "resizePolicy": {
@@ -4150,25 +4088,6 @@
                 },
                 "readinessProbe": {
                     "type": "object",
-                    "properties": {
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "replicas": {
@@ -4750,8 +4669,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the index-gateway",
-                    "type": "integer"
+                    "description": "Number of replicas for the index-gateway. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the index-gateway Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -4955,20 +4877,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -5304,7 +5213,10 @@
                 },
                 "replicas": {
                     "description": "Number of replicas for the ingester, when zoneAwareReplication.enabled is true, the total number of replicas will match this value with each zone having 1/3rd of the total replicas. Set to null to omit spec.replicas from the StatefulSet, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
-                    "type": "integer"
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the ingester Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -5902,31 +5814,6 @@
                 },
                 "livenessProbe": {
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "successThreshold": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "memberlistConfig": {
@@ -5980,34 +5867,6 @@
                 },
                 "readinessProbe": {
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "successThreshold": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "revisionHistoryLimit": {
@@ -6215,25 +6074,6 @@
                 "livenessProbe": {
                     "description": "Liveness probe",
                     "type": "object",
-                    "properties": {
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "lokiurl": {
@@ -6325,25 +6165,6 @@
                 "readinessProbe": {
                     "description": "Readiness probe",
                     "type": "object",
-                    "properties": {
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "replicas": {
@@ -6512,28 +6333,6 @@
                 "livenessProbe": {
                     "description": "Liveness probe for memcached pods",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "tcpSocket": {
-                            "type": "object",
-                            "properties": {
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "podSecurityContext": {
@@ -6551,28 +6350,6 @@
                 "readinessProbe": {
                     "description": "Readiness probe for memcached pods (probe port defaults to container port)",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "tcpSocket": {
-                            "type": "object",
-                            "properties": {
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "serviceAccount": {
@@ -6661,61 +6438,11 @@
                 "livenessProbe": {
                     "description": "Liveness probe for memcached exporter",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "readinessProbe": {
                     "description": "Readiness probe for memcached exporter",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "resizePolicy": {
@@ -7318,8 +7045,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the overrides-exporter",
-                    "type": "integer"
+                    "description": "Number of replicas for the overrides-exporter. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the overrides-exporter Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -7756,8 +7486,11 @@
                     "additionalProperties": true
                 },
                 "replicas": {
-                    "description": "Number of replicas for the pattern ingester",
-                    "type": "integer"
+                    "description": "Number of replicas for the pattern ingester. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the pattern ingester Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -7893,20 +7626,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -8205,8 +7925,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the querier",
-                    "type": "integer"
+                    "description": "Number of replicas for the querier. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the querier Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -8429,20 +8152,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -8704,8 +8414,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the query-frontend",
-                    "type": "integer"
+                    "description": "Number of replicas for the query-frontend. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the query-frontend Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -9061,8 +8774,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the query-scheduler. It should be lower than `-querier.max-concurrent` to avoid generating back-pressure in queriers; it's also recommended that this value evenly divides the latter",
-                    "type": "integer"
+                    "description": "Number of replicas for the query-scheduler. It should be lower than `-querier.max-concurrent` to avoid generating back-pressure in queriers; it's also recommended that this value evenly divides the latter Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the query-scheduler Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -9257,7 +8973,8 @@
                     "properties": {
                         "behavior": {
                             "description": "Behavior policies while scaling.",
-                            "type": "object"
+                            "type": "object",
+                            "additionalProperties": true
                         },
                         "enabled": {
                             "description": "Enable autoscaling for the read, this is only used if `queryIndex.enabled: true`",
@@ -9513,8 +9230,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the read",
-                    "type": "integer"
+                    "description": "Number of replicas for the read. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the read Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -10288,8 +10008,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the ruler",
-                    "type": "integer"
+                    "description": "Number of replicas for the ruler. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the ruler Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -10527,69 +10250,13 @@
                     }
                 },
                 "livenessProbe": {
-                    "description": "Liveness probe definition. Probe is disabled on the sidecar by default.",
+                    "description": "Liveness probe definition.",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "successThreshold": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "readinessProbe": {
-                    "description": "Readiness probe definition. Probe is disabled on the sidecar by default.",
+                    "description": "Readiness probe definition.",
                     "type": "object",
-                    "properties": {
-                        "failureThreshold": {
-                            "type": "integer"
-                        },
-                        "httpGet": {
-                            "type": "object",
-                            "properties": {
-                                "path": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "initialDelaySeconds": {
-                            "type": "integer"
-                        },
-                        "periodSeconds": {
-                            "type": "integer"
-                        },
-                        "successThreshold": {
-                            "type": "integer"
-                        },
-                        "timeoutSeconds": {
-                            "type": "integer"
-                        }
-                    },
                     "additionalProperties": true
                 },
                 "resizePolicy": {
@@ -10677,7 +10344,7 @@
                     "type": "boolean"
                 },
                 "startupProbe": {
-                    "description": "Startup probe definition. Probe is disabled on the sidecar by default.",
+                    "description": "Startup probe definition.",
                     "type": "object",
                     "additionalProperties": true
                 }
@@ -10704,20 +10371,7 @@
                         "behavior": {
                             "description": "HPA behavior configuration, passed directly as a K8s HPA behavior object.",
                             "type": "object",
-                            "properties": {
-                                "enabled": {
-                                    "description": "Enable autoscaling behaviours",
-                                    "type": "boolean"
-                                },
-                                "scaleDown": {
-                                    "description": "define scale down policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                },
-                                "scaleUp": {
-                                    "description": "define scale up policies, must conform to HPAScalingRules",
-                                    "type": "object"
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "customMetrics": {
                             "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
@@ -11024,8 +10678,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the single binary",
-                    "type": "integer"
+                    "description": "Number of replicas for the single binary. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the single binary Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
@@ -11474,56 +11131,7 @@
                         "behavior": {
                             "description": "Behavior policies while scaling.",
                             "type": "object",
-                            "properties": {
-                                "scaleDown": {
-                                    "type": "object",
-                                    "properties": {
-                                        "policies": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "periodSeconds": {
-                                                        "type": "integer"
-                                                    },
-                                                    "type": {
-                                                        "type": "string"
-                                                    },
-                                                    "value": {
-                                                        "type": "integer"
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        "stabilizationWindowSeconds": {
-                                            "type": "integer"
-                                        }
-                                    }
-                                },
-                                "scaleUp": {
-                                    "description": "see https://github.com/grafana/loki/blob/main/docs/sources/operations/storage/wal.md#how-to-scale-updown for scaledown details",
-                                    "type": "object",
-                                    "properties": {
-                                        "policies": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "periodSeconds": {
-                                                        "type": "integer"
-                                                    },
-                                                    "type": {
-                                                        "type": "string"
-                                                    },
-                                                    "value": {
-                                                        "type": "integer"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            "additionalProperties": true
                         },
                         "enabled": {
                             "description": "Enable autoscaling for the write.",
@@ -11846,8 +11454,11 @@
                     ]
                 },
                 "replicas": {
-                    "description": "Number of replicas for the write",
-                    "type": "integer"
+                    "description": "Number of replicas for the write. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "resizePolicy": {
                     "description": "Container resize policy for the write Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",

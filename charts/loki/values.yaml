@@ -128,13 +128,13 @@ defaults:
   # @schema skipProperties:true;additionalProperties:true
   # -- The SecurityContext for Loki containers for loki pods
   containerSecurityContext: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Configures the liveness probe for loki pods
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Configures the readiness probe for loki pods
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Configures the startup probe for loki pods
   startupProbe: {}
   # @schema additionalProperties:true
@@ -215,7 +215,7 @@ defaults:
 # -- Configuration for running Loki
 # @default -- See values.yaml
 loki:
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # Configures the liveness probe for all of the Loki pods
   livenessProbe:
     httpGet:
@@ -225,7 +225,7 @@ loki:
     successThreshold: 1
     failureThreshold: 10
     timeoutSeconds: 1
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # Configures the readiness probe for all of the Loki pods
   readinessProbe:
     httpGet:
@@ -236,7 +236,7 @@ loki:
     successThreshold: 1
     failureThreshold: 3
     timeoutSeconds: 1
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # Configures the startup probe for all of the Loki pods
   startupProbe: {}
   image:
@@ -1049,7 +1049,7 @@ lokiCanary:
     digest: null
     # -- Docker image pull policy
     pullPolicy: IfNotPresent
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Liveness probe
   livenessProbe:
     httpGet:
@@ -1057,7 +1057,7 @@ lokiCanary:
       port: http-metrics
     initialDelaySeconds: 15
     timeoutSeconds: 1
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Readiness probe
   readinessProbe:
     httpGet:
@@ -1065,7 +1065,7 @@ lokiCanary:
       port: http-metrics
     initialDelaySeconds: 15
     timeoutSeconds: 1
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Startup probe
   startupProbe: {}
   # @schema skipProperties:true;additionalProperties:true
@@ -1230,6 +1230,7 @@ gateway:
     # @schema type:[number, null]
     # -- Target memory utilisation percentage for the gateway
     targetMemoryUtilizationPercentage: null
+    # @schema skipProperties:true;additionalProperties:true
     # -- See `kubectl explain deployment.spec.strategy` for more
     # -- ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
     # -- Behavior policies while scaling.
@@ -1264,7 +1265,7 @@ gateway:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -1554,10 +1555,10 @@ gateway:
       filters: []
       # -- Timeouts for the default rule
       timeouts: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe for the nginx container in the gateway pods.
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # Configures the readiness probe for the gateway
   readinessProbe:
     httpGet:
@@ -1565,7 +1566,7 @@ gateway:
       port: http
     initialDelaySeconds: 15
     timeoutSeconds: 1
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe for the nginx container in the gateway pods.
   startupProbe: {}
   nginxConfig:
@@ -1640,7 +1641,7 @@ gateway:
       runAsGroup: 65532
     # -- Extra args to add to the exporter container.
     extraArgs: []
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Liveness probe for memcached exporter
     livenessProbe:
       httpGet:
@@ -1650,7 +1651,7 @@ gateway:
       periodSeconds: 10
       timeoutSeconds: 5
       failureThreshold: 3
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Readiness probe for memcached exporter
     readinessProbe:
       httpGet:
@@ -1660,7 +1661,7 @@ gateway:
       periodSeconds: 5
       timeoutSeconds: 3
       failureThreshold: 3
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Startup probe for memcached exporter
     startupProbe: {}
     service:
@@ -1875,7 +1876,9 @@ singleBinary:
   enabled: true
     # -- Kind of read deployment. StatefulSet and Deployment are supported.
   kind: StatefulSet
-  # -- Number of replicas for the single binary
+  # @schema type:[integer, null]
+  # -- Number of replicas for the single binary. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # -- EXPERIMENTAL: Enable creating a Job to recreate the write StatefulSet when the compactor configuration is changed.
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
@@ -1910,6 +1913,7 @@ singleBinary:
     #     target:
     #       type: AverageValue
     #       averageValue: 10k
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -1936,7 +1940,7 @@ singleBinary:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -2134,7 +2138,9 @@ write:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the write
+  # @schema type:[integer, null]
+  # -- Number of replicas for the write. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 3
   # @schema skipProperties:true;additionalProperties:true
   # -- UpdateStrategy or Strategy for the write.
@@ -2154,6 +2160,7 @@ write:
     # @schema type:[number, null]
     # -- Target memory utilization percentage for the write.
     targetMemoryUtilizationPercentage: null
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior policies while scaling.
     behavior:
       # -- see https://github.com/grafana/loki/blob/main/docs/sources/operations/storage/wal.md#how-to-scale-updown for scaledown details
@@ -2186,7 +2193,7 @@ write:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -2396,7 +2403,9 @@ read:
   kind: Deployment
   # -- Override for the read fullname. By default, this is generated using the fullname template with "-backend"
   fullnameOverride: '{{ include "loki.name" . }}-read'
-  # -- Number of replicas for the read
+  # @schema type:[integer, null]
+  # -- Number of replicas for the read. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 3
   # @schema skipProperties:true;additionalProperties:true
   # -- UpdateStrategy or Strategy for the read.
@@ -2419,6 +2428,7 @@ read:
     # @schema type:[number, null]
     # -- Target memory utilisation percentage for the read
     targetMemoryUtilizationPercentage: null
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior policies while scaling.
     behavior: {}
     #  scaleUp:
@@ -2451,7 +2461,7 @@ read:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -2541,10 +2551,10 @@ read:
   #   - resourceName: memory
   #     restartPolicy: RestartContainer
   resizePolicy: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for read pods. If empty, applies no livenessProbe
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe for the read pods. If empty, applies no startupProbe
   startupProbe: {}
   # -- Grace period to allow the read to shutdown before it is killed
@@ -2631,7 +2641,9 @@ backend:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the backend
+  # @schema type:[integer, null]
+  # -- Number of replicas for the backend. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 3
   # @schema skipProperties:true;additionalProperties:true
   # -- UpdateStrategy or Strategy for the backend.
@@ -2655,6 +2667,7 @@ backend:
     # @schema type:[number, null]
     # -- Target memory utilization percentage for the backend.
     targetMemoryUtilizationPercentage: null
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior policies while scaling.
     behavior: {}
     #    scaleUp:
@@ -2687,7 +2700,7 @@ backend:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -2915,6 +2928,7 @@ ingester:
   # -- PodManagementPolicy for the ingester StatefulSet. Only applicable if `compactor.kind` is StatefulSet.
   ## OrderedReady and Parallel are supported.
   podManagementPolicy: Parallel
+  # @schema type:[integer, null]
   # -- Number of replicas for the ingester, when zoneAwareReplication.enabled is true, the total
   # number of replicas will match this value with each zone having 1/3rd of the total replicas.
   # Set to null to omit spec.replicas from the StatefulSet, allowing an external controller
@@ -2953,6 +2967,7 @@ ingester:
     #     target:
     #       type: AverageValue
     #       averageValue: 10k
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -2979,7 +2994,7 @@ ingester:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -3139,13 +3154,13 @@ ingester:
   nodeSelector: {}
   # -- Tolerations for ingester pods
   tolerations: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- readiness probe settings for ingester pods. If empty, use `loki.readinessProbe`
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for ingester pods. If empty use `loki.livenessProbe`
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe settings for ingester pods. If empty use `loki.startupProbe`
   startupProbe: {}
   # @schema skipProperties:true;additionalProperties:true
@@ -3310,7 +3325,9 @@ ingester:
 distributor:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: true
-  # -- Number of replicas for the distributor
+  # @schema type:[integer, null]
+  # -- Number of replicas for the distributor. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
   kind: Deployment
@@ -3355,6 +3372,7 @@ distributor:
     #     target:
     #       type: AverageValue
     #       averageValue: 10k
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -3381,7 +3399,7 @@ distributor:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -3564,7 +3582,9 @@ querier:
   enabled: true
   # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
   kind: Deployment
-  # -- Number of replicas for the querier
+  # @schema type:[integer, null]
+  # -- Number of replicas for the querier. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema skipProperties:true;additionalProperties:true
   # -- Strategy for the querier.
@@ -3605,6 +3625,7 @@ querier:
     #     target:
     #       type: AverageValue
     #       averageValue: 12
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -3631,7 +3652,7 @@ querier:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -3836,7 +3857,9 @@ queryFrontend:
   enabled: true
   # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
   kind: Deployment
-  # -- Number of replicas for the query-frontend
+  # @schema type:[integer, null]
+  # -- Number of replicas for the query-frontend. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema skipProperties:true;additionalProperties:true
   # -- Strategy for the querier.
@@ -3877,6 +3900,7 @@ queryFrontend:
     #     target:
     #       type: AverageValue
     #       averageValue: 100
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -3903,7 +3927,7 @@ queryFrontend:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -4087,9 +4111,12 @@ queryScheduler:
   enabled: true
   # -- Kind of query-scheduler deployment. StatefulSet and Deployment are supported.
   kind: Deployment
+  # @schema type:[integer, null]
   # -- Number of replicas for the query-scheduler.
   # It should be lower than `-querier.max-concurrent` to avoid generating back-pressure in queriers;
   # it's also recommended that this value evenly divides the latter
+  # Set to null to omit spec.replicas from the workload, allowing an external controller
+  # (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema skipProperties:true;additionalProperties:true
   # -- Strategy for the query-scheduler.
@@ -4283,7 +4310,9 @@ indexGateway:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the index-gateway
+  # @schema type:[integer, null]
+  # -- Number of replicas for the index-gateway. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # -- Whether the index gateway should join the memberlist hashring
   joinMemberlist: true
@@ -4514,7 +4543,9 @@ compactor:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the compactor
+  # @schema type:[integer, null]
+  # -- Number of replicas for the compactor. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema skipProperties:true;additionalProperties:true
   # -- UpdateStrategy or Strategy for the compactor.
@@ -4624,13 +4655,13 @@ compactor:
   extraVolumeMounts: []
   # -- Volumes to add to the compactor pods
   extraVolumes: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- readiness probe settings for compactor pods. If empty, use `loki.readinessProbe`
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for compactor pods. If empty use `loki.livenessProbe`
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for ingester pods. If empty use `loki.livenessProbe`
   startupProbe: {}
   # @schema additionalProperties:true
@@ -4842,13 +4873,13 @@ bloomGateway:
   extraVolumeMounts: []
   # -- Volumes to add to the bloom-gateway pods
   extraVolumes: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- readiness probe settings for bloom-gateway pods. If empty, use `loki.readinessProbe`
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for bloom-gateway pods. If empty use `loki.livenessProbe`
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe settings for bloom-gateway pods. If empty, use `loki.startupProbe`
   startupProbe: {}
   # @schema additionalProperties:true
@@ -5048,13 +5079,13 @@ bloomPlanner:
   extraVolumeMounts: []
   # -- Volumes to add to the bloom-planner pods
   extraVolumes: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- readiness probe settings for bloom-planner pods. If empty, use `loki.readinessProbe`
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for bloom-planner pods. If empty use `loki.livenessProbe`
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe settings for bloom-planner pods. If empty use `loki.startupProbe`
   startupProbe: {}
   # @schema additionalProperties:true
@@ -5168,7 +5199,9 @@ bloomBuilder:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the bloom-builder
+  # @schema type:[integer, null]
+  # -- Number of replicas for the bloom-builder. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # -- hostAliases to add
   hostAliases: []
@@ -5203,6 +5236,7 @@ bloomBuilder:
     #     target:
     #       type: AverageValue
     #       averageValue: 100
+    # @schema skipProperties:true;additionalProperties:true
     # -- HPA behavior configuration, passed directly as a K8s HPA behavior object.
     behavior:
       # -- Enable autoscaling behaviours
@@ -5229,7 +5263,7 @@ bloomBuilder:
     # -- Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved.
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback
     fallback: {}
-    # @schema additionalProperties:true
+    # @schema skipProperties:true;additionalProperties:true
     # -- Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior).
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
@@ -5441,7 +5475,9 @@ patternIngester:
   ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
   statefulSetRecreateJob:
     enabled: false
-  # -- Number of replicas for the pattern ingester
+  # @schema type:[integer, null]
+  # -- Number of replicas for the pattern ingester. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema skipProperties:true;additionalProperties:true
   # -- UpdateStrategy or Strategy for the pattern ingester.
@@ -5514,13 +5550,13 @@ patternIngester:
   extraVolumeMounts: []
   # -- Volumes to add to the pattern ingester pods
   extraVolumes: []
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- readiness probe settings for pattern ingester pods. If empty, use `loki.readinessProbe`
   readinessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- liveness probe settings for pattern ingester pods. If empty use `loki.livenessProbe`
   livenessProbe: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- startup probe settings for pattern ingester pods. If empty use `loki.startupProbe`
   startupProbe: {}
   # @schema additionalProperties:true
@@ -5647,7 +5683,9 @@ ruler:
     enabled: false
   # -- Whether to enable the rules sidecar
   sidecar: false
-  # -- Number of replicas for the ruler
+  # @schema type:[integer, null]
+  # -- Number of replicas for the ruler. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # -- hostAliases to add
   hostAliases: []
@@ -5918,7 +5956,9 @@ overridesExporter:
   enabled: false
   # -- Kind of backend workload. StatefulSet and Deployment are supported.
   kind: Deployment
-  # -- Number of replicas for the overrides-exporter
+  # @schema type:[integer, null]
+  # -- Number of replicas for the overrides-exporter. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
   # @schema additionalProperties:true
   # -- DNSConfig for overrides-exporter
@@ -6124,7 +6164,7 @@ memcached:
     runAsNonRoot: true
     seccompProfile:
       type: RuntimeDefault
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Readiness probe for memcached pods (probe port defaults to container port)
   readinessProbe:
     tcpSocket:
@@ -6133,7 +6173,7 @@ memcached:
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 6
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Liveness probe for memcached pods
   livenessProbe:
     tcpSocket:
@@ -6142,7 +6182,7 @@ memcached:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Startup probe for memcached pods
   startupProbe: {}
 
@@ -6205,7 +6245,7 @@ memcachedExporter:
   #   memcached.tls.insecure-skip-verify: false
   #   memcached.tls.server-name: memcached
   extraArgs: {}
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Liveness probe for memcached exporter
   livenessProbe:
     httpGet:
@@ -6215,7 +6255,7 @@ memcachedExporter:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Readiness probe for memcached exporter
   readinessProbe:
     httpGet:
@@ -6225,7 +6265,7 @@ memcachedExporter:
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
-  # @schema additionalProperties:true
+  # @schema skipProperties:true;additionalProperties:true
   # -- Startup probe for memcached exporter
   startupProbe: {}
 
@@ -6871,9 +6911,10 @@ sidecar:
   disableX509StrictVerification: false
   # -- Ensure that rule files aren't conflicting and being overwritten by prefixing their name with the namespace they are defined in.
   enableUniqueFilenames: false
-  # @schema additionalProperties:true
-  # -- Readiness probe definition. Probe is disabled on the sidecar by default.
+  # @schema skipProperties:true;additionalProperties:true
+  # -- Readiness probe definition.
   readinessProbe:
+    enabled: true
     httpGet:
       path: /healthz
       port: http-sidecar
@@ -6882,9 +6923,10 @@ sidecar:
     successThreshold: 1
     failureThreshold: 3
     timeoutSeconds: 1
-  # @schema additionalProperties:true
-  # -- Liveness probe definition. Probe is disabled on the sidecar by default.
+  # @schema skipProperties:true;additionalProperties:true
+  # -- Liveness probe definition.
   livenessProbe:
+    enabled: true
     httpGet:
       path: /healthz
       port: http-sidecar
@@ -6893,9 +6935,10 @@ sidecar:
     successThreshold: 1
     failureThreshold: 3
     timeoutSeconds: 1
-  # @schema additionalProperties:true
-  # -- Startup probe definition. Probe is disabled on the sidecar by default.
-  startupProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- Startup probe definition.
+  startupProbe:
+    enabled: false
   rules:
     # -- Whether or not to create a sidecar to ingest rule from specific ConfigMaps and/or Secrets.
     enabled: true
