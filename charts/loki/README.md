@@ -49,6 +49,10 @@ helm delete RELEASE-NAME
 
 See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?chart=loki).
 
+## Values
+
+See the [values docs](https://grafana-community.github.io/helm-charts/docs/?chart=loki).
+
 ---
 
 ## Upgrading
