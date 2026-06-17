@@ -115,6 +115,17 @@ tests:
         documentIndex: 5
         template: networkpolicy.yaml
 
+  - it: renders alertmanager egress policy with a named port
+    set:
+      networkPolicy.enabled: true
+      networkPolicy.alertmanager.port: alertmanager-http
+    asserts:
+      - equal:
+          path: spec.egress[0].ports[0].port
+          value: alertmanager-http
+        documentIndex: 4
+        template: networkpolicy.yaml
+
   - it: renders discovery egress policy when discovery port is set
     set:
       networkPolicy.discovery.port: 7946
@@ -141,6 +152,19 @@ tests:
         template: networkpolicy.yaml
       - equal:
           path: spec.egress[0].to[0].podSelector.matchLabels.app
+          value: memberlist
+        documentIndex: 0
+        template: networkpolicy.yaml
+
+  - it: renders discovery egress policy with a named port
+    set:
+      networkPolicy.discovery.port: memberlist
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.egress[0].ports[0].port
           value: memberlist
         documentIndex: 0
         template: networkpolicy.yaml
