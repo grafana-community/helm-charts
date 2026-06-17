@@ -6784,15 +6784,15 @@
                     "type": "object",
                     "properties": {
                         "namespaceSelector": {
-                            "description": "Specifies the namespace the alertmanager is running in",
+                            "description": "Specifies the namespace the Alertmanager is running in",
                             "type": "object"
                         },
                         "podSelector": {
-                            "description": "Specifies the alertmanager Pods. As this is cross-namespace communication, you also need the namespaceSelector.",
+                            "description": "Specifies the Alertmanager Pods. As this is cross-namespace communication, you also need the namespaceSelector.",
                             "type": "object"
                         },
                         "port": {
-                            "description": "Specify the alertmanager port used for alerting",
+                            "description": "Specify the Alertmanager port used for alerting",
                             "type": [
                                 "string",
                                 "integer"
