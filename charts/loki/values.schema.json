@@ -201,6 +201,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -317,6 +318,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -324,6 +326,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -729,6 +732,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -828,6 +832,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -835,6 +840,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -1238,6 +1244,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -1245,6 +1252,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -1641,6 +1649,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -1648,6 +1657,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -2001,6 +2011,7 @@
                             "description": "Pod Disruption Budget maxUnavailable",
                             "deprecated": true,
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -2185,6 +2196,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -2267,6 +2279,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -2274,6 +2287,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -3313,6 +3327,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -3353,6 +3368,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -3360,6 +3376,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -4047,6 +4064,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -4054,6 +4072,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -4531,6 +4550,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -4634,6 +4654,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -4641,6 +4662,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -5069,6 +5091,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -5168,6 +5191,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -5175,6 +5199,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -6119,6 +6144,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -6126,6 +6152,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -6970,6 +6997,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -7010,6 +7038,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -7017,6 +7046,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -7326,6 +7356,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -7446,6 +7477,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -7453,6 +7485,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -7850,6 +7883,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -7890,6 +7924,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -7897,6 +7932,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -8339,6 +8375,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -8379,6 +8416,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -8386,6 +8424,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -8699,6 +8738,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -8739,6 +8779,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -8746,6 +8787,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -9155,6 +9197,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -9195,6 +9238,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -9202,6 +9246,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -9465,6 +9510,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -9544,6 +9590,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -9551,6 +9598,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -9885,6 +9933,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -9973,6 +10022,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -9980,6 +10030,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -10639,6 +10690,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -10646,6 +10698,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -11311,6 +11364,7 @@
                     "description": "Pod Disruption Budget maxUnavailable",
                     "deprecated": true,
                     "type": [
+                        "string",
                         "number",
                         "null"
                     ]
@@ -11415,6 +11469,7 @@
                         "maxUnavailable": {
                             "description": "Pod Disruption Budget maxUnavailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]
@@ -11422,6 +11477,7 @@
                         "minAvailable": {
                             "description": "Pod Disruption Budget minAvailable",
                             "type": [
+                                "string",
                                 "number",
                                 "null"
                             ]

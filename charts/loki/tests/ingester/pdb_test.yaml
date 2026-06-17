@@ -85,6 +85,35 @@ tests:
           path: spec.maxUnavailable
           value: 2
 
+  - it: should accept percentage string for podDisruptionBudget.maxUnavailable
+    set:
+      ingester.maxUnavailable: null
+      ingester.podDisruptionBudget.maxUnavailable: 20%
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 20%
+
+  - it: should accept percentage string for deprecated maxUnavailable field
+    set:
+      ingester.maxUnavailable: 20%
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 20%
+
+  - it: should accept percentage string for podDisruptionBudget.minAvailable
+    set:
+      ingester.maxUnavailable: null
+      ingester.podDisruptionBudget.maxUnavailable: null
+      ingester.podDisruptionBudget.minAvailable: 50%
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: 50%
+      - notExists:
+          path: spec.maxUnavailable
+
   - it: should use podDisruptionBudget.minAvailable when set to 0
     set:
       ingester.maxUnavailable: null
