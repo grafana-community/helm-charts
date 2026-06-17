@@ -10,8 +10,13 @@ jobs:
   chart-testing:
     name: Chart Testing
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     permissions:
       contents: read
+    outputs:
+      changed: ${{ steps.list-changed.outputs.changed }}
+      changed_list: ${{ steps.list-changed.outputs.changed_list }}
+      values_files_json: ${{ steps.test-matrix.outputs.values_files_json }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -37,11 +42,19 @@ jobs:
 
       - name: Run chart-testing (list-changed)
         id: list-changed
+        # language=bash
         run: |
           changed="$(ct list-changed --config .github/linters/ct.yaml)"
           if [[ -n "$changed" ]]; then
+            num_changed="$(printf '%s\n' "$changed" | wc -l | tr -d ' ')"
+            if [ "$num_changed" -gt 1 ]; then
+              echo "More than one chart changed (count=$num_changed). Failing."
+              printf '%s\n' "$changed"
+              exit 1
+            fi
+
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "changed_list=\"${changed//$'\n'/ }\"" >> "$GITHUB_OUTPUT"
+            echo "changed_list=${changed//$'\n'/ }" >> "$GITHUB_OUTPUT"
           fi
 
       - name: install helm unittest plugin
@@ -61,30 +74,88 @@ jobs:
       - name: Run chart-testing (lint)
         run: ct lint --config .github/linters/ct.yaml
 
-      - name: Create kind cluster
+      - name: Generate test matrix
         if: steps.list-changed.outputs.changed == 'true'
+        id: test-matrix
+        env:
+          CHANGED_LIST: ${{ steps.list-changed.outputs.changed_list }}
+        #language=bash
+        run: |
+          set -euo pipefail
+
+          read -r -a charts <<< "$CHANGED_LIST"
+          values_files_json="[\"${charts[0]}/values.yaml\"]"
+          if [[ -d "${charts[0]}/ci" ]]; then
+            ci_values_files_json="$(
+              find "${charts[0]}/ci" -maxdepth 1 -type f -name '*-values.yaml' -print \
+                | sort \
+                | jq --raw-input --slurp --compact-output 'split("\n") | map(select(length > 0))'
+            )"
+            if [[ "$ci_values_files_json" != "[]" ]]; then
+              values_files_json="$ci_values_files_json"
+            fi
+          fi
+
+          values_files_json="$(
+            jq --compact-output 'map({valuefile: ., name: sub("^charts/[^/]+/"; "")})' <<< "$values_files_json"
+          )"
+
+          echo "values_files_json=$values_files_json" >> "$GITHUB_OUTPUT"
+
+
+  integration-tests:
+    name: Integration Tests (${{ matrix.name }})
+    timeout-minutes: 15
+    needs: chart-testing
+    runs-on: ubuntu-latest
+    if: needs.chart-testing.outputs.changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.chart-testing.outputs.values_files_json) }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Checkout Target of PR
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          path: target
+          ref: ${{ github.event.pull_request.base.ref }}
+          persist-credentials: false
+
+      - name: Set up Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0
+        with:
+          # renovate: github=helm/helm
+          version: v4.2.0
+
+      - name: install helm diff plugin
+        run: helm plugin install https://github.com/databus23/helm-diff --version 3.15.4 --verify=false
+
+      - name: Create kind cluster
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
+        with:
+          config: kind.yaml
+          ignore_failed_clean: 'true'
 
       - name: Apply Gateway API CRDs
-        if: steps.list-changed.outputs.changed == 'true'
         run: kubectl apply -k https://github.com/kubernetes-sigs/gateway-api/config/crd
 
-      - name: Apply Prometheus Operator CRDs
-        if: steps.list-changed.outputs.changed == 'true'
-        run: |
-          helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds
-
       - name: Apply KEDA CRDs
-        if: steps.list-changed.outputs.changed == 'true'
         run: kubectl apply --server-side -f "https://github.com/kedacore/keda/releases/download/v${KEDA_VERSION}/keda-${KEDA_VERSION}-crds.yaml"
         env:
           #renovate: github=kedacore/keda
           KEDA_VERSION: 2.20.1
 
       - name: Provision integration test prerequisites
-        if: steps.list-changed.outputs.changed == 'true'
+        if: needs.chart-testing.outputs.changed == 'true'
+        env:
+          CHANGED_LIST: ${{ needs.chart-testing.outputs.changed_list }}
         run: |
-          for chart in $(ct list-changed --config .github/linters/ct.yaml); do
+          for chart in $CHANGED_LIST; do
             if [ -f "$chart/ci/integration/it-prerequisites.yaml" ]; then
               echo "Provisioning prerequisites for $chart"
               kubectl apply -f "$chart/ci/integration/it-prerequisites.yaml"
@@ -93,9 +164,162 @@ jobs:
           kubectl wait pod -l ci-managed=true -A \
             --for=condition=ready --timeout=300s 2>/dev/null || true
 
-      - name: Run chart-testing (install)
-        if: steps.list-changed.outputs.changed == 'true'
-        run: ct install --config .github/linters/ct.yaml
+      - name: Setup chart dependencies
+        id: setup
+        env:
+          value_file: "${{ matrix.valuefile }}"
+        # language=bash
+        run: |
+          set -euo pipefail
+          IFS=$'\n\t'
+
+          echo "Running diff for value file: $value_file"
+          # extract chart name from path like charts/<chart>/ci/<file>
+          # dirname twice: charts/<chart>/ci -> charts/<chart>, basename -> <chart>
+          chart="$(basename "$(dirname "$(dirname "$value_file")")")"
+
+          helm dependency update "./target/charts/$chart"
+          helm dependency update "./charts/$chart"
+
+          echo chart="$chart" >> "$GITHUB_OUTPUT"
+
+      - name: Run helm install from main branch
+        id: install
+        env:
+          chart: "${{ steps.setup.outputs.chart }}"
+          value_file: "${{ matrix.valuefile }}"
+        # language=bash
+        run: |
+          # install current target chart into cluster so helm diff has a baseline
+          helm upgrade -i "$chart" "./target/charts/$chart" \
+            --create-namespace \
+            --namespace "$chart" \
+            --wait \
+            --values "$value_file"
+
+      - name: Debug failed installation
+        if: failure() && steps.install.outcome == 'failure'
+        timeout-minutes: 6
+        env:
+          chart: "${{ steps.setup.outputs.chart }}"
+        # language=bash
+        run: |
+          echo "::group::kubectl describe nodes"
+          kubectl describe nodes
+          echo "::endgroup::"
+          echo "::group::kubectl get ns"
+          kubectl get ns --show-labels
+          echo "::endgroup::"
+          echo "::group::kubectl get events"
+          kubectl events --namespace "$chart"
+          echo "::endgroup::"
+          echo "::group::kubectl get deploy,ds,sts"
+          kubectl get deploy,ds,sts --namespace "$chart"
+          echo "::endgroup::"
+          echo "::group::kubectl get pods"
+          kubectl get pods --namespace "$chart" -o wide
+          echo "::endgroup::"
+          for pod in $(kubectl get pods --namespace "$chart" -o jsonpath='{.items[*].metadata.name}'); do
+            echo "::group::pods/$pod"
+            kubectl describe --namespace "$chart" "pods/$pod" || true
+            echo "--------------------------------"
+            kubectl logs --namespace "$chart" "$pod" || true
+            echo "--------------------------------"
+            kubectl logs --namespace "$chart" "$pod" -p || true
+            echo "::endgroup::"
+          done
+
+      - name: Run helm diff
+        env:
+          chart: "${{ steps.setup.outputs.chart }}"
+          value_file: "${{ matrix.valuefile }}"
+        #language=bash
+        run: |
+          set -euo pipefail
+          IFS=$'\n\t'
+
+          {
+            printf '```diff\n'
+            helm diff upgrade "$chart" "./charts/$chart" \
+              --namespace "$chart" \
+              --suppress=CustomResourceDefinition \
+              --normalize-manifests \
+              --reset-values \
+              --no-color \
+              -C 5 \
+              --suppress-output-line-regex="helm.sh/chart:" \
+              --suppress-output-line-regex="chart:" \
+              --suppress-output-line-regex="app.kubernetes.io/version:" \
+              --values "$value_file" | tee /dev/stderr
+            printf '\n```'
+          } > "$GITHUB_STEP_SUMMARY"
+
+
+      - name: Run helm install from PR branch
+        timeout-minutes: 6
+        id: upgrade
+        env:
+          chart: "${{ steps.setup.outputs.chart }}"
+          value_file: "${{ matrix.valuefile }}"
+        # language=bash
+        run: |
+          helm upgrade -i "$chart" "./charts/$chart" \
+            --create-namespace \
+            --namespace "$chart" \
+            --wait \
+            --values "$value_file"
+
+      - name: Debug failed upgrade
+        if: failure() && steps.upgrade.outcome == 'failure'
+        env:
+          chart: "${{ steps.setup.outputs.chart }}"
+        # language=bash
+        run: |
+          echo "::group::kubectl describe nodes"
+          kubectl describe nodes
+          echo "::endgroup::"
+          echo "::group::kubectl get ns"
+          kubectl get ns --show-labels
+          echo "::endgroup::"
+          echo "::group::kubectl get events"
+          kubectl events --namespace "$chart"
+          echo "::endgroup::"
+          echo "::group::kubectl get deploy,ds,sts"
+          kubectl get deploy,ds,sts --namespace "$chart"
+          echo "::endgroup::"
+          echo "::group::kubectl get pods"
+          kubectl get pods --namespace "$chart" -o wide
+          echo "::endgroup::"
+          for pod in $(kubectl get pods --namespace "$chart" -o jsonpath='{.items[*].metadata.name}'); do
+            echo "::group::pods/$pod"
+            kubectl describe --namespace "$chart" "pods/$pod" || true
+            echo "--------------------------------"
+            kubectl logs --namespace "$chart" "$pod" || true
+            echo "--------------------------------"
+            kubectl logs --namespace "$chart" "$pod" -p || true
+            echo "::endgroup::"
+          done
+
+      - name: helm test
+        timeout-minutes: 6
+        env:
+          chart: "${{ steps.setup.outputs.chart }}"
+          value_file: "${{ matrix.valuefile }}"
+        # language=bash
+        run: |
+          helm test "$chart" --namespace "$chart" --logs
+
+  fail:
+    if: "${{ cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}"
+    needs:
+      - chart-testing
+      - integration-tests
+    runs-on: "ubuntu-24.04"
+    steps:
+      - name: "verify checks passed"
+        run: |
+          echo "Some checks have failed!"
+          exit 1
 
   check-generated-files:
     name: Check Generated Files
@@ -104,7 +328,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -154,7 +378,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -194,6 +418,7 @@ jobs:
     environment: renovate-auto-merge
     needs:
       - chart-testing
+      - integration-tests
       - check-generated-files
       - super-linter
     if: >-

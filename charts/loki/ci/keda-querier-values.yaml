@@ -11,6 +11,11 @@ loki:
   kedaAutoscaling:
     prometheusAddress: http://prometheus:9090
     customHeaders: X-Scope-OrgID=tenant1
+
+ignoreMinioDeprecation: true
+minio:
+  enabled: true
+
 # Disable scalable-mode targets
 read:
   replicas: 0
