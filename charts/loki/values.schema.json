@@ -10984,7 +10984,10 @@
                 },
                 "retention_period": {
                     "description": "Set retention period",
-                    "type": "integer"
+                    "type": [
+                        "string",
+                        "integer"
+                    ]
                 },
                 "service": {
                     "type": "object",
