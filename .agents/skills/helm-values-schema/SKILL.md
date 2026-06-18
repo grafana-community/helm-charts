@@ -36,7 +36,7 @@ Helm validates chart values with JSON Schema draft-07. Keep generated schemas co
 1. Read `charts/<chart>/values.yaml`.
 2. Check whether `# @schema` annotations or `# $schema: ./values.schema.json` are present.
 3. If changing or adding values, preserve nearby annotations and add annotations when inferred schema would be wrong or too loose.
-4. Preserve helm-docs comments and ensure schema annotations are ordered correctly.
+4. Preserve helm-docs comments. When a field has both `# @schema` and helm-docs `# --` comments, `# @schema` comments must be above the helm-docs description comments.
 5. Regenerate `values.schema.json`.
 6. Review the schema diff for only intentional changes.
 7. Ensure values changes also have helm-unittest coverage for rendered behavior where applicable.
@@ -92,7 +92,7 @@ fullnameOverride: bar
 fullnameOverride: bar
 ```
 
-Helm-docs itself does not understand `# @schema` comments. When both `# @schema` and helm-docs comments are above a field, put `# @schema` first so schema annotations are not included in the generated description.
+Helm-docs itself does not understand `# @schema` comments. When both `# @schema` and helm-docs comments are above a field, put `# @schema` first so schema annotations are not included in the generated description. Treat the inverse order as invalid: helm-docs will include the schema annotation text in the description.
 
 Good:
 
@@ -112,7 +112,7 @@ nameOverride: "myapp"
 
 ## Annotation Placement
 
-`# @schema` annotations may be placed inline, on the line above a field, or in specific cases below a block. Preserve the surrounding style already used in the chart.
+`# @schema` annotations may be placed inline, on the line above a field, or in specific cases below a block. Preserve the surrounding style already used in the chart, except when the existing style conflicts with helm-docs ordering. If a value has a helm-docs `# --` description, any standalone `# @schema` comments for that value must be above the `# --` comment, never between the helm-docs comment and the value.
 
 Examples:
 
@@ -120,6 +120,15 @@ Examples:
 fullnameOverride: "myapp" # @schema maxLength:10;pattern:^[a-z]+$
 
 # @schema maxLength:10;pattern:^[a-z]+$
+nameOverride: "myapp"
+
+# @schema maxLength:10
+# -- My awesome nameOverride description
+nameOverride: "myapp"
+
+# Invalid with helm-docs: the schema annotation becomes part of the description.
+# -- My awesome nameOverride description
+# @schema maxLength:10
 nameOverride: "myapp"
 
 resources:
@@ -151,6 +160,6 @@ If adding schema generation for another chart, follow the chart's local Makefile
 - Do not hand-edit `values.schema.json` when it can be regenerated.
 - Do not remove existing `# @schema` annotations unless the associated value is removed.
 - Keep schema annotations as close as possible to the value they describe.
-- Keep `# @schema` comments above helm-docs `# --` comments.
+- Keep `# @schema` comments above helm-docs `# --` comments. Never add a standalone `# @schema` comment below a helm-docs description comment for the same value.
 - Include regenerated `values.schema.json` in the change.
 - Values changes that affect rendered manifests should also be covered by helm-unittest tests.
