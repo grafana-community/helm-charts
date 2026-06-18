@@ -7205,6 +7205,7 @@ tableManager:
   tolerations: []
   # -- Enable deletes by retention
   retention_deletes_enabled: false
+  # @schema type:[string, integer]
   # -- Set retention period
   retention_period: 0
 
