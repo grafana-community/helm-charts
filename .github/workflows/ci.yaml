@@ -429,7 +429,7 @@ jobs:
       && needs.super-linter.result == 'success'
       && github.event.pull_request.head.repo.full_name == github.repository
       && contains(github.event.pull_request.labels.*.name, 'dependencies/auto-merge')
-      && (github.event.pull_request.user.login  == 'renovate[bot]' || github.event.pull_request.user.login  == 'helm-charts-renovate-helper-app[bot]')
+      && (github.event.pull_request.user.login == 'renovate[bot]' || github.event.pull_request.user.login == 'helm-charts-renovate-helper-app[bot]')
     steps:
       # Using a GitHub App token, because GitHub Actions doesn't run on commits from github-actions bot
       # Used App:
@@ -440,6 +440,7 @@ jobs:
         with:
           app-id: ${{ secrets.APP_RENOVATE_HELPER_APP_ID }}
           private-key: ${{ secrets.APP_RENOVATE_HELPER_PRIVATE_KEY }}
+          permission-pull-requests: write
 
       - name: Approve PR
         run: |
