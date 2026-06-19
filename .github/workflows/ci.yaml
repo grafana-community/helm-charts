@@ -138,7 +138,7 @@ jobs:
       - name: Create kind cluster
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
         with:
-          config: kind.yaml
+          config: .github/linters/kind.yaml
           ignore_failed_clean: 'true'
 
       - name: Apply Gateway API CRDs
@@ -440,6 +440,7 @@ jobs:
         with:
           app-id: ${{ secrets.APP_RENOVATE_HELPER_APP_ID }}
           private-key: ${{ secrets.APP_RENOVATE_HELPER_PRIVATE_KEY }}
+          permission-pull-requests: 'write'
 
       - name: Approve PR
         run: |
