@@ -5,19 +5,155 @@ templates:
   - configmap-tempo.yaml
 
 tests:
-  - it: renders a StatefulSet with correct name and kind when kind is StatefulSet
+  - it: renders nothing when kind is Deployment
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: Deployment
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a StatefulSet when kind is StatefulSet
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+    asserts:
+      - equal:
+          path: kind
+          value: StatefulSet
+
+  - it: selector labels are stable (immutable field)
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/component: metrics-generator
+
+  - it: serviceName is stable (immutable field)
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+    asserts:
+      - equal:
+          path: spec.serviceName
+          value: metrics-generator
+
+  - it: wal volumeClaimTemplate name is stable (immutable field)
     template: metrics-generator/statefulset-metrics-generator.yaml
     set:
       metricsGenerator.enabled: true
       metricsGenerator.kind: StatefulSet
       metricsGenerator.persistence.enabled: true
+      metricsGenerator.persistence.size: 5Gi
     asserts:
       - equal:
-          path: kind
-          value: StatefulSet
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: wal
+
+  - it: defaults.extraEnv is applied to metrics-generator pod
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      defaults.extraEnv:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/tempo/gcs-credentials/credentials.json
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /etc/tempo/gcs-credentials/credentials.json
+
+  - it: defaults.extraVolumes is applied to metrics-generator pod
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      defaults.extraVolumes:
+        - name: gcs-credentials
+          secret:
+            secretName: tempo-gcs-credentials
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: gcs-credentials
+            secret:
+              secretName: tempo-gcs-credentials
+
+  - it: defaults.extraVolumeMounts is applied to metrics-generator container
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      defaults.extraVolumeMounts:
+        - name: gcs-credentials
+          mountPath: /etc/tempo/gcs-credentials
+          readOnly: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: gcs-credentials
+            mountPath: /etc/tempo/gcs-credentials
+            readOnly: true
+
+  - it: defaults.resources are applied when component has no resources
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      defaults.resources.limits.memory: 512Mi
+    asserts:
       - equal:
-          path: metadata.name
-          value: RELEASE-NAME-tempo-metrics-generator
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+
+  - it: component resources override defaults.resources
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      defaults.resources.limits.memory: 512Mi
+      metricsGenerator.resources.limits.memory: 2Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 2Gi
+
+  - it: wal volume is emptyDir when persistence is disabled
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: wal
+            emptyDir: {}
+
+  - it: persistence enabled creates wal PVC with correct size
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      metricsGenerator.persistence.enabled: true
+      metricsGenerator.persistence.size: 10Gi
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 10Gi
 
   - it: volumeClaimTemplate uses metricsGenerator persistence labels, not ingester labels
     template: metrics-generator/statefulset-metrics-generator.yaml

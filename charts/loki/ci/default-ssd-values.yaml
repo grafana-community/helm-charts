@@ -8,7 +8,12 @@ loki:
       chunks: chunks
       ruler: ruler
       admin: admin
+
 deploymentMode: SimpleScalable
+
+ignoreMinioDeprecation: true
+minio:
+  enabled: true
 
 read:
   replicas: 1

@@ -1,0 +1,267 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ingester StatefulSet
+templates:
+  - ingester/statefulset-ingester.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: renders a StatefulSet with correct name and kind
+    template: ingester/statefulset-ingester.yaml
+    asserts:
+      - equal:
+          path: kind
+          value: StatefulSet
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-ingester
+
+  - it: selector labels are stable (immutable field)
+    template: ingester/statefulset-ingester.yaml
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/component: ingester
+
+  - it: serviceName is stable (immutable field)
+    template: ingester/statefulset-ingester.yaml
+    asserts:
+      - equal:
+          path: spec.serviceName
+          value: ingester
+
+  - it: podManagementPolicy is Parallel
+    template: ingester/statefulset-ingester.yaml
+    asserts:
+      - equal:
+          path: spec.podManagementPolicy
+          value: Parallel
+
+  - it: defaults.extraEnv is applied to ingester pod
+    template: ingester/statefulset-ingester.yaml
+    set:
+      defaults.extraEnv:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/tempo/gcs-credentials/credentials.json
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /etc/tempo/gcs-credentials/credentials.json
+
+  - it: defaults.extraVolumes is applied to ingester pod
+    template: ingester/statefulset-ingester.yaml
+    set:
+      defaults.extraVolumes:
+        - name: gcs-credentials
+          secret:
+            secretName: tempo-gcs-credentials
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: gcs-credentials
+            secret:
+              secretName: tempo-gcs-credentials
+
+  - it: defaults.extraVolumeMounts is applied to ingester container
+    template: ingester/statefulset-ingester.yaml
+    set:
+      defaults.extraVolumeMounts:
+        - name: gcs-credentials
+          mountPath: /etc/tempo/gcs-credentials
+          readOnly: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: gcs-credentials
+            mountPath: /etc/tempo/gcs-credentials
+            readOnly: true
+
+  - it: component extraEnv overrides and extends defaults.extraEnv
+    template: ingester/statefulset-ingester.yaml
+    set:
+      defaults.extraEnv:
+        - name: FROM_DEFAULTS
+          value: "yes"
+      ingester.extraEnv:
+        - name: FROM_COMPONENT
+          value: "yes"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FROM_DEFAULTS
+            value: "yes"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FROM_COMPONENT
+            value: "yes"
+
+  - it: defaults.nodeSelector is applied when component has no nodeSelector
+    template: ingester/statefulset-ingester.yaml
+    set:
+      defaults.nodeSelector:
+        kubernetes.io/os: linux
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: linux
+
+  - it: defaults.tolerations are applied when component has no tolerations
+    template: ingester/statefulset-ingester.yaml
+    set:
+      defaults.tolerations:
+        - key: dedicated
+          operator: Equal
+          value: tempo
+          effect: NoSchedule
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: dedicated
+            operator: Equal
+            value: tempo
+            effect: NoSchedule
+
+  - it: defaults.resources are used when component has no resources set
+    template: ingester/statefulset-ingester.yaml
+    set:
+      defaults.resources.limits.memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+
+  - it: ingester.resources override defaults.resources
+    template: ingester/statefulset-ingester.yaml
+    set:
+      defaults.resources.limits.memory: 512Mi
+      ingester.resources.limits.memory: 1Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 1Gi
+
+  - it: data volume is emptyDir when persistence is disabled
+    template: ingester/statefulset-ingester.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+
+  - it: grpc port is present by default
+    template: ingester/statefulset-ingester.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 9095
+            name: grpc
+            protocol: TCP
+
+  - it: zone-aware renders 3 StatefulSets with correct zone selectors
+    template: ingester/statefulset-ingester.yaml
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.zoneAwareReplication.zones:
+        - name: zone-a
+        - name: zone-b
+        - name: zone-c
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: kind
+          value: StatefulSet
+      - isSubset:
+          path: spec.selector.matchLabels
+          content:
+            rollout-group: ingester
+
+  - it: zone-aware pod labels include rollout-group and zone
+    template: ingester/statefulset-ingester.yaml
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.zoneAwareReplication.zones:
+        - name: zone-a
+        - name: zone-b
+        - name: zone-c
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["rollout-group"]
+          value: ingester
+      - isNotEmpty:
+          path: spec.template.metadata.labels["zone"]
+      - isNotEmpty:
+          path: spec.template.metadata.labels["name"]
+
+  - it: zone-aware selector is a subset of pod labels (pods match selector)
+    template: ingester/statefulset-ingester.yaml
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.zoneAwareReplication.zones:
+        - name: zone-a
+        - name: zone-b
+        - name: zone-c
+    documentIndex: 0
+    asserts:
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/component: ingester
+            rollout-group: ingester
+
+  - it: zone-aware defaults.extraEnv flows into each zone pod
+    template: ingester/statefulset-ingester.yaml
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.zoneAwareReplication.zones:
+        - name: zone-a
+        - name: zone-b
+        - name: zone-c
+      defaults.extraEnv:
+        - name: ZONE_DEFAULT_ENV
+          value: "yes"
+    documentIndex: 0
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ZONE_DEFAULT_ENV
+            value: "yes"
+
+  - it: persistence enabled creates volumeClaimTemplate named data
+    template: ingester/statefulset-ingester.yaml
+    set:
+      ingester.persistence.enabled: true
+      ingester.persistence.size: 10Gi
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: data
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 10Gi
+
+  - it: legacyLabels selector matches pod labels
+    template: ingester/statefulset-ingester.yaml
+    set:
+      enterprise.legacyLabels: true
+    asserts:
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            app: tempo-ingester
+            release: RELEASE-NAME

@@ -1,0 +1,110 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: metrics-generator Deployment
+templates:
+  - metrics-generator/deployment-metrics-generator.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: renders nothing when kind is StatefulSet
+    template: metrics-generator/deployment-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a Deployment when kind is Deployment
+    template: metrics-generator/deployment-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: Deployment
+    asserts:
+      - equal:
+          path: kind
+          value: Deployment
+
+  - it: selector labels are stable
+    template: metrics-generator/deployment-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: Deployment
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/component: metrics-generator
+
+  - it: defaults.extraEnv is applied to metrics-generator pod
+    template: metrics-generator/deployment-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: Deployment
+      defaults.extraEnv:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/tempo/gcs-credentials/credentials.json
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /etc/tempo/gcs-credentials/credentials.json
+
+  - it: defaults.extraVolumes is applied to metrics-generator pod
+    template: metrics-generator/deployment-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: Deployment
+      defaults.extraVolumes:
+        - name: gcs-credentials
+          secret:
+            secretName: tempo-gcs-credentials
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: gcs-credentials
+            secret:
+              secretName: tempo-gcs-credentials
+
+  - it: defaults.extraVolumeMounts is applied to metrics-generator container
+    template: metrics-generator/deployment-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: Deployment
+      defaults.extraVolumeMounts:
+        - name: gcs-credentials
+          mountPath: /etc/tempo/gcs-credentials
+          readOnly: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: gcs-credentials
+            mountPath: /etc/tempo/gcs-credentials
+            readOnly: true
+
+  - it: defaults.resources are applied when component has no resources
+    template: metrics-generator/deployment-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: Deployment
+      defaults.resources.limits.memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+
+  - it: wal volume is always emptyDir in Deployment mode
+    template: metrics-generator/deployment-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: Deployment
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: wal
+            emptyDir: {}
