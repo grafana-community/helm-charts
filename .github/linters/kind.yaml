@@ -20,3 +20,13 @@ nodes:
         failSwapOn: false
         memorySwap:
           swapBehavior: LimitedSwap
+
+  - role: worker
+    kubeadmConfigPatches:
+      #language=yaml
+      - |
+        apiVersion: kubelet.config.k8s.io/v1beta1
+        kind: KubeletConfiguration
+        failSwapOn: false
+        memorySwap:
+          swapBehavior: LimitedSwap
