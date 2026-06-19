@@ -138,7 +138,7 @@ jobs:
       - name: Create kind cluster
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
         with:
-          config: kind.yaml
+          config: .github/linters/kind.yaml
           ignore_failed_clean: 'true'
 
       - name: Apply Gateway API CRDs
@@ -385,7 +385,7 @@ jobs:
           fetch-tags: 'false'
 
       - name: Lint Code Base
-        uses: super-linter/super-linter/slim@9e863354e3ff62e0727d37183162c4a88873df41 # v8.6.0
+        uses: super-linter/super-linter/slim@4ce20838b8ab83717e78138c5b3a1407148e0918 # v8.7.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MULTI_STATUS: false
@@ -429,7 +429,7 @@ jobs:
       && needs.super-linter.result == 'success'
       && github.event.pull_request.head.repo.full_name == github.repository
       && contains(github.event.pull_request.labels.*.name, 'dependencies/auto-merge')
-      && (github.event.pull_request.user.login  == 'renovate[bot]' || github.event.pull_request.user.login  == 'helm-charts-renovate-helper-app[bot]')
+      && (github.event.pull_request.user.login == 'renovate[bot]' || github.event.pull_request.user.login == 'helm-charts-renovate-helper-app[bot]')
     steps:
       # Using a GitHub App token, because GitHub Actions doesn't run on commits from github-actions bot
       # Used App:
@@ -440,6 +440,8 @@ jobs:
         with:
           app-id: ${{ secrets.APP_RENOVATE_HELPER_APP_ID }}
           private-key: ${{ secrets.APP_RENOVATE_HELPER_PRIVATE_KEY }}
+          permission-pull-requests: write
+          permission-contents: write
 
       - name: Approve PR
         run: |
