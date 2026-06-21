@@ -2652,38 +2652,6 @@ prometheusRule:
   #     - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
   #       expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)
 
-# -- Set to true to suppress the deprecation error when minio.enabled=true.
-# The built-in MinIO subchart will be removed in chart v4.0.0 (targeting Tempo 4.x, ~mid-2027).
-# Deploy MinIO (or any S3-compatible store) externally and point storage.trace.s3 at it instead.
-ignoreMinioDeprecation: false
-
-minio:
-  enabled: false
-  mode: standalone
-  rootUser: grafana-tempo
-  rootPassword: supersecret
-  buckets:
-    # Default Tempo storage bucket.
-    - name: tempo-traces
-      policy: none
-      purge: false
-    # Bucket for traces storage if enterprise.enabled is true - requires license.
-    - name: enterprise-traces
-      policy: none
-      purge: false
-    # Admin client bucket if enterprise.enabled is true - requires license.
-    - name: enterprise-traces-admin
-      policy: none
-      purge: false
-  persistence:
-    size: 5Gi
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-  # Changed the mc config path to '/tmp' from '/etc' as '/etc' is only writable by root and OpenShift will not permit this.
-  configPathmc: '/tmp/minio/mc/'
-
 # Configuration for the gateway
 gateway:
   # -- Specifies whether the gateway should be enabled
@@ -3177,7 +3145,7 @@ enterprise:
     # -- Grafana Enterprise Traces container image repository. Note: for Grafana Tempo use the value 'image.repository'
     repository: grafana/enterprise-traces
     # -- Grafana Enterprise Traces container image tag. Note: for Grafana Tempo use the value 'image.tag'
-    tag: v2.8.9
+    tag: v2.8.10
     # Note: pullPolicy and optional pullSecrets are set in toplevel 'image' section, not here
 
 # In order to use Grafana Enterprise Traces features, you will need to provide the contents of your Grafana Enterprise Traces

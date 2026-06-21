@@ -1,0 +1,440 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: workload extra and init containers
+templates:
+  - monolithic/workload.yaml
+  - read/workload.yaml
+  - write/workload.yaml
+  - backend/workload.yaml
+  - ingester/workload.yaml
+  - distributor/workload.yaml
+  - querier/workload.yaml
+  - query-frontend/workload.yaml
+  - query-scheduler/workload.yaml
+  - index-gateway/workload.yaml
+  - compactor/workload.yaml
+  - bloom-gateway/statefulset.yaml
+  - bloom-planner/statefulset.yaml
+  - bloom-builder/workload.yaml
+  - pattern-ingester/workload.yaml
+  - ruler/workload.yaml
+  - overrides-exporter/workload.yaml
+  - results-cache/statefulset.yaml
+  - chunks-cache/statefulset.yaml
+  - config.yaml
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+
+tests:
+  - it: should render initContainers and extraContainers for the monolithic component
+    set:
+      deploymentMode: Monolithic
+      singleBinary.replicas: 1
+      singleBinary.persistence.enabled: false
+      singleBinary.initContainers:
+        - name: init-single-binary
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - echo init
+      singleBinary.extraContainers:
+        - name: extra-single-binary
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - sleep 3600
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-single-binary
+            image: busybox:1.36
+            command:
+              - sh
+              - -c
+              - echo init
+        template: monolithic/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-single-binary
+            image: busybox:1.36
+            command:
+              - sh
+              - -c
+              - sleep 3600
+        template: monolithic/workload.yaml
+
+  - it: should render initContainers and extraContainers for simple scalable components
+    set:
+      deploymentMode: SimpleScalable
+      read.legacyReadTarget: false
+      write.initContainers:
+        - name: init-write
+          image: busybox:1.36
+      write.extraContainers:
+        - name: extra-write
+          image: busybox:1.36
+      read.initContainers:
+        - name: init-read
+          image: busybox:1.36
+      read.extraContainers:
+        - name: extra-read
+          image: busybox:1.36
+      backend.initContainers:
+        - name: init-backend
+          image: busybox:1.36
+      backend.extraContainers:
+        - name: extra-backend
+          image: busybox:1.36
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-write
+            image: busybox:1.36
+        template: write/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-write
+            image: busybox:1.36
+        template: write/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-read
+            image: busybox:1.36
+        template: read/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-read
+            image: busybox:1.36
+        template: read/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-backend
+            image: busybox:1.36
+        template: backend/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-backend
+            image: busybox:1.36
+        template: backend/workload.yaml
+
+  - it: should render initContainers and extraContainers for distributed components
+    set:
+      deploymentMode: Distributed
+      ingester.zoneAwareReplication.enabled: false
+      ingester.initContainers:
+        - name: init-ingester
+          image: busybox:1.36
+      ingester.extraContainers:
+        - name: extra-ingester
+          image: busybox:1.36
+      distributor.initContainers:
+        - name: init-distributor
+          image: busybox:1.36
+      distributor.extraContainers:
+        - name: extra-distributor
+          image: busybox:1.36
+      querier.initContainers:
+        - name: init-querier
+          image: busybox:1.36
+      querier.extraContainers:
+        - name: extra-querier
+          image: busybox:1.36
+      queryFrontend.initContainers:
+        - name: init-query-frontend
+          image: busybox:1.36
+      queryFrontend.extraContainers:
+        - name: extra-query-frontend
+          image: busybox:1.36
+      queryScheduler.initContainers:
+        - name: init-query-scheduler
+          image: busybox:1.36
+      queryScheduler.extraContainers:
+        - name: extra-query-scheduler
+          image: busybox:1.36
+      indexGateway.initContainers:
+        - name: init-index-gateway
+          image: busybox:1.36
+      indexGateway.extraContainers:
+        - name: extra-index-gateway
+          image: busybox:1.36
+      compactor.initContainers:
+        - name: init-compactor
+          image: busybox:1.36
+      compactor.extraContainers:
+        - name: extra-compactor
+          image: busybox:1.36
+      bloomGateway.replicas: 1
+      bloomGateway.initContainers:
+        - name: init-bloom-gateway
+          image: busybox:1.36
+      bloomGateway.extraContainers:
+        - name: extra-bloom-gateway
+          image: busybox:1.36
+      bloomPlanner.replicas: 1
+      bloomPlanner.initContainers:
+        - name: init-bloom-planner
+          image: busybox:1.36
+      bloomPlanner.extraContainers:
+        - name: extra-bloom-planner
+          image: busybox:1.36
+      bloomBuilder.enabled: true
+      bloomBuilder.initContainers:
+        - name: init-bloom-builder
+          image: busybox:1.36
+      bloomBuilder.extraContainers:
+        - name: extra-bloom-builder
+          image: busybox:1.36
+      patternIngester.enabled: true
+      patternIngester.initContainers:
+        - name: init-pattern-ingester
+          image: busybox:1.36
+      patternIngester.extraContainers:
+        - name: extra-pattern-ingester
+          image: busybox:1.36
+      ruler.replicas: 1
+      ruler.initContainers:
+        - name: init-ruler
+          image: busybox:1.36
+      ruler.extraContainers:
+        - name: extra-ruler
+          image: busybox:1.36
+      overridesExporter.enabled: true
+      overridesExporter.initContainers:
+        - name: init-overrides-exporter
+          image: busybox:1.36
+      overridesExporter.extraContainers:
+        - name: extra-overrides-exporter
+          image: busybox:1.36
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-ingester
+            image: busybox:1.36
+        template: ingester/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-ingester
+            image: busybox:1.36
+        template: ingester/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-distributor
+            image: busybox:1.36
+        template: distributor/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-distributor
+            image: busybox:1.36
+        template: distributor/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-querier
+            image: busybox:1.36
+        template: querier/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-querier
+            image: busybox:1.36
+        template: querier/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-query-frontend
+            image: busybox:1.36
+        template: query-frontend/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-query-frontend
+            image: busybox:1.36
+        template: query-frontend/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-query-scheduler
+            image: busybox:1.36
+        template: query-scheduler/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-query-scheduler
+            image: busybox:1.36
+        template: query-scheduler/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-index-gateway
+            image: busybox:1.36
+        template: index-gateway/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-index-gateway
+            image: busybox:1.36
+        template: index-gateway/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-compactor
+            image: busybox:1.36
+        template: compactor/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-compactor
+            image: busybox:1.36
+        template: compactor/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-bloom-gateway
+            image: busybox:1.36
+        template: bloom-gateway/statefulset.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-bloom-gateway
+            image: busybox:1.36
+        template: bloom-gateway/statefulset.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-bloom-planner
+            image: busybox:1.36
+        template: bloom-planner/statefulset.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-bloom-planner
+            image: busybox:1.36
+        template: bloom-planner/statefulset.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-bloom-builder
+            image: busybox:1.36
+        template: bloom-builder/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-bloom-builder
+            image: busybox:1.36
+        template: bloom-builder/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-pattern-ingester
+            image: busybox:1.36
+        template: pattern-ingester/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-pattern-ingester
+            image: busybox:1.36
+        template: pattern-ingester/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-ruler
+            image: busybox:1.36
+        template: ruler/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-ruler
+            image: busybox:1.36
+        template: ruler/workload.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-overrides-exporter
+            image: busybox:1.36
+        template: overrides-exporter/workload.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-overrides-exporter
+            image: busybox:1.36
+        template: overrides-exporter/workload.yaml
+
+  - it: should render initContainers and extraContainers for cache components
+    set:
+      resultsCache.initContainers:
+        - name: init-results-cache
+          image: busybox:1.36
+      resultsCache.extraContainers:
+        - name: extra-results-cache
+          image: busybox:1.36
+      chunksCache.initContainers:
+        - name: init-chunks-cache
+          image: busybox:1.36
+      chunksCache.extraContainers:
+        - name: extra-chunks-cache
+          image: busybox:1.36
+      chunksCache.l2.enabled: true
+      chunksCache.l2.initContainers:
+        - name: init-chunks-cache-l2
+          image: busybox:1.36
+      chunksCache.l2.extraContainers:
+        - name: extra-chunks-cache-l2
+          image: busybox:1.36
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-results-cache
+            image: busybox:1.36
+        template: results-cache/statefulset.yaml
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-results-cache
+            image: busybox:1.36
+        template: results-cache/statefulset.yaml
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-chunks-cache
+            image: busybox:1.36
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-chunks-cache
+            image: busybox:1.36
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.initContainers
+          content:
+            name: init-chunks-cache-l2
+            image: busybox:1.36
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 1
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: extra-chunks-cache-l2
+            image: busybox:1.36
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 1

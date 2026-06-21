@@ -321,6 +321,15 @@ tests:
       compactor.extraEnvFrom:
         - secretRef:
             name: compactor-env
+      global.extraEnv:
+        - name: GLOBAL_ENV
+          value: global
+      defaults.extraEnv:
+        - name: DEFAULTS_ENV
+          value: defaults
+      compactor.extraEnv:
+        - name: COMPACTOR_ENV
+          value: compactor
       global.extraVolumes:
         - name: global-volume
           emptyDir: {}
@@ -362,6 +371,9 @@ tests:
         limits:
           cpu: 200m
           memory: 256Mi
+      compactor.resizePolicy:
+        - resourceName: memory
+          restartPolicy: NotRequired
       compactor.livenessProbe:
         enabled: true
         httpGet:
@@ -403,6 +415,36 @@ tests:
           value: compactor-env
         template: templates/compactor/workload.yaml
       - equal:
+          path: spec.template.spec.containers[0].env[0]
+          value:
+            name: GLOBAL_ENV
+            value: global
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[1]
+          value:
+            name: DEFAULTS_ENV
+            value: defaults
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[2]
+          value:
+            name: COMPACTOR_ENV
+            value: compactor
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[3]
+          value:
+            name: GOMEMLIMIT
+            value: 217MiB
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[4]
+          value:
+            name: GOGC
+            value: "80"
+        template: templates/compactor/workload.yaml
+      - equal:
           path: spec.template.spec.containers[0].livenessProbe.httpGet.path
           value: /live
         template: templates/compactor/workload.yaml
@@ -433,6 +475,14 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.limits.memory
           value: 256Mi
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[0].resourceName
+          value: memory
+        template: templates/compactor/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[0].restartPolicy
+          value: NotRequired
         template: templates/compactor/workload.yaml
       - equal:
           path: spec.template.spec.containers[1].name

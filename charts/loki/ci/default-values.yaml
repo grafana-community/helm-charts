@@ -8,6 +8,11 @@ loki:
       chunks: chunks
       ruler: ruler
       admin: admin
+
+ignoreMinioDeprecation: true
+minio:
+  enabled: true
+
 deploymentMode: Monolithic
 singleBinary:
   replicas: 1

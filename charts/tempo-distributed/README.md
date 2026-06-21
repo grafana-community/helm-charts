@@ -12,7 +12,6 @@ Kubernetes: `^1.25.0-0`
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://charts.min.io/ | minio(minio) | 4.1.0 |
 | https://grafana.github.io/helm-charts | grafana-agent-operator | 0.5.2 |
 | https://grafana.github.io/helm-charts | rollout_operator | 0.43.0 |
 
@@ -52,17 +51,11 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
-### MinIO subchart deprecation
+### MinIO subchart removed
 
-The built-in MinIO subchart (`minio.enabled: true`) is deprecated as of chart v2.26.0 and will be
-removed in v4.0.0 (targeting Tempo 4.x, ~mid-2027).
-
-The subchart was convenient for quick-start setups but its service name embeds the Helm release name,
-which makes it incompatible with static CI values files and complicates upgrades. The recommended
-approach is to deploy MinIO (or any S3-compatible store) externally and reference it via
-`storage.trace.s3`.
-
-**Migrating to an external MinIO:**
+The built-in MinIO subchart has been removed in chart v3.0.0. `minio` is no longer a chart
+dependency, and setting `minio.enabled: true` fails the render. Tempo must point at an
+externally managed S3-compatible object store via `storage.trace.s3`:
 
 ```yaml
 storage:
@@ -74,18 +67,14 @@ storage:
       access_key: <access-key>
       secret_key: <secret-key>
       insecure: true  # remove if TLS is configured
-
-minio:
-  enabled: false
 ```
 
-To keep using the built-in subchart until you migrate, set:
-
-```yaml
-ignoreMinioDeprecation: true
-minio:
-  enabled: true
-```
+If you previously used the built-in subchart, do **not** run a plain `helm upgrade`: it
+would garbage collect the MinIO Deployment, Service, Secret, and PVC and destroy your trace
+data. Detach those objects from the release first (annotate them with
+`helm.sh/resource-policy: keep`, the Helm equivalent of `kubectl delete --cascade=orphan`),
+then repoint `storage.trace.s3` at the surviving MinIO Service. See [`UPGRADE.md`](./UPGRADE.md)
+for the full procedure.
 
 ### From Chart versions < 2.17.10
 
@@ -224,11 +213,6 @@ metaMonitoring:
     enabled: true
     installOperator: true
 ```
-* minio can now be enabled as part of this chart using the following values
-```yaml
-minio:
-  enabled: true
-```
 * allow configuration to be stored in a secret.  See the documentation for `useExternalConfig` and `configStorageType` in the values file for more details.
 
 ### From chart version < 0.26.0
@@ -365,7 +349,6 @@ The other components are optional and must be explicitly enabled.
 | memcached-exporter | yes | |
 | gateway | yes | |
 | rollout-operator | yes | |
-| minio | yes | |
 
 ## [Configuration](https://grafana.com/docs/tempo/latest/configuration/)
 

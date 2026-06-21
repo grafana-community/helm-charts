@@ -117,10 +117,48 @@ block temporarily and migrate using
 `tempo-cli migrate overrides-config`. See the
 [overrides configuration reference](https://grafana.com/docs/tempo/latest/configuration/#overrides).
 
-### Built-in MinIO subchart deprecated
+### Built-in MinIO subchart removed
 
-`minio.enabled: true` now causes a hard chart-render failure. Deploy MinIO (or
-any S3-compatible store) externally and reference it via `storage.trace.s3`:
+The built-in MinIO subchart is gone. The `minio` value is no longer a chart
+dependency, and setting `minio.enabled: true` now fails the render with a
+message pointing here. Tempo must be configured against an externally managed
+S3-compatible object store via `storage.trace.s3`.
+
+If you never used the built-in MinIO (the default was `minio.enabled: false`),
+just delete any leftover `minio:` block from your values and upgrade.
+
+#### Keeping your existing built-in MinIO running
+
+If you relied on `minio.enabled: true`, a plain `helm upgrade` would garbage
+collect the MinIO `Deployment`, `Service`, `Secret`, and **`PersistentVolumeClaim`**,
+because they are no longer part of the rendered release; that destroys your trace
+data along with them.
+
+To upgrade without losing the running MinIO, detach those objects from the Helm
+release first, the same idea as `kubectl delete --cascade=orphan`. Annotate them
+with `helm.sh/resource-policy: keep` *before* upgrading. Helm then skips deleting
+anything carrying that annotation when it disappears from the manifest, leaving
+MinIO running as a now-unmanaged deployment with its PVC and data intact.
+
+```bash
+# RELEASE and NAMESPACE are your existing tempo-distributed install.
+for kind in deployment service secret pvc serviceaccount; do
+  kubectl -n "$NAMESPACE" annotate "$kind" \
+    -l app=minio,release="$RELEASE" \
+    helm.sh/resource-policy=keep --overwrite
+done
+```
+
+Verify the annotation landed on every MinIO object (especially the PVC) before
+proceeding:
+
+```bash
+kubectl -n "$NAMESPACE" get deploy,svc,secret,pvc,sa -l app=minio,release="$RELEASE" \
+  -o jsonpath='{range .items[*]}{.kind}/{.metadata.name}: {.metadata.annotations.helm\.sh/resource-policy}{"\n"}{end}'
+```
+
+Then remove the `minio:` block from your values, point Tempo at the surviving
+MinIO Service, and upgrade:
 
 ```yaml
 storage:
@@ -128,16 +166,24 @@ storage:
     backend: s3
     s3:
       bucket: tempo-traces
-      endpoint: <minio-host>:9000
+      # Service kept from the old subchart, e.g. <release>-minio.<namespace>.svc:9000
+      endpoint: <release>-minio.<namespace>.svc.cluster.local:9000
       access_key: <key>
       secret_key: <secret>
-      insecure: true
-
-minio:
-  enabled: false
+      insecure: true   # drop once TLS is configured
 ```
 
-The built-in subchart will be removed entirely in chart v4.0.0.
+The orphaned MinIO is no longer upgraded or reconfigured by this chart. Migrate
+to a dedicated MinIO release (`helm install minio minio/minio`) or another
+S3-compatible store when convenient; the data lives in the retained PVC and can
+be re-mounted or copied out with `mc mirror`.
+
+#### Migrating to a fresh external store instead
+
+If you would rather start clean on external storage, deploy MinIO (or any
+S3-compatible store) separately and configure `storage.trace.s3` as above. Old
+blocks in the previous bucket can be backfilled with `mc mirror` or
+`tempo-cli` if you need to retain history.
 
 ### Removed config fields
 

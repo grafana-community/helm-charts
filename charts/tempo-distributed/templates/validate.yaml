@@ -1,3 +1,3 @@
-{{- if and .Values.minio.enabled (not .Values.ignoreMinioDeprecation) }}
-{{- fail "The tempo-distributed chart built-in MinIO dependency is deprecated and will be removed in chart v4.0.0 (targeting Tempo 4.x, ~mid-2027). Deploy MinIO externally and configure storage.trace.s3 to point at it. To continue using the built-in subchart in the meantime, set ignoreMinioDeprecation=true." }}
+{{- if and .Values.minio .Values.minio.enabled }}
+{{- fail "The built-in MinIO subchart has been removed from the tempo-distributed chart, so minio.enabled is no longer honored. Leaving it set means your traces would have no storage backend after the upgrade. Deploy MinIO (or any S3-compatible object store) externally and configure storage.trace.s3 to point at it, then remove the minio block from your values. See UPGRADE.md for a migration path that preserves your existing MinIO data." }}
 {{- end }}

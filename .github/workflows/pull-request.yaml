@@ -8,17 +8,14 @@ on:
     types: ["opened", "reopened", "synchronize", "edited"]
 
 jobs:
-  check-multiple-chart-changes:
-    name: Check Multiple Chart Changes
+  check-title:
+    name: Check Title
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-    outputs:
-      changed: ${{ steps.list-changed.outputs.changed }}
-      changed_list: ${{ steps.list-changed.outputs.changed_list }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -27,7 +24,7 @@ jobs:
         uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0
         with:
           # renovate: github=helm/helm
-          version: v4.2.0
+          version: v4.2.2
 
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
@@ -48,26 +45,8 @@ jobs:
             echo "changed_list=\"${changed//$'\n'/ }\"" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: check for multiple chart changes
-        if: steps.list-changed.outputs.changed == 'true'
-        run: |
-          COUNT=$(echo "$CHANGED_LIST" | wc -w)
-          if [ "$COUNT" -gt 1 ]; then
-            echo "Error: ($COUNT) charts changed. Please create separate PRs for each chart." >&2
-            exit 1
-          fi
-        env:
-          CHANGED_LIST: ${{ steps.list-changed.outputs.changed_list }}
-
-  check-title:
-    name: Check Title
-    needs: check-multiple-chart-changes
-    if: needs.check-multiple-chart-changes.outputs.changed == 'true'
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-    steps:
       - name: Validate PR Title format
+        if: steps.list-changed.outputs.changed == 'true'
         run: |
           CHANGED_LIST="${CHANGED_LIST//\"/}"
 
@@ -95,5 +74,5 @@ jobs:
             exit 1
           fi
         env:
-          CHANGED_LIST: ${{ needs.check-multiple-chart-changes.outputs.changed_list }}
+          CHANGED_LIST: ${{ steps.list-changed.outputs.changed_list }}
           PR_TITLE: ${{ github.event.pull_request.title }}

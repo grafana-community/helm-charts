@@ -295,6 +295,10 @@ spec:
       resources:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with $component.resizePolicy }}
+      resizePolicy:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- if and $component.sidecar .Values.sidecar.rules.enabled }}
     {{- include "loki.rulesSidecar" . | nindent 4 }}
       {{- end }}
@@ -327,24 +331,28 @@ rules sidecar
   resources:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  {{- with .Values.sidecar.resizePolicy }}
+  resizePolicy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   {{- with .Values.sidecar.securityContext }}
   securityContext:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- with .Values.sidecar.livenessProbe }}
-    {{- if .enabled | default true }}
+    {{- if .enabled }}
   livenessProbe:
     {{- toYaml (omit . "enabled") | nindent 8 }}
     {{- end }}
   {{- end }}
   {{- with .Values.sidecar.readinessProbe }}
-    {{- if .enabled | default true }}
+    {{- if .enabled }}
   readinessProbe:
     {{- toYaml (omit . "enabled") | nindent 8 }}
     {{- end }}
   {{- end }}
   {{- with .Values.sidecar.startupProbe }}
-    {{- if .enabled | default true }}
+    {{- if .enabled }}
   startupProbe:
     {{- toYaml (omit . "enabled") | nindent 8 }}
     {{- end }}
