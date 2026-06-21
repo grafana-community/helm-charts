@@ -3509,7 +3509,6 @@ extraObjects: []
 tests:
   integration:
     # -- Enable helm test hooks that run a BATS trace roundtrip against the live cluster.
-    # WARNING: enabling this and running `helm test` ingests real trace data through the
-    # live Kafka topic into object storage. Traces age out via retention; Tempo has no
-    # delete API.
+    # WARNING: enabling this and running `helm test` ingests real trace data into object storage.
+    # Traces age out via retention; Tempo has no delete API.
     enabled: false
