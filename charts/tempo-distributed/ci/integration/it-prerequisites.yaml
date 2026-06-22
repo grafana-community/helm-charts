@@ -51,6 +51,12 @@ spec:
               value: "0"
             - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
               value: "true"
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xmx256m -Xms256m"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 384Mi
           readinessProbe:
             exec:
               command:
