@@ -1,3 +1,9 @@
+blockBuilder:
+  enabled: false
+
+liveStore:
+  enabled: false
+
 storage:
   trace:
     backend: s3
