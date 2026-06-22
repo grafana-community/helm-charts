@@ -261,6 +261,8 @@ extraObjects:
               volumeMounts:
                 - name: data
                   mountPath: /data
+                - name: rc
+                  mountPath: /rc
               readinessProbe:
                 httpGet:
                   path: /health
@@ -270,13 +272,18 @@ extraObjects:
               startupProbe:
                 exec:
                   command:
-                    - mkdir
-                    - -p
-                    - /data/chunks/
+                    - /bin/sh
+                    - -ec
+                    - >-
+                      /rc/usr/bin/rc alias set local http://localhost:9000 rustfsadmin rustfsadmin &&
+                      /rc/usr/bin/rc mb local/chunks -p
                 initialDelaySeconds: 1
                 periodSeconds: 1
                 failureThreshold: 10
-
           volumes:
             - name: data
               emptyDir: {}
+            - name: rc
+              image:
+                reference: docker.io/rustfs/rc:v0.1.22
+                pullPolicy: IfNotPresent
