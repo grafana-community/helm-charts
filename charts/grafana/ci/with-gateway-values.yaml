@@ -48,3 +48,5 @@ listenerSet:
         port: 443
         protocol: HTTPS
         hostname: grafana.example.com
+        tls:
+          mode: Terminate
