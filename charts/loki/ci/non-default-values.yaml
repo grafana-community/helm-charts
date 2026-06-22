@@ -10,13 +10,51 @@ deploymentMode: Distributed
 nameOverride: '{{ $.Release.Name }}'
 test:
   enabled: true
+ignoreMinioDeprecation: true
+minio:
+  enabled: true
 loki:
   auth_enabled: true
   commonConfig:
     replication_factor: 1
   server:
     log_level: warn
-  useTestSchema: true
+  schema_config:
+    configs:
+      # Keep old data in MinIO readable
+      - from: "2024-01-01"
+        store: tsdb
+        object_store: minio
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+      # Write new data to external S3
+      - from: "2026-06-23" # Adjust this date as needed based on your retention period. Should be in the near future
+        store: tsdb
+        object_store: rustfs
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  structuredConfig:
+    storage_config:
+      named_stores:
+        aws:
+          minio:
+            endpoint: '{{ include "loki.minio" $ }}'
+            bucketnames: chunks
+            secret_access_key: '{{ $.Values.minio.rootPassword }}'
+            access_key_id: '{{ $.Values.minio.rootUser }}'
+            s3forcepathstyle: true
+            insecure: true
+          rustfs:
+            endpoint: 'rustfs.{{ $.Release.Namespace }}.svc.cluster.local.:9000'
+            bucketnames: chunks
+            access_key_id: 'rustfsadmin'
+            secret_access_key: 'rustfsadmin'
+            s3forcepathstyle: true
+            insecure: true
   tenants:
     - name: "self-monitoring"
       password: "self-monitoring"
@@ -33,13 +71,6 @@ loki:
       chunks: chunks
       ruler: ruler
       admin: admin
-    type: s3
-    s3:
-      endpoint: "rustfs.{{ $.Release.Namespace }}.svc.cluster.local.:9000"
-      secret_access_key: rustfsadmin
-      access_key_id: rustfsadmin
-      s3forcepathstyle: true
-      insecure: true
   rulerConfig:
     wal:
       dir: "/var/loki/ruler-wal"
@@ -94,8 +125,6 @@ ingester:
 sidecar:
   rules:
     enabled: true
-minio:
-  enabled: false
 read:
   replicas: 0
 write:
