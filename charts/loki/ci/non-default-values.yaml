@@ -30,7 +30,7 @@ loki:
           prefix: index_
           period: 24h
       # Write new data to external S3
-      - from: "2026-06-23" # Adjust this date as needed based on your retention period. Should be in the near future
+      - from: "2026-06-23"  # Adjust this date as needed based on your retention period. Should be in the near future
         store: tsdb
         object_store: rustfs
         schema: v13
