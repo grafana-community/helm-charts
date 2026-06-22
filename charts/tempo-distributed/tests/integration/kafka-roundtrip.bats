@@ -21,7 +21,7 @@ TRACE_PAYLOAD='{
 }'
 
 setup_file() {
-	for _ in $(seq 1 60); do
+	for _ in $(seq 1 30); do
 		if wget -q -O- \
 			--header 'Content-Type: application/json' \
 			--post-data "${TRACE_PAYLOAD}" \
@@ -30,7 +30,7 @@ setup_file() {
 		fi
 		sleep 2
 	done
-	echo "distributor at ${DISTRIBUTOR} not ready after 120s" >&3
+	echo "distributor at ${DISTRIBUTOR} not ready after 60s" >&3
 	return 1
 }
 

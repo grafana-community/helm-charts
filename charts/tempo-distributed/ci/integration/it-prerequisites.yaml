@@ -51,6 +51,15 @@ spec:
               value: "0"
             - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
               value: "true"
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
           volumeMounts:
             - name: data
               mountPath: /var/lib/kafka/data
