@@ -19,7 +19,7 @@ loki:
     replication_factor: 1
   server:
     log_level: warn
-  schema_config:
+  schemaConfig:
     configs:
       # Keep old data in MinIO readable
       - from: "2024-01-01"
