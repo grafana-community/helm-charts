@@ -14,6 +14,8 @@ loki:
   auth_enabled: true
   commonConfig:
     replication_factor: 1
+  server:
+    log_level: debug
   useTestSchema: true
   tenants:
     - name: "self-monitoring"
@@ -32,16 +34,19 @@ loki:
       ruler: ruler
       admin: admin
     type: s3
-  storage_config:
-    use_thanos_objstore: true
-    object_store:
-      s3:
-        endpoint: rustfs:9000
-        insecure: true
-        bucket_name: chunks
-        access_key_id: rustfsadmin
-        secret_access_key: rustfsadmin
-        bucket_lookup_type: path
+    s3:
+      endpoint: "rustfs.{{ $.Release.Namespace }}.svc.cluster.local.:9000"
+      secret_access_key: rustfsadmin
+      access_key_id: rustfsadmin
+      s3forcepathstyle: true
+      insecure: true
+  rulerConfig:
+    wal:
+      dir: "/var/loki/ruler-wal"
+    storage:
+      type: local
+      local:
+        directory: /var/loki/rules
 ingester:
   replicas: 2
   affinity: null
@@ -261,8 +266,6 @@ extraObjects:
               volumeMounts:
                 - name: data
                   mountPath: /data
-                - name: rc
-                  mountPath: /rc
               readinessProbe:
                 httpGet:
                   path: /health
@@ -272,18 +275,12 @@ extraObjects:
               startupProbe:
                 exec:
                   command:
-                    - /bin/sh
-                    - -ec
-                    - >-
-                      /rc/usr/bin/rc alias set local http://localhost:9000 rustfsadmin rustfsadmin &&
-                      /rc/usr/bin/rc mb local/chunks -p
+                    - mkdir
+                    - -p
+                    - /data/chunks/
                 initialDelaySeconds: 1
                 periodSeconds: 1
                 failureThreshold: 10
           volumes:
             - name: data
               emptyDir: {}
-            - name: rc
-              image:
-                reference: docker.io/rustfs/rc:v0.1.22
-                pullPolicy: IfNotPresent
