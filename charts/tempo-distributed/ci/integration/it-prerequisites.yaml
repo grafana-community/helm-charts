@@ -51,8 +51,12 @@ spec:
               value: "0"
             - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
               value: "true"
+            # Bound heap prevents the JVM from requesting memory beyond this limit.
             - name: KAFKA_HEAP_OPTS
               value: "-Xmx256m -Xms256m"
+          # Guaranteed CPU/memory keeps the broker responsive during chart upgrade when
+          # 10+ Tempo pods restart simultaneously; without requests the JVM gets throttled
+          # and block-builder/live-store exhaust their 10-retry Kafka connection limit.
           resources:
             requests:
               cpu: 250m
