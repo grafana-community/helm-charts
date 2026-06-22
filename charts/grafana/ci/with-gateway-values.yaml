@@ -50,3 +50,7 @@ listenerSet:
         hostname: grafana.example.com
         tls:
           mode: Terminate
+          certificateRefs:
+            - kind: Secret
+              group: ""
+              name: default-cert
