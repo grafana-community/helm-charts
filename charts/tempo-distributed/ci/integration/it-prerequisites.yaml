@@ -61,12 +61,13 @@ spec:
             requests:
               cpu: 250m
               memory: 384Mi
+          # tcpSocket avoids running kafka-broker-api-versions.sh (JVM-heavy) on every probe
+          # tick; under upgrade CPU pressure the exec probe times out (default 1s) and pulls
+          # Kafka out of service endpoints after 30 failures, causing block-builder to get
+          # connection refused on the ClusterIP.
           readinessProbe:
-            exec:
-              command:
-                - /bin/bash
-                - -c
-                - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1
+            tcpSocket:
+              port: 9092
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 30
