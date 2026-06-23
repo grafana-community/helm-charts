@@ -55,7 +55,7 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ### From 17.x to 18.0.0 ([#193](https://github.com/grafana-community/helm-charts/pull/193))
 
-The `.Values.monitoring` block has been refactored. Users should not assume backwards compatibility with any prior monitoring configuration — review this section in full before upgrading.
+The `.Values.monitoring` block has been refactored and the root `.Values.clusterLabelOverride` field removed and merged into `.Values.monitoring`. Users should not assume backwards compatibility with any prior monitoring configuration — review this section in full before upgrading.
 
 All dashboards, recording rules, and alert rules are now generated from the upstream [loki-mixin](https://github.com/grafana/loki/tree/main/production/loki-mixin) rather than maintained as static files. This ensures dashboard queries work correctly across all deployment modes (Monolithic, SimpleScalable, Distributed) and keeps the chart aligned with the upstream Loki observability stack.
 
