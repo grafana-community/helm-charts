@@ -2,6 +2,14 @@
 
 set -euo pipefail
 
+make helm-schema HELM_CHART=loki
+
+if ! git diff "$GITHUB_SHA" --color=always --exit-code; then
+  echo "Please run 'make helm-schema HELM_CHART=loki' to fix the linting errors."
+  exit 1
+fi
+
+
 {
   SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
@@ -28,10 +36,3 @@ set -euo pipefail
 
   rm -rf ./venv ./*.git
 } 2>&1
-
-make helm-schema HELM_CHART=loki
-
-if ! git diff "$GITHUB_SHA" --color=always --exit-code; then
-  echo "Please run 'make helm-schema HELM_CHART=loki' to fix the linting errors."
-  exit 1
-fi
