@@ -6597,7 +6597,10 @@
                             "properties": {
                                 "annotations": {
                                     "description": "Additional annotations for the GrafanaOperator resources",
-                                    "type": "object"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 },
                                 "enabled": {
                                     "description": "If enabled, GrafanaOperator resources for Grafana Operator are created to deploy the dashboards.",
@@ -6605,19 +6608,31 @@
                                 },
                                 "folder": {
                                     "description": "Which folder contains all dashboards in Grafana # This folder will be created on the Root level # Only one of 'folder', 'folderUID' or 'folderRef' can be set #",
-                                    "type": "string"
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
                                 },
                                 "folderRef": {
                                     "description": "Which GrafanaFolder reference contains all dashboards in Grafana # This allows you to use subfolder hierarchy. # Only one of 'folder', 'folderUID' or 'folderRef' can be set #",
-                                    "type": "null"
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
                                 },
                                 "folderUID": {
                                     "description": "Which UID of the target folder contains all dashboards in Grafana # This allows you to use subfolder hierarchy # Only one of 'folder', 'folderUID' or 'folderRef' can be set #",
-                                    "type": "null"
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
                                 },
                                 "labels": {
                                     "description": "Additional labels for the GrafanaOperator resources",
-                                    "type": "object"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
                                 },
                                 "resyncPeriod": {
                                     "description": "How frequently the operator should resync resources (in duration format)",
@@ -6654,7 +6669,10 @@
                 },
                 "namespace": {
                     "description": "Alternative namespace to deploy all monitoring resources (ServiceMonitor, PrometheusRule, ConfigMap dashboards) in. Defaults to the release namespace.",
-                    "type": "null"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "rules": {
                     "description": "Recording rules for monitoring Loki, required for some dashboards",

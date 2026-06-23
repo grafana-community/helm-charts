@@ -6979,6 +6979,7 @@ sidecar:
 
 # -- Monitoring section determines which monitoring features to enable
 monitoring:
+  # @schema type:[string, null]
   # -- Alternative namespace to deploy all monitoring resources (ServiceMonitor, PrometheusRule, ConfigMap dashboards) in.
   # Defaults to the release namespace.
   namespace: null
@@ -7027,27 +7028,32 @@ monitoring:
       # -- If enabled, GrafanaOperator resources for Grafana Operator are created to deploy the dashboards.
       enabled: false
 
+      # @schema additionalProperties:{"type":"string"}
       # -- Additional annotations for the GrafanaOperator resources
       annotations: {}
 
+      # @schema additionalProperties:{"type":"string"}
       # -- Additional labels for the GrafanaOperator resources
       labels: {}
 
       # -- How frequently the operator should resync resources (in duration format)
       resyncPeriod: 10m
 
+      # @schema type:[string, null]
       # -- Which folder contains all dashboards in Grafana
       ## This folder will be created on the Root level
       ## Only one of 'folder', 'folderUID' or 'folderRef' can be set
       ##
       folder: General
 
+      # @schema type:[string, null]
       # -- Which UID of the target folder contains all dashboards in Grafana
       ## This allows you to use subfolder hierarchy
       ## Only one of 'folder', 'folderUID' or 'folderRef' can be set
       ##
       folderUID: null
 
+      # @schema type:[string, null]
       # -- Which GrafanaFolder reference contains all dashboards in Grafana
       ## This allows you to use subfolder hierarchy.
       ## Only one of 'folder', 'folderUID' or 'folderRef' can be set
