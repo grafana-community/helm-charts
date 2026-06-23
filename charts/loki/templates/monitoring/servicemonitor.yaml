@@ -47,9 +47,9 @@ spec:
         - action: "replace"
           replacement: {{ tpl $.Values.monitoring.appInstanceLabelValue $ | quote }}
           targetLabel: {{ $.Values.monitoring.appInstanceLabelName | quote }}
-        {{- if and $.Values.monitoring.dashboards.multiCluster.enabled $.Values.monitoring.dashboards.multiCluster.clusterName }}
+        {{- if and $.Values.monitoring.multiCluster.enabled $.Values.monitoring.multiCluster.clusterName }}
         - action: "replace"
-          replacement: "{{ tpl $.Values.monitoring.dashboards.multiCluster.clusterName $ }}"
+          replacement: "{{ tpl $.Values.monitoring.multiCluster.clusterName $ }}"
           targetLabel: cluster
         {{- end }}
         {{- with .relabelings }}

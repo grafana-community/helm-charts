@@ -1,0 +1,18 @@
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: tempo-traces
+      endpoint: rustfs.rustfs-ci.svc.cluster.local:9000
+      access_key: rustfsadmin
+      secret_key: rustfsadmin
+      insecure: true
+
+traces:
+  otlp:
+    http:
+      enabled: true
+
+tests:
+  integration:
+    enabled: true

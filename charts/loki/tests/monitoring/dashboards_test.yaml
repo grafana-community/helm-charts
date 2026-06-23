@@ -1,0 +1,111 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: monitoring dashboards (loki-chunks)
+templates:
+  - monitoring/dashboards/loki-chunks.yaml
+
+tests:
+  - it: should not render ConfigMap when dashboards disabled
+    set:
+      monitoring.dashboards.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ConfigMap when dashboards enabled
+    set:
+      monitoring.dashboards.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: metadata.name
+          pattern: "loki-chunks"
+
+  - it: should use monitoring.namespace for ConfigMap
+    set:
+      monitoring.dashboards.enabled: true
+      monitoring.namespace: custom-ns
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: custom-ns
+
+  - it: should render two documents when grafanaOperator enabled
+    set:
+      monitoring.dashboards.enabled: true
+      monitoring.dashboards.grafanaOperator.enabled: true
+      # grafanaOperator.annotations and .labels have no default {} in values.yaml; must be non-nil maps
+      monitoring.dashboards.grafanaOperator.annotations.placeholder: ""
+      monitoring.dashboards.grafanaOperator.labels.placeholder: ""
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: first document is ConfigMap when grafanaOperator enabled
+    set:
+      monitoring.dashboards.enabled: true
+      monitoring.dashboards.grafanaOperator.enabled: true
+      monitoring.dashboards.grafanaOperator.annotations.placeholder: ""
+      monitoring.dashboards.grafanaOperator.labels.placeholder: ""
+    asserts:
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+
+  - it: second document is GrafanaDashboard when grafanaOperator enabled
+    set:
+      monitoring.dashboards.enabled: true
+      monitoring.dashboards.grafanaOperator.enabled: true
+      monitoring.dashboards.grafanaOperator.annotations.placeholder: ""
+      monitoring.dashboards.grafanaOperator.labels.placeholder: ""
+    asserts:
+      - isKind:
+          of: GrafanaDashboard
+        documentIndex: 1
+
+  - it: should embed editable=false in JSON data when defaultDashboardsEditable=false
+    set:
+      monitoring.dashboards.enabled: true
+      monitoring.dashboards.defaultDashboardsEditable: false
+    asserts:
+      - matchRegex:
+          path: data["loki-chunks.json"]
+          pattern: '"editable":false'
+
+  - it: should embed editable=true in JSON data when defaultDashboardsEditable=true (default)
+    set:
+      monitoring.dashboards.enabled: true
+      monitoring.dashboards.defaultDashboardsEditable: true
+    asserts:
+      - matchRegex:
+          path: data["loki-chunks.json"]
+          pattern: '"editable":true'
+
+  # multiCluster.enabled controls whether the cluster variable is present or absent.
+  # The app_instance variable is always present.
+  - it: should exclude cluster variable when multiCluster disabled
+    set:
+      monitoring.dashboards.enabled: true
+      monitoring.multiCluster.enabled: false
+    asserts:
+      - notMatchRegex:
+          path: data["loki-chunks.json"]
+          pattern: '"name":"cluster"'
+      - matchRegex:
+          path: data["loki-chunks.json"]
+          pattern: '"name":"app_instance"'
+
+  - it: should include cluster variable when multiCluster enabled
+    set:
+      monitoring.dashboards.enabled: true
+      monitoring.multiCluster.enabled: true
+      monitoring.multiCluster.clusterName: my-cluster
+    asserts:
+      - matchRegex:
+          path: data["loki-chunks.json"]
+          pattern: '"name":"cluster"'
+      - matchRegex:
+          path: data["loki-chunks.json"]
+          pattern: '"name":"app_instance"'

@@ -7,6 +7,9 @@ loki:
       admin: admin
     type: s3
 
+ignoreMinioDeprecation: true
+minio:
+  enabled: true
 
 read:
   replicas: 1

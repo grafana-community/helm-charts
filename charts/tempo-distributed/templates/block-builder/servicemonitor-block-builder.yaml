@@ -1,0 +1,3 @@
+{{- if .Values.blockBuilder.enabled }}
+{{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" "block-builder" "memberlist" true) }}
+{{- end }}

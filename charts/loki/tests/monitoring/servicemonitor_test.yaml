@@ -1,0 +1,92 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: monitoring servicemonitor
+templates:
+  - monitoring/servicemonitor.yaml
+
+tests:
+  - it: should not render ServiceMonitor when disabled
+    set:
+      monitoring.serviceMonitor.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ServiceMonitor when enabled
+    set:
+      monitoring.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: kind
+          value: ServiceMonitor
+
+  - it: should inject app_instance relabeling with default appInstanceLabelName
+    set:
+      monitoring.serviceMonitor.enabled: true
+    asserts:
+      - contains:
+          path: spec.endpoints[0].relabelings
+          content:
+            action: "replace"
+            replacement: "RELEASE-NAME-loki"
+            targetLabel: "app_instance"
+
+  - it: should use custom appInstanceLabelName as targetLabel
+    set:
+      monitoring.serviceMonitor.enabled: true
+      monitoring.appInstanceLabelName: instance
+    asserts:
+      - contains:
+          path: spec.endpoints[0].relabelings
+          content:
+            action: "replace"
+            replacement: "RELEASE-NAME-loki"
+            targetLabel: "instance"
+
+  - it: should not add cluster relabeling when multiCluster disabled
+    set:
+      monitoring.serviceMonitor.enabled: true
+    asserts:
+      - notContains:
+          path: spec.endpoints[0].relabelings
+          content:
+            targetLabel: cluster
+
+  - it: should add cluster relabeling when multiCluster enabled with clusterName
+    set:
+      monitoring.serviceMonitor.enabled: true
+      monitoring.multiCluster.enabled: true
+      monitoring.multiCluster.clusterName: my-cluster
+    asserts:
+      - contains:
+          path: spec.endpoints[0].relabelings
+          content:
+            action: "replace"
+            replacement: "my-cluster"
+            targetLabel: cluster
+
+  - it: should not add cluster relabeling when multiCluster enabled but clusterName empty
+    set:
+      monitoring.serviceMonitor.enabled: true
+      monitoring.multiCluster.enabled: true
+      monitoring.multiCluster.clusterName: ""
+    asserts:
+      - notContains:
+          path: spec.endpoints[0].relabelings
+          content:
+            targetLabel: cluster
+
+  - it: should add jobPrefix relabeling when jobPrefix is set
+    set:
+      monitoring.serviceMonitor.enabled: true
+      monitoring.serviceMonitor.jobPrefix: "myprefix/"
+    asserts:
+      - contains:
+          path: spec.endpoints[0].relabelings
+          content:
+            action: "replace"
+            replacement: "myprefix/$1"
+            sourceLabels:
+              - job
+            targetLabel: "job"

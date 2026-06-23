@@ -383,6 +383,43 @@ route:
     ## Ref. https://gateway-api.sigs.k8s.io/guides/http-redirect-rewrite/
     httpsRedirect: false
 
+# -- BETA: Configure Gateway API ListenerSet resources for the chart here.
+# ListenerSet allows attaching additional listeners to an existing Gateway.
+# More listener sets can be added by adding a dictionary key like the 'main' entry.
+# Being BETA this can/will change in the future without notice, do not use unless you want to take that risk
+# [[ref]](https://gateway-api.sigs.k8s.io/reference/api-spec/main/spec/#listenerset)
+listenerSet:
+  main:
+    # -- Enables or disables the listener set
+    enabled: false
+
+    # -- Set the ListenerSet apiVersion, e.g. gateway.networking.k8s.io/v1
+    apiVersion: gateway.networking.k8s.io/v1
+
+    annotations: {}
+    labels: {}
+
+    # -- Reference to the parent Gateway this ListenerSet attaches to
+    parentRef: {}
+    # name: my-gateway
+    # namespace: default
+    # group: gateway.networking.k8s.io
+    # kind: Gateway
+
+    # -- List of listeners to attach to the parent Gateway
+    listeners: []
+    # - name: https
+    #   port: 443
+    #   protocol: HTTPS
+    #   hostname: grafana.example.com
+    #   tls:
+    #     mode: Terminate
+    #     certificateRefs:
+    #       - name: grafana-tls
+    #   allowedRoutes:
+    #     namespaces:
+    #       from: Same
+
 resources: {}
 #  limits:
 #    cpu: 100m
@@ -995,7 +1032,7 @@ sidecar:
     # -- The Docker registry
     registry: quay.io
     repository: kiwigrid/k8s-sidecar
-    tag: 2.7.3
+    tag: 2.7.4
     sha: ""
   imagePullPolicy: IfNotPresent
   resources: {}
@@ -1012,7 +1049,7 @@ sidecar:
       - ALL
     seccompProfile:
       type: RuntimeDefault
-  # skipTlsVerify Set to true to skip tls verification for kube api calls
+  # Set to true to skip tls verification for kube api calls. Can be overridden per sidecar
   # skipTlsVerify: true
   enableUniqueFilenames: false
   readinessProbe: {}
@@ -1038,6 +1075,8 @@ sidecar:
     #      key: value_key
     # Do not reprocess already processed unchanged resources on k8s API reconnect.
     # ignoreAlreadyProcessed: true
+    # Set to true to skip tls verification for kube api calls. Overrides sidecar.skipTlsVerify
+    # skipTlsVerify: true
     # label that the configmaps with alert are marked with (can be templated)
     label: grafana_alert
     # value of label that the configmaps with alert are set to (can be templated)
@@ -1129,6 +1168,8 @@ sidecar:
     #      key: value_key
     # Do not reprocess already processed unchanged resources on k8s API reconnect.
     # ignoreAlreadyProcessed: true
+    # Set to true to skip tls verification for kube api calls. Overrides sidecar.skipTlsVerify
+    # skipTlsVerify: true
     SCProvider: true
     # label that the configmaps with dashboards are marked with (can be templated)
     label: grafana_dashboard
@@ -1246,6 +1287,8 @@ sidecar:
     #      key: value_key
     # Do not reprocess already processed unchanged resources on k8s API reconnect.
     # ignoreAlreadyProcessed: true
+    # Set to true to skip tls verification for kube api calls. Overrides sidecar.skipTlsVerify
+    # skipTlsVerify: true
     # label that the configmaps with datasources are marked with (can be templated)
     label: grafana_datasource
     # value of label that the configmaps with datasources are set to (can be templated)
@@ -1324,6 +1367,8 @@ sidecar:
     env: {}
     # Do not reprocess already processed unchanged resources on k8s API reconnect.
     # ignoreAlreadyProcessed: true
+    # Set to true to skip tls verification for kube api calls. Overrides sidecar.skipTlsVerify
+    # skipTlsVerify: true
     # label that the configmaps with plugins are marked with (can be templated)
     label: grafana_plugin
     # value of label that the configmaps with plugins are set to (can be templated)
@@ -1392,6 +1437,8 @@ sidecar:
     env: {}
     # Do not reprocess already processed unchanged resources on k8s API reconnect.
     # ignoreAlreadyProcessed: true
+    # Set to true to skip tls verification for kube api calls. Overrides sidecar.skipTlsVerify
+    # skipTlsVerify: true
     # label that the configmaps with notifiers are marked with (can be templated)
     label: grafana_notifier
     # value of label that the configmaps with notifiers are set to (can be templated)

@@ -1,0 +1,56 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: monitoring additional prometheus rules
+templates:
+  - monitoring/additional-prometheus-rules.yaml
+
+tests:
+  - it: should produce no output with empty additionalPrometheusRules (default)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render one PrometheusRule per dict key
+    set:
+      monitoring.additionalPrometheusRules.my-rules.groups[0].name: test-group
+      monitoring.additionalPrometheusRules.my-rules.groups[0].rules[0].record: "test:metric"
+      monitoring.additionalPrometheusRules.my-rules.groups[0].rules[0].expr: "vector(1)"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: kind
+          value: PrometheusRule
+      - matchRegex:
+          path: metadata.name
+          pattern: ".*-my-rules$"
+
+  - it: should have a non-empty spec.groups when a rule is defined
+    set:
+      monitoring.additionalPrometheusRules.my-rules.groups[0].name: test-group
+      monitoring.additionalPrometheusRules.my-rules.groups[0].rules[0].record: "test:metric"
+      monitoring.additionalPrometheusRules.my-rules.groups[0].rules[0].expr: "vector(1)"
+    asserts:
+      - isNotNull:
+          path: spec.groups
+
+  - it: should apply monitoring.rules.labels to additional rules
+    set:
+      monitoring.additionalPrometheusRules.my-rules.groups[0].name: test-group
+      monitoring.additionalPrometheusRules.my-rules.groups[0].rules[0].record: "test:metric"
+      monitoring.additionalPrometheusRules.my-rules.groups[0].rules[0].expr: "vector(1)"
+      monitoring.rules.labels.release: kube-prometheus-stack
+    asserts:
+      - equal:
+          path: metadata.labels.release
+          value: kube-prometheus-stack
+
+  - it: should use monitoring.namespace when set
+    set:
+      monitoring.additionalPrometheusRules.my-rules.groups[0].name: test-group
+      monitoring.additionalPrometheusRules.my-rules.groups[0].rules[0].record: "test:metric"
+      monitoring.additionalPrometheusRules.my-rules.groups[0].rules[0].expr: "vector(1)"
+      monitoring.namespace: custom-ns
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: custom-ns

@@ -1,0 +1,229 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kafka-ci
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: kafka-ci
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+        ci-managed: "true"
+    spec:
+      containers:
+        - name: kafka
+          # renovate: docker=docker.io/apache/kafka
+          image: apache/kafka:4.0.0
+          ports:
+            - containerPort: 9092
+              name: plaintext
+          env:
+            - name: KAFKA_NODE_ID
+              value: "1"
+            - name: KAFKA_PROCESS_ROLES
+              value: "broker,controller"
+            - name: KAFKA_LISTENERS
+              value: "PLAINTEXT://:9092,CONTROLLER://:9093"
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "PLAINTEXT://kafka.kafka-ci.svc.cluster.local:9092"
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: "1@localhost:9093"
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+              value: "1"
+            - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+              value: "0"
+            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+              value: "true"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/kafka/data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: kafka-ci
+spec:
+  selector:
+    app: kafka
+  ports:
+    - name: plaintext
+      port: 9092
+      targetPort: 9092
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minio-ci
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: minio-ci
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+        ci-managed: "true"
+    spec:
+      containers:
+        - name: minio
+          # renovate: docker=docker.io/pgsty/minio
+          image: pgsty/minio:RELEASE.2026-04-17T00-00-00Z
+          # A directory under the data root is served as a bucket.
+          command:
+            - sh
+            - -ec
+            - mkdir -p /data/tempo-traces && exec minio server /data
+          ports:
+            - containerPort: 9000
+              name: s3
+          env:
+            - name: MINIO_ROOT_USER
+              value: "grafana-tempo"
+            - name: MINIO_ROOT_PASSWORD
+              value: "supersecret"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: minio-ci
+spec:
+  selector:
+    app: minio
+  ports:
+    - name: s3
+      port: 9000
+      targetPort: 9000
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rustfs-ci
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rustfs
+  namespace: rustfs-ci
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rustfs
+  template:
+    metadata:
+      labels:
+        app: rustfs
+        ci-managed: "true"
+    spec:
+      containers:
+        - name: rustfs
+          # renovate: docker=docker.io/rustfs/rustfs
+          image: rustfs/rustfs:1.0.0-beta.8
+          ports:
+            - containerPort: 9000
+              name: s3
+          env:
+            - name: RUSTFS_ACCESS_KEY
+              value: "rustfsadmin"
+            - name: RUSTFS_SECRET_KEY
+              value: "rustfsadmin"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs
+  namespace: rustfs-ci
+spec:
+  selector:
+    app: rustfs
+  ports:
+    - name: s3
+      port: 9000
+      targetPort: 9000
+---
+# Waits for RustFS to be ready, creates the tempo-traces bucket, then stays alive.
+# The readinessProbe gates kubectl wait: ct install only starts after the bucket exists.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rustfs-bucket-init
+  namespace: rustfs-ci
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rustfs-bucket-init
+  template:
+    metadata:
+      labels:
+        app: rustfs-bucket-init
+        ci-managed: "true"
+    spec:
+      containers:
+        - name: mc
+          # renovate: docker=docker.io/minio/mc
+          image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+          command:
+            - sh
+            - -ec
+            - |
+              until mc alias set rustfs http://rustfs.rustfs-ci.svc.cluster.local:9000 rustfsadmin rustfsadmin 2>/dev/null; do
+                sleep 2
+              done
+              mc mb rustfs/tempo-traces --ignore-existing
+              while true; do sleep 3600; done
+          readinessProbe:
+            exec:
+              command:
+                - mc
+                - ls
+                - rustfs/tempo-traces
+            initialDelaySeconds: 5
+            periodSeconds: 5

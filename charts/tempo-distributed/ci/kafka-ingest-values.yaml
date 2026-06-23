@@ -1,0 +1,27 @@
+ingester:
+  enabled: false
+
+backendScheduler:
+  enabled: true
+
+blockBuilder:
+  enabled: true
+  replicas: 1
+
+liveStore:
+  enabled: true
+  replicas: 1
+
+ingest:
+  kafka:
+    address: "kafka.kafka-ci.svc.cluster.local:9092"
+    auto_create_topic_default_partitions: 1
+
+traces:
+  otlp:
+    http:
+      enabled: true
+
+tests:
+  integration:
+    enabled: true

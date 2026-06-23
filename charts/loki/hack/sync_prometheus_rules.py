@@ -2,6 +2,7 @@
 """Fetch alerting and aggregation rules from provided urls into this chart."""
 import json
 import os
+from pathlib import Path
 import re
 import shutil
 import subprocess
@@ -70,7 +71,7 @@ replacement_map = {
         'replacement': '$labels.{{ $.Values.monitoring.appInstanceLabelName }}',
     },
     'cluster,': {
-        'replacement': '{{ $.Values.monitoring.appInstanceLabelName }},',
+        'replacement': '{{ if and $.Values.monitoring.multiCluster.enabled $.Values.monitoring.multiCluster.clusterName }}cluster, {{ end }}{{ $.Values.monitoring.appInstanceLabelName }},',
     },
 }
 
@@ -202,22 +203,22 @@ def add_custom_labels(rules_str, group, indent=4, label_indent=2, monitoring_pat
     rule_group_labels = get_rule_group_condition(condition_map.get(group['name'], ''), 'additionalRuleGroupLabels')
 
     additional_rule_labels = textwrap.indent("""
-{{- if and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName }}
-cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
+{{- if and .Values.monitoring.multiCluster.enabled .Values.monitoring.multiCluster.clusterName }}
+cluster: "{{ tpl .Values.monitoring.multiCluster.clusterName $ }}"
 {{- end }}
+{{ $.Values.monitoring.appInstanceLabelName }}: "{{ tpl $.Values.monitoring.appInstanceLabelValue $ }}"
 {{- with .Values.%s.additionalRuleLabels }}
   {{- toYaml . | nindent 8 }}
 {{- end }}""" % monitoring_path, " " * (indent + label_indent * 2))
 
-    additional_rule_labels_condition_start = "\n" + " " * (indent + label_indent * 2) + "{{- if or (and .Values.monitoring.dashboards.multiCluster.enabled .Values.monitoring.dashboards.multiCluster.clusterName) .Values.%s.additionalRuleLabels }}" % monitoring_path
-    additional_rule_labels_condition_end = "\n" + " " * (indent + label_indent * 2) + "{{- end }}"
-    # labels: cannot be null, if a rule does not have any labels by default, the labels block
-    # should only be added if there are .Values.monitoring.rules.additionalRuleLabels defined
-    rule_seperator = "\n" + " " * indent + "-.*"
-    label_seperator = "\n" + " " * indent + "  labels:"
-    section_seperator = "\n" + " " * indent + "  \\S"
-    section_seperator_len = len(section_seperator)-1
-    rules_positions = re.finditer(rule_seperator,rules_str)
+    # appInstanceLabelName is always added, so labels: block is always needed
+    additional_rule_labels_condition_start = ""
+    additional_rule_labels_condition_end = ""
+    rule_separator = "\n" + " " * indent + "-.*"
+    label_separator = "\n" + " " * indent + "  labels:"
+    section_separator = "\n" + " " * indent + "  \\S"
+    section_separator_len = len(section_separator)-1
+    rules_positions = re.finditer(rule_separator,rules_str)
 
     # fetch breakpoint between each set of rules
     ruleStartingLine = [(rule_position.start(),rule_position.end()) for rule_position in rules_positions]
@@ -235,14 +236,14 @@ cluster: "{{ tpl .Values.monitoring.dashboards.multiCluster.clusterName $ }}"
     rules.append(rules_str[previousRule[0]:len(rules_str)-1])
 
     for i, rule in enumerate(rules):
-        current_label = re.search(label_seperator,rule)
+        current_label = re.search(label_separator,rule)
         if current_label:
             # `labels:` block exists
             # determine if there are any existing entries
-            entries = re.search(section_seperator,rule[current_label.end():])
+            entries = re.search(section_separator,rule[current_label.end():])
             if entries:
                 entries_start = current_label.end()
-                entries_end = entries.end()+current_label.end()-section_seperator_len
+                entries_end = entries.end()+current_label.end()-section_separator_len
                 rules[i] = rule[:entries_end] + additional_rule_labels_condition_start + additional_rule_labels + additional_rule_labels_condition_end + rule[entries_end:]
             else:
                 # `labels:` does not contain any entries
@@ -448,9 +449,7 @@ def main():
                     subprocess.run(["jb", "install"], cwd=mixin_dir)
 
                 if 'content' in chart:
-                    f = open(mixin_dir + mixin_file, "w")
-                    f.write(chart['content'])
-                    f.close()
+                    Path(mixin_dir + mixin_file).write_text(chart['content'])
 
                 print("Generating rules from %s" % mixin_file)
                 print("Change cwd to %s" % checkout_dir + '/' + source_cwd)
@@ -521,7 +520,7 @@ def jsonnet_import_callback(base, rel):
         if candidate:
             tried.append(candidate)
             if os.path.isfile(candidate):
-                return candidate, open(candidate).read().encode('utf-8')
+                return candidate, Path(candidate).read_text().encode('utf-8')
 
         # If base is empty, also try the repository vendor/ path once
         # (so 'vendor/<rel>' is checked). This handles imports that live in
@@ -530,13 +529,13 @@ def jsonnet_import_callback(base, rel):
             vendor_candidate = os.path.join(os.getcwd(), 'vendor', rel)
             tried.append(vendor_candidate)
             if os.path.isfile(vendor_candidate):
-                return vendor_candidate, open(vendor_candidate).read().encode('utf-8')
+                return vendor_candidate, Path(vendor_candidate).read_text().encode('utf-8')
 
             # Also try the plain relative path (rel) in the current cwd.
             plain_candidate = rel
             tried.append(plain_candidate)
             if os.path.isfile(plain_candidate):
-                return plain_candidate, open(plain_candidate).read().encode('utf-8')
+                return plain_candidate, Path(plain_candidate).read_text().encode('utf-8')
 
             # We've tried empty base (vendor and plain rel), stop looping.
             break

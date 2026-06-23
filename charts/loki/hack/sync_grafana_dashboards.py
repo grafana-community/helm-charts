@@ -2,6 +2,7 @@
 """Fetch dashboards from provided urls into this chart."""
 import json
 import os
+from pathlib import Path
 import re
 import shutil
 import subprocess
@@ -42,7 +43,7 @@ charts = [
         'destination': '../templates/monitoring/dashboards',
         'type': 'jsonnet_mixin',
         'mixin_vars': {},
-        'multicluster_key': '.Values.monitoring.dashboards.multiCluster.enabled',
+        'multicluster_key': '.Values.monitoring.multiCluster.enabled',
     },
 ]
 
@@ -109,14 +110,22 @@ replacement_map = {
     'loki-single-binary': {
         'replacement': '`}}{{ include "loki.resourceName" (dict "ctx" $) }}{{`',
     },
-    '"label":"cluster","multi":false,"name":"cluster"': {
-        'replacement': '"label":"Instance","multi":false,"name":"instance"',
+    # Upstream uses "cluster" for Loki instance identity. We keep "cluster" for k8s cluster
+    # and add appInstanceLabelName alongside it for Loki instance selection.
+    # Variable name/label placeholder (set in patch_dashboards_json).
+    ':appInstanceLabelName:': {
+        'replacement': '`}}{{ $.Values.monitoring.appInstanceLabelName }}{{`',
+    },
+    # Label selectors: conditionally keep cluster filter, always add app_instance filter.
+    'cluster=\\"$cluster\\"': {
+        'replacement': '`}}{{ if .Values.monitoring.multiCluster.enabled }}{{`cluster=\\"$cluster\\", `}}{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}{{`=\\"$`}}{{ $.Values.monitoring.appInstanceLabelName }}{{`\\"',
     },
     'cluster=~\\"$cluster\\"': {
-        'replacement': '`}}{{ $.Values.monitoring.appInstanceLabelName }}{{`=~\\"$instance\\"',
+        'replacement': '`}}{{ if .Values.monitoring.multiCluster.enabled }}{{`cluster=~\\"$cluster\\", `}}{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}{{`=~\\"$`}}{{ $.Values.monitoring.appInstanceLabelName }}{{`\\"',
     },
-    'cluster)': {
-        'replacement': '`}}{{ $.Values.monitoring.appInstanceLabelName }}{{`)',
+    # by() clauses: conditionally keep cluster, always add app_instance.
+    'cluster, ': {
+        'replacement': '`}}{{ if .Values.monitoring.multiCluster.enabled }}{{`cluster, `}}{{ end }}{{ $.Values.monitoring.appInstanceLabelName }}{{`, ',
     },
 }
 
@@ -211,11 +220,26 @@ def patch_dashboards_json(content, multicluster_key):
         content_struct = json.loads(content)
 
         # multicluster
+        cluster_var_json = None
         overwrite_list = []
         for variable in content_struct['templating']['list']:
             if variable['name'] == 'cluster':
-                variable['allValue'] = '.*'
-                variable['hide'] = ':multicluster:'
+                # Upstream uses "cluster" to mean "Loki instance". We split it into two variables:
+                # 1. "cluster" for k8s cluster selection — only present when multiCluster enabled.
+                #    Serialized separately and injected as a Helm conditional after json.dumps.
+                cluster_var_json = json.dumps(variable, separators=(',', ':'))
+                cluster_var_json = cluster_var_json.replace('`', '`}}`{{`')
+                overwrite_list.append(':CLUSTER_VAR:')
+                # 2. "app_instance" for Loki instance selection — always visible.
+                #    Uses :appInstanceLabelName: placeholder replaced by replacement_map.
+                app_instance_var = variable.copy()
+                app_instance_var['name'] = ':appInstanceLabelName:'
+                app_instance_var['label'] = ':appInstanceLabelName:'
+                app_instance_var['query'] = 'label_values(loki_build_info, :appInstanceLabelName:)'
+                app_instance_var['hide'] = 0
+                app_instance_var.pop('allValue', None)
+                overwrite_list.append(app_instance_var)
+                continue
             overwrite_list.append(variable)
         content_struct['templating']['list'] = overwrite_list
 
@@ -225,15 +249,20 @@ def patch_dashboards_json(content, multicluster_key):
 
         content = json.dumps(content_struct, separators=(',', ':'))
         content = content.replace('`', '`}}`{{`')
-        content = content.replace('":multicluster:"', '`}}{{ if %s }}0{{ else }}2{{ end }}{{`' % multicluster_key,)
+        # Inject cluster variable conditionally — present only when multiCluster enabled
+        if cluster_var_json:
+            content = content.replace(
+                '":CLUSTER_VAR:",',
+                '`}}{{ if %s }}{{`%s,`}}{{ end }}{{`' % (multicluster_key, cluster_var_json),
+            )
         init_line = ''
 
         for line in replacement_map:
             if line in content and replacement_map[line].get('init'):
                 init_line += '\n' + replacement_map[line]['init']
             content = content.replace(line, replacement_map[line]['replacement'])
-    except (ValueError, KeyError):
-        pass
+    except (ValueError, KeyError) as e:
+        print("WARNING: Failed to patch dashboard JSON: %s" % e)
 
     return init_line, "{{`" + content + "`}}"
 
@@ -283,7 +312,7 @@ def jsonnet_import_callback(base, rel):
         if candidate:
             tried.append(candidate)
             if os.path.isfile(candidate):
-                return candidate, open(candidate).read().encode('utf-8')
+                return candidate, Path(candidate).read_text().encode('utf-8')
 
         # If base is empty, also try the repository vendor/ path once
         # (so 'vendor/<rel>' is checked). This handles imports that live in
