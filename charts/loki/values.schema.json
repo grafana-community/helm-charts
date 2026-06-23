@@ -3317,7 +3317,10 @@
                 },
                 "maxSurge": {
                     "description": "Max Surge for distributor pods",
-                    "type": "integer"
+                    "type": [
+                        "string",
+                        "integer"
+                    ]
                 },
                 "maxUnavailable": {
                     "description": "Pod Disruption Budget maxUnavailable",
@@ -7886,7 +7889,10 @@
                 },
                 "maxSurge": {
                     "description": "Max Surge for querier pods",
-                    "type": "integer"
+                    "type": [
+                        "string",
+                        "integer"
+                    ]
                 },
                 "maxUnavailable": {
                     "description": "Pod Disruption Budget maxUnavailable",
