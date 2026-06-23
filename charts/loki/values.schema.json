@@ -10857,6 +10857,7 @@
         },
         "tableManager": {
             "description": "DEPRECATED Configuration for the table-manager. The table-manager is only necessary when using a deprecated index type such as Cassandra, Bigtable, or DynamoDB, it has not been necessary since loki introduced self- contained index types like 'boltdb-shipper' and 'tsdb'. This will be removed in a future helm chart.",
+            "deprecated": true,
             "type": "object",
             "properties": {
                 "affinity": {

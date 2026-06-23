@@ -7146,6 +7146,7 @@ monitoring:
     # -- The job label is required for the included dashboards to work.
     jobPrefix: '{{ include "loki.namespace" $ }}/'
 
+# @schema deprecated
 # -- DEPRECATED Configuration for the table-manager. The table-manager is only necessary when using a deprecated
 # index type such as Cassandra, Bigtable, or DynamoDB, it has not been necessary since loki introduced self-
 # contained index types like 'boltdb-shipper' and 'tsdb'. This will be removed in a future helm chart.
