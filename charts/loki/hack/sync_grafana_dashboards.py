@@ -29,7 +29,7 @@ def change_style(style, representer):
 
 
 refs = {
-    # renovate: github=docker.io/grafana/loki
+    # renovate: github=grafana/loki
     'ref.loki': 'v3.7.1',
 }
 
