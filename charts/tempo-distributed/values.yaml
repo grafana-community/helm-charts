@@ -3155,6 +3155,11 @@ prometheusRule:
 
 minio:
   enabled: false
+  # renovate: docker=docker.io/pgsty/minio
+  image:
+    repository: pgsty/minio
+    tag: RELEASE.2026-04-17T00-00-00Z
+    pullPolicy: IfNotPresent
   mode: standalone
   rootUser: grafana-tempo
   rootPassword: supersecret
@@ -4037,7 +4042,6 @@ extraObjects: []
 tests:
   integration:
     # -- Enable helm test hooks that run a BATS trace roundtrip against the live cluster.
-    # WARNING: enabling this and running `helm test` ingests real trace data through the
-    # live Kafka topic into object storage. Traces age out via retention; Tempo has no
-    # delete API.
+    # WARNING: enabling this and running `helm test` ingests real trace data into object storage.
+    # Traces age out via retention; Tempo has no delete API.
     enabled: false
