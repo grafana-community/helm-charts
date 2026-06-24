@@ -30,7 +30,7 @@ def change_style(style, representer):
 
 refs = {
     # renovate: github=grafana/loki
-    'ref.loki': 'v3.7.2',
+    'ref.loki': 'v3.7.3',
 }
 
 _mixin_config = "horizontally_scalable_compactor_enabled: false, internal_components: false, meta_monitoring+: { enabled: true }, promtail+: { enabled: false }, ssd+: { enabled: false, pod_prefix_matcher: 'loki.*' }"
