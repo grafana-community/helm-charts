@@ -17,7 +17,7 @@ spec:
     matchLabels:
       {{- include "grafana.selectorLabels" . | nindent 6 }}
   serviceName: {{ include "grafana.fullname" . }}-headless
-  {{- if and .Values.persistence.enabled (semverCompare ">=1.27.0-0" .Capabilities.KubeVersion.Version) }}
+  {{- if .Values.persistence.enabled }}
   {{- with .Values.persistence.persistentVolumeClaimRetentionPolicy }}
   persistentVolumeClaimRetentionPolicy:
     {{- toYaml . | nindent 4 }}
