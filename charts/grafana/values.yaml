@@ -204,7 +204,7 @@ downloadDashboardsImage:
   # -- The Docker registry
   registry: docker.io
   repository: curlimages/curl
-  tag: 8.20.0
+  tag: 8.21.0
   sha: ""
   pullPolicy: IfNotPresent
 
