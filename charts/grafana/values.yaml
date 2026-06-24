@@ -502,6 +502,12 @@ persistence:
   ## Extra labels to apply to a PVC.
   extraPvcLabels: {}
   disableWarning: false
+  ## Configure StatefulSet persistent volume claim retention policy.
+  ## This is ignored when Grafana is configured to use a Deployment with a PVC.
+  ## By default, Kubernetes uses Retain for both whenDeleted and whenScaled.
+  persistentVolumeClaimRetentionPolicy: {}
+  #  whenDeleted: Retain
+  #  whenScaled: Retain
 
   ## If persistence is not enabled, this allows to mount the
   ## local storage in-memory to improve performance
