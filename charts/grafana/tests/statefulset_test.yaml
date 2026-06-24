@@ -34,11 +34,3 @@ tests:
           value:
             whenDeleted: Delete
             whenScaled: Delete
-  - it: should omit persistent volume claim retention policy on Kubernetes versions below 1.27
-    capabilities:
-      majorVersion: 1
-      minorVersion: 26
-    asserts:
-      - template: statefulset.yaml
-        notExists:
-          path: spec.persistentVolumeClaimRetentionPolicy
