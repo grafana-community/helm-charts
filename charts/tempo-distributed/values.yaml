@@ -675,6 +675,9 @@ distributor:
   readinessProbe: {}
   # -- Resource requests and limits for the distributor
   resources: {}
+  # -- On SIGTERM, report not-ready and wait this long before shutdown so the LB drains the pod before connections are cut.
+  # "0s" (default) disables. When enabling, keep terminationGracePeriodSeconds above shutdownDelay + server.graceful_shutdown_timeout.
+  shutdownDelay: 0s
   # -- Grace period to allow the distributor to shutdown before it is killed
   terminationGracePeriodSeconds: 30
   # -- Container lifecycle hooks for the distributor

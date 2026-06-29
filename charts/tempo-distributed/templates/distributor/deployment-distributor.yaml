@@ -38,6 +38,13 @@ without ending up with two entries for the same port.
 {{/* Merge the computed extraPorts into a copy of the distributor component dict so that
   tempo.podTemplate renders the full set of ports from $component.extraPorts */}}
 {{- $component := merge (dict "extraPorts" $extraPorts) .Values.distributor }}
+{{/* Inject -shutdown-delay before extraArgs so a user-supplied extraArgs override can't drop it. "0s" (default) renders nothing. */}}
+{{- $podArgs := list }}
+{{- with .Values.distributor.shutdownDelay }}
+{{- if ne (. | toString) "0s" }}
+{{- $podArgs = append $podArgs (printf "-shutdown-delay=%s" .) }}
+{{- end }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -63,4 +70,4 @@ spec:
 {{- toYaml . | nindent 4 }}
 {{- end }}
   template:
-    {{- include "tempo.podTemplate" (dict "ctx" $ "component" $component "target" "distributor") | nindent 4 }}
+    {{- include "tempo.podTemplate" (dict "ctx" $ "component" $component "target" "distributor" "args" $podArgs) | nindent 4 }}
