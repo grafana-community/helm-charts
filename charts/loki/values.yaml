@@ -2084,7 +2084,7 @@ singleBinary:
     # -- What to do with the volumes when the StatefulSet is deleted.
     whenDeleted: Delete
     # -- Enable StatefulSetAutoDeletePVC feature
-    enableStatefulSetAutoDeletePVC: true
+    enableStatefulSetAutoDeletePVC: false
     # -- Enable persistent disk
     enabled: true
     # -- Set access modes on the PersistentVolumeClaim
