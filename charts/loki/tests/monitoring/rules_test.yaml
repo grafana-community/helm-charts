@@ -1,0 +1,108 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: monitoring recording rules
+templates:
+  - monitoring/rules/loki_rules.yaml
+
+tests:
+  - it: should not render PrometheusRule when disabled
+    set:
+      monitoring.rules.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render PrometheusRule when enabled
+    set:
+      monitoring.rules.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: kind
+          value: PrometheusRule
+      - matchRegex:
+          path: metadata.name
+          pattern: .*-loki-rules$
+
+  - it: should use cluster_job prefix for recording rules
+    set:
+      monitoring.rules.enabled: true
+    asserts:
+      - matchRegex:
+          path: spec.groups[0].rules[0].record
+          pattern: "^cluster_job:"
+
+  - it: should use appInstanceLabelName in by() expressions
+    set:
+      monitoring.rules.enabled: true
+    asserts:
+      - matchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: by \(.*app_instance.*\)
+
+  - it: should use custom appInstanceLabelName in by() expressions
+    set:
+      monitoring.rules.enabled: true
+      monitoring.appInstanceLabelName: instance
+    asserts:
+      - matchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: by \(.*instance.*\)
+
+  - it: should not add cluster label to rules when multiCluster disabled
+    set:
+      monitoring.rules.enabled: true
+    asserts:
+      - notExists:
+          path: spec.groups[0].rules[0].labels.cluster
+
+  - it: should add cluster label when multiCluster enabled with clusterName
+    set:
+      monitoring.rules.enabled: true
+      monitoring.multiCluster.enabled: true
+      monitoring.multiCluster.clusterName: my-cluster
+    asserts:
+      - equal:
+          path: spec.groups[0].rules[0].labels.cluster
+          value: my-cluster
+
+  - it: should not add cluster label when multiCluster enabled but clusterName empty (power user mode)
+    set:
+      monitoring.rules.enabled: true
+      monitoring.multiCluster.enabled: true
+      monitoring.multiCluster.clusterName: ""
+    asserts:
+      - notExists:
+          path: spec.groups[0].rules[0].labels.cluster
+      - exists:
+          path: spec.groups[0].rules[0].labels.app_instance
+
+  - it: should use monitoring.namespace when set
+    set:
+      monitoring.rules.enabled: true
+      monitoring.namespace: custom-ns
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: custom-ns
+
+  - it: should include additionalAggregationLabels in by() expressions
+    set:
+      monitoring.rules.enabled: true
+      monitoring.rules.additionalAggregationLabels[0]: region
+    asserts:
+      - matchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: by \(region,.*\)
+
+  - it: should add additionalRuleLabels to rules
+    set:
+      monitoring.rules.enabled: true
+      monitoring.multiCluster.enabled: true
+      monitoring.multiCluster.clusterName: my-cluster
+      monitoring.rules.additionalRuleLabels:
+        team: platform
+    asserts:
+      - equal:
+          path: spec.groups[0].rules[0].labels.team
+          value: platform

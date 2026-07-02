@@ -1,0 +1,152 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: monitoring alert rules
+templates:
+  - monitoring/alerts/loki_alerts.yaml
+
+tests:
+  - it: should not render PrometheusRule when disabled
+    set:
+      monitoring.alerts.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render PrometheusRule when enabled
+    set:
+      monitoring.alerts.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: kind
+          value: PrometheusRule
+      - matchRegex:
+          path: metadata.name
+          pattern: ".*-loki-alerts$"
+
+  - it: should contain LokiRequestErrors alert by default
+    set:
+      monitoring.alerts.enabled: true
+    asserts:
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: LokiRequestErrors
+          any: true
+
+  - it: should contain LokiRequestPanics alert by default
+    set:
+      monitoring.alerts.enabled: true
+    asserts:
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: LokiRequestPanics
+          any: true
+
+  - it: should contain LokiRequestLatency alert by default
+    set:
+      monitoring.alerts.enabled: true
+    asserts:
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: LokiRequestLatency
+          any: true
+
+  - it: should omit LokiRequestErrors when disabled
+    set:
+      monitoring.alerts.enabled: true
+      monitoring.alerts.disabled.LokiRequestErrors: true
+    asserts:
+      - notContains:
+          path: spec.groups[0].rules
+          content:
+            alert: LokiRequestErrors
+          any: true
+
+  - it: should override severity for LokiRequestPanics via overrides
+    set:
+      monitoring.alerts.enabled: true
+      monitoring.alerts.overrides.LokiRequestPanics.severity: warning
+    asserts:
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: LokiRequestPanics
+            labels:
+              severity: warning
+              app_instance: "RELEASE-NAME-loki"
+          any: true
+
+  - it: should add keep_firing_for when keepFiringFor is set
+    set:
+      monitoring.alerts.enabled: true
+      monitoring.alerts.keepFiringFor: 10m
+    asserts:
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: LokiRequestErrors
+            keep_firing_for: "10m"
+          any: true
+
+  - it: should use monitoring.namespace when set
+    set:
+      monitoring.alerts.enabled: true
+      monitoring.namespace: custom-ns
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: custom-ns
+
+  - it: should not add cluster label when multiCluster enabled but clusterName empty (power user mode)
+    set:
+      monitoring.alerts.enabled: true
+      monitoring.multiCluster.enabled: true
+      monitoring.multiCluster.clusterName: ""
+    asserts:
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: LokiRequestErrors
+            labels:
+              severity: critical
+              app_instance: "RELEASE-NAME-loki"
+          any: true
+      - notContains:
+          path: spec.groups[0].rules
+          content:
+            labels:
+              cluster: ""
+          any: true
+
+  - it: should add cluster label when multiCluster enabled with clusterName
+    set:
+      monitoring.alerts.enabled: true
+      monitoring.multiCluster.enabled: true
+      monitoring.multiCluster.clusterName: my-cluster
+    asserts:
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: LokiRequestErrors
+            labels:
+              severity: critical
+              cluster: my-cluster
+              app_instance: "RELEASE-NAME-loki"
+          any: true
+
+  - it: should include additionalAggregationLabels in alert expressions
+    set:
+      monitoring.alerts.enabled: true
+      monitoring.alerts.additionalAggregationLabels[0]: region
+    asserts:
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: LokiRequestErrors
+          any: true
+      - matchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: "by \\(region,"

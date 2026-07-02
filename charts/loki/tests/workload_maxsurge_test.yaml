@@ -1,0 +1,35 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: distributor and querier maxSurge accepts percentages
+templates:
+  - distributor/workload.yaml
+  - querier/workload.yaml
+  - config.yaml
+  - validate.yaml
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+  deploymentMode: Distributed
+tests:
+  - it: should accept a percentage string for distributor.maxSurge
+    set:
+      distributor.maxSurge: 25%
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: distributor/workload.yaml
+  - it: should accept a percentage string for querier.maxSurge
+    set:
+      querier.maxSurge: 25%
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: querier/workload.yaml
+  - it: should still accept an integer for distributor.maxSurge
+    set:
+      distributor.maxSurge: 3
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: distributor/workload.yaml

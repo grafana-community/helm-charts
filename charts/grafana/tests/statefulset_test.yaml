@@ -1,0 +1,36 @@
+suite: statefulset
+templates:
+  - statefulset.yaml
+  - configmap.yaml
+  - dashboards-json-configmap.yaml
+  - configmap-dashboard-provider.yaml
+  - secret.yaml
+set:
+  persistence:
+    enabled: true
+    type: statefulset
+tests:
+  - it: should omit persistent volume claim retention policy by default
+    capabilities:
+      majorVersion: 1
+      minorVersion: 27
+    asserts:
+      - template: statefulset.yaml
+        notExists:
+          path: spec.persistentVolumeClaimRetentionPolicy
+  - it: should allow overriding the persistent volume claim retention policy
+    capabilities:
+      majorVersion: 1
+      minorVersion: 27
+    set:
+      persistence:
+        persistentVolumeClaimRetentionPolicy:
+          whenDeleted: Delete
+          whenScaled: Delete
+    asserts:
+      - template: statefulset.yaml
+        equal:
+          path: spec.persistentVolumeClaimRetentionPolicy
+          value:
+            whenDeleted: Delete
+            whenScaled: Delete
