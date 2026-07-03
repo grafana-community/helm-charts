@@ -120,6 +120,7 @@ New dashboard configuration options:
 - `monitoring.dashboards.defaultDashboardsEditable` (default: `true`)
 - `monitoring.dashboards.defaultDashboardsInterval` (default: `1m`)
 - `monitoring.dashboards.grafanaOperator` — optional deployment via Grafana Operator CRD instead of ConfigMaps
+- `monitoring.dashboards.grafanaOperator.instanceSelector` — label selector matching your Grafana instance's labels (default: `{}`)
 
 ### From 16.x to 17.0.0 ([#366](https://github.com/grafana-community/helm-charts/pull/366))
 

@@ -43,11 +43,7 @@ spec:
   resyncPeriod: {{ .Values.monitoring.dashboards.grafanaOperator.resyncPeriod | default "10m" | quote }}
   {{- include "loki.grafana.operator.folder" $ | nindent 2 }}
   instanceSelector:
-    matchLabels:
-      {{- include "loki.selectorLabels" $ | nindent 6 }}
-      {{- with .Values.monitoring.dashboards.labels }}
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
+    {{- toYaml .Values.monitoring.dashboards.grafanaOperator.instanceSelector | nindent 4 }}
   configMapRef:
     name: {{ include "loki.resourceName" (dict "ctx" $ "component" "dashboards" "suffix" "loki-reads-resources") }}
     key: loki-reads-resources.json

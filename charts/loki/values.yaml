@@ -7065,6 +7065,13 @@ monitoring:
       ## Only one of 'folder', 'folderUID' or 'folderRef' can be set
       ##
       folderRef: null
+
+      # @schema $ref: $k8s/_definitions.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
+      # -- instanceSelector for the GrafanaDashboard resources
+      ## The grafana-operator matches this against the labels on your Grafana CR
+      ## An empty selector (the default) matches every Grafana instance
+      instanceSelector: {}
+
   # -- Recording rules for monitoring Loki, required for some dashboards
   rules:
     # -- If enabled, create a PrometheusRule resource with Loki recording rules
