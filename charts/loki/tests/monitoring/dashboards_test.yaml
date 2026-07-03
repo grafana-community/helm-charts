@@ -109,3 +109,27 @@ tests:
       - matchRegex:
           path: data["loki-chunks.json"]
           pattern: '"name":"app_instance"'
+
+  # instanceSelector is taken from values and passed through to the GrafanaDashboard CR
+  - it: should default the GrafanaDashboard instanceSelector to match-all
+    set:
+      monitoring.dashboards.enabled: true
+      monitoring.dashboards.grafanaOperator.enabled: true
+    asserts:
+      - equal:
+          path: spec.instanceSelector
+          value: {}
+        documentIndex: 1
+
+  - it: should allow overriding the GrafanaDashboard instanceSelector from values
+    set:
+      monitoring.dashboards.enabled: true
+      monitoring.dashboards.grafanaOperator.enabled: true
+      monitoring.dashboards.grafanaOperator.instanceSelector.matchLabels.dashboards: grafana
+    asserts:
+      - equal:
+          path: spec.instanceSelector
+          value:
+            matchLabels:
+              dashboards: grafana
+        documentIndex: 1
