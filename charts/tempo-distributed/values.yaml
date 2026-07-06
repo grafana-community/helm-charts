@@ -72,6 +72,8 @@ reportingEnabled: true
 streamOverHTTPEnabled: false
 
 tempo:
+  # -- Pod DNS config applied to all components. Override per component with `<component>.dnsConfig` or `defaults.dnsConfig`.
+  dnsConfig: {}
   image:
     # -- The Docker registry. Overrides `global.image.registry`
     registry: null
@@ -135,6 +137,8 @@ tempo:
 # -- Default values applied to every pod in this chart.
 # These values are overridden by component-specific settings.
 defaults:
+  # -- Default pod DNS config for all pods. Overridden per component by `<component>.dnsConfig`; falls back to `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Default pod-level security context for all pods
   podSecurityContext: {}
   # -- Default container-level security context for all containers
@@ -201,6 +205,8 @@ metricsGenerator:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Init containers for the metrics generator pod
   initContainers: []
   image:
@@ -374,6 +380,8 @@ distributor:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   autoscaling:
     # -- Enable autoscaling for the distributor
     enabled: false
@@ -544,6 +552,8 @@ backendScheduler:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Init containers to add to the backend-scheduler pod
   initContainers: []
   image:
@@ -795,6 +805,8 @@ backendWorker:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Init containers to add to the backend-worker pods
   initContainers: []
   image:
@@ -918,6 +930,10 @@ backendWorker:
         - name: ndots
           value: "3"    # This is required for Azure Kubernetes Service (AKS) https://github.com/grafana/tempo/issues/1462
 
+# -- Ingest configuration. Sets the top-level `ingest:` block in tempo.yaml.
+# Required for Tempo 3.0 microservices mode. Distributors write spans to Kafka;
+# block-builders and live-stores consume from it.
+# The number of block-builder and live-store replicas must equal the Kafka partition count.
 ingest:
   kafka:
     # -- Kafka broker address (e.g. "kafka.kafka-namespace.svc.cluster.local:9092")
@@ -944,6 +960,8 @@ blockBuilder:
   labels: {}
   # -- hostAliases to add
   hostAliases: []
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Init containers to add to the block-builder pod
   initContainers: []
   image:
@@ -1031,6 +1049,8 @@ liveStore:
   labels: {}
   # -- hostAliases to add
   hostAliases: []
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Init containers to add to the live-store pod
   initContainers: []
   image:
@@ -1115,6 +1135,8 @@ querier:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Annotations for querier deployment
   annotations: {}
   autoscaling:
@@ -1272,6 +1294,8 @@ queryFrontend:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   config:
     # -- Maximum number of outstanding requests per tenant per frontend; requests beyond this error with HTTP 429.
     max_outstanding_per_tenant: 2000
