@@ -206,6 +206,8 @@ ingester:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   initContainers: []
   autoscaling:
     # -- Enable autoscaling for the ingester. WARNING: Autoscaling ingesters can result in lost data. Only do this if you know what you're doing.
@@ -439,6 +441,8 @@ metricsGenerator:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Init containers for the metrics generator pod
   initContainers: []
   image:
@@ -612,6 +616,8 @@ distributor:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   autoscaling:
     # -- Enable autoscaling for the distributor
     enabled: false
@@ -782,6 +788,8 @@ backendScheduler:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Init containers to add to the backend-scheduler pod
   initContainers: []
   image:
@@ -1033,6 +1041,8 @@ backendWorker:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Init containers to add to the backend-worker pods
   initContainers: []
   image:
@@ -1235,6 +1245,8 @@ compactor:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   image:
     # -- The Docker registry for the compactor image. Overrides `tempo.image.registry`
     registry: null
@@ -1368,6 +1380,8 @@ blockBuilder:
   labels: {}
   # -- hostAliases to add
   hostAliases: []
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Init containers to add to the block-builder pod
   initContainers: []
   image:
@@ -1455,6 +1469,8 @@ liveStore:
   labels: {}
   # -- hostAliases to add
   hostAliases: []
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Init containers to add to the live-store pod
   initContainers: []
   image:
@@ -1542,6 +1558,8 @@ querier:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   # -- Annotations for querier deployment
   annotations: {}
   autoscaling:
@@ -1699,6 +1717,8 @@ queryFrontend:
   #  - ip: 1.2.3.4
   #    hostnames:
   #      - domain.tld
+  # -- Pod DNS config for this component. Falls back to `defaults.dnsConfig`, then `tempo.dnsConfig`.
+  dnsConfig: {}
   config:
     # -- Maximum number of outstanding requests per tenant per frontend; requests beyond this error with HTTP 429.
     max_outstanding_per_tenant: 2000
