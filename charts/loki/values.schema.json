@@ -6637,6 +6637,17 @@
                                         "null"
                                     ]
                                 },
+                                "instanceSelector": {
+                                    "allOf": [
+                                        {
+                                            "description": "instanceSelector for the GrafanaDashboard resources # The grafana-operator matches this against the labels on your Grafana CR # An empty selector (the default) matches every Grafana instance",
+                                            "type": "object"
+                                        },
+                                        {
+                                            "$ref": "#/$defs/_definitions.json/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector"
+                                        }
+                                    ]
+                                },
                                 "labels": {
                                     "description": "Additional labels for the GrafanaOperator resources",
                                     "type": "object",
@@ -11689,5 +11700,56 @@
             }
         }
     },
-    "additionalProperties": true
+    "additionalProperties": true,
+    "$defs": {
+        "_definitions.json": {
+            "definitions": {
+                "io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector": {
+                    "description": "A label selector is a label query over a set of resources. The result of matchLabels and matchExpressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.",
+                    "type": "object",
+                    "properties": {
+                        "matchExpressions": {
+                            "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/_definitions.json/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement"
+                            }
+                        },
+                        "matchLabels": {
+                            "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement": {
+                    "description": "A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
+                    "type": "object",
+                    "required": [
+                        "key",
+                        "operator"
+                    ],
+                    "properties": {
+                        "key": {
+                            "description": "key is the label key that the selector applies to.",
+                            "type": "string"
+                        },
+                        "operator": {
+                            "description": "operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.",
+                            "type": "string"
+                        },
+                        "values": {
+                            "description": "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
