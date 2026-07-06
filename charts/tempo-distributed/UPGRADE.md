@@ -117,6 +117,30 @@ block temporarily and migrate using
 `tempo-cli migrate overrides-config`. See the
 [overrides configuration reference](https://grafana.com/docs/tempo/latest/configuration/#overrides).
 
+### dnsConfigOverides removed
+
+The misspelled, per-component `dnsConfigOverides` key (`backendScheduler`,
+`backendWorker`) is removed. Use the plain `dnsConfig` key instead, either
+per component or chart-wide via `defaults.dnsConfig` / `tempo.dnsConfig`:
+
+```yaml
+# Before
+backendScheduler:
+  dnsConfigOverides:
+    enabled: true
+    dnsConfig:
+      options:
+        - name: ndots
+          value: "3"
+
+# After
+backendScheduler:
+  dnsConfig:
+    options:
+      - name: ndots
+        value: "3"
+```
+
 ### Built-in MinIO subchart removed
 
 The built-in MinIO subchart is gone. The `minio` value is no longer a chart

@@ -79,13 +79,7 @@ spec:
   hostAliases:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- $dnsConfig := coalesce $component.dnsConfig .Values.defaults.dnsConfig .Values.tempo.dnsConfig }}
-  {{- $dnsOverride := $component.dnsConfigOverides | default dict }}
-  {{- if and (not $dnsConfig) $dnsOverride.enabled $dnsOverride.dnsConfig }}
-  {{/* Deprecated: prefer `dnsConfig` (component / defaults / tempo) over `dnsConfigOverides`. */}}
-  {{- $dnsConfig = $dnsOverride.dnsConfig }}
-  {{- end }}
-  {{- with $dnsConfig }}
+  {{- with (coalesce $component.dnsConfig .Values.defaults.dnsConfig .Values.tempo.dnsConfig) }}
   dnsConfig:
     {{- toYaml . | nindent 4 }}
   {{- end }}

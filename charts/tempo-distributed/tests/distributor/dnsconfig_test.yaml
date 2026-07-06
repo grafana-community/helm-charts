@@ -53,17 +53,3 @@ tests:
       - equal:
           path: spec.template.spec.dnsConfig.options[0].value
           value: "1"
-
-  - it: legacy dnsConfigOverides still works when dnsConfig is unset
-    template: distributor/deployment-distributor.yaml
-    set:
-      distributor.dnsConfigOverides:
-        enabled: true
-        dnsConfig:
-          options:
-            - name: ndots
-              value: "5"
-    asserts:
-      - equal:
-          path: spec.template.spec.dnsConfig.options[0].value
-          value: "5"
