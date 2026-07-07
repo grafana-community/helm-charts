@@ -1,3 +1,12 @@
+blockBuilder:
+  enabled: false
+liveStore:
+  enabled: false
+
+ingest:
+  kafka:
+    address: "kafka.kafka-ci.svc.cluster.local:9092"
+
 traces:
   otlp:
     http:
@@ -26,12 +35,6 @@ gateway:
             port: 4318
           - path: /distributor/ring
             pathType: PathPrefix
-        ingester:
-          - path: /flush
-            pathType: PathPrefix
         query-frontend:
           - path: /api
-            pathType: PathPrefix
-        compactor:
-          - path: /compactor/ring
             pathType: PathPrefix

@@ -30,9 +30,6 @@ without ending up with two entries for the same port.
 {{- if .Values.traces.otlp.grpc.enabled }}
 {{- $extraPorts = append $extraPorts (dict "containerPort" 4317 "name" "grpc-otlp" "protocol" "TCP") }}
 {{- end }}
-{{- if .Values.traces.opencensus.enabled }}
-{{- $extraPorts = append $extraPorts (dict "containerPort" 55678 "name" "opencensus" "protocol" "TCP") }}
-{{- end }}
 {{/* Append any user-defined extra ports after the trace-protocol ports; remove duplicates */}}
 {{- $extraPorts = concat $extraPorts (.Values.distributor.extraPorts | default list) | uniq }}
 {{/* Merge the computed extraPorts into a copy of the distributor component dict so that

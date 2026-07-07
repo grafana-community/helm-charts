@@ -1,15 +1,7 @@
-ingester:
-  enabled: false
-
-backendScheduler:
-  enabled: true
-
 blockBuilder:
-  enabled: true
   replicas: 1
 
 liveStore:
-  enabled: true
   replicas: 1
 
 ingest:

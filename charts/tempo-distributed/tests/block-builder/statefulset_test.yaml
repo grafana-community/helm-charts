@@ -1,0 +1,65 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: block-builder StatefulSet
+templates:
+  - block-builder/statefulset-block-builder.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: renders a StatefulSet with correct name and kind by default
+    template: block-builder/statefulset-block-builder.yaml
+    asserts:
+      - equal:
+          path: kind
+          value: StatefulSet
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-block-builder
+
+  - it: does not render when disabled
+    template: block-builder/statefulset-block-builder.yaml
+    set:
+      blockBuilder.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: replica count matches blockBuilder.replicas
+    template: block-builder/statefulset-block-builder.yaml
+    set:
+      blockBuilder.replicas: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: renders memberlist and http-metrics ports
+    template: block-builder/statefulset-block-builder.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 7946
+            name: http-memberlist
+            protocol: TCP
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 3200
+            name: http-metrics
+            protocol: TCP
+
+  - it: uses tempo.podSecurityContext when no component override is set
+    template: block-builder/statefulset-block-builder.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+
+  - it: global.priorityClassName is used when no component override
+    template: block-builder/statefulset-block-builder.yaml
+    set:
+      global.priorityClassName: high-priority
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: high-priority

@@ -1,3 +1,0 @@
-{{- if not .Values.backendScheduler.enabled }}
-{{- include "tempo.lib.pdb" (dict "ctx" $ "component" .Values.compactor "target" "compactor" "memberlist" true) }}
-{{- end }}

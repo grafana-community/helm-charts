@@ -1,0 +1,6 @@
+{{- if and .Values.minio .Values.minio.enabled }}
+{{- fail "The built-in MinIO subchart has been removed from the tempo-distributed chart, so the minio.* values are no longer honored. Deploy MinIO (or any S3-compatible object store) externally and configure storage.trace.s3 to point at it, then remove the minio block from your values. See UPGRADE.md for a migration path that preserves your existing MinIO data." }}
+{{- end }}
+{{- if and (or .Values.blockBuilder.enabled .Values.liveStore.enabled) (not .Values.ingest.kafka.address) }}
+{{- fail "ingest.kafka.address is required when blockBuilder or liveStore is enabled. Tempo 3.0 uses a Kafka-backed write path: block-builder and live-store consume spans from Kafka and will not start without a broker. Set ingest.kafka.address to your Kafka broker (e.g. \"kafka.kafka-namespace.svc.cluster.local:9092\"), or disable blockBuilder and liveStore. See UPGRADE.md for details." }}
+{{- end }}

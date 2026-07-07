@@ -1,4 +1,0 @@
-{{- if and (not .Values.backendScheduler.enabled) .Values.compactor.autoscaling.enabled .Values.compactor.autoscaling.keda.enabled }}
-{{- include "tempo.lib.validateAutoscaling" (dict "component" .Values.compactor "name" "compactor") }}
-{{- include "tempo.lib.keda" (dict "ctx" $ "component" .Values.compactor "target" "compactor" "kind" "Deployment" ) }}
-{{- end }}

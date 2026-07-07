@@ -51,6 +51,26 @@ spec:
               value: "0"
             - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
               value: "true"
+            # Bound heap prevents the JVM from requesting memory beyond this limit.
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xmx256m -Xms256m"
+          # Guaranteed CPU/memory keeps the broker responsive during chart upgrade when
+          # 10+ Tempo pods restart simultaneously; without requests the JVM gets throttled
+          # and block-builder/live-store exhaust their 10-retry Kafka connection limit.
+          resources:
+            requests:
+              cpu: 250m
+              memory: 384Mi
+          # tcpSocket avoids running kafka-broker-api-versions.sh (JVM-heavy) on every probe
+          # tick; under upgrade CPU pressure the exec probe times out (default 1s) and pulls
+          # Kafka out of service endpoints after 30 failures, causing block-builder to get
+          # connection refused on the ClusterIP.
+          readinessProbe:
+            tcpSocket:
+              port: 9092
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
           volumeMounts:
             - name: data
               mountPath: /var/lib/kafka/data

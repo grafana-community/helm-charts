@@ -5,26 +5,18 @@
 ***********************************************************************
 
 Installed components:
-{{- if .Values.ingester.enabled }}
-* ingester
-{{- end }}
 * distributor
 * querier
 * query-frontend
-{{- if .Values.liveStore.enabled }}
-* live-store
+{{- if .Values.backendScheduler.enabled }}
+* backend-scheduler
+* backend-worker
 {{- end }}
 {{- if .Values.blockBuilder.enabled }}
 * block-builder
 {{- end }}
-{{- if .Values.backendScheduler.enabled }}
-* backend-scheduler
-* backend-worker
-{{- else }}
-* compactor
-{{- end }}
-{{- if .Values.enterpriseFederationFrontend.enabled }}
-* federation-frontend
+{{- if .Values.liveStore.enabled }}
+* live-store
 {{- end }}
 {{- if .Values.metricsGenerator.enabled }}
 * metrics-generator
@@ -38,13 +30,6 @@ Installed components:
 {{- if .Values.gateway.enabled }}
 * gateway
 {{- end }}
-{{- if .Values.minio.enabled }}
-* minio
-{{- end }}
 {{- if .Values.rollout_operator.enabled }}
 * rollout-operator
-{{- end }}
-{{- if .Values.enterprise.enabled }}
-* admin_api
-* enterprise-gateway
 {{- end }}

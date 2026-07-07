@@ -12,7 +12,6 @@ Kubernetes: `^1.25.0-0`
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://charts.min.io/ | minio(minio) | 4.1.0 |
 | https://grafana.github.io/helm-charts | grafana-agent-operator | 0.5.2 |
 | https://grafana.github.io/helm-charts | rollout_operator | 0.43.0 |
 
@@ -52,6 +51,31 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### MinIO subchart removed
+
+The built-in MinIO subchart has been removed in chart v3.0.0. `minio` is no longer a chart
+dependency, and setting `minio.enabled: true` fails the render. Tempo must point at an
+externally managed S3-compatible object store via `storage.trace.s3`:
+
+```yaml
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: tempo-traces
+      endpoint: minio.minio-namespace.svc.cluster.local:9000
+      access_key: <access-key>
+      secret_key: <secret-key>
+      insecure: true  # remove if TLS is configured
+```
+
+If you previously used the built-in subchart, do **not** run a plain `helm upgrade`: it
+would garbage collect the MinIO Deployment, Service, Secret, and PVC and destroy your trace
+data. Detach those objects from the release first (annotate them with
+`helm.sh/resource-policy: keep`, the Helm equivalent of `kubectl delete --cascade=orphan`),
+then repoint `storage.trace.s3` at the surviving MinIO Service. See [`UPGRADE.md`](./UPGRADE.md)
+for the full procedure.
+
 ### From Chart versions < 2.17.10
 
 Version 2.17.10 change the memcached Services and Statefulsets spec.
@@ -81,6 +105,12 @@ kubectl -n <namespace> delete statefulset --selector 'app.kubernetes.io/instance
 ```
 
 Perform a regular Helm upgrade on the existing release. The new Statefulsets will pick up the existing pods and perform a rolling upgrade.
+
+### From Chart versions < 3.0.0
+
+Tempo 3.0 replaces the ingester-based write path with a Kafka-backed architecture. This is a breaking change for microservices-mode deployments.
+
+See [UPGRADE.md](UPGRADE.md) for the full migration guide, including the parallel-deployment path, Kafka configuration, and the `tempo-cli migrate config` command.
 
 ### From Chart versions < 2.0.0
 
@@ -182,11 +212,6 @@ metaMonitoring:
   grafanaAgent:
     enabled: true
     installOperator: true
-```
-* minio can now be enabled as part of this chart using the following values
-```yaml
-minio:
-  enabled: true
 ```
 * allow configuration to be stored in a secret.  See the documentation for `useExternalConfig` and `configStorageType` in the values file for more details.
 
@@ -307,25 +332,23 @@ The memcached default args are removed and should be provided manually. The sett
 ## Components
 
 The chart supports the components shown in the following table.
-Ingester, distributor, querier, query-frontend, and compactor are always installed.
+Distributor, querier, and query-frontend are always installed.
 The other components are optional and must be explicitly enabled.
 
-| Component | Optional |
-| --- | --- |
-| ingester | no |
-| distributor | no |
-| querier | no |
-| query-frontend | no |
-| compactor | no |
-| metrics-generator | yes |
-| memcached | yes |
-| memcached-exporter | yes |
-| gateway | yes |
-| federation-frontend | yes |
-| rollout-operator | yes |
-| minio | yes |
-| admin-api | yes |
-| enterprise-gateway | yes |
+| Component | Optional | Notes |
+| --- | --- | --- |
+| distributor | no | Writes spans to Kafka in Tempo 3.0 |
+| querier | no | |
+| query-frontend | no | |
+| backend-scheduler | yes (`backendScheduler.enabled`) | Required for compaction and retention |
+| backend-worker | yes (enabled with backend-scheduler) | Executes compaction jobs |
+| block-builder | yes (`blockBuilder.enabled`) | Consumes from Kafka, writes blocks to object storage |
+| live-store | yes (`liveStore.enabled`) | Consumes from Kafka, serves recent-data queries |
+| metrics-generator | yes | |
+| memcached | yes | |
+| memcached-exporter | yes | |
+| gateway | yes | |
+| rollout-operator | yes | |
 
 ## [Configuration](https://grafana.com/docs/tempo/latest/configuration/)
 
@@ -388,57 +411,39 @@ global_overrides:
 ### Example configuration using S3 for storage
 
 ```yaml
-config: |
-  multitenancy_enabled: false
-  compactor:
-    compaction:
-      block_retention: 48h
-    ring:
-      kvstore:
-        store: memberlist
-  distributor:
-    receivers:
-      jaeger:
-        protocols:
-          grpc:
-            endpoint: 0.0.0.0:14250
-          thrift_binary:
-            endpoint: 0.0.0.0:6832
-          thrift_compact:
-            endpoint: 0.0.0.0:6831
-          thrift_http:
-            endpoint: 0.0.0.0:14268
-  querier:
-    frontend_worker:
-      frontend_address: {{ include "tempo.resourceName" (dict "ctx" . "component" "query-frontend") }}:9095
-  ingester:
-    lifecycler:
-      ring:
-        replication_factor: 1
-  memberlist:
-    abort_if_cluster_join_fails: false
-    join_members:
-      - {{ include "tempo.fullname" . }}-memberlist
-  server:
-    http_listen_port: 3100
-  storage:
-    trace:
-      backend: s3
-      s3:
-        access_key: tempo
-        bucket: <your s3 bucket>
-        endpoint: minio:9000
-        insecure: true
-        secret_key: supersecret
-      pool:
-        queue_depth: 2000
-      wal:
-        path: /var/tempo/wal
-      memcached:
-        consistent_hash: true
-        host: a-tempo-distributed-memcached
-        service: memcached-client
-        timeout: 500ms
+storage:
+  trace:
+    backend: s3
+    s3:
+      access_key: tempo
+      bucket: <your-s3-bucket>
+      endpoint: s3.amazonaws.com
+      secret_key: <your-secret>
+    wal:
+      path: /var/tempo/wal
+
+ingest:
+  kafka:
+    address: <kafka-broker>:9092
+    topic: tempo-traces
+
+blockBuilder:
+  enabled: true
+  replicas: 3  # must equal Kafka partition count
+
+liveStore:
+  enabled: true
+  replicas: 3  # must equal Kafka partition count
+
+backendScheduler:
+  enabled: true
+
+traces:
+  otlp:
+    http:
+      enabled: true
+    grpc:
+      enabled: true
 ```
 
 ### Memcached cache configuration
