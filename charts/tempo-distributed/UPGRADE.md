@@ -8,8 +8,8 @@ This is a **breaking change** for microservices-mode deployments.
 ### Grafana Enterprise Tempo
 
 Enterprise Tempo (GE) is in maintenance mode and is no longer maintained in this
-chart. Enterprise templates (`admin-api`, `enterprise-gateway`, `provisioner`,
-`tokengen`) have been removed. For enterprise deployments, use the
+chart. Enterprise templates (`admin-api`, `enterprise-gateway`,
+`enterprise-federation-frontend`, `provisioner`, `tokengen`) have been removed. For enterprise deployments, use the
 [grafana/helm-charts](https://github.com/grafana/helm-charts) repository.
 
 ### Config migration tool
