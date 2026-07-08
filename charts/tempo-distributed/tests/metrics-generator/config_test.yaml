@@ -1,0 +1,21 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: metrics-generator config
+templates:
+  - configmap-tempo.yaml
+
+tests:
+  - it: renders the metrics_generator config block when enabled
+    set:
+      metricsGenerator.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?m)^metrics_generator:"
+
+  - it: does not render traces_storage (removed in Tempo 3.0)
+    set:
+      metricsGenerator.enabled: true
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: traces_storage
