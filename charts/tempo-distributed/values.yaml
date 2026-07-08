@@ -355,8 +355,6 @@ metricsGenerator:
       # -- https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write
       remote_write: []
     # -- Used by the local blocks processor to store a wal for traces.
-    traces_storage:
-      path: /var/tempo/traces
     metrics_ingestion_time_range_slack: 30s
   service:
     # -- Annotations for Metrics Generator service
@@ -1853,8 +1851,6 @@ config: |
       {{- toYaml .Values.metricsGenerator.config.processor | nindent 6 }}
     storage:
       {{- toYaml .Values.metricsGenerator.config.storage | nindent 6 }}
-    traces_storage:
-      {{- toYaml .Values.metricsGenerator.config.traces_storage | nindent 6 }}
     registry:
       {{- toYaml .Values.metricsGenerator.config.registry | nindent 6 }}
     metrics_ingestion_time_range_slack: {{ .Values.metricsGenerator.config.metrics_ingestion_time_range_slack }}
