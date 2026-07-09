@@ -3078,17 +3078,14 @@ ingress:
       - path: /distributor/ring
         # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
         # pathType: Prefix
-      - path: /ingester/ring
+      - path: /live-store/ring
+      - path: /partition-ring
       - path: /metrics-generator/ring
-    ingester:
-      - path: /flush
-      - path: /shutdown
+      - path: /memberlist
     query-frontend:
       - path: /api
-    compactor:
-      - path: /compactor/ring
-    backend-worker:
-      - path: /backend-worker/ring
+    backend-scheduler:
+      - path: /status/backendscheduler
   hosts:
     - tempo.example.com
 
@@ -3126,23 +3123,19 @@ route:
           port: 4318
         - path: /distributor/ring
           pathType: PathPrefix
-        - path: /ingester/ring
+        - path: /live-store/ring
+          pathType: PathPrefix
+        - path: /partition-ring
           pathType: PathPrefix
         - path: /metrics-generator/ring
           pathType: PathPrefix
-      ingester:
-        - path: /flush
-          pathType: PathPrefix
-        - path: /shutdown
+        - path: /memberlist
           pathType: PathPrefix
       query-frontend:
         - path: /api
           pathType: PathPrefix
-      compactor:
-        - path: /compactor/ring
-          pathType: PathPrefix
-      backendWorker:
-        - path: /backend-worker/ring
+      backend-scheduler:
+        - path: /status/backendscheduler
           pathType: PathPrefix
 
 ##############################################################################
