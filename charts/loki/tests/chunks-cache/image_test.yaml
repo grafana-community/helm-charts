@@ -8,7 +8,6 @@ set:
   loki.useTestSchema: true
   loki.storage.bucketNames.chunks: chunks
   loki.storage.bucketNames.ruler: ruler
-  loki.storage.bucketNames.admin: admin
   memcached.enabled: true
   chunksCache.enabled: true
   memcached.image.tag: 1.6.41-alpine

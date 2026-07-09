@@ -1033,6 +1033,13 @@
                     "type": "object",
                     "additionalProperties": true
                 },
+                "annotations": {
+                    "description": "Annotations for bloom-builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "appProtocol": {
                     "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
                     "deprecated": true,
@@ -1132,6 +1139,17 @@
                         "array",
                         "null"
                     ]
+                },
+                "kind": {
+                    "description": "Kind of compactor deployment. StatefulSet and Deployment are supported.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for bloom-builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "livenessProbe": {
                     "description": "liveness probe settings for bloom-gateway pods. If empty use `loki.livenessProbe`",
@@ -1272,6 +1290,10 @@
                     "additionalProperties": {
                         "type": "string"
                     }
+                },
+                "podManagementPolicy": {
+                    "description": "The default is to deploy all pods in parallel.",
+                    "type": "string"
                 },
                 "priorityClassName": {
                     "description": "The name of the PriorityClass for bloom-gateway pods",
@@ -1419,6 +1441,20 @@
                     "type": "object",
                     "additionalProperties": true
                 },
+                "statefulSetRecreateJob": {
+                    "description": "Enable creating a Job to recreate the StatefulSet when the StatefulSet configuration is changed. # Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "strategy": {
+                    "description": "UpdateStrategy or Strategy for the pattern ingester.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
                 "terminationGracePeriodSeconds": {
                     "description": "Grace period to allow the bloom-gateway to shutdown before it is killed",
                     "type": "integer"
@@ -1437,6 +1473,13 @@
                     "description": "Affinity for bloom-planner pods. The value will be passed through tpl.",
                     "type": "object",
                     "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for bloom-builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "appProtocol": {
                     "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
@@ -1537,6 +1580,17 @@
                         "array",
                         "null"
                     ]
+                },
+                "kind": {
+                    "description": "Kind of compactor deployment. StatefulSet and Deployment are supported.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for bloom-builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "livenessProbe": {
                     "description": "liveness probe settings for bloom-planner pods. If empty use `loki.livenessProbe`",
@@ -1677,6 +1731,10 @@
                     "additionalProperties": {
                         "type": "string"
                     }
+                },
+                "podManagementPolicy": {
+                    "description": "The default is to deploy all pods in parallel.",
+                    "type": "string"
                 },
                 "priorityClassName": {
                     "description": "The name of the PriorityClass for bloom-planner pods",
@@ -1821,6 +1879,20 @@
                 },
                 "startupProbe": {
                     "description": "startup probe settings for bloom-planner pods. If empty use `loki.startupProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "statefulSetRecreateJob": {
+                    "description": "Enable creating a Job to recreate the StatefulSet when the StatefulSet configuration is changed. # Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "strategy": {
+                    "description": "UpdateStrategy or Strategy for the pattern ingester.",
                     "type": "object",
                     "additionalProperties": true
                 },

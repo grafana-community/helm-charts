@@ -12,8 +12,8 @@ templates:
   - query-scheduler/workload.yaml
   - index-gateway/workload.yaml
   - compactor/workload.yaml
-  - bloom-gateway/statefulset.yaml
-  - bloom-planner/statefulset.yaml
+  - bloom-gateway/workload.yaml
+  - bloom-planner/workload.yaml
   - bloom-builder/workload.yaml
   - pattern-ingester/workload.yaml
   - ruler/workload.yaml
@@ -26,7 +26,8 @@ set:
   loki.useTestSchema: true
   loki.storage.bucketNames.chunks: chunks
   loki.storage.bucketNames.ruler: ruler
-  loki.storage.bucketNames.admin: admin
+  bloomGateway.enabled: true
+  bloomPlanner.enabled: true
 
 tests:
   - it: should render initContainers and extraContainers for the monolithic component
@@ -308,25 +309,25 @@ tests:
           content:
             name: init-bloom-gateway
             image: busybox:1.36
-        template: bloom-gateway/statefulset.yaml
+        template: bloom-gateway/workload.yaml
       - contains:
           path: spec.template.spec.containers
           content:
             name: extra-bloom-gateway
             image: busybox:1.36
-        template: bloom-gateway/statefulset.yaml
+        template: bloom-gateway/workload.yaml
       - contains:
           path: spec.template.spec.initContainers
           content:
             name: init-bloom-planner
             image: busybox:1.36
-        template: bloom-planner/statefulset.yaml
+        template: bloom-planner/workload.yaml
       - contains:
           path: spec.template.spec.containers
           content:
             name: extra-bloom-planner
             image: busybox:1.36
-        template: bloom-planner/statefulset.yaml
+        template: bloom-planner/workload.yaml
       - contains:
           path: spec.template.spec.initContainers
           content:

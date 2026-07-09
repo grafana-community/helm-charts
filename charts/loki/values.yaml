@@ -4785,6 +4785,12 @@ compactor:
 bloomGateway:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: false
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: StatefulSet
+  # -- Enable creating a Job to recreate the StatefulSet when the StatefulSet configuration is changed.
+  ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Number of replicas for the bloom-gateway
   replicas: 0
   # -- hostAliases to add
@@ -4795,6 +4801,11 @@ bloomGateway:
   #      - domain.tld
   # -- Use the host's user namespace in the bloom-gateway
   hostUsers: null
+  # @schema skipProperties:true;additionalProperties:true
+  # -- UpdateStrategy or Strategy for the pattern ingester.
+  strategy:
+    rollingUpdate:
+      partition: 0
   # @schema additionalProperties:true
   # -- DNSConfig for bloom-gateway pods
   dnsConfig: {}
@@ -4814,6 +4825,12 @@ bloomGateway:
   # @schema type:[string, null]
   # -- The name of the PriorityClass for bloom-gateway pods
   priorityClassName: null
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for bloom-builder
+  labels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for bloom-builder
+  annotations: {}
   # @schema additionalProperties:{"type":"string"}
   # -- Labels for bloom-gateway pods
   podLabels: {}
@@ -4934,6 +4951,8 @@ bloomGateway:
   # @deprecated -- This option is deprecated in favor of `bloomGateway.service.appProtocol`
   appProtocol:
     grpc: ""
+  # -- The default is to deploy all pods in parallel.
+  podManagementPolicy: "Parallel"
   persistence:
     # -- Enable creating PVCs for the bloom-gateway
     enabled: false
@@ -4991,6 +5010,12 @@ bloomGateway:
 bloomPlanner:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: false
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: StatefulSet
+  # -- Enable creating a Job to recreate the StatefulSet when the StatefulSet configuration is changed.
+  ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Number of replicas for the bloom-planner
   replicas: 0
   # -- hostAliases to add
@@ -5004,6 +5029,11 @@ bloomPlanner:
   # @schema additionalProperties:true
   # -- DNSConfig for bloom-planner pods
   dnsConfig: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- UpdateStrategy or Strategy for the pattern ingester.
+  strategy:
+    rollingUpdate:
+      partition: 0
   image:
     # @schema type:[string, null]
     # -- The Docker registry for the bloom-planner image. Overrides `loki.image.registry`
@@ -5020,6 +5050,12 @@ bloomPlanner:
   # @schema type:[string, null]
   # -- The name of the PriorityClass for bloom-planner pods
   priorityClassName: null
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for bloom-builder
+  labels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for bloom-builder
+  annotations: {}
   # @schema additionalProperties:{"type":"string"}
   # -- Labels for bloom-planner pods
   podLabels: {}
@@ -5140,6 +5176,8 @@ bloomPlanner:
   # @deprecated -- This option is deprecated in favor of `bloomPlanner.service.appProtocol`
   appProtocol:
     grpc: ""
+  # -- The default is to deploy all pods in parallel.
+  podManagementPolicy: "Parallel"
   persistence:
     # -- Enable creating PVCs for the bloom-planner
     enabled: false

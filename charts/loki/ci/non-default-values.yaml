@@ -16,16 +16,7 @@ loki:
     replication_factor: 1
   server:
     log_level: warn
-  schemaConfig:
-    configs:
-      # Write new data to external S3
-      - from: "2026-06-23"  # Adjust this date as needed based on your retention period. Should be in the near future
-        store: tsdb
-        object_store: s3
-        schema: v13
-        index:
-          prefix: index_
-          period: 24h
+  useTestSchema: true
   tenants:
     - name: "self-monitoring"
       password: "self-monitoring"
@@ -41,18 +32,7 @@ loki:
     bucketNames:
       chunks: chunks
       ruler: ruler
-      admin: admin
     type: s3
-  storage_config:
-    use_thanos_objstore: true
-    object_store:
-      s3:
-        endpoint: "rustfs.{{ $.Release.Namespace }}.svc.cluster.local.:9000"
-        insecure: true
-        bucket_name: chunks
-        access_key_id: rustfsadmin
-        secret_access_key: rustfsadmin
-        bucket_lookup_type: path
   rulerConfig:
     wal:
       dir: "/var/loki/ruler-wal"
