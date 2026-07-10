@@ -9,7 +9,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for backend pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -521,7 +524,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for bloom-builder pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -1030,7 +1036,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for bloom-gateway pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -1471,7 +1480,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for bloom-planner pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -1915,7 +1927,10 @@
                 },
                 "affinity": {
                     "description": "Affinity for chunks-cache pods",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "allocatedCPU": {
@@ -2481,7 +2496,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for compactor pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -3179,7 +3197,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for distributor pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -3661,7 +3682,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for gateway pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -4494,7 +4518,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for index-gateway pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -4940,7 +4967,10 @@
                 },
                 "affinity": {
                     "description": "Affinity for ingester pods. Ignored if zoneAwareReplication is enabled. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -6065,7 +6095,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for canary pods",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -6974,7 +7007,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for overrides-exporter pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -7330,7 +7366,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for pattern ingester pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -7732,7 +7771,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for querier pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -8264,7 +8306,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for query-frontend pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -8725,7 +8770,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for query-scheduler pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -9105,7 +9153,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for read pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -9538,7 +9589,10 @@
                 },
                 "affinity": {
                     "description": "Affinity for results-cache pods",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "allocatedCPU": {
@@ -9909,7 +9963,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for ruler pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -10511,7 +10568,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for single binary pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -10958,7 +11018,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for table-manager pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -11277,7 +11340,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for write pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
