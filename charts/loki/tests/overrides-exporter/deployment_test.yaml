@@ -8,7 +8,6 @@ set:
   loki.useTestSchema: true
   loki.storage.bucketNames.chunks: chunks
   loki.storage.bucketNames.ruler: ruler
-  loki.storage.bucketNames.admin: admin
   overridesExporter.enabled: true
 
 tests:

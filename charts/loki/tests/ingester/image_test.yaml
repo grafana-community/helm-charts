@@ -2,7 +2,6 @@
 suite: ingester image
 templates:
   - ingester/workload.yaml
-  - ingester/statefulset-zone.yaml
   - config.yaml
 set:
   deploymentMode: Distributed
@@ -10,7 +9,6 @@ set:
   loki.image.tag: 0.0.0
   loki.storage.bucketNames.chunks: chunks
   loki.storage.bucketNames.ruler: ruler
-  loki.storage.bucketNames.admin: admin
   ingester.zoneAwareReplication.enabled: true
   ingester.zoneAwareReplication.migration.enabled: true
 
@@ -21,6 +19,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: docker.io/grafana/loki:0.0.0
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should override repository and tag at write component level
     set:
@@ -31,6 +30,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: docker.io/custom/loki-write:custom-tag
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should override registry at write component level
     set:
@@ -41,6 +41,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: quay.io/custom/loki-write:0.0.0
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should let global imageRegistry override write and loki registries
     set:
@@ -52,6 +53,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: registry.example.com/custom/loki-write:0.0.0
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should always prepend global imageRegistry even when repository contains a registry
     set:
@@ -62,6 +64,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: registry.example.com/ghcr.io/custom/loki-write:0.0.0
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should support deprecated global.image.registry override
     set:
@@ -72,6 +75,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: deprecated.registry.example.com/custom/loki-write:0.0.0
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should support deprecated global.registry override
     set:
@@ -82,6 +86,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: deprecated2.registry.example.com/custom/loki-write:0.0.0
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should let write image tag override loki image tag
     set:
@@ -91,6 +96,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: docker.io/grafana/loki:write-tag
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should prefer write image digest over tag
     set:
@@ -102,6 +108,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: docker.io/custom/loki-write@sha256:d1g357
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should use write image sha as digest fallback when digest is not set
     set:
@@ -113,6 +120,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: docker.io/custom/loki-write@sha256:abcdef0123456789
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should prefer write digest over loki digest
     set:
@@ -124,6 +132,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: docker.io/custom/loki-write@sha256:component
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should prefer global.imageRegistry over deprecated global registry keys
     set:
@@ -136,6 +145,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: current.registry.example.com/custom/loki-write:0.0.0
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should prefer deprecated global.image.registry over deprecated global.registry when imageRegistry is unset
     set:
@@ -147,6 +157,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: preferred.registry.example.com/custom/loki-write:0.0.0
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should use default loki image digest when write image is not set
     set:
@@ -156,6 +167,7 @@ tests:
           path: spec.template.spec.containers[0].image
           value: docker.io/grafana/loki@sha256:defaultdigest
         template: ingester/workload.yaml
+        documentIndex: 0
 
   - it: should use default loki image sha as digest fallback when digest is not set and write image is not set
     set:
@@ -165,3 +177,4 @@ tests:
           path: spec.template.spec.containers[0].image
           value: docker.io/grafana/loki@sha256:deadbeef01234567
         template: ingester/workload.yaml
+        documentIndex: 0

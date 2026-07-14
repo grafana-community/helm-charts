@@ -982,7 +982,7 @@ lokiCanary:
   nodeSelector: {}
   # -- Tolerations for canary pods
   tolerations: []
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for canary pods
   affinity: {}
   # -- Set this toggle to false to opt out of automounting API credentials for the service account
@@ -1365,7 +1365,7 @@ gateway:
     # @schema type:[string, null]
     # -- Pod Disruption Budget unhealthyPodEvictionPolicy
     unhealthyPodEvictionPolicy: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for gateway pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -2052,7 +2052,7 @@ singleBinary:
   # @schema type:[boolean, null]
   # -- Use the host's user namespace in the single binary pods
   hostUsers: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for single binary pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -2290,7 +2290,7 @@ write:
   # @schema type:[boolean, null]
   # -- Use the host's user namespace in the write pods.
   hostUsers: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for write pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -2560,7 +2560,7 @@ read:
   # @schema type:[boolean, null]
   # -- Use the host's user namespace in the read pods.
   hostUsers: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for read pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -2793,7 +2793,7 @@ backend:
   # @schema type:[boolean, null]
   # -- Use the host's user namespace in the backend pods.
   hostUsers: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for backend pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -3111,7 +3111,7 @@ ingester:
           app.kubernetes.io/component: ingester
           app.kubernetes.io/name: '{{ include "loki.name" . }}'
           app.kubernetes.io/instance: '{{ .Release.Name }}'
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for ingester pods. Ignored if zoneAwareReplication is enabled.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -3522,7 +3522,7 @@ distributor:
     # @schema type:[string, null]
     # -- Pod Disruption Budget unhealthyPodEvictionPolicy
     unhealthyPodEvictionPolicy: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for distributor pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -3798,7 +3798,7 @@ querier:
           app.kubernetes.io/component: querier
           app.kubernetes.io/name: '{{ include "loki.name" . }}'
           app.kubernetes.io/instance: '{{ .Release.Name }}'
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for querier pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -4052,7 +4052,7 @@ queryFrontend:
     # @schema type:[string, null]
     # -- Pod Disruption Budget unhealthyPodEvictionPolicy
     unhealthyPodEvictionPolicy: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for query-frontend pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -4234,7 +4234,7 @@ queryScheduler:
   extraContainers: []
   # -- Grace period to allow the query-scheduler to shutdown before it is killed
   terminationGracePeriodSeconds: 30
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for query-scheduler pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -4444,7 +4444,7 @@ indexGateway:
     unhealthyPodEvictionPolicy: null
   # -- Lifecycle for the index-gateway container
   lifecycle: {}
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for index-gateway pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -4598,7 +4598,7 @@ compactor:
   # @schema additionalProperties:{"type":"string"}
   # -- Annotations for compactor pods
   podAnnotations: {}
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for compactor pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -4785,6 +4785,12 @@ compactor:
 bloomGateway:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: false
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: StatefulSet
+  # -- Enable creating a Job to recreate the StatefulSet when the StatefulSet configuration is changed.
+  ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Number of replicas for the bloom-gateway
   replicas: 0
   # -- hostAliases to add
@@ -4795,6 +4801,11 @@ bloomGateway:
   #      - domain.tld
   # -- Use the host's user namespace in the bloom-gateway
   hostUsers: null
+  # @schema skipProperties:true;additionalProperties:true
+  # -- UpdateStrategy or Strategy for the pattern ingester.
+  strategy:
+    rollingUpdate:
+      partition: 0
   # @schema additionalProperties:true
   # -- DNSConfig for bloom-gateway pods
   dnsConfig: {}
@@ -4815,12 +4826,18 @@ bloomGateway:
   # -- The name of the PriorityClass for bloom-gateway pods
   priorityClassName: null
   # @schema additionalProperties:{"type":"string"}
+  # -- Labels for bloom-builder
+  labels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for bloom-builder
+  annotations: {}
+  # @schema additionalProperties:{"type":"string"}
   # -- Labels for bloom-gateway pods
   podLabels: {}
   # @schema additionalProperties:{"type":"string"}
   # -- Annotations for bloom-gateway pods
   podAnnotations: {}
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for bloom-gateway pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -4934,6 +4951,8 @@ bloomGateway:
   # @deprecated -- This option is deprecated in favor of `bloomGateway.service.appProtocol`
   appProtocol:
     grpc: ""
+  # -- The default is to deploy all pods in parallel.
+  podManagementPolicy: "Parallel"
   persistence:
     # -- Enable creating PVCs for the bloom-gateway
     enabled: false
@@ -4991,6 +5010,12 @@ bloomGateway:
 bloomPlanner:
   # -- Enable the component. Requires `loki.deploymentMode` to be set to `Distributed`.
   enabled: false
+  # -- Kind of compactor deployment. StatefulSet and Deployment are supported.
+  kind: StatefulSet
+  # -- Enable creating a Job to recreate the StatefulSet when the StatefulSet configuration is changed.
+  ## Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
   # -- Number of replicas for the bloom-planner
   replicas: 0
   # -- hostAliases to add
@@ -5004,6 +5029,11 @@ bloomPlanner:
   # @schema additionalProperties:true
   # -- DNSConfig for bloom-planner pods
   dnsConfig: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- UpdateStrategy or Strategy for the pattern ingester.
+  strategy:
+    rollingUpdate:
+      partition: 0
   image:
     # @schema type:[string, null]
     # -- The Docker registry for the bloom-planner image. Overrides `loki.image.registry`
@@ -5021,12 +5051,18 @@ bloomPlanner:
   # -- The name of the PriorityClass for bloom-planner pods
   priorityClassName: null
   # @schema additionalProperties:{"type":"string"}
+  # -- Labels for bloom-builder
+  labels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for bloom-builder
+  annotations: {}
+  # @schema additionalProperties:{"type":"string"}
   # -- Labels for bloom-planner pods
   podLabels: {}
   # @schema additionalProperties:{"type":"string"}
   # -- Annotations for bloom-planner pods
   podAnnotations: {}
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for bloom-planner pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -5140,6 +5176,8 @@ bloomPlanner:
   # @deprecated -- This option is deprecated in favor of `bloomPlanner.service.appProtocol`
   appProtocol:
     grpc: ""
+  # -- The default is to deploy all pods in parallel.
+  podManagementPolicy: "Parallel"
   persistence:
     # -- Enable creating PVCs for the bloom-planner
     enabled: false
@@ -5384,7 +5422,7 @@ bloomBuilder:
     # @schema type:[string, null]
     # -- Pod Disruption Budget unhealthyPodEvictionPolicy
     unhealthyPodEvictionPolicy: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for bloom-builder pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -5527,7 +5565,7 @@ patternIngester:
   # @schema additionalProperties:{"type":"string"}
   # -- Annotations for pattern ingester pods
   podAnnotations: {}
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for pattern ingester pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -5809,7 +5847,7 @@ ruler:
     # @schema type:[string, null]
     # -- Pod Disruption Budget unhealthyPodEvictionPolicy
     unhealthyPodEvictionPolicy: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for ruler pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -6085,7 +6123,7 @@ overridesExporter:
     # @schema type:[string, null]
     # -- Pod Disruption Budget unhealthyPodEvictionPolicy
     unhealthyPodEvictionPolicy: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for overrides-exporter pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -6308,7 +6346,7 @@ resultsCache:
   # @schema additionalProperties:true
   # -- Node selector for results-cache pods
   nodeSelector: {}
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for results-cache pods
   affinity: {}
   # @schema item:object
@@ -6470,7 +6508,7 @@ chunksCache:
   # @schema additionalProperties:true
   # -- Node selector for chunks-cache pods
   nodeSelector: {}
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for chunks-cache pods
   affinity: {}
   # @schema item:object
@@ -7246,7 +7284,7 @@ tableManager:
   # @schema type:[boolean, null]
   # -- Use the host's user namespace in table-manager pods
   hostUsers: null
-  # @schema skipProperties:true;additionalProperties:true
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for table-manager pods.
   # @default -- Hard node and anti-affinity
   # The value will be passed through tpl.

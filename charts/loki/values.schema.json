@@ -9,7 +9,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for backend pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -521,7 +524,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for bloom-builder pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -1030,8 +1036,18 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for bloom-gateway pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for bloom-builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "appProtocol": {
                     "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
@@ -1132,6 +1148,17 @@
                         "array",
                         "null"
                     ]
+                },
+                "kind": {
+                    "description": "Kind of compactor deployment. StatefulSet and Deployment are supported.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for bloom-builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "livenessProbe": {
                     "description": "liveness probe settings for bloom-gateway pods. If empty use `loki.livenessProbe`",
@@ -1272,6 +1299,10 @@
                     "additionalProperties": {
                         "type": "string"
                     }
+                },
+                "podManagementPolicy": {
+                    "description": "The default is to deploy all pods in parallel.",
+                    "type": "string"
                 },
                 "priorityClassName": {
                     "description": "The name of the PriorityClass for bloom-gateway pods",
@@ -1419,6 +1450,20 @@
                     "type": "object",
                     "additionalProperties": true
                 },
+                "statefulSetRecreateJob": {
+                    "description": "Enable creating a Job to recreate the StatefulSet when the StatefulSet configuration is changed. # Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "strategy": {
+                    "description": "UpdateStrategy or Strategy for the pattern ingester.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
                 "terminationGracePeriodSeconds": {
                     "description": "Grace period to allow the bloom-gateway to shutdown before it is killed",
                     "type": "integer"
@@ -1435,8 +1480,18 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for bloom-planner pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for bloom-builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "appProtocol": {
                     "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
@@ -1537,6 +1592,17 @@
                         "array",
                         "null"
                     ]
+                },
+                "kind": {
+                    "description": "Kind of compactor deployment. StatefulSet and Deployment are supported.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for bloom-builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "livenessProbe": {
                     "description": "liveness probe settings for bloom-planner pods. If empty use `loki.livenessProbe`",
@@ -1677,6 +1743,10 @@
                     "additionalProperties": {
                         "type": "string"
                     }
+                },
+                "podManagementPolicy": {
+                    "description": "The default is to deploy all pods in parallel.",
+                    "type": "string"
                 },
                 "priorityClassName": {
                     "description": "The name of the PriorityClass for bloom-planner pods",
@@ -1824,6 +1894,20 @@
                     "type": "object",
                     "additionalProperties": true
                 },
+                "statefulSetRecreateJob": {
+                    "description": "Enable creating a Job to recreate the StatefulSet when the StatefulSet configuration is changed. # Only applicable if `compactor.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "strategy": {
+                    "description": "UpdateStrategy or Strategy for the pattern ingester.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
                 "terminationGracePeriodSeconds": {
                     "description": "Grace period to allow the bloom-planner to shutdown before it is killed",
                     "type": "integer"
@@ -1843,7 +1927,10 @@
                 },
                 "affinity": {
                     "description": "Affinity for chunks-cache pods",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "allocatedCPU": {
@@ -2409,7 +2496,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for compactor pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -3107,7 +3197,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for distributor pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -3589,7 +3682,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for gateway pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -4422,7 +4518,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for index-gateway pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -4868,7 +4967,10 @@
                 },
                 "affinity": {
                     "description": "Affinity for ingester pods. Ignored if zoneAwareReplication is enabled. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -5993,7 +6095,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for canary pods",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -6902,7 +7007,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for overrides-exporter pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -7258,7 +7366,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for pattern ingester pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -7660,7 +7771,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for querier pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -8192,7 +8306,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for query-frontend pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -8653,7 +8770,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for query-scheduler pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -9033,7 +9153,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for read pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -9466,7 +9589,10 @@
                 },
                 "affinity": {
                     "description": "Affinity for results-cache pods",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "allocatedCPU": {
@@ -9837,7 +9963,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for ruler pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -10439,7 +10568,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for single binary pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -10886,7 +11018,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for table-manager pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {
@@ -11205,7 +11340,10 @@
             "properties": {
                 "affinity": {
                     "description": "Affinity for write pods. The value will be passed through tpl.",
-                    "type": "object",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
                     "additionalProperties": true
                 },
                 "annotations": {

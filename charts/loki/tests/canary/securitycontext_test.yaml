@@ -10,7 +10,6 @@ set:
   lokiCanary.image.tag: 0.0.0
   loki.storage.bucketNames.chunks: chunks
   loki.storage.bucketNames.ruler: ruler
-  loki.storage.bucketNames.admin: admin
 
 tests:
   - it: should render canary pod with seccompProfile RuntimeDefault by default

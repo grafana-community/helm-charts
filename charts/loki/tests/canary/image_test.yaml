@@ -9,7 +9,6 @@ set:
   lokiCanary.image.tag: 0.0.0
   loki.storage.bucketNames.chunks: chunks
   loki.storage.bucketNames.ruler: ruler
-  loki.storage.bucketNames.admin: admin
 
 tests:
   - it: should set resizePolicy for canary

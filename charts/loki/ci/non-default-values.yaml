@@ -41,7 +41,6 @@ loki:
     bucketNames:
       chunks: chunks
       ruler: ruler
-      admin: admin
     type: s3
   storage_config:
     use_thanos_objstore: true

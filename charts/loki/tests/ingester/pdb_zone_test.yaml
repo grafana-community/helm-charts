@@ -6,7 +6,6 @@ set:
   loki.useTestSchema: true
   loki.storage.bucketNames.chunks: chunks
   loki.storage.bucketNames.ruler: ruler
-  loki.storage.bucketNames.admin: admin
   ingester.zoneAwareReplication.enabled: true
   ingester.replicas: 3
   ingester.maxUnavailable: 1

@@ -1,7 +1,6 @@
 # $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
 suite: ingester replicas and rollout-max-unavailable
 templates:
-  - ingester/statefulset-zone.yaml
   - ingester/workload.yaml
   - config.yaml
 set:
@@ -9,7 +8,6 @@ set:
   loki.useTestSchema: true
   loki.storage.bucketNames.chunks: chunks
   loki.storage.bucketNames.ruler: ruler
-  loki.storage.bucketNames.admin: admin
 
 tests:
   - it: should omit spec.replicas from zone StatefulSets when ingester.replicas is null
@@ -20,7 +18,7 @@ tests:
     asserts:
       - notExists:
           path: spec.replicas
-        template: ingester/statefulset-zone.yaml
+        template: ingester/workload.yaml
 
   - it: should set rollout-max-unavailable to 1 on zone StatefulSets when ingester.replicas is null
     set:
@@ -31,7 +29,7 @@ tests:
       - equal:
           path: metadata.annotations["rollout-max-unavailable"]
           value: "1"
-        template: ingester/statefulset-zone.yaml
+        template: ingester/workload.yaml
 
   - it: should set spec.replicas to 1 per zone when ingester.replicas is 3
     set:
@@ -42,7 +40,7 @@ tests:
       - equal:
           path: spec.replicas
           value: 1
-        template: ingester/statefulset-zone.yaml
+        template: ingester/workload.yaml
 
   - it: should set rollout-max-unavailable to 1 when ingester.replicas is 3
     set:
@@ -53,7 +51,7 @@ tests:
       - equal:
           path: metadata.annotations["rollout-max-unavailable"]
           value: "1"
-        template: ingester/statefulset-zone.yaml
+        template: ingester/workload.yaml
 
   - it: should set spec.replicas to 7 per zone when ingester.replicas is 21
     set:
@@ -64,7 +62,7 @@ tests:
       - equal:
           path: spec.replicas
           value: 7
-        template: ingester/statefulset-zone.yaml
+        template: ingester/workload.yaml
 
   - it: should set rollout-max-unavailable to 3 when ingester.replicas is 21
     set:
@@ -75,7 +73,7 @@ tests:
       - equal:
           path: metadata.annotations["rollout-max-unavailable"]
           value: "3"
-        template: ingester/statefulset-zone.yaml
+        template: ingester/workload.yaml
 
   - it: should omit spec.replicas from zone StatefulSets when autoscaling is enabled
     set:
@@ -85,7 +83,7 @@ tests:
     asserts:
       - notExists:
           path: spec.replicas
-        template: ingester/statefulset-zone.yaml
+        template: ingester/workload.yaml
 
   - it: should omit spec.replicas from zone StatefulSets when kedaAutoscaling is enabled
     set:
@@ -95,7 +93,7 @@ tests:
     asserts:
       - notExists:
           path: spec.replicas
-        template: ingester/statefulset-zone.yaml
+        template: ingester/workload.yaml
 
   - it: should omit spec.replicas from non-zone StatefulSet when ingester.replicas is null
     set:
