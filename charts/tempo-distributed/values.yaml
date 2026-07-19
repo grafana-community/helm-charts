@@ -931,6 +931,108 @@ ingest:
     # -- Number of partitions for the auto-created topic.
     # Block-builder and live-store replica count must match this value.
     auto_create_topic_default_partitions: 3
+    # SASL authentication for the Kafka client. When `mechanism` is empty it
+    # defaults to PLAIN, which — with no username/password — leaves SASL disabled
+    # (the unauthenticated default). Set a mechanism to enable authentication.
+    sasl:
+      # -- SASL mechanism. Must be one of PLAIN, SCRAM-SHA-256, SCRAM-SHA-512,
+      # OAUTHBEARER, AWS_MSK_IAM. Empty defaults to PLAIN.
+      mechanism: ""
+      # -- Username for PLAIN and SCRAM-SHA-* mechanisms. Ignored if
+      # `existingSecret` is set. Prefer `existingSecret` in production so the
+      # value is never inlined into tempo.yaml.
+      username: ""
+      # -- Password for PLAIN and SCRAM-SHA-* mechanisms. Ignored if
+      # `existingSecret` is set. Prefer `existingSecret` in production so the
+      # value is never inlined into tempo.yaml.
+      password: ""
+      # -- Name of an existing Secret containing `usernameKey`/`passwordKey`.
+      # When set, `username`/`password` above are ignored and tempo.yaml
+      # references the credentials via env var expansion
+      # (`-config.expand-env=true`) instead of inlining them. Recommended over
+      # setting `username`/`password` directly.
+      existingSecret: ""
+      # -- Key in `existingSecret` containing the username.
+      usernameKey: username
+      # -- Key in `existingSecret` containing the password.
+      passwordKey: password
+      # OAUTHBEARER options (used when mechanism is OAUTHBEARER). Provide exactly
+      # one credential source: token, filePath, httpSocketPath, or existingSecret.
+      oauthbearer:
+        # -- Static OAuth token. Ignored if `existingSecret` is set. Prefer
+        # `existingSecret` in production so the value is never inlined into
+        # tempo.yaml.
+        token: ""
+        # -- Name of an existing Secret containing `tokenKey`. When set,
+        # `token` above is ignored and tempo.yaml references the credential
+        # via env var expansion (`-config.expand-env=true`) instead of
+        # inlining it. Recommended over setting `token` directly.
+        existingSecret: ""
+        # -- Key in `existingSecret` containing the token.
+        tokenKey: token
+        # -- Optional authorization ID.
+        zid: ""
+        # -- Optional map of additional OAuth extensions (string -> string).
+        extensions: {}
+        # -- Path to a file containing a (rotating) OAuth token in JSON format.
+        filePath: ""
+        # -- Path to a Unix domain socket that serves the OAuth token over HTTP.
+        httpSocketPath: ""
+        # -- Timeout for fetching the token from httpSocketPath (e.g. "10s").
+        httpSocketTimeout: ""
+      # AWS_MSK_IAM options (used when mechanism is AWS_MSK_IAM). Provide exactly
+      # one credential source: static keys, filePath, httpSocketPath, or existingSecret.
+      mskIam:
+        # -- AWS access key ID. Ignored if `existingSecret` is set. Prefer
+        # `existingSecret` in production so the value is never inlined into
+        # tempo.yaml.
+        accessKey: ""
+        # -- AWS secret access key. Ignored if `existingSecret` is set. Prefer
+        # `existingSecret` in production so the value is never inlined into
+        # tempo.yaml.
+        secretKey: ""
+        # -- Optional AWS session token for temporary credentials. Ignored if
+        # `existingSecret` is set.
+        sessionToken: ""
+        # -- Name of an existing Secret containing `accessKeyKey`/`secretKeyKey`
+        # and, optionally, `sessionTokenKey`. When set, `accessKey`/`secretKey`/
+        # `sessionToken` above are ignored and tempo.yaml references the
+        # credentials via env var expansion (`-config.expand-env=true`) instead
+        # of inlining them. Recommended over setting the static keys directly.
+        existingSecret: ""
+        # -- Key in `existingSecret` containing the AWS access key ID.
+        accessKeyKey: access-key
+        # -- Key in `existingSecret` containing the AWS secret access key.
+        secretKeyKey: secret-key
+        # -- Key in `existingSecret` containing the AWS session token. Empty
+        # by default (session token is optional); set this only when
+        # `existingSecret` also contains a session token entry.
+        sessionTokenKey: ""
+        # -- Optional user agent string.
+        userAgent: ""
+        # -- Path to a file containing AWS credentials in JSON format.
+        filePath: ""
+        # -- Path to a Unix domain socket that serves AWS credentials over HTTP.
+        httpSocketPath: ""
+        # -- Timeout for fetching credentials from httpSocketPath (e.g. "10s").
+        httpSocketTimeout: ""
+    # TLS for the Kafka client connection. Independent of the SASL mechanism and
+    # can be combined with any of them (e.g. PLAIN over TLS).
+    tls:
+      # -- Enable TLS for the Kafka connection.
+      enabled: false
+      # -- Path to the client certificate (for mTLS).
+      certPath: ""
+      # -- Path to the client key (for mTLS).
+      keyPath: ""
+      # -- Path to the CA certificate used to verify the broker.
+      caPath: ""
+      # -- Override the server name / SNI used during verification.
+      serverName: ""
+      # -- Minimum TLS version (e.g. "VersionTLS12", "VersionTLS13").
+      minVersion: ""
+      # -- Skip broker certificate verification. Avoid in production.
+      insecureSkipVerify: false
 
 # Configuration for the block-builder (Tempo 3.0+)
 # Consumes spans from Kafka and writes blocks to object storage.
@@ -1975,6 +2077,147 @@ config: |
       topic: {{ $.Values.ingest.kafka.topic }}
       auto_create_topic_enabled: {{ $.Values.ingest.kafka.auto_create_topic_enabled }}
       auto_create_topic_default_partitions: {{ $.Values.ingest.kafka.auto_create_topic_default_partitions }}
+      {{- /*
+        SASL authentication. Tempo's Kafka client accepts a fixed set of
+        sasl_mechanism values; anything else fails at startup. When no mechanism
+        is configured we default to PLAIN (which, with no username/password, means
+        SASL is disabled — the historical unauthenticated behaviour). When a
+        mechanism is configured we validate it and render only the options that
+        apply to it.
+      */}}
+      {{- $sasl := $.Values.ingest.kafka.sasl | default dict }}
+      {{- if $sasl.mechanism }}
+      {{- $mechanism := $sasl.mechanism }}
+      {{- $allowedMechanisms := list "PLAIN" "SCRAM-SHA-256" "SCRAM-SHA-512" "OAUTHBEARER" "AWS_MSK_IAM" }}
+      {{- if not (has $mechanism $allowedMechanisms) }}
+        {{- fail (printf "ingest.kafka.sasl.mechanism %q is invalid, must be one of: %s" $mechanism (join ", " $allowedMechanisms)) }}
+      {{- end }}
+      {{- $oauthbearer := $sasl.oauthbearer | default dict }}
+      {{- $mskIam := $sasl.mskIam | default dict }}
+      {{- /*
+        Credentials are inlined into tempo.yaml only when no existingSecret is
+        configured for the active mechanism; in that case the value ends up in
+        plaintext in the rendered ConfigMap/Secret, so require
+        configStorageType=Secret as a safety net. When existingSecret is set,
+        tempo.yaml instead references an env var (populated from the Secret via
+        secretKeyRef on the pod spec) and relies on `-config.expand-env=true` —
+        no credential material is ever rendered into the config object, so
+        configStorageType can remain ConfigMap.
+      */}}
+      {{- $inlinesCredential := false }}
+      {{- if or (eq $mechanism "PLAIN") (eq $mechanism "SCRAM-SHA-256") (eq $mechanism "SCRAM-SHA-512") }}
+      {{- if and (not $sasl.existingSecret) (or $sasl.username $sasl.password) }}
+      {{- $inlinesCredential = true }}
+      {{- end }}
+      {{- else if eq $mechanism "OAUTHBEARER" }}
+      {{- if and (not $oauthbearer.existingSecret) $oauthbearer.token }}
+      {{- $inlinesCredential = true }}
+      {{- end }}
+      {{- else if eq $mechanism "AWS_MSK_IAM" }}
+      {{- if and (not $mskIam.existingSecret) (or $mskIam.accessKey $mskIam.secretKey) }}
+      {{- $inlinesCredential = true }}
+      {{- end }}
+      {{- end }}
+      {{- if and $inlinesCredential (not (eq $.Values.configStorageType "Secret")) }}
+        {{- fail "ingest.kafka.sasl is configuring credentials directly (not via existingSecret), but configStorageType is not Secret. Either set ingest.kafka.sasl.existingSecret (recommended) or set configStorageType=Secret." }}
+      {{- end }}
+      sasl_mechanism: {{ $mechanism }}
+      {{- if or (eq $mechanism "PLAIN") (eq $mechanism "SCRAM-SHA-256") (eq $mechanism "SCRAM-SHA-512") }}
+      {{- if $sasl.existingSecret }}
+      sasl_username: ${TEMPO_KAFKA_SASL_USERNAME}
+      sasl_password: ${TEMPO_KAFKA_SASL_PASSWORD}
+      {{- else }}
+      {{- with $sasl.username }}
+      sasl_username: {{ . }}
+      {{- end }}
+      {{- with $sasl.password }}
+      sasl_password: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- else if eq $mechanism "OAUTHBEARER" }}
+      {{- with $oauthbearer }}
+      {{- if .existingSecret }}
+      sasl_oauthbearer_token: ${TEMPO_KAFKA_SASL_OAUTHBEARER_TOKEN}
+      {{- else }}
+      {{- with .token }}
+      sasl_oauthbearer_token: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- with .zid }}
+      sasl_oauthbearer_zid: {{ . }}
+      {{- end }}
+      {{- with .extensions }}
+      sasl_oauthbearer_extensions:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .filePath }}
+      sasl_oauthbearer_file_path: {{ . }}
+      {{- end }}
+      {{- with .httpSocketPath }}
+      sasl_oauthbearer_http_socket_path: {{ . }}
+      {{- end }}
+      {{- with .httpSocketTimeout }}
+      sasl_oauthbearer_http_socket_timeout: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- else if eq $mechanism "AWS_MSK_IAM" }}
+      {{- with $mskIam }}
+      {{- if .existingSecret }}
+      sasl_msk_iam_access_key: ${TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY}
+      sasl_msk_iam_secret_key: ${TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY}
+      {{- if .sessionTokenKey }}
+      sasl_msk_iam_session_token: ${TEMPO_KAFKA_SASL_MSK_IAM_SESSION_TOKEN}
+      {{- end }}
+      {{- else }}
+      {{- with .accessKey }}
+      sasl_msk_iam_access_key: {{ . }}
+      {{- end }}
+      {{- with .secretKey }}
+      sasl_msk_iam_secret_key: {{ . }}
+      {{- end }}
+      {{- with .sessionToken }}
+      sasl_msk_iam_session_token: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- with .userAgent }}
+      sasl_msk_iam_user_agent: {{ . }}
+      {{- end }}
+      {{- with .filePath }}
+      sasl_msk_iam_file_path: {{ . }}
+      {{- end }}
+      {{- with .httpSocketPath }}
+      sasl_msk_iam_http_socket_path: {{ . }}
+      {{- end }}
+      {{- with .httpSocketTimeout }}
+      sasl_msk_iam_http_socket_timeout: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- /* TLS is independent of the SASL mechanism and can be combined with any of them. */}}
+      {{- with $.Values.ingest.kafka.tls }}
+      {{- if .enabled }}
+      tls_enabled: true
+      {{- with .certPath }}
+      tls_cert_path: {{ . }}
+      {{- end }}
+      {{- with .keyPath }}
+      tls_key_path: {{ . }}
+      {{- end }}
+      {{- with .caPath }}
+      tls_ca_path: {{ . }}
+      {{- end }}
+      {{- with .serverName }}
+      tls_server_name: {{ . }}
+      {{- end }}
+      {{- with .minVersion }}
+      tls_min_version: {{ . }}
+      {{- end }}
+      {{- if .insecureSkipVerify }}
+      tls_insecure_skip_verify: true
+      {{- end }}
+      {{- end }}
+      {{- end }}
   {{- end }}
   memberlist:
     {{- with .Values.memberlist }}
