@@ -446,6 +446,445 @@ traces:
       enabled: true
 ```
 
+### Kafka SASL Authentication
+
+Tempo 3.0 requires Kafka for the write path. The chart supports secure authentication using SASL.
+
+> **Security Best Practice**: Use file-based credentials (mounted from Secrets) whenever possible to keep credentials out of the rendered configuration. File paths are supported for OAUTHBEARER and AWS_MSK_IAM mechanisms.
+
+#### SCRAM-SHA-512 Authentication (Recommended for Most Deployments)
+
+SCRAM-SHA-512 provides strong authentication with salted challenge-response.
+
+> **Note**: SCRAM mechanisms require direct credentials in the configuration. Use `configStorageType: Secret` to store the entire `tempo.yaml` in a Kubernetes Secret instead of a ConfigMap.
+
+**Step 1: Configure SCRAM with Secret storage**
+
+```yaml
+# Store tempo.yaml in a Secret (not ConfigMap)
+configStorageType: Secret
+
+ingest:
+  kafka:
+    address: kafka.kafka.svc.cluster.local:9092
+    topic: tempo-spans
+    sasl:
+      mechanism: SCRAM-SHA-512
+      username: tempo-production-user
+      password: your-secure-password
+    tls:
+      enabled: true
+      caPath: /etc/kafka/tls/ca.crt
+
+# Mount TLS CA certificate in all Kafka-accessing components
+distributor:
+  extraVolumes:
+    - name: kafka-tls-ca
+      secret:
+        secretName: kafka-tls-ca
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: kafka-tls-ca
+      mountPath: /etc/kafka/tls
+      readOnly: true
+
+blockBuilder:
+  enabled: true
+  replicas: 3
+  extraVolumes:
+    - name: kafka-tls-ca
+      secret:
+        secretName: kafka-tls-ca
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: kafka-tls-ca
+      mountPath: /etc/kafka/tls
+      readOnly: true
+
+liveStore:
+  enabled: true
+  replicas: 3
+  extraVolumes:
+    - name: kafka-tls-ca
+      secret:
+        secretName: kafka-tls-ca
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: kafka-tls-ca
+      mountPath: /etc/kafka/tls
+      readOnly: true
+
+backendScheduler:
+  enabled: true
+```
+
+**Step 2: Verify the setup**
+
+```bash
+# Verify tempo.yaml is stored in a Secret (not ConfigMap)
+kubectl get secret tempo-config -n tempo -o yaml
+
+# Check Kafka connection in logs
+kubectl logs -n tempo tempo-block-builder-0 | grep -i kafka
+```
+
+**Security notes**:
+- ✅ Credentials stored in Kubernetes Secret (encrypted at rest if cluster encryption enabled)
+- ✅ TLS encrypts credentials in transit
+- ✅ RBAC can restrict Secret access
+- ⚠️ Credential rotation requires Helm upgrade and pod restart
+
+#### OAUTHBEARER Authentication
+
+OAuth 2.0 bearer token authentication for Kafka. **Use file-based credentials** to keep tokens out of the configuration and enable rotation without Helm upgrades.
+
+**Step 1: Create a Secret with your OAuth token**
+
+```bash
+# Create token.json file
+cat > token.json <<EOF
+{
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_at": "2026-12-31T23:59:59Z"
+}
+EOF
+
+kubectl create secret generic kafka-oauth-token \
+  --from-file=token.json=token.json \
+  --namespace tempo
+
+# Clean up local file
+rm token.json
+```
+
+**Step 2: Configure Helm values with file path**
+
+```yaml
+ingest:
+  kafka:
+    address: kafka.kafka.svc.cluster.local:9092
+    topic: tempo-spans
+    sasl:
+      mechanism: OAUTHBEARER
+      oauthbearer:
+        # Use file path (recommended) - token is read from mounted Secret
+        filePath: /etc/kafka/oauth/token.json
+        zid: "tempo-service"  # Optional authorization ID
+    tls:
+      enabled: true
+
+# Mount OAuth token in all Kafka-accessing components
+distributor:
+  extraVolumes:
+    - name: kafka-oauth-token
+      secret:
+        secretName: kafka-oauth-token
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: kafka-oauth-token
+      mountPath: /etc/kafka/oauth
+      readOnly: true
+
+blockBuilder:
+  enabled: true
+  replicas: 3
+  extraVolumes:
+    - name: kafka-oauth-token
+      secret:
+        secretName: kafka-oauth-token
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: kafka-oauth-token
+      mountPath: /etc/kafka/oauth
+      readOnly: true
+
+liveStore:
+  enabled: true
+  replicas: 3
+  extraVolumes:
+    - name: kafka-oauth-token
+      secret:
+        secretName: kafka-oauth-token
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: kafka-oauth-token
+      mountPath: /etc/kafka/oauth
+      readOnly: true
+```
+
+**Step 3: Verify the setup**
+
+```bash
+# Check that token file is mounted correctly
+kubectl exec -n tempo tempo-block-builder-0 -- ls -la /etc/kafka/oauth/
+# Should show: token.json (mode 0400)
+
+# Verify tempo.yaml references file path (not actual token)
+kubectl exec -n tempo tempo-block-builder-0 -- grep oauthbearer /conf/tempo.yaml
+# Should show:
+#   sasl_mechanism: OAUTHBEARER
+#   sasl_oauthbearer_file_path: /etc/kafka/oauth/token.json
+
+# Check Kafka connection in logs
+kubectl logs -n tempo tempo-block-builder-0 | grep -i kafka
+```
+
+**Token rotation**:
+
+```bash
+# Update the Secret with a new token
+kubectl create secret generic kafka-oauth-token \
+  --from-file=token.json=new-token.json \
+  --namespace tempo \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Tempo will read the new token on next authentication (no restart needed)
+```
+
+**Security benefits**:
+- ✅ Token stored in Kubernetes Secret (not in tempo.yaml)
+- ✅ Token file re-read on each authentication
+- ✅ Supports token rotation without Helm upgrade or pod restart
+- ✅ Token never appears in rendered configuration
+
+#### AWS MSK IAM Authentication
+
+For AWS MSK (Managed Streaming for Kafka) with IAM authentication. **Three methods are supported, in order of security preference:**
+
+##### Method 1: IRSA (IAM Roles for Service Accounts) - Most Secure ✅
+
+No credentials needed - uses AWS IAM roles attached to Kubernetes service accounts.
+
+```yaml
+# Enable IRSA on the service account
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/tempo-kafka-role
+
+ingest:
+  kafka:
+    address: b-1.msk-cluster.kafka.us-east-1.amazonaws.com:9098
+    topic: tempo-spans
+    sasl:
+      mechanism: AWS_MSK_IAM
+      mskIam:
+        # No credentials needed - uses IRSA
+        userAgent: "tempo-distributed"
+
+# No extraVolumes needed - credentials from IRSA
+```
+
+**Security benefits**:
+- ✅ No credentials to manage or rotate
+- ✅ IAM policies control access
+- ✅ Credentials automatically rotated by AWS
+- ✅ Audit trail via CloudTrail
+
+##### Method 2: File-Based Credentials - Recommended if IRSA Not Available ✅
+
+Use a file to store AWS credentials. This allows rotation without Helm upgrades.
+
+**Step 1: Create credentials Secret**
+
+```bash
+# Create credentials.json file
+cat > credentials.json <<EOF
+{
+  "AccessKey": "AKIAIOSFODNN7EXAMPLE",
+  "SecretKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+  "Region": "us-east-1"
+}
+EOF
+
+kubectl create secret generic kafka-aws-credentials \
+  --from-file=credentials.json=credentials.json \
+  --namespace tempo
+
+# Clean up local file
+rm credentials.json
+```
+
+**Step 2: Configure Helm values with file path**
+
+```yaml
+ingest:
+  kafka:
+    address: b-1.msk-cluster.kafka.us-east-1.amazonaws.com:9098
+    topic: tempo-spans
+    sasl:
+      mechanism: AWS_MSK_IAM
+      mskIam:
+        # Use file path (recommended) - credentials read from mounted Secret
+        filePath: /etc/kafka/aws/credentials.json
+        userAgent: "tempo-distributed"
+
+# Mount AWS credentials in all Kafka-accessing components
+distributor:
+  extraVolumes:
+    - name: kafka-aws-credentials
+      secret:
+        secretName: kafka-aws-credentials
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: kafka-aws-credentials
+      mountPath: /etc/kafka/aws
+      readOnly: true
+
+blockBuilder:
+  enabled: true
+  replicas: 3
+  extraVolumes:
+    - name: kafka-aws-credentials
+      secret:
+        secretName: kafka-aws-credentials
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: kafka-aws-credentials
+      mountPath: /etc/kafka/aws
+      readOnly: true
+
+liveStore:
+  enabled: true
+  replicas: 3
+  extraVolumes:
+    - name: kafka-aws-credentials
+      secret:
+        secretName: kafka-aws-credentials
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: kafka-aws-credentials
+      mountPath: /etc/kafka/aws
+      readOnly: true
+```
+
+**Step 3: Verify the setup**
+
+```bash
+# Check that credentials file is mounted correctly
+kubectl exec -n tempo tempo-block-builder-0 -- ls -la /etc/kafka/aws/
+# Should show: credentials.json (mode 0400)
+
+# Verify tempo.yaml references file path (not actual credentials)
+kubectl exec -n tempo tempo-block-builder-0 -- grep msk_iam /conf/tempo.yaml
+# Should show:
+#   sasl_mechanism: AWS_MSK_IAM
+#   sasl_msk_iam_file_path: /etc/kafka/aws/credentials.json
+
+# Check Kafka connection in logs
+kubectl logs -n tempo tempo-block-builder-0 | grep -i kafka
+```
+
+**Credential rotation**:
+
+```bash
+# Update the Secret with new credentials
+kubectl create secret generic kafka-aws-credentials \
+  --from-file=credentials.json=new-credentials.json \
+  --namespace tempo \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Tempo will read the new credentials on next authentication (no restart needed)
+```
+
+**Security benefits**:
+- ✅ Credentials stored in Kubernetes Secret (not in tempo.yaml)
+- ✅ Credentials file re-read on each authentication
+- ✅ Supports credential rotation without Helm upgrade or pod restart
+- ✅ Credentials never appear in rendered configuration
+
+##### Method 3: Direct Credentials - Not Recommended ⚠️
+
+> **Warning**: This method stores AWS credentials directly in `values.yaml` and renders them into `tempo.yaml`. Use `configStorageType: Secret` if you must use this method, but prefer IRSA or file-based credentials instead.
+
+```yaml
+configStorageType: Secret  # Required if using direct credentials
+
+ingest:
+  kafka:
+    address: b-1.msk-cluster.kafka.us-east-1.amazonaws.com:9098
+    sasl:
+      mechanism: AWS_MSK_IAM
+      mskIam:
+        accessKey: "AKIAIOSFODNN7EXAMPLE"
+        secretKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        userAgent: "tempo-distributed"
+```
+
+**Drawbacks**:
+- ❌ Credentials in `values.yaml` (often committed to Git)
+- ❌ Requires Helm upgrade to rotate credentials
+- ❌ Credentials rendered into configuration
+- ❌ Less secure than IRSA or file-based methods
+
+#### Supported SASL Mechanisms
+
+| Mechanism | Security | Use Case | Credential Method | Rotation |
+|-----------|----------|----------|-------------------|----------|
+| **SCRAM-SHA-512** | ⭐⭐⭐⭐⭐ | Production (recommended) | Direct + `configStorageType: Secret` | Helm upgrade + restart |
+| **SCRAM-SHA-256** | ⭐⭐⭐⭐ | Production (legacy) | Direct + `configStorageType: Secret` | Helm upgrade + restart |
+| **OAUTHBEARER** | ⭐⭐⭐⭐⭐ | OAuth 2.0 environments | File path (recommended) | Update Secret (no restart) |
+| **AWS_MSK_IAM** | ⭐⭐⭐⭐⭐ | AWS MSK | IRSA (best) or file path | Automatic (IRSA) or update Secret |
+| **PLAIN** | ⭐⭐ | Development only (with TLS) | Direct + `configStorageType: Secret` | Helm upgrade + restart |
+
+#### Security Best Practices
+
+1. **Credential Storage Hierarchy** (most to least secure):
+   - IRSA (AWS MSK only) - No credentials to manage
+   - File paths (OAUTHBEARER, AWS_MSK_IAM) - Credentials in Secret, rotation without restart
+   - Direct credentials with `configStorageType: Secret` (SCRAM, PLAIN) - Credentials in Secret, requires restart
+   - Direct credentials with `configStorageType: ConfigMap` - ❌ Never use for production
+
+2. **Always enable TLS** (`tls.enabled: true`) to encrypt credentials in transit
+
+3. **Use strong passwords** for SCRAM (minimum 16 characters, random)
+
+4. **Restrict Secret access** with Kubernetes RBAC
+
+5. **Never commit credentials to Git** - use external secret management (e.g., Sealed Secrets, External Secrets Operator, Vault)
+
+6. **Rotate credentials regularly**:
+   - IRSA: Automatic rotation by AWS
+   - File paths: Update Secret, Tempo reloads automatically
+   - Direct credentials: Update values, Helm upgrade, restart pods
+
+#### Troubleshooting
+
+**SCRAM authentication fails**:
+```bash
+# Check that tempo.yaml is in a Secret
+kubectl get secret tempo-config -n tempo
+
+# Verify credentials in tempo.yaml
+kubectl get secret tempo-config -n tempo -o jsonpath='{.data.tempo\.yaml}' | base64 -d | grep sasl
+```
+
+**OAUTHBEARER/MSK_IAM file not found**:
+```bash
+# Check volume is mounted
+kubectl exec -n tempo tempo-block-builder-0 -- ls -la /etc/kafka/oauth/
+kubectl exec -n tempo tempo-block-builder-0 -- ls -la /etc/kafka/aws/
+
+# Check Secret exists
+kubectl get secret kafka-oauth-token -n tempo
+kubectl get secret kafka-aws-credentials -n tempo
+
+# Verify file path in tempo.yaml
+kubectl exec -n tempo tempo-block-builder-0 -- grep file_path /conf/tempo.yaml
+```
+
+**IRSA not working**:
+```bash
+# Check service account annotation
+kubectl get sa tempo -n tempo -o yaml | grep eks.amazonaws.com/role-arn
+
+# Check pod has correct service account
+kubectl get pod tempo-block-builder-0 -n tempo -o yaml | grep serviceAccountName
+
+# Verify IAM role trust policy allows the service account
+aws iam get-role --role-name tempo-kafka-role
+```
+
 ### Memcached cache configuration
 
 By default, the chart deploys a single shared memcached StatefulSet (`memcached`) used for all cache roles — bloom filters, parquet footer, and frontend search. This is the simplest setup and works well for most deployments.
