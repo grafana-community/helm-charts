@@ -450,28 +450,35 @@ traces:
 
 Tempo 3.0 requires Kafka for the write path. The chart supports secure authentication using SASL.
 
-> **Security Best Practice**: Use file-based credentials (mounted from Secrets) whenever possible to keep credentials out of the rendered configuration. File paths are supported for OAUTHBEARER and AWS_MSK_IAM mechanisms.
+> **Security Best Practice**: Use `existingSecret` (recommended for SCRAM/PLAIN and available for OAUTHBEARER/AWS_MSK_IAM too) or file-based credentials (mounted from Secrets, OAUTHBEARER/AWS_MSK_IAM only) whenever possible to keep credentials out of the rendered configuration.
 
 #### SCRAM-SHA-512 Authentication (Recommended for Most Deployments)
 
 SCRAM-SHA-512 provides strong authentication with salted challenge-response.
 
-> **Note**: SCRAM mechanisms require direct credentials in the configuration. Use `configStorageType: Secret` to store the entire `tempo.yaml` in a Kubernetes Secret instead of a ConfigMap.
+> **Note**: Tempo's SCRAM client only accepts direct username/password values (no file-path credential source). Use `ingest.kafka.sasl.existingSecret` so the chart injects the credentials as env vars and references them in `tempo.yaml` via `${TEMPO_KAFKA_SASL_USERNAME}` / `${TEMPO_KAFKA_SASL_PASSWORD}` (the chart already runs Tempo with `-config.expand-env=true`). This keeps the credential value itself out of the ConfigMap/Secret, so `configStorageType` can remain the default `ConfigMap`.
 
-**Step 1: Configure SCRAM with Secret storage**
+**Step 1: Create a Secret with the SCRAM credentials**
+
+```bash
+kubectl create secret generic kafka-scram-credentials \
+  --from-literal=username=tempo-production-user \
+  --from-literal=password=your-secure-password \
+  --namespace tempo
+```
+
+**Step 2: Reference the Secret from Helm values**
 
 ```yaml
-# Store tempo.yaml in a Secret (not ConfigMap)
-configStorageType: Secret
-
 ingest:
   kafka:
     address: kafka.kafka.svc.cluster.local:9092
     topic: tempo-spans
     sasl:
       mechanism: SCRAM-SHA-512
-      username: tempo-production-user
-      password: your-secure-password
+      existingSecret: kafka-scram-credentials
+      # usernameKey/passwordKey default to "username"/"password"; override
+      # only if your Secret uses different key names.
     tls:
       enabled: true
       caPath: /etc/kafka/tls/ca.crt
@@ -518,25 +525,58 @@ backendScheduler:
   enabled: true
 ```
 
-**Step 2: Verify the setup**
+**Step 3: Verify the setup**
 
 ```bash
-# Verify tempo.yaml is stored in a Secret (not ConfigMap)
-kubectl get secret tempo-config -n tempo -o yaml
+# tempo.yaml stays in a ConfigMap, but only holds env var placeholders — no
+# credential value is inlined.
+kubectl get configmap tempo-config -n tempo -o jsonpath='{.data.tempo\.yaml}' | grep sasl
+# Should show:
+#   sasl_mechanism: SCRAM-SHA-512
+#   sasl_username: ${TEMPO_KAFKA_SASL_USERNAME}
+#   sasl_password: ${TEMPO_KAFKA_SASL_PASSWORD}
+
+# Verify the env vars are wired to the Secret
+kubectl get pod -n tempo -l app.kubernetes.io/component=distributor -o jsonpath='{.items[0].spec.containers[0].env}' | jq
 
 # Check Kafka connection in logs
 kubectl logs -n tempo tempo-block-builder-0 | grep -i kafka
 ```
 
 **Security notes**:
-- ✅ Credentials stored in Kubernetes Secret (encrypted at rest if cluster encryption enabled)
+- ✅ Credential value never rendered into `tempo.yaml`/ConfigMap — only an env var placeholder is
+- ✅ Credentials stored in a Kubernetes Secret, injected via `secretKeyRef` (encrypted at rest if cluster encryption enabled)
 - ✅ TLS encrypts credentials in transit
 - ✅ RBAC can restrict Secret access
-- ⚠️ Credential rotation requires Helm upgrade and pod restart
+- ⚠️ Credential rotation still requires a pod restart (SCRAM has no dynamic file/socket credential source in Tempo, so the env var is only re-read on process start)
+
+<details>
+<summary>Alternative: direct credentials in values.yaml (not recommended)</summary>
+
+If you cannot use `existingSecret`, you can set `username`/`password` directly. Since the values are then rendered into `tempo.yaml`, `configStorageType: Secret` is required so the rendered config object itself is not a plaintext ConfigMap:
+
+```yaml
+configStorageType: Secret  # Required when sasl.existingSecret is not used
+
+ingest:
+  kafka:
+    address: kafka.kafka.svc.cluster.local:9092
+    topic: tempo-spans
+    sasl:
+      mechanism: SCRAM-SHA-512
+      username: tempo-production-user
+      password: your-secure-password
+```
+
+This still requires a Helm upgrade and pod restart to rotate credentials, and the credential value is committed to `values.yaml` unless sourced from a secrets-management pipeline at deploy time. Prefer `existingSecret` above.
+
+</details>
+
+
 
 #### OAUTHBEARER Authentication
 
-OAuth 2.0 bearer token authentication for Kafka. **Use file-based credentials** to keep tokens out of the configuration and enable rotation without Helm upgrades.
+OAuth 2.0 bearer token authentication for Kafka. **Use file-based credentials** to keep tokens out of the configuration and enable rotation without Helm upgrades. If a rotating file/socket source isn't available, `ingest.kafka.sasl.oauthbearer.existingSecret` is a lower-friction alternative to setting `token` directly — see the SCRAM section above for how that pattern works.
 
 **Step 1: Create a Secret with your OAuth token**
 
@@ -544,7 +584,7 @@ OAuth 2.0 bearer token authentication for Kafka. **Use file-based credentials** 
 # Create token.json file
 cat > token.json <<EOF
 {
-  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token": "<PASTE-YOUR-OAUTH-TOKEN-HERE>",
   "expires_at": "2026-12-31T23:59:59Z"
 }
 EOF
@@ -793,9 +833,38 @@ kubectl create secret generic kafka-aws-credentials \
 - ✅ Supports credential rotation without Helm upgrade or pod restart
 - ✅ Credentials never appear in rendered configuration
 
-##### Method 3: Direct Credentials - Not Recommended ⚠️
+##### Method 3: existingSecret - Recommended if IRSA and File-Based Credentials Are Not Available
 
-> **Warning**: This method stores AWS credentials directly in `values.yaml` and renders them into `tempo.yaml`. Use `configStorageType: Secret` if you must use this method, but prefer IRSA or file-based credentials instead.
+Reference a pre-created Secret containing the static AWS access/secret keys (and, optionally, a session token). The chart injects them as env vars and `tempo.yaml` references `${TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY}` / `${TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY}` instead of inlining the values, so `configStorageType` can remain the default `ConfigMap`.
+
+```bash
+kubectl create secret generic kafka-msk-credentials \
+  --from-literal=access-key=AKIAIOSFODNN7EXAMPLE \
+  --from-literal=secret-key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY \
+  --namespace tempo
+```
+
+```yaml
+ingest:
+  kafka:
+    address: b-1.msk-cluster.kafka.us-east-1.amazonaws.com:9098
+    sasl:
+      mechanism: AWS_MSK_IAM
+      mskIam:
+        existingSecret: kafka-msk-credentials
+        # accessKeyKey/secretKeyKey default to "access-key"/"secret-key".
+        # Set sessionTokenKey too if the Secret also has a session token.
+        userAgent: "tempo-distributed"
+```
+
+**Security notes**:
+- ✅ Credential values never rendered into `tempo.yaml`/ConfigMap
+- ✅ Credentials stored in a Kubernetes Secret, injected via `secretKeyRef`
+- ⚠️ Static keys still require a pod restart to rotate (no dynamic file/socket source), same limitation as Method 4 below
+
+##### Method 4: Direct Credentials - Not Recommended ⚠️
+
+> **Warning**: This method stores AWS credentials directly in `values.yaml` and renders them into `tempo.yaml`. Use `configStorageType: Secret` if you must use this method, but prefer IRSA, file-based credentials, or `existingSecret` (Method 3) instead.
 
 ```yaml
 configStorageType: Secret  # Required if using direct credentials
@@ -815,25 +884,26 @@ ingest:
 - ❌ Credentials in `values.yaml` (often committed to Git)
 - ❌ Requires Helm upgrade to rotate credentials
 - ❌ Credentials rendered into configuration
-- ❌ Less secure than IRSA or file-based methods
+- ❌ Less secure than IRSA, file-based, or `existingSecret` methods
 
 #### Supported SASL Mechanisms
 
 | Mechanism | Security | Use Case | Credential Method | Rotation |
 |-----------|----------|----------|-------------------|----------|
-| **SCRAM-SHA-512** | ⭐⭐⭐⭐⭐ | Production (recommended) | Direct + `configStorageType: Secret` | Helm upgrade + restart |
-| **SCRAM-SHA-256** | ⭐⭐⭐⭐ | Production (legacy) | Direct + `configStorageType: Secret` | Helm upgrade + restart |
-| **OAUTHBEARER** | ⭐⭐⭐⭐⭐ | OAuth 2.0 environments | File path (recommended) | Update Secret (no restart) |
-| **AWS_MSK_IAM** | ⭐⭐⭐⭐⭐ | AWS MSK | IRSA (best) or file path | Automatic (IRSA) or update Secret |
-| **PLAIN** | ⭐⭐ | Development only (with TLS) | Direct + `configStorageType: Secret` | Helm upgrade + restart |
+| **SCRAM-SHA-512** | ⭐⭐⭐⭐⭐ | Production (recommended) | `existingSecret` (recommended) or direct + `configStorageType: Secret` | Restart |
+| **SCRAM-SHA-256** | ⭐⭐⭐⭐ | Production (legacy) | `existingSecret` (recommended) or direct + `configStorageType: Secret` | Restart |
+| **OAUTHBEARER** | ⭐⭐⭐⭐⭐ | OAuth 2.0 environments | File path (recommended) or `existingSecret` | Update Secret (no restart with file path) |
+| **AWS_MSK_IAM** | ⭐⭐⭐⭐⭐ | AWS MSK | IRSA (best), file path, or `existingSecret` | Automatic (IRSA), update Secret (file path, no restart), or restart (`existingSecret`) |
+| **PLAIN** | ⭐⭐ | Development only (with TLS) | `existingSecret` (recommended) or direct + `configStorageType: Secret` | Restart |
 
 #### Security Best Practices
 
 1. **Credential Storage Hierarchy** (most to least secure):
-   - IRSA (AWS MSK only) - No credentials to manage
-   - File paths (OAUTHBEARER, AWS_MSK_IAM) - Credentials in Secret, rotation without restart
-   - Direct credentials with `configStorageType: Secret` (SCRAM, PLAIN) - Credentials in Secret, requires restart
-   - Direct credentials with `configStorageType: ConfigMap` - ❌ Never use for production
+    - IRSA (AWS MSK only) - No credentials to manage
+    - File paths (OAUTHBEARER, AWS_MSK_IAM) - Credentials in Secret, rotation without restart
+    - `existingSecret` (all mechanisms) - Credentials in Secret, injected as env vars, never rendered into `tempo.yaml`; requires restart to rotate
+    - Direct credentials with `configStorageType: Secret` (SCRAM, PLAIN, AWS_MSK_IAM, OAUTHBEARER) - Credentials in Secret, but also rendered into the config object; requires restart to rotate
+    - Direct credentials with `configStorageType: ConfigMap` - ❌ Never use for production (blocked by a chart-level `fail` unless `existingSecret` is set)
 
 2. **Always enable TLS** (`tls.enabled: true`) to encrypt credentials in transit
 
@@ -844,18 +914,23 @@ ingest:
 5. **Never commit credentials to Git** - use external secret management (e.g., Sealed Secrets, External Secrets Operator, Vault)
 
 6. **Rotate credentials regularly**:
-   - IRSA: Automatic rotation by AWS
-   - File paths: Update Secret, Tempo reloads automatically
-   - Direct credentials: Update values, Helm upgrade, restart pods
+    - IRSA: Automatic rotation by AWS
+    - File paths: Update Secret, Tempo reloads automatically
+    - `existingSecret`: Update the Secret, then restart pods (env vars are only read at process start)
+    - Direct credentials: Update values, Helm upgrade, restart pods
 
 #### Troubleshooting
 
 **SCRAM authentication fails**:
 ```bash
-# Check that tempo.yaml is in a Secret
-kubectl get secret tempo-config -n tempo
+# If using existingSecret, tempo.yaml is a ConfigMap with env var placeholders
+kubectl get configmap tempo-config -n tempo -o jsonpath='{.data.tempo\.yaml}' | grep sasl
 
-# Verify credentials in tempo.yaml
+# Verify the env vars are wired to the Secret on the pod
+kubectl get pod -n tempo -l app.kubernetes.io/component=distributor -o jsonpath='{.items[0].spec.containers[0].env}' | jq
+
+# If using direct credentials, tempo.yaml is a Secret instead
+kubectl get secret tempo-config -n tempo
 kubectl get secret tempo-config -n tempo -o jsonpath='{.data.tempo\.yaml}' | base64 -d | grep sasl
 ```
 
