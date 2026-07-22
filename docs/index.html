@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>helm-docs values table</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #ffffff;
+        --text: #20242c;
+        --muted: #5f6978;
+        --line: #d9dee8;
+        --error-bg: #fff2f0;
+        --error-text: #9f1d1d;
+        --code-bg: #f1f4f8;
+        --filter-height: 57px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      #output {
+        width: 100%;
+        min-height: calc(100vh - var(--filter-height));
+      }
+
+      .filter {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+        background: var(--bg);
+        min-height: var(--filter-height);
+      }
+
+      .filter input {
+        width: min(520px, 100%);
+        height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0 10px;
+        color: var(--text);
+        font: inherit;
+      }
+
+      .filter input:focus {
+        border-color: #1f6feb;
+        outline: 2px solid rgba(31, 111, 235, 0.18);
+      }
+
+      .result-count {
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .message,
+      .error {
+        padding: 16px;
+        color: var(--muted);
+      }
+
+      .error {
+        background: var(--error-bg);
+        color: var(--error-text);
+        white-space: pre-wrap;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        table-layout: fixed;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        position: sticky;
+        top: var(--filter-height);
+        z-index: 2;
+        background: #eef3f9;
+        color: #303846;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      th:first-child,
+      td:first-child {
+        width: 24%;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      th:nth-child(2),
+      td:nth-child(2) {
+        width: 12%;
+        color: var(--muted);
+      }
+
+      th:nth-child(3),
+      td:nth-child(3) {
+        width: 34%;
+      }
+
+      th:nth-child(4),
+      td:nth-child(4) {
+        width: 30%;
+      }
+
+      pre {
+        max-width: 520px;
+        max-height: 220px;
+        overflow: auto;
+        margin: 0;
+        border-radius: 6px;
+        padding: 8px;
+        background: var(--code-bg);
+        font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        white-space: pre-wrap;
+      }
+
+      h3 {
+        margin: 16px 12px 8px;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="filter">
+      <input id="filter-input" type="search" placeholder="Filter keys and descriptions" autocomplete="off" />
+      <span id="result-count" class="result-count"></span>
+    </div>
+    <div id="output"><div class="message">Loading...</div></div>
+
+    <script src="wasm_exec.js"></script>
+    <script>
+      const output = document.getElementById("output");
+      const filterInput = document.getElementById("filter-input");
+      const resultCount = document.getElementById("result-count");
+
+      function isLocalhost(hostname) {
+        return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "";
+      }
+
+      function showMessage(message, className = "message") {
+        output.innerHTML = "";
+        resultCount.textContent = "";
+        const element = document.createElement("div");
+        element.className = className;
+        element.textContent = message;
+        output.appendChild(element);
+      }
+
+      function updateSectionVisibility() {
+        const children = Array.from(output.children);
+        for (let index = 0; index < children.length; index += 1) {
+          const child = children[index];
+          if (child.tagName !== "H3") {
+            continue;
+          }
+
+          const table = children[index + 1];
+          if (!table || table.tagName !== "TABLE") {
+            continue;
+          }
+
+          const visibleRows = Array.from(table.tBodies[0]?.rows || []).filter((row) => !row.hidden);
+          const hidden = visibleRows.length === 0;
+          child.hidden = hidden;
+          table.hidden = hidden;
+        }
+      }
+
+      function applyFilter() {
+        const needle = filterInput.value.trim().toLowerCase();
+        const rows = Array.from(output.querySelectorAll("tbody tr"));
+        let visibleCount = 0;
+
+        for (const row of rows) {
+          const cells = row.cells;
+          const key = cells[0]?.textContent.toLowerCase() || "";
+          const description = cells[3]?.textContent.toLowerCase() || "";
+          const visible = needle === "" || key.includes(needle) || description.includes(needle);
+          row.hidden = !visible;
+          if (visible) {
+            visibleCount += 1;
+          }
+        }
+
+        updateSectionVisibility();
+        resultCount.textContent = rows.length === 0 ? "" : `${visibleCount} / ${rows.length}`;
+      }
+
+      function pageContext() {
+        const params = new URLSearchParams(window.location.search);
+        const chart = params.get("chart");
+        const local = isLocalhost(window.location.hostname);
+        const pathParts = window.location.pathname.split("/").filter(Boolean);
+
+        if (!chart) {
+          throw new Error("Missing required query parameter: chart");
+        }
+
+        let org;
+        let repo = pathParts[0];
+
+        if (local) {
+          org = params.get("org");
+          repo = params.get("repo") || repo || "helm-charts";
+          if (!org) {
+            throw new Error("Missing required localhost query parameter: org");
+          }
+        } else {
+          const githubPagesMatch = window.location.hostname.match(/^([^.]+)\.github\.io$/);
+          if (!githubPagesMatch) {
+            throw new Error("This page must be hosted from GitHub Pages or localhost");
+          }
+          org = githubPagesMatch[1];
+          if (!repo) {
+            throw new Error("Could not infer GitHub repository from the URL path");
+          }
+        }
+
+        return { org, repo, chart };
+      }
+
+      function rawValuesURL({ org, repo, chart }) {
+        const safeOrg = encodeURIComponent(org);
+        const safeRepo = encodeURIComponent(repo);
+        const safeChart = chart
+          .split("/")
+          .filter(Boolean)
+          .map((part) => encodeURIComponent(part))
+          .join("/");
+        return `https://raw.githubusercontent.com/${safeOrg}/${safeRepo}/refs/heads/main/charts/${safeChart}/values.yaml`;
+      }
+
+      async function fetchValuesYAML(context) {
+        const response = await fetch(rawValuesURL(context));
+        if (!response.ok) {
+          throw new Error(`Could not fetch values.yaml: HTTP ${response.status}`);
+        }
+        return response.text();
+      }
+
+      async function bootWASM() {
+        if (!WebAssembly.instantiateStreaming) {
+          WebAssembly.instantiateStreaming = async (response, importObject) => {
+            const source = await (await response).arrayBuffer();
+            return WebAssembly.instantiate(source, importObject);
+          };
+        }
+
+        const go = new Go();
+        const result = await WebAssembly.instantiateStreaming(fetch("helm-docs.wasm"), go.importObject);
+        go.run(result.instance);
+      }
+
+      async function render() {
+        const context = pageContext();
+        const valuesYAML = await fetchValuesYAML(context);
+        const result = window.renderHelmDocsValuesTable(valuesYAML);
+        if (!result.ok) {
+          throw new Error(result.error);
+        }
+        output.innerHTML = result.html;
+        applyFilter();
+      }
+
+      filterInput.addEventListener("input", applyFilter);
+
+      bootWASM()
+        .then(render)
+        .catch((error) => showMessage(error.message || String(error), "error"));
+    </script>
+  </body>
+</html>
