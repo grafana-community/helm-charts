@@ -88,15 +88,6 @@ Grafana 13 is configured by default. Grafana 13 explicit requires an image rende
 
 Grafana is primarily configured through `grafana.ini`. The `grafana.ini` key in `values.yaml` maps directly to the Grafana configuration file and supports all settings documented in the [official Grafana configuration reference](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/).
 
-For example, to disable analytics reporting (which is enabled by default in Grafana and sends anonymous usage statistics to `stats.grafana.org`):
-
-```yaml
-grafana.ini:
-  analytics:
-    reporting_enabled: false
-    check_for_updates: false
-```
-
 ### Example ingress with path
 
 With grafana 6.3 and above
