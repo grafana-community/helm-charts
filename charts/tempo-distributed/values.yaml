@@ -2043,6 +2043,9 @@ config: |
       {{- if .Values.storage.trace.blocklist_poll_stale_tenant_index }}
       blocklist_poll_stale_tenant_index: {{ .Values.storage.trace.blocklist_poll_stale_tenant_index }}
       {{- end }}
+      {{- if .Values.storage.trace.blocklist_poll_tenant_concurrency }}
+      blocklist_poll_tenant_concurrency: {{ .Values.storage.trace.blocklist_poll_tenant_concurrency }}
+      {{- end }}
       {{- if .Values.storage.trace.empty_tenant_deletion_age }}
       empty_tenant_deletion_age: {{ .Values.storage.trace.empty_tenant_deletion_age }}
       {{- end }}
@@ -2125,6 +2128,8 @@ storage:
     blocklist_poll_tenant_index_builders: null
     # -- The oldest allowable tenant index.
     blocklist_poll_stale_tenant_index: null
+    # -- Number of tenants to poll concurrently. Default is 1.
+    blocklist_poll_tenant_concurrency: null
     # -- How fast the poller will delete a tenant if it is empty. Will need to be enabled in 'empty_tenant_deletion_enabled'.
     empty_tenant_deletion_age: null
     # -- Delete empty tenants.
