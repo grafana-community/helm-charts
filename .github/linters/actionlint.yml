@@ -1,0 +1,14 @@
+# $schema: https://www.schemastore.org/actionlint.json
+# actionlint configuration.
+#
+# `concurrency.queue` (queue: single | max) is valid, documented GitHub Actions
+# syntax, but actionlint's schema does not recognise it yet and reports it as an
+# unexpected key. The dependabot auto-merge workflow relies on `queue: max` to
+# serialise runs, so ignore that one message for it. Drop this entry once
+# actionlint learns the key.
+# See also rhysd/actionlint#654.
+# https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency
+paths:
+  .github/workflows/release.yaml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'
