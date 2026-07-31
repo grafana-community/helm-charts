@@ -83,6 +83,10 @@ deploymentStrategy:
 ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
 progressDeadlineSeconds: null
 
+## Startup probe. Holds off the liveness and readiness probes until it succeeds, useful for slow starts.
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+startupProbe: {}
+
 readinessProbe:
   httpGet:
     path: /api/health
