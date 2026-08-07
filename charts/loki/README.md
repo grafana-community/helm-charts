@@ -89,6 +89,7 @@ Note: `lookbackPeriod` and `threshold` are not carried forward as they did not g
 
 | Old value | Replacement |
 |---|---|
+| `ingester.updateStrategy` | `ingester.strategy` |
 | `clusterLabelOverride` | `monitoring.appInstanceLabelName` and `monitoring.appInstanceLabelValue` |
 | `monitoring.serviceMonitor.clusterLabel` | `monitoring.appInstanceLabelName` and `monitoring.appInstanceLabelValue` |
 | `monitoring.dashboards.namespace` | `monitoring.namespace` (applies to all monitoring resources) |
