@@ -128,9 +128,7 @@ New dashboard configuration options:
 The built-in MinIO subchart is now **officially deprecated**. Enabling `minio.enabled=true` now fails chart rendering by default.
 
 Actions required:
-1. Configure a dedicated external object storage backend instead of the built-in MinIO dependency
-   (for example: AWS S3, GCS, or Azure Blob). Potential self-hosted S3-compatible options include
-   RustFS and Garage; validate production suitability for your environment before adoption.
+1. Configure a dedicated external object storage backend instead of the built-in MinIO dependency (for example: AWS S3, GCS, or Azure Blob). Potential self-hosted S3-compatible options include RustFS and Garage; validate production suitability for your environment before adoption.
 2. Deploy a transition release that keeps old MinIO data readable but writes new data to the external store.
 3. Keep both stores configured until old data in MinIO has aged out according to retention.
 4. Remove the MinIO-related config only after retention has fully elapsed.
