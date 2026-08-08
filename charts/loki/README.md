@@ -375,7 +375,7 @@ After:
 
 ### From 11.x to 12.0.0 ([#258](https://github.com/grafana-community/helm-charts/pull/258))
 
-The `deploymentMode` default value has been changed to `Monolithic`. `SingleBinary` has been renamed to `Monolithic`. 
+The `deploymentMode` default value has been changed to `Monolithic`. `SingleBinary` has been renamed to `Monolithic`.
 The old naming `SingleBinary` is still supported. `SimpleScalable` is still supported but will be removed in Loki 4.0.0.
 
 Actions required:
