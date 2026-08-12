@@ -24372,6 +24372,45 @@ entries:
   loki:
   - apiVersion: v2
     appVersion: 3.7.6
+    created: "2026-08-12T20:39:20.249782984Z"
+    dependencies:
+    - alias: minio
+      condition: minio.enabled
+      name: minio
+      repository: https://charts.min.io/
+      version: 5.4.0
+    - alias: rollout_operator
+      condition: rollout_operator.enabled
+      name: rollout-operator
+      repository: https://grafana.github.io/helm-charts
+      version: 0.50.1
+    description: Helm chart for Grafana Loki supporting monolithic, simple scalable,
+      and microservices modes.
+    digest: 1d3cea554261ec7eb37c44b1261cd7be7ff420e1cc3d9cf9a3963b5a6c29086d
+    home: https://grafana-community.github.io/helm-charts
+    icon: https://grafana.com/docs/loki/latest/logo_and_name.png
+    kubeVersion: '>=1.25.0-0'
+    maintainers:
+    - email: mike1118@live.com
+      name: Michael Timmerman
+      url: https://github.com/TheRealNoob
+    - email: github@jkroepke.de
+      name: Jan-Otto Kröpke
+      url: https://github.com/jkroepke
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    name: loki
+    sources:
+    - https://github.com/grafana/loki
+    - https://grafana.com/oss/loki/
+    - https://grafana.com/docs/loki/latest/
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/loki-18.8.0/loki-18.8.0.tgz
+    version: 18.8.0
+  - apiVersion: v2
+    appVersion: 3.7.6
     created: "2026-08-08T21:36:23.900585549Z"
     dependencies:
     - alias: minio
@@ -60608,4 +60647,4 @@ entries:
     urls:
     - https://github.com/grafana-community/helm-charts/releases/download/tempo-vulture-0.1.0/tempo-vulture-0.1.0.tgz
     version: 0.1.0
-generated: "2026-08-12T05:38:34.800791089Z"
+generated: "2026-08-12T20:39:20.252583511Z"
