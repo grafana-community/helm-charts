@@ -133,7 +133,7 @@ jobs:
           version: v4.2.3
 
       - name: install helm diff plugin
-        run: helm plugin install https://github.com/databus23/helm-diff --version 3.15.4 --verify=false
+        run: helm plugin install https://github.com/databus23/helm-diff --version 3.15.11 --verify=false
 
       - name: Create kind cluster
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
