@@ -1,0 +1,23 @@
+suite: startup probe
+templates:
+  - deployment.yaml
+tests:
+  - it: should not render a startupProbe by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].startupProbe
+  - it: should render a startupProbe on the main container when set
+    set:
+      startupProbe:
+        httpGet:
+          path: /api/health
+          port: grafana
+        periodSeconds: 10
+        failureThreshold: 30
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.path
+          value: /api/health
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 30
