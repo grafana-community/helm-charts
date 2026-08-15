@@ -1,0 +1,20 @@
+{{- if .Values.liveStore.enabled }}
+{{- if and (gt (int .Values.liveStore.replicas) 1) .Values.liveStore.podDisruptionBudget.enabled }}
+{{ $dict := dict "ctx" . "component" "live-store" "memberlist" true }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "tempo.resourceName" $dict }}
+  labels:
+    {{- include "tempo.labels" $dict | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "tempo.selectorLabels" $dict | nindent 6 }}
+  maxUnavailable: {{ .Values.liveStore.maxUnavailable }}
+  {{- with .Values.liveStore.podDisruptionBudget.unhealthyPodEvictionPolicy }}
+  unhealthyPodEvictionPolicy: {{ . }}
+  {{- end }}
+{{- end }}
+{{- end }}
