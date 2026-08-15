@@ -80,3 +80,16 @@ app.kubernetes.io/version: {{ mustRegexReplaceAllLiteral "@sha.*" .Values.image.
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
+{{/*
+Return the appropriate apiVersion for Gateway API resources.
+*/}}
+{{- define "tempo.gatewayApi.apiVersion" -}}
+{{- if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" }}
+{{- print "gateway.networking.k8s.io/v1" }}
+{{- else if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1beta1" }}
+{{- print "gateway.networking.k8s.io/v1beta1" }}
+{{- else }}
+{{- print "gateway.networking.k8s.io/v1" }}
+{{- end }}
+{{- end -}}
+
