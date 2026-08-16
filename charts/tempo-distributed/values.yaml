@@ -1013,6 +1013,14 @@ blockBuilder:
   statefulStrategy:
     rollingUpdate:
       partition: 0
+  # -- Pod Disruption Budget configuration
+  podDisruptionBudget:
+    # -- Enable PodDisruptionBudget for block-builder
+    enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the block-builder PodDisruptionBudget. Requires policy/v1.
+    unhealthyPodEvictionPolicy: ""
+  # -- Pod Disruption Budget maxUnavailable
+  maxUnavailable: 1
   service:
     # -- Annotations for block-builder service
     annotations: {}
@@ -1102,6 +1110,14 @@ liveStore:
   statefulStrategy:
     rollingUpdate:
       partition: 0
+  # -- Pod Disruption Budget configuration
+  podDisruptionBudget:
+    # -- Enable PodDisruptionBudget for live-store
+    enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the live-store PodDisruptionBudget. Requires policy/v1.
+    unhealthyPodEvictionPolicy: ""
+  # -- Pod Disruption Budget maxUnavailable
+  maxUnavailable: 1
   service:
     # -- Annotations for live-store service
     annotations: {}
