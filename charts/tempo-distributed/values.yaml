@@ -363,7 +363,7 @@ metricsGenerator:
   service:
     # -- Annotations for Metrics Generator service
     annotations: {}
-    # -- Traffic distribution for the Metrics Generator service (e.g. PreferClose). Overrides tempo.service.trafficDistribution.
+    # -- Traffic distribution for the Metrics Generator service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
     trafficDistribution: null
   serviceDiscovery:
     # -- Annotations for Metrics Generator discovery service
@@ -423,7 +423,7 @@ distributor:
     externalTrafficPolicy: null
     # -- https://kubernetes.io/docs/concepts/services-networking/service-traffic-policy/
     internalTrafficPolicy: Cluster
-    # -- Traffic distribution for the distributor service (e.g. PreferClose). Overrides tempo.service.trafficDistribution.
+    # -- Traffic distribution for the distributor service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
     trafficDistribution: null
   serviceDiscovery:
     # -- Annotations for distributorDiscovery service
@@ -1262,7 +1262,7 @@ querier:
   service:
     # -- Annotations for querier service
     annotations: {}
-    # -- Traffic distribution for the querier service (e.g. PreferClose). Overrides tempo.service.trafficDistribution.
+    # -- Traffic distribution for the querier service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
     trafficDistribution: null
   # -- Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.
   appProtocol:
@@ -1382,7 +1382,7 @@ queryFrontend:
     labels: {}
     # -- Type of service for the queryFrontend
     type: ClusterIP
-    # -- Traffic distribution for the queryFrontend service (e.g. PreferClose). Overrides tempo.service.trafficDistribution.
+    # -- Traffic distribution for the queryFrontend service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
     trafficDistribution: null
     # -- If type is LoadBalancer you can assign the IP to the LoadBalancer
     loadBalancerIP: ""
@@ -2797,7 +2797,7 @@ gateway:
     port: 80
     # -- Type of the gateway service
     type: ClusterIP
-    # -- Traffic distribution for the gateway service (e.g. PreferClose). Overrides tempo.service.trafficDistribution.
+    # -- Traffic distribution for the gateway service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
     trafficDistribution: null
     # -- ClusterIP of the gateway service
     clusterIP: null
