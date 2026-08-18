@@ -1,0 +1,101 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: service publishNotReadyAddresses
+templates:
+  - query-frontend/service.yaml
+  - ingester/service.yaml
+  - backend/query-scheduler-discovery.yaml
+  - config.yaml
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: defaults to true on non-headless query-frontend service
+    set:
+      deploymentMode: Distributed
+    asserts:
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        documentIndex: 0
+        template: query-frontend/service.yaml
+
+  - it: sets publishNotReadyAddresses on query-frontend service via component value
+    set:
+      deploymentMode: Distributed
+      queryFrontend.service.publishNotReadyAddresses: false
+    asserts:
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        documentIndex: 0
+        template: query-frontend/service.yaml
+
+  - it: sets publishNotReadyAddresses on query-frontend headless service via component value
+    set:
+      deploymentMode: Distributed
+      queryFrontend.service.publishNotReadyAddresses: false
+    asserts:
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        documentIndex: 1
+        template: query-frontend/service.yaml
+
+  - it: sets publishNotReadyAddresses on query-frontend service via defaults.service
+    set:
+      deploymentMode: Distributed
+      defaults.service.publishNotReadyAddresses: false
+    asserts:
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        documentIndex: 0
+        template: query-frontend/service.yaml
+
+  - it: component publishNotReadyAddresses overrides defaults.service.publishNotReadyAddresses
+    set:
+      deploymentMode: Distributed
+      defaults.service.publishNotReadyAddresses: false
+      queryFrontend.service.publishNotReadyAddresses: true
+    asserts:
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        documentIndex: 0
+        template: query-frontend/service.yaml
+
+  - it: keeps zone-aware ingester headless service publishNotReadyAddresses false regardless of defaults.service
+    set:
+      deploymentMode: Distributed
+      read.replicas: 0
+      write.replicas: 0
+      backend.replicas: 0
+      ingester.replicas: 3
+      ingester.zoneAwareReplication.enabled: true
+      defaults.service.publishNotReadyAddresses: true
+    asserts:
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        documentIndex: 2
+        template: ingester/service.yaml
+
+  - it: defaults to true on the query-scheduler-discovery service
+    set:
+      deploymentMode: SimpleScalable
+      read.legacyReadTarget: false
+    asserts:
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        template: backend/query-scheduler-discovery.yaml
+
+  - it: sets publishNotReadyAddresses on the query-scheduler-discovery service via backend.service value
+    set:
+      deploymentMode: SimpleScalable
+      read.legacyReadTarget: false
+      backend.service.publishNotReadyAddresses: false
+    asserts:
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: false
+        template: backend/query-scheduler-discovery.yaml

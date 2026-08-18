@@ -20,7 +20,8 @@ metadata:
 spec:
   type: ClusterIP
   clusterIP: None
-  publishNotReadyAddresses: true
+  {{- $publishNotReadyAddressesDefault := kindIs "bool" .Values.defaults.service.publishNotReadyAddresses | ternary .Values.defaults.service.publishNotReadyAddresses true }}
+  publishNotReadyAddresses: {{ kindIs "bool" .Values.backend.service.publishNotReadyAddresses | ternary .Values.backend.service.publishNotReadyAddresses $publishNotReadyAddressesDefault }}
   ports:
     - name: http-metrics
       port: {{ .Values.loki.server.http_listen_port }}
