@@ -133,6 +133,10 @@ tempo:
     #   - 'IPv6'
     # -- Configure the IP family policy for all tempo services.  SingleStack, PreferDualStack or RequireDualStack
     ipFamilyPolicy: 'SingleStack'
+    # -- Default traffic distribution for all non-headless tempo services (PreferSameZone or PreferSameNode).
+    # See https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution.
+    # Can be overridden per component via <component>.service.trafficDistribution.
+    trafficDistribution: null
 
 # -- Default values applied to every pod in this chart.
 # These values are overridden by component-specific settings.
@@ -359,6 +363,8 @@ metricsGenerator:
   service:
     # -- Annotations for Metrics Generator service
     annotations: {}
+    # -- Traffic distribution for the Metrics Generator service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
+    trafficDistribution: null
   serviceDiscovery:
     # -- Annotations for Metrics Generator discovery service
     annotations: {}
@@ -417,6 +423,8 @@ distributor:
     externalTrafficPolicy: null
     # -- https://kubernetes.io/docs/concepts/services-networking/service-traffic-policy/
     internalTrafficPolicy: Cluster
+    # -- Traffic distribution for the distributor service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
+    trafficDistribution: null
   serviceDiscovery:
     # -- Annotations for distributorDiscovery service
     annotations: {}
@@ -1254,6 +1262,8 @@ querier:
   service:
     # -- Annotations for querier service
     annotations: {}
+    # -- Traffic distribution for the querier service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
+    trafficDistribution: null
   # -- Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.
   appProtocol:
     # -- Set the optional gRPC service protocol. Ex: "grpc", "http2" or "https"
@@ -1372,6 +1382,8 @@ queryFrontend:
     labels: {}
     # -- Type of service for the queryFrontend
     type: ClusterIP
+    # -- Traffic distribution for the queryFrontend service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
+    trafficDistribution: null
     # -- If type is LoadBalancer you can assign the IP to the LoadBalancer
     loadBalancerIP: ""
     # -- If type is LoadBalancer limit incoming traffic from IPs.
@@ -2785,6 +2797,8 @@ gateway:
     port: 80
     # -- Type of the gateway service
     type: ClusterIP
+    # -- Traffic distribution for the gateway service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
+    trafficDistribution: null
     # -- ClusterIP of the gateway service
     clusterIP: null
     # -- Node port if service type is NodePort
