@@ -95,7 +95,6 @@ tests:
       read.legacyReadTarget: false
       backend.service.publishNotReadyAddresses: false
     asserts:
-      - equal:
+      - notExists:
           path: spec.publishNotReadyAddresses
-          value: false
         template: backend/query-scheduler-discovery.yaml
