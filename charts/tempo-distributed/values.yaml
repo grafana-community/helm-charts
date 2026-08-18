@@ -1335,9 +1335,9 @@ queryFrontend:
       # 0 disables this limit.
       max_duration: 3h
       # -- query_backend_after controls where the query-frontend searches for traces.
+      # Time ranges newer than query_backend_after will be searched in the live-stores only.
       # Time ranges older than query_backend_after will be searched in the backend/object storage only.
-      # Time ranges between query_backend_after and now will be queried from the metrics-generators.
-      query_backend_after: 30m
+      query_backend_after: 15m
       # -- The target length of time for each job to handle when querying the backend.
       interval: 5m
       # -- If set to a non-zero value, it's value will be used to decide if query is within SLO or not.
