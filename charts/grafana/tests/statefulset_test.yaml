@@ -34,3 +34,17 @@ tests:
           value:
             whenDeleted: Delete
             whenScaled: Delete
+  - it: should set replicas by default
+    asserts:
+      - template: statefulset.yaml
+        equal:
+          path: spec.replicas
+          value: 1
+  - it: should omit replicas when autoscaling is enabled
+    set:
+      autoscaling:
+        enabled: true
+    asserts:
+      - template: statefulset.yaml
+        notExists:
+          path: spec.replicas
