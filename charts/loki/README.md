@@ -89,6 +89,7 @@ Note: `lookbackPeriod` and `threshold` are not carried forward as they did not g
 
 | Old value | Replacement |
 |---|---|
+| `ingester.updateStrategy` | `ingester.strategy` |
 | `clusterLabelOverride` | `monitoring.appInstanceLabelName` and `monitoring.appInstanceLabelValue` |
 | `monitoring.serviceMonitor.clusterLabel` | `monitoring.appInstanceLabelName` and `monitoring.appInstanceLabelValue` |
 | `monitoring.dashboards.namespace` | `monitoring.namespace` (applies to all monitoring resources) |
@@ -127,9 +128,7 @@ New dashboard configuration options:
 The built-in MinIO subchart is now **officially deprecated**. Enabling `minio.enabled=true` now fails chart rendering by default.
 
 Actions required:
-1. Configure a dedicated external object storage backend instead of the built-in MinIO dependency
-   (for example: AWS S3, GCS, or Azure Blob). Potential self-hosted S3-compatible options include
-   RustFS and Garage; validate production suitability for your environment before adoption.
+1. Configure a dedicated external object storage backend instead of the built-in MinIO dependency (for example: AWS S3, GCS, or Azure Blob). Potential self-hosted S3-compatible options include RustFS and Garage; validate production suitability for your environment before adoption.
 2. Deploy a transition release that keeps old MinIO data readable but writes new data to the external store.
 3. Keep both stores configured until old data in MinIO has aged out according to retention.
 4. Remove the MinIO-related config only after retention has fully elapsed.
@@ -376,7 +375,7 @@ After:
 
 ### From 11.x to 12.0.0 ([#258](https://github.com/grafana-community/helm-charts/pull/258))
 
-The `deploymentMode` default value has been changed to `Monolithic`. `SingleBinary` has been renamed to `Monolithic`. 
+The `deploymentMode` default value has been changed to `Monolithic`. `SingleBinary` has been renamed to `Monolithic`.
 The old naming `SingleBinary` is still supported. `SimpleScalable` is still supported but will be removed in Loki 4.0.0.
 
 Actions required:

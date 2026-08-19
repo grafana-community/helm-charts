@@ -1,0 +1,76 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: block-builder PodDisruptionBudget
+templates:
+  - block-builder/poddisruptionbudget-block-builder.yaml
+
+tests:
+  - it: renders a PodDisruptionBudget with correct name and kind by default
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: kind
+          value: PodDisruptionBudget
+      - equal:
+          path: apiVersion
+          value: policy/v1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-block-builder
+
+  - it: does not render when the block-builder is disabled
+    set:
+      blockBuilder.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when the PodDisruptionBudget is disabled
+    set:
+      blockBuilder.podDisruptionBudget.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render with a single replica
+    set:
+      blockBuilder.replicas: 1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: selects the block-builder pods
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/component"]
+          value: block-builder
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
+
+  - it: is labelled as part of the memberlist
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/part-of"]
+          value: memberlist
+
+  - it: uses blockBuilder.maxUnavailable
+    set:
+      blockBuilder.maxUnavailable: 2
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 2
+
+  - it: omits unhealthyPodEvictionPolicy by default
+    asserts:
+      - notExists:
+          path: spec.unhealthyPodEvictionPolicy
+
+  - it: renders unhealthyPodEvictionPolicy when set
+    set:
+      blockBuilder.podDisruptionBudget.unhealthyPodEvictionPolicy: AlwaysAllow
+    asserts:
+      - equal:
+          path: spec.unhealthyPodEvictionPolicy
+          value: AlwaysAllow
