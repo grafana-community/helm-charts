@@ -198,11 +198,7 @@ defaults:
       # -- Secret key references for TriggerAuthentication
       secretTargetRef: []
   statefulSetRecreateJob:
-    # -- When a component sets `*.statefulSetRecreateJob.enabled`, the pre-upgrade Job can patch PVC
-    # storage requests before deleting the StatefulSet with --cascade=orphan. The Job also recreates
-    # the StatefulSet when podManagementPolicy, serviceName, or volumeClaimTemplates count/name/size
-    # change. It does not migrate storageClass, accessModes, selectors, or VCT labels.
-    # See the chart README section "StatefulSet immutability".
+    # -- When a component sets `*.statefulSetRecreateJob.enabled`, the pre-upgrade Job can patch PVC storage requests and recreate the StatefulSet for podManagementPolicy, serviceName, or volumeClaimTemplates count/name/size changes. It does not migrate storageClass, accessModes, selectors, or VCT labels. See README "StatefulSet immutability".
     patchPVC: true
     image:
       registry: registry.k8s.io
