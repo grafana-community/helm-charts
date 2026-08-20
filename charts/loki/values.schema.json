@@ -3176,7 +3176,7 @@
                             }
                         },
                         "patchPVC": {
-                            "description": "When a component sets `*.statefulSetRecreateJob.enabled`, the pre-upgrade Job can patch PVC storage requests and recreate the StatefulSet for podManagementPolicy, serviceName, or volumeClaimTemplates count/name/size changes. It does not migrate storageClass, accessModes, selectors, or VCT labels. See README "StatefulSet immutability".",
+                            "description": "When a component sets `*.statefulSetRecreateJob.enabled`, the pre-upgrade Job can patch PVC storage requests and recreate the StatefulSet for podManagementPolicy, serviceName, or volumeClaimTemplates count/name/size changes. It does not migrate storageClass, accessModes, selectors, or VCT labels. See the chart README section StatefulSet immutability.",
                             "type": "boolean"
                         }
                     }
