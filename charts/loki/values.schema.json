@@ -6454,6 +6454,10 @@
                             "description": "Memcached Docker image pull policy",
                             "type": "string"
                         },
+                        "registry": {
+                            "description": "Memcached Docker image registry",
+                            "type": "string"
+                        },
                         "repository": {
                             "description": "Memcached Docker image repository",
                             "type": "string"
@@ -6559,12 +6563,19 @@
                     "type": "object",
                     "properties": {
                         "pullPolicy": {
+                            "description": "Memcached exporter Docker image pull policy",
+                            "type": "string"
+                        },
+                        "registry": {
+                            "description": "Memcached exporter Docker image registry",
                             "type": "string"
                         },
                         "repository": {
+                            "description": "Memcached exporter Docker image repository",
                             "type": "string"
                         },
                         "tag": {
+                            "description": "Memcached exporter Docker image tag",
                             "type": "string"
                         }
                     }
