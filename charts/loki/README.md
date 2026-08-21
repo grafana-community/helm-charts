@@ -53,16 +53,7 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## StatefulSet immutability
 
-Kubernetes forbids in-place updates to most StatefulSet spec fields. A Helm upgrade (or GitOps reconcile) that changes one of those fields fails with:
-
-```text
-StatefulSet.apps "..." is invalid: spec: Forbidden: updates to statefulset spec for fields other than
-'replicas', 'ordinals', 'template', 'updateStrategy', 'persistentVolumeClaimRetentionPolicy' and 'minReadySeconds' are forbidden
-```
-
-This is a Kubernetes API constraint, not a Flux-specific bug. Under Flux `HelmRelease`, Argo CD, or any controller that retries, the same forbidden patch fails on every reconcile.
-
-Treat storage class, PVC size, access modes, volume-claim identity, `podManagementPolicy`, and the generated pod selector / headless `serviceName` as **install-time** decisions unless you follow a documented recreate or migration path.
+Most StatefulSet spec fields are immutable. Storage class, PVC size, access modes, `podManagementPolicy`, selector, and `serviceName` are install-time unless the recreate job below covers the change.
 
 ### Which workloads render StatefulSets
 
@@ -73,71 +64,32 @@ Treat storage class, PVC size, access modes, volume-claim identity, `podManageme
 | Distributed | `ingester`, `indexGateway`, `compactor`, `ruler`, plus `patternIngester` / bloom components when enabled and `kind=StatefulSet` |
 | Caches | `resultsCache` / `chunksCache` memcached StatefulSets when those caches are enabled |
 
-Loki component StatefulSets are rendered from `templates/_workload.tpl`. Memcached caches use `templates/memcached/_memcached-statefulset.tpl`.
-
 ### Values that map to immutable StatefulSet fields
 
-Paths below are per component (`singleBinary.*`, `write.*`, `backend.*`, `ingester.*`, and so on) unless noted.
+Paths are per component (`singleBinary.*`, `write.*`, `backend.*`, `ingester.*`, and so on) unless noted.
 
-| Values | STS field | Live-patchable? | Recreate job covers it? |
-| --- | --- | --- | --- |
-| `*.persistence.storageClass`, `*.persistence.claims[].storageClass`, zone storageClass overrides | `volumeClaimTemplates[].spec.storageClassName` | No | No |
-| `*.persistence.size`, `*.persistence.claims[].size`, cache `persistence.storageSize` | `volumeClaimTemplates[].spec.resources.requests.storage` | No | Yes, if `*.statefulSetRecreateJob.enabled` (Loki components only). Also patches PVCs when `defaults.statefulSetRecreateJob.patchPVC` is true |
-| `*.persistence.accessModes`, `claims[].accessModes` | `volumeClaimTemplates[].spec.accessModes` | No | No |
-| `*.persistence.selector` | `volumeClaimTemplates[].spec.selector` | No | No |
-| `*.persistence.volumeAttributesClassName` and claims equivalent | `volumeClaimTemplates[].spec.volumeAttributesClassName` | No | No |
-| `*.persistence.labels`, `claims[].labels`, claim `name` | VCT metadata identity | No | Count/name/size mismatch only; labels and annotations are not compared |
-| `*.persistence.annotations`, `claims[].annotations` | VCT annotations | Treat as no | No |
-| `*.podManagementPolicy` | `spec.podManagementPolicy` | No | Yes, if the recreate job is enabled |
-| `nameOverride`, `fullnameOverride`, `*.fullnameOverride`, Helm release name | `spec.selector` and `spec.serviceName` | No | `serviceName` only; selector changes are not handled |
-| Chart-generated selector (`app.kubernetes.io/name`, `app.kubernetes.io/instance`, `app.kubernetes.io/component`, plus zone labels on zone-aware ingesters) | `spec.selector` | No | No |
+| Values | Recreate job covers it? |
+| --- | --- |
+| `*.persistence.storageClass`, `*.persistence.claims[].storageClass`, zone storageClass overrides | No |
+| `*.persistence.size`, `*.persistence.claims[].size`, cache `persistence.storageSize` | Yes, if `*.statefulSetRecreateJob.enabled` (Loki components only). Also patches PVCs when `defaults.statefulSetRecreateJob.patchPVC` is true |
+| `*.persistence.accessModes`, `claims[].accessModes` | No |
+| `*.persistence.selector` | No |
+| `*.persistence.volumeAttributesClassName` and claims equivalent | No |
+| `*.persistence.labels`, `claims[].labels`, claim `name` | Count/name/size mismatch only |
+| `*.persistence.annotations`, `claims[].annotations` | No |
+| `*.podManagementPolicy` | Yes, if the recreate job is enabled |
+| `nameOverride`, `fullnameOverride`, `*.fullnameOverride`, Helm release name | `serviceName` only |
+| Chart-generated selector labels | No |
 
-Some simple-scalable / monolithic components define `*.selectorLabels` in `values.yaml`. Those keys are **not rendered** into `spec.selector` today. Do not use them to change pod selectors.
-
-### Day-2 changes that are safe
-
-Prefer values that only affect `spec.template` or the Kubernetes-allowed StatefulSet fields:
-
-- Image, resources, env, probes, affinity, and extra volumes that are **not** VCT-backed
-- Config via ConfigMap/Secret (the pod template changes)
-- `replicas` (unless omitted for HPA/KEDA), `strategy` / `updateStrategy`, and `persistence.whenDeleted` / `whenScaled` when auto-delete PVC is enabled
-
-Switching `*.kind` between `StatefulSet` and `Deployment` replaces the workload object; it is not an in-place StatefulSet patch.
+`*.selectorLabels` in `values.yaml` is **not rendered** into `spec.selector`.
 
 ### Recreate job (experimental)
 
-Each Loki component StatefulSet can set `*.statefulSetRecreateJob.enabled=true`. On `helm upgrade`, a pre-upgrade Job:
+Set `*.statefulSetRecreateJob.enabled=true` on a Loki component. On `helm upgrade`, a pre-upgrade Job deletes the StatefulSet with `--cascade=orphan` when `podManagementPolicy`, `serviceName`, volume-claim count, claim name, or claim **size** differs, and optionally expands PVCs when `defaults.statefulSetRecreateJob.patchPVC` is true.
 
-1. Uses cluster `lookup` to compare the live StatefulSet with the newly rendered spec.
-2. Deletes the StatefulSet with `kubectl delete statefulset --cascade=orphan` when `podManagementPolicy`, `serviceName`, volume-claim count, claim name, or claim **size** differs.
-3. Optionally patches existing PVC storage requests when `defaults.statefulSetRecreateJob.patchPVC` is true (size increases only; the StorageClass must allow volume expansion).
+It does not migrate `storageClass`, `accessModes`, VCT selectors, VCT labels/annotations, or `volumeAttributesClassName`. Memcached cache StatefulSets do not have this Job. `lookup` needs a live cluster; `helm template` / dry-run will not emit it.
 
-The job does **not** migrate `storageClass`, `accessModes`, VCT selectors, VCT labels/annotations, or `volumeAttributesClassName`.
-
-`lookup` requires a live cluster during `helm upgrade`. `helm template` and dry-run without cluster access will not emit the Job. Flux helm-controller upgrades do talk to the cluster, so the Job can run there; still treat this path as disruptive (orphan delete + recreate).
-
-Memcached cache StatefulSets do not have this Job.
-
-### Migrating volumeClaimTemplates without the recreate job
-
-When you must change an immutable VCT field the recreate job does not cover:
-
-1. Confirm object-storage / backup / WAL retention is sound for that component (filesystem monolithic vs object-storage backends).
-2. Pause writes or scale down if the component cannot lose in-flight data.
-3. Delete the StatefulSet with `--cascade=orphan` so existing PVCs are retained when intended (`persistence.whenDeleted` / `enableStatefulSetAutoDeletePVC` must not delete them).
-4. Recreate the StatefulSet with the new VCT fields and re-attach or migrate data.
-5. Resume traffic.
-
-PVC size increases on a StorageClass that supports expansion can use the recreate job instead of this manual sequence.
-
-### GitOps / server-side apply
-
-- Immutable StatefulSet drift fails **every** reconcile, not only a one-shot `helm upgrade`. Suspend the `HelmRelease` / Application until you migrate; do not leave retry spam firing alerts.
-- Do not oscillate values that rewrite VCT specs (for example `storageClass: null` vs an explicit class across environments).
-- This chart emits `apiVersion: v1` and `kind: PersistentVolumeClaim` on each VCT. Older live objects that lack those fields can fail server-side apply even when values did not change.
-- Chart upgrades that change default VCT fields (access modes, labels, default size) can block upgrades for existing releases. Pin the previous values until you migrate.
-
-Related historical Loki chart regressions (grafana/loki): [#9524](https://github.com/grafana/loki/issues/9524) (`podManagementPolicy`), [#19065](https://github.com/grafana/loki/issues/19065) (persistence/`accessModes`), [#12854](https://github.com/grafana/loki/issues/12854) / [#21675](https://github.com/grafana/loki/issues/21675) (PVC size / recreate job). Original request: [grafana/loki#23912](https://github.com/grafana/loki/issues/23912).
+This chart emits `apiVersion: v1` and `kind: PersistentVolumeClaim` on each VCT. Older live objects that lack those fields can fail server-side apply even when values did not change.
 
 ---
 
