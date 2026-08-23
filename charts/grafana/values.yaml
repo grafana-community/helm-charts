@@ -111,7 +111,7 @@ image:
   # -- Docker image repository
   repository: grafana/grafana
   # Overrides the Grafana image tag whose default is the chart appVersion
-  tag: ""
+  tag: "{{ .Chart.AppVersion }}-distroless"
   sha: ""
   pullPolicy: IfNotPresent
 
@@ -170,6 +170,7 @@ containerSecurityContext:
     - ALL
   seccompProfile:
     type: RuntimeDefault
+  readOnlyRootFilesystem: true
 
 # Enable creating the grafana configmap
 createConfigmap: true
