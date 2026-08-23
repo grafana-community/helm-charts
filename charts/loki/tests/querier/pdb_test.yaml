@@ -63,3 +63,13 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: should not render PDB when querier.enabled is false
+    set:
+      querier.replicas: 3
+      querier.enabled: false
+      querier.autoscaling.enabled: false
+      querier.kedaAutoscaling.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
