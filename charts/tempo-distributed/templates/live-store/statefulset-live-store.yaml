@@ -5,6 +5,7 @@
 {{- range $zoneName, $rolloutZone := $zonesMap -}}
 {{- with $ -}}
 {{- $dict := dict "ctx" . "component" "live-store" "memberlist" true "rolloutZoneName" $zoneName -}}
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -20,9 +21,6 @@ metadata:
     grafana.com/no-downscale: "true"
     {{- else if $prepareDownscale.enabled }}
     grafana.com/prepare-downscale: "true"
-    {{- with $prepareDownscale.minTimeBetweenZonesDownscale }}
-    grafana.com/min-time-between-zones-downscale: {{ . | quote }}
-    {{- end }}
     {{- end }}
     {{- end }}
   {{- $annotations := mergeOverwrite (deepCopy (.Values.liveStore.annotations | default dict)) ($rolloutZone.annotations | default dict) }}
@@ -32,7 +30,10 @@ metadata:
   {{- end }}
   {{- if and $prepareDownscale.enabled (not $zoneAware.noDownscale) }}
   {{- $_ := set $annotations "grafana.com/prepare-downscale-http-path" $prepareDownscale.httpPath }}
-  {{- $_ := set $annotations "grafana.com/prepare-downscale-http-port" "3200" }}
+  {{- $_ := set $annotations "grafana.com/prepare-downscale-http-port" (.Values.server.httpListenPort | toString) }}
+  {{- with $prepareDownscale.minTimeBetweenZonesDownscale }}
+  {{- $_ := set $annotations "grafana.com/min-time-between-zones-downscale" (. | toString) }}
+  {{- end }}
   {{- end }}
   {{- end }}
   {{- with $annotations }}
@@ -63,7 +64,6 @@ spec:
     {{- $podArgs = list (printf "-live-store.instance-availability-zone=%s" $zoneName) }}
     {{- end }}
     {{- include "tempo.podTemplate" (dict "ctx" $ "component" .Values.liveStore "target" "live-store" "rolloutZoneName" $zoneName "rolloutZone" $rolloutZone "args" $podArgs) | nindent 4 }}
----
 {{ end }}
 {{- end }}
 {{- end }}

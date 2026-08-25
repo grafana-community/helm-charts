@@ -14,6 +14,7 @@ Params:
   ctx = root context ($)
 */}}
 {{- define "live-store.zoneAwareReplicationMap" -}}
+{{- $ctx := .ctx -}}
 {{- $zonesMap := dict -}}
 {{- $liveStore := .ctx.Values.liveStore -}}
 {{- $zoneAware := $liveStore.zoneAwareReplication | default dict -}}
@@ -34,7 +35,7 @@ Params:
 {{- fail "liveStore.zoneAwareReplication.zones must have unique names." -}}
 {{- end -}}
 {{- range $zone := $zones -}}
-{{- $antiAffinity := include "live-store.zoneAntiAffinity" (dict "rolloutZoneName" $zone.name "topologyKey" $zoneAware.topologyKey) | fromYaml -}}
+{{- $antiAffinity := include "live-store.zoneAntiAffinity" (dict "ctx" $ctx "rolloutZoneName" $zone.name "topologyKey" $zoneAware.topologyKey) | fromYaml -}}
 {{- $affinity := mergeOverwrite (deepCopy ($zone.extraAffinity | default dict)) $antiAffinity -}}
 {{- $_ := set $zonesMap $zone.name (dict
       "affinity" $affinity
@@ -52,10 +53,12 @@ Params:
 
 {{/*
 Anti-affinity that keeps the live-stores of one zone away from the nodes, racks
-or availability zones that already run another zone. Renders an empty dict when
-no topologyKey is set.
+or availability zones that already run another zone. The selector is scoped to
+this release, so two tempo releases in one namespace do not push each other
+apart. Renders an empty dict when no topologyKey is set.
 
 Params:
+  ctx             = root context ($)
   rolloutZoneName = name of the rollout zone
   topologyKey     = topology key of the failure domain
 */}}
@@ -65,6 +68,14 @@ podAntiAffinity:
   requiredDuringSchedulingIgnoredDuringExecution:
     - labelSelector:
         matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+              - {{ include "tempo.name" .ctx }}
+          - key: app.kubernetes.io/instance
+            operator: In
+            values:
+              - {{ .ctx.Release.Name }}
           - key: rollout-group
             operator: In
             values:

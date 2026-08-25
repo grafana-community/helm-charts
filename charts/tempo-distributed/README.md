@@ -492,14 +492,22 @@ Notes:
   zone, not the total. Adding a zone multiplies the live-store count and the
   Kafka read traffic.
 - At least 2 zones are required.
-- `topologyKey` adds an anti-affinity rule that keeps the live-stores of one
-  zone off the domains that run another zone. Leave it unset to let the
-  scheduler place the pods freely.
+- `topologyKey` adds a required anti-affinity rule that keeps the live-stores of
+  one zone off the domains that run another zone. The cluster must hold at least
+  as many domains as there are zones, otherwise the extra zones stay
+  unschedulable. `kubernetes.io/hostname` is the conservative choice, and
+  `topology.kubernetes.io/zone` needs one availability zone per zone. Leave it
+  unset when a `nodeSelector` on every zone already pins the zones.
 - `liveStore.topologySpreadConstraints` is ignored while zone-awareness is on,
   because the zones already define the spread.
 - Set `zoneAwareReplication.rolloutOperatorManagedExternally: true` when a
   rollout-operator already runs in the namespace and this chart must not
   install one.
+- With no `topologyKey` and no per-zone `nodeSelector`, the zones still give
+  separate pods, separate consumer groups and one partition owner each, but the
+  scheduler can place two zones in one failure domain. Nothing then protects the
+  partition from the loss of that domain.
+
 #### Turning zone-awareness on
 
 The switch replaces the flat StatefulSet with the per-zone ones, so every
@@ -510,10 +518,11 @@ rebuild its query state. Plan the switch like a full live-store restart.
 
 #### Scaling down
 
-A live-store count must keep matching the Kafka partition count, and a partition
-that loses its last owner loses its recent-read tier. Two opt-in settings guard
-the scale-down. Both need the rollout-operator admission webhooks, which the
-subchart enables by default.
+A live-store count must keep matching the Kafka partition count, so a lower
+`liveStore.replicas` retires the last Kafka partitions, and a partition that
+loses its last owner loses its recent-read tier. Two opt-in settings guard that
+change. Both need the rollout-operator admission webhooks, which the subchart
+enables by default.
 
 `noDownscale` rejects every scale-down of the live-stores:
 
@@ -525,7 +534,7 @@ liveStore:
 
 `prepareDownscale` coordinates the scale-down instead. On a scale-down the
 webhook calls `live-store/prepare-partition-downscale` on every live-store that
-goes away, which moves its partition to INACTIVE before the pod stops. The
+goes away, which moves its partition to INACTIVE and stops the writes to it. The
 webhook then rejects the scale-down of a second zone until
 `minTimeBetweenZonesDownscale` has passed, so the zones go down one at a time:
 
@@ -539,6 +548,27 @@ liveStore:
 
 A rejected scale-down fails the `helm upgrade`, and the zones that were already
 accepted stay scaled down. Wait for the window, then run the upgrade again.
+
+The pod stops as soon as its partition is INACTIVE. The zones that are still up
+own that partition too and hold the same recent traces, so the read path stays
+whole until the last zone goes down. The last zone is the one that takes the
+last owner away, which is why `minTimeBetweenZonesDownscale` must be longer than
+the period a live-store still serves recent traces. Writes to the partition stop
+at the first zone, so the window starts there.
+
+Two limits follow from the same design:
+
+- Remove a zone from the `zones` list and Helm deletes its StatefulSet. A
+  deletion is not a scale-down, so the webhook never sees it and no partition
+  goes INACTIVE. This is safe, because every remaining zone still owns every
+  partition, but do not combine it with a lower `liveStore.replicas` in one
+  step.
+- The chart does not configure the delayed-downscale mechanism of the
+  rollout-operator, which needs a `ReplicaTemplate` resource and the
+  mirror-replicas annotations. That mechanism is what lets the Tempo jsonnet
+  point the webhook at `live-store/prepare-downscale`, the endpoint that also
+  keeps the pod from re-creating its partition on start. Here the zone stagger
+  does that job instead.
 
 The webhook reaches the live-stores through the pod DNS names of the headless
 service, and it builds them with its own cluster domain, which defaults to

@@ -267,8 +267,10 @@ tests:
           path: metadata.labels["grafana.com/prepare-downscale"]
           value: "true"
       - equal:
-          path: metadata.labels["grafana.com/min-time-between-zones-downscale"]
+          path: metadata.annotations["grafana.com/min-time-between-zones-downscale"]
           value: 12h
+      - notExists:
+          path: metadata.labels["grafana.com/min-time-between-zones-downscale"]
       - equal:
           path: metadata.annotations["grafana.com/prepare-downscale-http-path"]
           value: live-store/prepare-partition-downscale
@@ -290,7 +292,7 @@ tests:
           path: metadata.annotations["grafana.com/prepare-downscale-http-path"]
           value: live-store/prepare-downscale
       - equal:
-          path: metadata.labels["grafana.com/min-time-between-zones-downscale"]
+          path: metadata.annotations["grafana.com/min-time-between-zones-downscale"]
           value: 30m
 
   - it: rejects every scale-down when noDownscale is set
@@ -306,3 +308,54 @@ tests:
           value: "true"
       - notExists:
           path: metadata.labels["grafana.com/prepare-downscale"]
+
+  - it: scopes the zone anti-affinity to this release
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.topologyKey: kubernetes.io/hostname
+    documentIndex: 0
+    asserts:
+      - contains:
+          path: spec.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions
+          content:
+            key: app.kubernetes.io/instance
+            operator: In
+            values:
+              - RELEASE-NAME
+      - contains:
+          path: spec.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions
+          content:
+            key: app.kubernetes.io/name
+            operator: In
+            values:
+              - tempo
+
+  - it: takes the downscale port from the configured HTTP listen port
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+      server.httpListenPort: 3100
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-port"]
+          value: "3100"
+
+  - it: emits one name label per pod with the legacy enterprise labels
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      enterprise.legacyLabels: true
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels.name
+          value: live-store-zone-a
+      - equal:
+          path: spec.template.metadata.labels.target
+          value: live-store

@@ -56,9 +56,7 @@ metadata:
     {{- end }}
     {{- if .Values.enterprise.legacyLabels }}
     app: {{ include "tempo.name" . }}-{{ $target }}
-    {{- if $rolloutZoneName }}
-    name: {{ $target }}-{{ $rolloutZoneName }}
-    {{- else }}
+    {{- if not $rolloutZoneName }}
     name: {{ $target }}
     {{- end }}
     gossip_ring_member: "true"

@@ -1131,29 +1131,49 @@ liveStore:
     # not installed by this chart. Skips the `rollout_operator.enabled` check.
     rolloutOperatorManagedExternally: false
     # -- Topology key of the failure domain. When set, the live-stores of one zone
-    # never share a domain with the live-stores of another zone.
+    # never share a domain with the live-stores of another zone. The cluster must
+    # hold at least as many domains as there are zones, otherwise the extra zones
+    # stay unschedulable. With neither this nor a `nodeSelector` on every zone,
+    # the zones still give separate pods and one partition owner each, but two
+    # zones can share a failure domain.
     topologyKey: null
     # -- Maximum number of live-stores the rollout-operator restarts at the same
     # time inside one zone. The rollout-operator always moves one zone at a time.
+    # A zone with fewer live-stores than this restarts as a whole, which the read
+    # quorum of 1 covers, at the cost of the read capacity of that zone.
     maxUnavailable: 25
     # -- Reject every scale-down of the live-stores. The live-store count must
     # match the Kafka partition count, so an accidental scale-down drops the
     # recent-read tier of the partitions that go away. Needs the rollout-operator
     # webhooks. Cannot be combined with `prepareDownscale.enabled`.
     noDownscale: false
-    # Coordinated scale-down through the rollout-operator admission webhook. On a
-    # scale-down the webhook calls `httpPath` on every live-store that goes away,
-    # which moves its partition to INACTIVE before the pod stops. The webhook
-    # rejects the scale-down of a second zone until
-    # `minTimeBetweenZonesDownscale` has passed, so the zones go down one at a
-    # time. A rejected scale-down fails the `helm upgrade`: wait for the window,
-    # then run the upgrade again.
+    # Coordinated scale-down through the rollout-operator admission webhook. It
+    # guards a lower `liveStore.replicas`, which retires the last Kafka
+    # partitions. On such a scale-down the webhook calls `httpPath` on every
+    # live-store that goes away, which moves its partition to INACTIVE and stops
+    # the writes to it. The webhook then rejects the scale-down of a second zone
+    # until `minTimeBetweenZonesDownscale` has passed, so the zones go down one
+    # at a time. A rejected scale-down fails the `helm upgrade`: wait for the
+    # window, then run the upgrade again.
+    #
+    # The webhook is the only mechanism the chart uses, so a pod stops as soon
+    # as its partition is INACTIVE. The remaining zones still own that partition
+    # and still hold its recent traces, which is what keeps the read path whole
+    # until the last zone goes down. Do not remove a zone from the `zones` list
+    # in the same step: that deletes the StatefulSet, which the webhook never
+    # sees.
     prepareDownscale:
       # -- Enable the coordinated scale-down
       enabled: false
-      # -- Minimum time between the scale-down of two zones
+      # -- Minimum time between the scale-down of two zones. Must be longer than
+      # the period a live-store still serves recent traces, because the last
+      # zone to go down takes the last owner of the retired partitions with it.
       minTimeBetweenZonesDownscale: 12h
-      # -- Endpoint the webhook calls on every live-store that goes away
+      # -- Endpoint the webhook calls on every live-store that goes away. Must
+      # accept a POST while the partition is still ACTIVE.
+      # `live-store/prepare-downscale` does not: it answers 409 until the
+      # partition is INACTIVE, so it needs the delayed-downscale mechanism of
+      # the rollout-operator, which this chart does not configure.
       httpPath: live-store/prepare-partition-downscale
     # -- Zones to deploy. At least 2 zones are required. Every zone runs
     # `liveStore.replicas` live-stores.
@@ -1161,7 +1181,8 @@ liveStore:
       - name: zone-a
         # -- Node selector for the live-stores of this zone
         nodeSelector: null
-        # -- Extra affinity merged into the zone anti-affinity
+        # -- Extra affinity for the live-stores of this zone. The zone
+        # anti-affinity of `topologyKey` overwrites a `podAntiAffinity` here.
         extraAffinity: {}
         # -- Extra annotations for the StatefulSet of this zone
         annotations: {}

@@ -125,3 +125,54 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: accepts a double-dash cluster domain arg
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      rollout_operator.enabled: true
+      rollout_operator.extraArgs:
+        - --cluster-domain=custom.local
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: accepts a space-separated cluster domain arg
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      rollout_operator.enabled: true
+      rollout_operator.extraArgs:
+        - -cluster-domain
+        - custom.local
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: leaves the cluster domain of an externally managed rollout-operator alone
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.rolloutOperatorManagedExternally: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: still rejects a cluster domain that reaches no rollout-operator arg
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      rollout_operator.enabled: true
+      rollout_operator.extraArgs:
+        - -cluster-domain=other.local
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: cluster-domain=custom.local
