@@ -80,3 +80,35 @@ app.kubernetes.io/version: {{ mustRegexReplaceAllLiteral "@sha.*" .Values.image.
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
+{{/*
+Ports of the tempo service, as a YAML list. Mirrors the protocol selection of
+templates/service.yaml, so a caller can check whether a port is reachable.
+*/}}
+{{- define "tempo.servicePorts" -}}
+{{- if (eq .Values.service.type "LoadBalancer") }}
+{{- $protocol := .Values.service.protocol | default "TCP" }}
+{{- if contains "UDP" $protocol }}
+{{- include "tempo.udp" . }}
+{{- end }}
+{{- if contains "TCP" $protocol }}
+{{- include "tempo.tcp" . }}
+{{- end }}
+{{- else }}
+{{- include "tempo.udp" . }}
+{{- include "tempo.tcp" . }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Return the appropriate apiVersion for Gateway API resources.
+*/}}
+{{- define "tempo.gatewayApi.apiVersion" -}}
+{{- if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" }}
+{{- print "gateway.networking.k8s.io/v1" }}
+{{- else if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1beta1" }}
+{{- print "gateway.networking.k8s.io/v1beta1" }}
+{{- else }}
+{{- print "gateway.networking.k8s.io/v1" }}
+{{- end }}
+{{- end -}}
+

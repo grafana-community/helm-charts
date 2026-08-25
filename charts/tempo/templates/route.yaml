@@ -1,0 +1,69 @@
+{{- $servicePorts := include "tempo.servicePorts" . | fromYamlArray }}
+{{- $exposedPorts := list }}
+{{- range $servicePorts }}
+{{- $exposedPorts = append $exposedPorts (.port | int) }}
+{{- end }}
+{{- range $name, $route := .Values.route }}
+{{- if $route.enabled }}
+{{- if not $route.httpsRedirect }}
+{{- $backendPort := $route.backendPort | default 3200 | int }}
+{{- if not (has $backendPort $exposedPorts) }}
+{{- fail (printf "route.%s.backendPort is %d, but the tempo service does not expose that port. Enable the matching receiver, or use one of: %v" $name $backendPort $exposedPorts) }}
+{{- end }}
+{{- end }}
+---
+apiVersion: {{ $route.apiVersion | default (include "tempo.gatewayApi.apiVersion" $) }}
+kind: {{ $route.kind | default "HTTPRoute" }}
+metadata:
+  name: {{ include "tempo.fullname" $ }}{{ if ne $name "main" }}-{{ $name }}{{ end }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "tempo.labels" $ | nindent 4 }}
+    {{- with $route.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $route.annotations }}
+  annotations:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $route.parentRefs }}
+  parentRefs:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $route.hostnames }}
+  hostnames:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- with $route.additionalRules }}
+    {{- tpl (toYaml .) $ | nindent 4 }}
+    {{- end }}
+    {{- if $route.httpsRedirect }}
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+    {{- else }}
+    - backendRefs:
+        - name: {{ include "tempo.fullname" $ }}
+          port: {{ $route.backendPort | default 3200 }}
+          group: ''
+          kind: Service
+          weight: 1
+      {{- with $route.filters }}
+      filters:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $route.matches }}
+      matches:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $route.timeouts }}
+      timeouts:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}
