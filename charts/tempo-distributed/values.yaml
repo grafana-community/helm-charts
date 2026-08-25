@@ -1176,13 +1176,16 @@ liveStore:
       # the rollout-operator, which this chart does not configure.
       httpPath: live-store/prepare-partition-downscale
     # -- Zones to deploy. At least 2 zones are required. Every zone runs
-    # `liveStore.replicas` live-stores.
+    # `liveStore.replicas` live-stores. A zone name must be a DNS label: it
+    # becomes a StatefulSet name suffix and the value of the zone label.
     zones:
       - name: zone-a
-        # -- Node selector for the live-stores of this zone
+        # -- Node selector for the live-stores of this zone. Merged on top of
+        # `liveStore.nodeSelector`, or of `defaults.nodeSelector`.
         nodeSelector: null
-        # -- Extra affinity for the live-stores of this zone. The zone
-        # anti-affinity of `topologyKey` overwrites a `podAntiAffinity` here.
+        # -- Extra affinity for the live-stores of this zone. Merged on top of
+        # `liveStore.affinity`. The zone anti-affinity of `topologyKey`
+        # overwrites a `podAntiAffinity` here.
         extraAffinity: {}
         # -- Extra annotations for the StatefulSet of this zone
         annotations: {}

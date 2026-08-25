@@ -499,7 +499,9 @@ Notes:
   `topology.kubernetes.io/zone` needs one availability zone per zone. Leave it
   unset when a `nodeSelector` on every zone already pins the zones.
 - `liveStore.topologySpreadConstraints` is ignored while zone-awareness is on,
-  because the zones already define the spread.
+  because the zones already define the spread. `liveStore.affinity` and the node
+  selector of the component are kept: a zone merges its own `extraAffinity` and
+  `nodeSelector` on top of them.
 - Set `zoneAwareReplication.rolloutOperatorManagedExternally: true` when a
   rollout-operator already runs in the namespace and this chart must not
   install one.

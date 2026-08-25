@@ -29,17 +29,29 @@ Params:
 {{- if not .name -}}
 {{- fail "every entry of liveStore.zoneAwareReplication.zones must set a name." -}}
 {{- end -}}
+{{- if not (regexMatch "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" (.name | toString)) -}}
+{{- fail (printf "liveStore.zoneAwareReplication zone name %q is not a DNS label. A zone name becomes both a StatefulSet name suffix and the value of the zone label, so it must hold lowercase letters, digits and dashes only, and start and end with a letter or a digit." .name) -}}
+{{- end -}}
 {{- $zoneNames = append $zoneNames .name -}}
 {{- end -}}
 {{- if ne (len ($zoneNames | uniq)) (len $zoneNames) -}}
 {{- fail "liveStore.zoneAwareReplication.zones must have unique names." -}}
 {{- end -}}
+{{- $baseAffinity := dict -}}
+{{- with $liveStore.affinity -}}
+{{- if kindIs "string" . -}}
+{{- $baseAffinity = tpl . $ctx | fromYaml -}}
+{{- else -}}
+{{- $baseAffinity = . -}}
+{{- end -}}
+{{- end -}}
+{{- $baseNodeSelector := coalesce $liveStore.nodeSelector $ctx.Values.defaults.nodeSelector | default dict -}}
 {{- range $zone := $zones -}}
 {{- $antiAffinity := include "live-store.zoneAntiAffinity" (dict "ctx" $ctx "rolloutZoneName" $zone.name "topologyKey" $zoneAware.topologyKey) | fromYaml -}}
-{{- $affinity := mergeOverwrite (deepCopy ($zone.extraAffinity | default dict)) $antiAffinity -}}
+{{- $affinity := mergeOverwrite (deepCopy $baseAffinity) (deepCopy ($zone.extraAffinity | default dict)) $antiAffinity -}}
 {{- $_ := set $zonesMap $zone.name (dict
       "affinity" $affinity
-      "nodeSelector" ($zone.nodeSelector | default dict)
+      "nodeSelector" (mergeOverwrite (deepCopy $baseNodeSelector) ($zone.nodeSelector | default dict))
       "annotations" ($zone.annotations | default dict)
       "podAnnotations" ($zone.podAnnotations | default dict)
       "replicas" $replicas
