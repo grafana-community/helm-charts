@@ -1,0 +1,73 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana GOMEMLIMIT injection
+templates:
+  - deployment.yaml
+
+tests:
+  - it: should inject GOMEMLIMIT when memory limit is set
+    set:
+      resources.limits.memory: 640Mi
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: "576MiB"
+
+  - it: should apply the configured factor
+    set:
+      resources.limits.memory: 1Gi
+      goMemLimit.factor: 0.75
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: "768MiB"
+
+  - it: should not inject GOMEMLIMIT when no memory limit is set
+    set:
+      resources.limits.cpu: 100m
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+
+  - it: should not inject GOMEMLIMIT when disabled via goMemLimit.enabled
+    set:
+      resources.limits.memory: 640Mi
+      goMemLimit.enabled: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+
+  - it: should not inject GOMEMLIMIT when user sets it via env
+    set:
+      resources.limits.memory: 640Mi
+      env.GOMEMLIMIT: "512MiB"
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: "576MiB"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: "512MiB"
+
+  - it: should not inject GOMEMLIMIT when user sets it via envValueFrom
+    set:
+      resources.limits.memory: 640Mi
+      envValueFrom.GOMEMLIMIT.resourceFieldRef.resource: limits.memory
+      envValueFrom.GOMEMLIMIT.resourceFieldRef.divisor: "1"
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: "576MiB"

@@ -12,6 +12,9 @@ metadata:
     {{- tpl (toYaml . | nindent 4) $ }}
   {{- end }}
 spec:
+  {{- with (coalesce .Values.metricsGenerator.service.trafficDistribution .Values.tempo.service.trafficDistribution) }}
+  trafficDistribution: {{ . }}
+  {{- end }}
   ipFamilies: {{ .Values.tempo.service.ipFamilies }}
   ipFamilyPolicy: {{ .Values.tempo.service.ipFamilyPolicy }}
   ports:

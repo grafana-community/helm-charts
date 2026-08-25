@@ -14,6 +14,9 @@ metadata:
     {{- tpl (toYaml . | nindent 4) $ }}
   {{- end }}
 spec:
+  {{- with (coalesce .Values.gateway.service.trafficDistribution .Values.tempo.service.trafficDistribution) }}
+  trafficDistribution: {{ . }}
+  {{- end }}
   type: {{ .Values.gateway.service.type }}
   {{- with .Values.gateway.service.clusterIP }}
   clusterIP: {{ . }}

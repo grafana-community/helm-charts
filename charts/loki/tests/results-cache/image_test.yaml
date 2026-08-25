@@ -35,7 +35,24 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: memcached:1.6.41-alpine
+          value: docker.io/library/memcached:1.6.41-alpine
+        template: results-cache/statefulset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: docker.io/prom/memcached-exporter:v0.17.0
+        template: results-cache/statefulset.yaml
+
+  - it: should preserve the upstream memcached path when global imageRegistry is set for result-cache
+    set:
+      global.imageRegistry: registry.example.com/docker.io
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.example.com/docker.io/library/memcached:1.6.41-alpine
+        template: results-cache/statefulset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: registry.example.com/docker.io/prom/memcached-exporter:v0.17.0
         template: results-cache/statefulset.yaml
 
   - it: should override repository and tag for memcached in result-cache
@@ -45,7 +62,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: custom/memcached:custom-tag
+          value: docker.io/custom/memcached:custom-tag
         template: results-cache/statefulset.yaml
 
   - it: should override registry for memcached in result-cache
@@ -105,7 +122,18 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: memcached:memcached-tag
+          value: docker.io/library/memcached:memcached-tag
+        template: results-cache/statefulset.yaml
+
+  - it: should override registry for memcached exporter in result-cache
+    set:
+      memcachedExporter.image.registry: quay.io
+      memcachedExporter.image.repository: custom/memcached-exporter
+      memcachedExporter.image.tag: custom-tag
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: quay.io/custom/memcached-exporter:custom-tag
         template: results-cache/statefulset.yaml
 
   - it: should prefer memcached image digest over tag for result-cache
@@ -116,7 +144,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: custom/memcached@sha256:d1g357
+          value: docker.io/custom/memcached@sha256:d1g357
         template: results-cache/statefulset.yaml
 
   - it: should use memcached image sha as digest fallback for result-cache when digest is not set
@@ -127,7 +155,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: custom/memcached@sha256:abcdef0123456789
+          value: docker.io/custom/memcached@sha256:abcdef0123456789
         template: results-cache/statefulset.yaml
 
   - it: should prefer global.imageRegistry over deprecated global registry keys for result-cache memcached

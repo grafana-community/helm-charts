@@ -133,6 +133,10 @@ tempo:
     #   - 'IPv6'
     # -- Configure the IP family policy for all tempo services.  SingleStack, PreferDualStack or RequireDualStack
     ipFamilyPolicy: 'SingleStack'
+    # -- Default traffic distribution for all non-headless tempo services (PreferSameZone or PreferSameNode).
+    # See https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution.
+    # Can be overridden per component via <component>.service.trafficDistribution.
+    trafficDistribution: null
 
 # -- Default values applied to every pod in this chart.
 # These values are overridden by component-specific settings.
@@ -359,6 +363,8 @@ metricsGenerator:
   service:
     # -- Annotations for Metrics Generator service
     annotations: {}
+    # -- Traffic distribution for the Metrics Generator service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
+    trafficDistribution: null
   serviceDiscovery:
     # -- Annotations for Metrics Generator discovery service
     annotations: {}
@@ -417,6 +423,8 @@ distributor:
     externalTrafficPolicy: null
     # -- https://kubernetes.io/docs/concepts/services-networking/service-traffic-policy/
     internalTrafficPolicy: Cluster
+    # -- Traffic distribution for the distributor service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
+    trafficDistribution: null
   serviceDiscovery:
     # -- Annotations for distributorDiscovery service
     annotations: {}
@@ -1013,6 +1021,14 @@ blockBuilder:
   statefulStrategy:
     rollingUpdate:
       partition: 0
+  # -- Pod Disruption Budget configuration
+  podDisruptionBudget:
+    # -- Enable PodDisruptionBudget for block-builder
+    enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the block-builder PodDisruptionBudget. Requires policy/v1.
+    unhealthyPodEvictionPolicy: ""
+  # -- Pod Disruption Budget maxUnavailable
+  maxUnavailable: 1
   service:
     # -- Annotations for block-builder service
     annotations: {}
@@ -1102,6 +1118,14 @@ liveStore:
   statefulStrategy:
     rollingUpdate:
       partition: 0
+  # -- Pod Disruption Budget configuration
+  podDisruptionBudget:
+    # -- Enable PodDisruptionBudget for live-store
+    enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the live-store PodDisruptionBudget. Requires policy/v1.
+    unhealthyPodEvictionPolicy: ""
+  # -- Pod Disruption Budget maxUnavailable
+  maxUnavailable: 1
   service:
     # -- Annotations for live-store service
     annotations: {}
@@ -1238,6 +1262,8 @@ querier:
   service:
     # -- Annotations for querier service
     annotations: {}
+    # -- Traffic distribution for the querier service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
+    trafficDistribution: null
   # -- Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.
   appProtocol:
     # -- Set the optional gRPC service protocol. Ex: "grpc", "http2" or "https"
@@ -1309,9 +1335,9 @@ queryFrontend:
       # 0 disables this limit.
       max_duration: 3h
       # -- query_backend_after controls where the query-frontend searches for traces.
+      # Time ranges newer than query_backend_after will be searched in the live-stores only.
       # Time ranges older than query_backend_after will be searched in the backend/object storage only.
-      # Time ranges between query_backend_after and now will be queried from the metrics-generators.
-      query_backend_after: 30m
+      query_backend_after: 15m
       # -- The target length of time for each job to handle when querying the backend.
       interval: 5m
       # -- If set to a non-zero value, it's value will be used to decide if query is within SLO or not.
@@ -1356,6 +1382,8 @@ queryFrontend:
     labels: {}
     # -- Type of service for the queryFrontend
     type: ClusterIP
+    # -- Traffic distribution for the queryFrontend service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
+    trafficDistribution: null
     # -- If type is LoadBalancer you can assign the IP to the LoadBalancer
     loadBalancerIP: ""
     # -- If type is LoadBalancer limit incoming traffic from IPs.
@@ -2769,6 +2797,8 @@ gateway:
     port: 80
     # -- Type of the gateway service
     type: ClusterIP
+    # -- Traffic distribution for the gateway service (PreferSameZone or PreferSameNode). Overrides tempo.service.trafficDistribution.
+    trafficDistribution: null
     # -- ClusterIP of the gateway service
     clusterIP: null
     # -- Node port if service type is NodePort

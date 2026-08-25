@@ -1,0 +1,70 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: service not rendered when component enabled is false
+templates:
+  - distributor/service.yaml
+  - querier/service.yaml
+  - ingester/service.yaml
+  - write/service.yaml
+  - read/service.yaml
+  - backend/service.yaml
+  - config.yaml
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: should not render distributor service when distributor.enabled is false
+    set:
+      deploymentMode: Distributed
+      distributor.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: distributor/service.yaml
+
+  - it: should not render querier service when querier.enabled is false
+    set:
+      deploymentMode: Distributed
+      querier.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: querier/service.yaml
+
+  - it: should not render ingester service when ingester.enabled is false
+    set:
+      deploymentMode: Distributed
+      ingester.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: ingester/service.yaml
+
+  - it: should not render write service when write.enabled is false
+    set:
+      deploymentMode: SimpleScalable
+      write.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: write/service.yaml
+
+  - it: should not render read service when read.enabled is false
+    set:
+      deploymentMode: SimpleScalable
+      read.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: read/service.yaml
+
+  - it: should not render backend service when backend.enabled is false
+    set:
+      deploymentMode: SimpleScalable
+      backend.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: backend/service.yaml
