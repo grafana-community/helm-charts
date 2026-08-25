@@ -1,7 +1,9 @@
 {{- if .Values.liveStore.enabled }}
 {{- $zonesMap := include "live-store.zoneAwareReplicationMap" (dict "ctx" $) | fromYaml -}}
 {{- $totalReplicas := mul (int .Values.liveStore.replicas) (len $zonesMap) -}}
-{{- if and (gt $totalReplicas 1) .Values.liveStore.podDisruptionBudget.enabled }}
+{{- $zoneAware := .Values.liveStore.zoneAwareReplication -}}
+{{- $zpdbTakesOver := and $zoneAware.enabled (($zoneAware.podDisruptionBudget | default dict).enabled) -}}
+{{- if and (gt $totalReplicas 1) .Values.liveStore.podDisruptionBudget.enabled (not $zpdbTakesOver) }}
 {{- $dict := dict "ctx" . "component" "live-store" "memberlist" true }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget

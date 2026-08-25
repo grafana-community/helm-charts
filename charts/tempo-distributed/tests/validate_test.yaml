@@ -176,3 +176,45 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: cluster-domain=custom.local
+
+  - it: fails when the pod eviction webhook is turned off
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      rollout_operator.webhooks.enabled: false
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: rollout-operator pod eviction webhook
+
+  - it: fails when the ZoneAwarePodDisruptionBudget CRD is not installed
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      rollout_operator.crds.enabled: false
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: needs the ZoneAwarePodDisruptionBudget CRD
+
+  - it: fails on a cross-zone eviction delay without a partition regex
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.podDisruptionBudget.podNamePartitionRegex: null
+      liveStore.zoneAwareReplication.podDisruptionBudget.crossZoneEvictionDelay: 20m
+    asserts:
+      - failedTemplate:
+          errorPattern: crossZoneEvictionDelay needs podNamePartitionRegex
+
+  - it: leaves the webhooks alone when the zone-aware budget is off
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      rollout_operator.webhooks.enabled: false
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.podDisruptionBudget.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

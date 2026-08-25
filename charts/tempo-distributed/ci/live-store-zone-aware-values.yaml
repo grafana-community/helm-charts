@@ -13,6 +13,8 @@ liveStore:
     zones:
       - name: zone-a
       - name: zone-b
+    podDisruptionBudget:
+      crossZoneEvictionDelay: 20m
 
 rollout_operator:
   enabled: true

@@ -21,6 +21,20 @@
 {{- fail "liveStore.zoneAwareReplication.noDownscale and liveStore.zoneAwareReplication.prepareDownscale.enabled are enforced by the rollout-operator admission webhooks, which rollout_operator.webhooks.enabled turns off. Turn the webhooks back on, or drop these settings." }}
 {{- end }}
 {{- end }}
+{{- $zpdb := $zoneAware.podDisruptionBudget | default dict }}
+{{- if and $zoneAware.enabled $zpdb.enabled .Values.liveStore.podDisruptionBudget.enabled }}
+{{- if .Values.rollout_operator.enabled }}
+{{- if not .Values.rollout_operator.webhooks.enabled }}
+{{- fail "liveStore.zoneAwareReplication.podDisruptionBudget.enabled is enforced by the rollout-operator pod eviction webhook, which rollout_operator.webhooks.enabled turns off. Turn the webhooks back on, or set liveStore.zoneAwareReplication.podDisruptionBudget.enabled to false to keep a native PodDisruptionBudget over all zones." }}
+{{- end }}
+{{- if not .Values.rollout_operator.crds.enabled }}
+{{- fail "liveStore.zoneAwareReplication.podDisruptionBudget.enabled needs the ZoneAwarePodDisruptionBudget CRD, which rollout_operator.crds.enabled turns off. Install the CRD out of band, or set liveStore.zoneAwareReplication.podDisruptionBudget.enabled to false to keep a native PodDisruptionBudget over all zones." }}
+{{- end }}
+{{- end }}
+{{- if and $zpdb.crossZoneEvictionDelay (not $zpdb.podNamePartitionRegex) }}
+{{- fail "liveStore.zoneAwareReplication.podDisruptionBudget.crossZoneEvictionDelay needs podNamePartitionRegex. The delay applies between the owners of one partition, so without the regex the rollout-operator has no partition to compare and rejects the object." }}
+{{- end }}
+{{- end }}
 {{- if and $zoneAware.enabled $prepareDownscale.enabled (ne .Values.global.clusterDomain "cluster.local") (not $zoneAware.rolloutOperatorManagedExternally) }}
 {{- $clusterDomainArg := printf "-cluster-domain=%s" .Values.global.clusterDomain }}
 {{- $extraArgs := join " " (.Values.rollout_operator.extraArgs | default list) }}

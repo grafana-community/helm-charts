@@ -1181,6 +1181,40 @@ liveStore:
       # partition is INACTIVE, so it needs the delayed-downscale mechanism of
       # the rollout-operator, which this chart does not configure.
       httpPath: live-store/prepare-partition-downscale
+    # Voluntary evictions of zone-aware live-stores, through the
+    # ZoneAwarePodDisruptionBudget of the rollout-operator. A native
+    # PodDisruptionBudget counts pods, so it cannot tell that the same pod
+    # ordinal in two zones holds every owner of one partition. This one counts
+    # per partition across zones and rejects an eviction that would take the
+    # last owner, whatever the budget of a single zone allows.
+    #
+    # Needs the ZoneAwarePodDisruptionBudget CRD and the pod eviction webhook of
+    # the rollout-operator. The bundled subchart installs both. The webhook
+    # rejects an eviction while the rollout-operator is unreachable, so this
+    # never opens a window. While this is on, it replaces the
+    # `liveStore.podDisruptionBudget` object.
+    podDisruptionBudget:
+      # -- Guard the evictions with a ZoneAwarePodDisruptionBudget. Set to false
+      # to keep a single native PodDisruptionBudget over all zones instead.
+      enabled: true
+      # -- Live-stores of one partition that may be unavailable at the same
+      # time, counted over every zone. 1 keeps a partition served through any
+      # single voluntary eviction. 0 rejects every voluntary eviction.
+      maxUnavailable: 1
+      # -- Regular expression that returns the partition of a live-store from
+      # its pod name. The rollout-operator anchors it with `^` and `$`, so it
+      # must match the whole name. The default reads the pod ordinal, which is
+      # the Kafka partition, and holds for any zone name.
+      podNamePartitionRegex: ".*-([0-9]+)"
+      # -- Capture group of the partition. Only needed when
+      # `podNamePartitionRegex` holds more than one group.
+      podNameRegexGroup: null
+      # -- Minimum time after a live-store becomes ready before another owner of
+      # the same partition may be evicted. A Go duration, so days are not a
+      # unit. Set this when the live-stores run with the default
+      # `readiness-target-lag` of 0, because a live-store then reports ready
+      # while it still replays its partition.
+      crossZoneEvictionDelay: null
     # -- Zones to deploy. At least 2 zones are required. Every zone runs
     # `liveStore.replicas` live-stores. A zone name must be a DNS label: it
     # becomes a StatefulSet name suffix and the value of the zone label.

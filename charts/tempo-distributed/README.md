@@ -502,10 +502,7 @@ Notes:
   because the zones already define the spread. `liveStore.affinity` and the node
   selector of the component are kept: a zone merges its own `extraAffinity` and
   `nodeSelector` on top of them.
-- The PodDisruptionBudget covers the live-stores of every zone together, with
-  `liveStore.maxUnavailable` as the budget for the whole set. One budget per zone
-  would let a drain evict the same pod ordinal in two zones at once, and those
-  pods are every owner of one partition.
+- Voluntary evictions are guarded per partition, not per pod count. See below.
 - Set `zoneAwareReplication.rolloutOperatorManagedExternally: true` when a
   rollout-operator already runs in the namespace and this chart must not
   install one.
@@ -521,6 +518,49 @@ live-store restarts at once and the recent-read tier is unavailable until the
 pods are ready. Each zone also gets its own Kafka consumer group, which has no
 committed offset yet, so every live-store replays the Kafka lookback period to
 rebuild its query state. Plan the switch like a full live-store restart.
+
+#### Draining a node
+
+The same pod ordinal in every zone holds every owner of one Kafka partition:
+`live-store-zone-a-2` and `live-store-zone-b-2` both own partition 2. A native
+PodDisruptionBudget counts pods and cannot express that, so it either allows
+both to go at once, or it has to be tightened to one eviction for the whole
+live-store set.
+
+Zone-awareness therefore renders a `ZoneAwarePodDisruptionBudget` instead, which
+the rollout-operator enforces on the eviction of a pod. It reads the partition
+from the pod name and counts the unavailable live-stores of that partition over
+every zone:
+
+```yaml
+liveStore:
+  zoneAwareReplication:
+    podDisruptionBudget:
+      enabled: true
+      maxUnavailable: 1
+```
+
+With `maxUnavailable: 1`, a drain can take one live-store per partition and many
+partitions at the same time, and it can never take the last owner of a
+partition. The rollout-operator rejects an eviction while it is unreachable, so
+this opens no window. It replaces the `liveStore.podDisruptionBudget` object.
+
+Set `crossZoneEvictionDelay` when the live-stores run with the default
+`readiness-target-lag` of 0, because a live-store then reports ready while it
+still replays its partition:
+
+```yaml
+liveStore:
+  zoneAwareReplication:
+    podDisruptionBudget:
+      crossZoneEvictionDelay: 20m
+```
+
+The budget needs the `ZoneAwarePodDisruptionBudget` CRD and the pod eviction
+webhook. The bundled rollout-operator installs both, and the chart refuses to
+render when either is turned off. Set `podDisruptionBudget.enabled: false` to
+fall back to a single native PodDisruptionBudget over all zones, with
+`liveStore.maxUnavailable` as the budget for the whole set.
 
 #### Scaling down
 

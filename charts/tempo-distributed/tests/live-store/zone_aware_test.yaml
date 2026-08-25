@@ -3,6 +3,7 @@ suite: live-store zone-aware replication
 templates:
   - live-store/statefulset-live-store.yaml
   - live-store/poddisruptionbudget-live-store.yaml
+  - live-store/zonepoddisruptionbudget-live-store.yaml
   - configmap-tempo.yaml
 
 tests:
@@ -218,11 +219,51 @@ tests:
           path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key
           value: dedicated
 
-  - it: keeps one PodDisruptionBudget for every zone together
+  - it: budgets the evictions per partition across the zones
+    template: live-store/zonepoddisruptionbudget-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ZoneAwarePodDisruptionBudget
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-live-store
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
+      - equal:
+          path: spec.podNamePartitionRegex
+          value: .*-([0-9]+)
+      - notExists:
+          path: spec.selector.matchLabels.zone
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/component"]
+          value: live-store
+      - notExists:
+          path: spec.crossZoneEvictionDelay
+      - notExists:
+          path: spec.podNameRegexGroup
+
+  - it: hands the budget over from the native PodDisruptionBudget
     template: live-store/poddisruptionbudget-live-store.yaml
     set:
       rollout_operator.enabled: true
       liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: keeps one native PodDisruptionBudget over all zones when the zone-aware one is off
+    template: live-store/poddisruptionbudget-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.replicas: 1
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.podDisruptionBudget.enabled: false
     asserts:
       - hasDocuments:
           count: 1
@@ -232,21 +273,44 @@ tests:
       - notExists:
           path: spec.selector.matchLabels.zone
       - equal:
-          path: spec.selector.matchLabels["app.kubernetes.io/component"]
-          value: live-store
-      - equal:
           path: spec.maxUnavailable
           value: 1
 
-  - it: budgets the live-stores of every zone once the zones together hold more than one
-    template: live-store/poddisruptionbudget-live-store.yaml
-    set:
-      rollout_operator.enabled: true
-      liveStore.replicas: 1
-      liveStore.zoneAwareReplication.enabled: true
+  - it: renders no zone-aware budget on the flat path
+    template: live-store/zonepoddisruptionbudget-live-store.yaml
     asserts:
       - hasDocuments:
-          count: 1
+          count: 0
+
+  - it: renders no budget at all when the PodDisruptionBudget is turned off
+    template: live-store/zonepoddisruptionbudget-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.podDisruptionBudget.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: carries the eviction delay and the capture group when they are set
+    template: live-store/zonepoddisruptionbudget-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.podDisruptionBudget.maxUnavailable: 0
+      liveStore.zoneAwareReplication.podDisruptionBudget.podNamePartitionRegex: "[a-z-]+-zone-([a-z]+)-([0-9]+)"
+      liveStore.zoneAwareReplication.podDisruptionBudget.podNameRegexGroup: 2
+      liveStore.zoneAwareReplication.podDisruptionBudget.crossZoneEvictionDelay: 20m
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 0
+      - equal:
+          path: spec.podNameRegexGroup
+          value: 2
+      - equal:
+          path: spec.crossZoneEvictionDelay
+          value: 20m
 
   - it: fails when fewer than two zones are defined
     template: live-store/statefulset-live-store.yaml
