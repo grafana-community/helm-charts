@@ -73,7 +73,7 @@ grafana.ini: |
 {{- if .Values.dashboards  }}
 download_dashboards.sh: |
   #!/usr/bin/env sh
-  set -{{ $.Values.defaultShellOptions | default "eufo pipefail" }}
+  set -{{ $.Values.defaultShellOptions }}
   mkdir -p /var/lib/grafana/dashboards/default
   {{- if .Values.dashboardProviders }}
     {{- range $key, $value := .Values.dashboardProviders }}
