@@ -1118,6 +1118,41 @@ liveStore:
   statefulStrategy:
     rollingUpdate:
       partition: 0
+  # Zone-aware replication spreads the live-stores over failure domains such as
+  # availability zones, racks or data centres. Every zone runs a full set of
+  # live-stores, so each Kafka partition gets one owner per zone (RF equals the
+  # number of zones). The read quorum is 1: a querier only needs an answer from
+  # one zone, so recent-trace queries survive the loss of a zone.
+  # Requires `rollout_operator.enabled: true`.
+  zoneAwareReplication:
+    # -- Enable zone-aware replication for the live-store
+    enabled: false
+    # -- Set to true when a rollout-operator already runs in this namespace and is
+    # not installed by this chart. Skips the `rollout_operator.enabled` check.
+    rolloutOperatorManagedExternally: false
+    # -- Topology key of the failure domain. When set, the live-stores of one zone
+    # never share a domain with the live-stores of another zone.
+    topologyKey: null
+    # -- Maximum number of live-stores the rollout-operator restarts at the same
+    # time inside one zone. The rollout-operator always moves one zone at a time.
+    maxUnavailable: 25
+    # -- Zones to deploy. At least 2 zones are required. Every zone runs
+    # `liveStore.replicas` live-stores.
+    zones:
+      - name: zone-a
+        # -- Node selector for the live-stores of this zone
+        nodeSelector: null
+        # -- Extra affinity merged into the zone anti-affinity
+        extraAffinity: {}
+        # -- Extra annotations for the StatefulSet of this zone
+        annotations: {}
+        # -- Extra annotations for the pods of this zone
+        podAnnotations: {}
+      - name: zone-b
+        nodeSelector: null
+        extraAffinity: {}
+        annotations: {}
+        podAnnotations: {}
   # -- Pod Disruption Budget configuration
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for live-store

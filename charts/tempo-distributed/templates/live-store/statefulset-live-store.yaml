@@ -1,5 +1,9 @@
 {{- if .Values.liveStore.enabled }}
-{{- $dict := dict "ctx" . "component" "live-store" "memberlist" true -}}
+{{- $zonesMap := include "live-store.zoneAwareReplicationMap" (dict "ctx" $) | fromYaml -}}
+{{- $zoneAware := .Values.liveStore.zoneAwareReplication -}}
+{{- range $zoneName, $rolloutZone := $zonesMap -}}
+{{- with $ -}}
+{{- $dict := dict "ctx" . "component" "live-store" "memberlist" true "rolloutZoneName" $zoneName -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -10,12 +14,18 @@ metadata:
     {{- with .Values.liveStore.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with .Values.liveStore.annotations }}
+  {{- $annotations := mergeOverwrite (deepCopy (.Values.liveStore.annotations | default dict)) ($rolloutZone.annotations | default dict) }}
+  {{- if $zoneName }}
+  {{- with $zoneAware.maxUnavailable }}
+  {{- $_ := set $annotations "rollout-max-unavailable" (. | toString) }}
+  {{- end }}
+  {{- end }}
+  {{- with $annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  replicas: {{ .Values.liveStore.replicas }}
+  replicas: {{ $rolloutZone.replicas }}
   revisionHistoryLimit: {{ .Values.tempo.revisionHistoryLimit }}
   selector:
     matchLabels:
@@ -23,7 +33,18 @@ spec:
   serviceName: live-store
   podManagementPolicy: Parallel
   updateStrategy:
+    {{- if $zoneName }}
+    type: OnDelete
+    {{- else }}
     {{- toYaml .Values.liveStore.statefulStrategy | nindent 4 }}
+    {{- end }}
   template:
-    {{- include "tempo.podTemplate" (dict "ctx" $ "component" .Values.liveStore "target" "live-store") | nindent 4 }}
+    {{- $podArgs := list }}
+    {{- if $zoneName }}
+    {{- $podArgs = list (printf "-live-store.instance-availability-zone=%s" $zoneName) }}
+    {{- end }}
+    {{- include "tempo.podTemplate" (dict "ctx" $ "component" .Values.liveStore "target" "live-store" "rolloutZoneName" $zoneName "rolloutZone" $rolloutZone "args" $podArgs) | nindent 4 }}
+---
+{{ end }}
+{{- end }}
 {{- end }}

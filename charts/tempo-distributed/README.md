@@ -446,6 +446,64 @@ traces:
       enabled: true
 ```
 
+### Zone-aware replication for the live-store
+
+The live-store serves the recent part of every trace query. Without zone
+awareness the chart renders one flat StatefulSet, so each Kafka partition has
+exactly one live-store. If that pod goes away, recent-trace queries for its
+partition fail until the pod comes back.
+
+Zone-aware replication renders one StatefulSet per zone. Each zone runs a full
+set of live-stores, gets its own Kafka consumer group and passes its own
+`-live-store.instance-availability-zone` to Tempo. A partition therefore has one
+owner per zone, and a querier needs an answer from one zone only. The loss of a
+zone no longer breaks recent-trace queries.
+
+The rollout-operator coordinates the rollout. It moves one zone at a time and
+restarts at most `maxUnavailable` live-stores inside that zone, so the other
+zones keep serving. Zone-aware StatefulSets use the `OnDelete` update strategy,
+which means nothing restarts them unless a rollout-operator watches the
+namespace. The chart refuses to render without one.
+
+```yaml
+rollout_operator:
+  enabled: true
+
+liveStore:
+  enabled: true
+  replicas: 3  # partitions per zone; must equal the Kafka partition count
+  zoneAwareReplication:
+    enabled: true
+    topologyKey: topology.kubernetes.io/zone
+    zones:
+      - name: zone-a
+        nodeSelector:
+          topology.kubernetes.io/zone: eu-west-1a
+      - name: zone-b
+        nodeSelector:
+          topology.kubernetes.io/zone: eu-west-1b
+```
+
+The example above runs 6 live-stores: 3 partitions in each of the 2 zones.
+
+Notes:
+
+- `liveStore.replicas` stays the Kafka partition count. It is the size of one
+  zone, not the total. Adding a zone multiplies the live-store count and the
+  Kafka read traffic.
+- At least 2 zones are required.
+- `topologyKey` adds an anti-affinity rule that keeps the live-stores of one
+  zone off the domains that run another zone. Leave it unset to let the
+  scheduler place the pods freely.
+- `liveStore.topologySpreadConstraints` is ignored while zone-awareness is on,
+  because the zones already define the spread.
+- Set `zoneAwareReplication.rolloutOperatorManagedExternally: true` when a
+  rollout-operator already runs in the namespace and this chart must not
+  install one.
+- Scaling down is not coordinated across zones. Reduce the live-stores of one
+  zone at a time, and remember that `liveStore.replicas` must keep matching the
+  Kafka partition count.
+
 ### Memcached cache configuration
 
 By default, the chart deploys a single shared memcached StatefulSet (`memcached`) used for all cache roles — bloom filters, parquet footer, and frontend search. This is the simplest setup and works well for most deployments.

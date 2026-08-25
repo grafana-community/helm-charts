@@ -1,0 +1,231 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: live-store zone-aware replication
+templates:
+  - live-store/statefulset-live-store.yaml
+  - live-store/poddisruptionbudget-live-store.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: renders a single flat StatefulSet when zone-awareness is off
+    template: live-store/statefulset-live-store.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-live-store
+      - notExists:
+          path: metadata.labels["rollout-group"]
+      - notExists:
+          path: metadata.annotations["rollout-max-unavailable"]
+      - exists:
+          path: spec.template.spec.topologySpreadConstraints
+
+  - it: renders one StatefulSet per zone
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-live-store-zone-a
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-live-store-zone-b
+        documentIndex: 1
+
+  - it: gives every zone the full replica set so each partition has one owner per zone
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.replicas: 6
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 6
+        documentIndex: 0
+      - equal:
+          path: spec.replicas
+          value: 6
+        documentIndex: 1
+
+  - it: passes the availability zone to the live-store
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -live-store.instance-availability-zone=zone-a
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -live-store.instance-availability-zone=zone-b
+        documentIndex: 1
+
+  - it: hands the rollout over to the rollout-operator
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.maxUnavailable: 4
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.updateStrategy.type
+          value: OnDelete
+      - equal:
+          path: metadata.labels["rollout-group"]
+          value: live-store
+      - equal:
+          path: metadata.labels.zone
+          value: zone-a
+      - equal:
+          path: metadata.annotations["rollout-max-unavailable"]
+          value: "4"
+      - equal:
+          path: spec.template.metadata.labels.name
+          value: live-store-zone-a
+
+  - it: scopes the selector of a zone to that zone
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["rollout-group"]
+          value: live-store
+      - equal:
+          path: spec.selector.matchLabels.zone
+          value: zone-b
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/component"]
+          value: live-store
+
+  - it: keeps the zones apart when a topology key is set
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.topologyKey: topology.kubernetes.io/zone
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey
+          value: topology.kubernetes.io/zone
+      - contains:
+          path: spec.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions
+          content:
+            key: zone
+            operator: NotIn
+            values:
+              - zone-a
+      - notExists:
+          path: spec.template.spec.topologySpreadConstraints
+
+  - it: sets no affinity when no topology key is given
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    documentIndex: 0
+    asserts:
+      - notExists:
+          path: spec.template.spec.affinity
+
+  - it: merges extraAffinity and nodeSelector of a zone
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.zones:
+        - name: zone-a
+          nodeSelector:
+            topology.kubernetes.io/zone: eu-west-1a
+          extraAffinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: dedicated
+                        operator: In
+                        values:
+                          - tempo
+        - name: zone-b
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector["topology.kubernetes.io/zone"]
+          value: eu-west-1a
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key
+          value: dedicated
+
+  - it: renders one PodDisruptionBudget per zone
+    template: live-store/poddisruptionbudget-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-live-store-zone-a
+        documentIndex: 0
+      - equal:
+          path: spec.selector.matchLabels.zone
+          value: zone-b
+        documentIndex: 1
+
+  - it: fails when fewer than two zones are defined
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.zones:
+        - name: zone-a
+    asserts:
+      - failedTemplate:
+          errorPattern: must define at least 2 zones
+
+  - it: fails on duplicate zone names
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.zones:
+        - name: zone-a
+        - name: zone-a
+    asserts:
+      - failedTemplate:
+          errorPattern: must have unique names
+
+  - it: fails on a zone without a name
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.zones:
+        - name: zone-a
+        - nodeSelector: {}
+    asserts:
+      - failedTemplate:
+          errorPattern: must set a name
+
+  - it: accepts a rollout-operator that the chart does not install
+    template: live-store/statefulset-live-store.yaml
+    set:
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.rolloutOperatorManagedExternally: true
+    asserts:
+      - hasDocuments:
+          count: 2

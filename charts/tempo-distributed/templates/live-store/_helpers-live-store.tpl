@@ -1,0 +1,80 @@
+{{/*
+Rollout zones for the live-store.
+
+Returns a map keyed by zone name. The key "" is used when zone-aware replication
+is disabled and renders the single flat StatefulSet.
+
+Each zone runs a full set of live-stores. A live-store derives its Kafka
+partition from the numeric suffix of its pod name and its consumer group from
+the StatefulSet name, so every zone consumes all partitions independently and
+each partition ends up with one owner per zone. Therefore the replica count of a
+zone is liveStore.replicas, not a share of it.
+
+Params:
+  ctx = root context ($)
+*/}}
+{{- define "live-store.zoneAwareReplicationMap" -}}
+{{- $zonesMap := dict -}}
+{{- $liveStore := .ctx.Values.liveStore -}}
+{{- $zoneAware := $liveStore.zoneAwareReplication | default dict -}}
+{{- $replicas := $liveStore.replicas | int -}}
+{{- if $zoneAware.enabled -}}
+{{- $zones := $zoneAware.zones | default list -}}
+{{- if lt (len $zones) 2 -}}
+{{- fail "liveStore.zoneAwareReplication.zones must define at least 2 zones. A partition needs an owner in more than one zone before the read path can survive the loss of a zone." -}}
+{{- end -}}
+{{- $zoneNames := list -}}
+{{- range $zones -}}
+{{- if not .name -}}
+{{- fail "every entry of liveStore.zoneAwareReplication.zones must set a name." -}}
+{{- end -}}
+{{- $zoneNames = append $zoneNames .name -}}
+{{- end -}}
+{{- if ne (len ($zoneNames | uniq)) (len $zoneNames) -}}
+{{- fail "liveStore.zoneAwareReplication.zones must have unique names." -}}
+{{- end -}}
+{{- range $zone := $zones -}}
+{{- $antiAffinity := include "live-store.zoneAntiAffinity" (dict "rolloutZoneName" $zone.name "topologyKey" $zoneAware.topologyKey) | fromYaml -}}
+{{- $affinity := mergeOverwrite (deepCopy ($zone.extraAffinity | default dict)) $antiAffinity -}}
+{{- $_ := set $zonesMap $zone.name (dict
+      "affinity" $affinity
+      "nodeSelector" ($zone.nodeSelector | default dict)
+      "annotations" ($zone.annotations | default dict)
+      "podAnnotations" ($zone.podAnnotations | default dict)
+      "replicas" $replicas
+    ) -}}
+{{- end -}}
+{{- else -}}
+{{- $_ := set $zonesMap "" (dict "replicas" $replicas) -}}
+{{- end -}}
+{{- $zonesMap | toYaml -}}
+{{- end -}}
+
+{{/*
+Anti-affinity that keeps the live-stores of one zone away from the nodes, racks
+or availability zones that already run another zone. Renders an empty dict when
+no topologyKey is set.
+
+Params:
+  rolloutZoneName = name of the rollout zone
+  topologyKey     = topology key of the failure domain
+*/}}
+{{- define "live-store.zoneAntiAffinity" -}}
+{{- if .topologyKey -}}
+podAntiAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+          - key: rollout-group
+            operator: In
+            values:
+              - live-store
+          - key: zone
+            operator: NotIn
+            values:
+              - {{ .rolloutZoneName }}
+      topologyKey: {{ .topologyKey | quote }}
+{{- else -}}
+{}
+{{- end -}}
+{{- end -}}

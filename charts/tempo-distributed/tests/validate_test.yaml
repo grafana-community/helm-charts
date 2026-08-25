@@ -45,3 +45,29 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: fails when zone-aware live-stores have no rollout-operator
+    set:
+      ingest.kafka.address: kafka:9092
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: needs a rollout-operator in this namespace
+
+  - it: renders nothing when the rollout-operator is installed by the chart
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the rollout-operator is managed outside the chart
+    set:
+      ingest.kafka.address: kafka:9092
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.rolloutOperatorManagedExternally: true
+    asserts:
+      - hasDocuments:
+          count: 0

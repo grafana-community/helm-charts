@@ -140,6 +140,10 @@ app.kubernetes.io/part-of: memberlist
 app.kubernetes.io/version: {{ .ctx.Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .ctx.Release.Service }}
+{{- if .rolloutZoneName }}
+rollout-group: {{ .component }}
+zone: {{ .rolloutZoneName }}
+{{- end }}
 {{- if .ctx.Values.global.commonLabels }}
 {{ toYaml .ctx.Values.global.commonLabels | indent 0 }}
 {{- end }}
@@ -150,12 +154,23 @@ app.kubernetes.io/managed-by: {{ .ctx.Release.Service }}
 
 {{/*
 Simple service selector labels
+Params:
+  ctx = . context
+  component = name of the component (optional)
+  rolloutZoneName = rollout zone name (optional); makes the selector match one zone only
 */}}
 {{- define "tempo.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "tempo.name" .ctx }}
 app.kubernetes.io/instance: {{ .ctx.Release.Name }}
 {{- if .component }}
 app.kubernetes.io/component: {{ .component }}
+{{- end }}
+{{- if .rolloutZoneName }}
+{{- if not .component }}
+{{- printf "Component name cannot be empty if rolloutZoneName (%s) is set" .rolloutZoneName | fail }}
+{{- end }}
+rollout-group: {{ .component }}
+zone: {{ .rolloutZoneName }}
 {{- end -}}
 {{- end -}}
 
@@ -172,9 +187,13 @@ Create the name of the service account to use
 
 {{/*
 Resource name template
+Params:
+  ctx = . context
+  component = name of the component (optional)
+  rolloutZoneName = rollout zone name (optional); appended as a suffix
 */}}
 {{- define "tempo.resourceName" -}}
-{{ include "tempo.fullname" .ctx }}{{- if .component -}}-{{ .component }}{{- end -}}
+{{ include "tempo.fullname" .ctx }}{{- if .component -}}-{{ .component }}{{- end -}}{{- if .rolloutZoneName -}}-{{ .rolloutZoneName }}{{- end -}}
 {{- end -}}
 
 {{/*

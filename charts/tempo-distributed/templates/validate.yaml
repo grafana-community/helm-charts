@@ -4,3 +4,6 @@
 {{- if and (or .Values.blockBuilder.enabled .Values.liveStore.enabled) (not .Values.ingest.kafka.address) }}
 {{- fail "ingest.kafka.address is required when blockBuilder or liveStore is enabled. Tempo 3.0 uses a Kafka-backed write path: block-builder and live-store consume spans from Kafka and will not start without a broker. Set ingest.kafka.address to your Kafka broker (e.g. \"kafka.kafka-namespace.svc.cluster.local:9092\"), or disable blockBuilder and liveStore. See UPGRADE.md for details." }}
 {{- end }}
+{{- if and .Values.liveStore.enabled .Values.liveStore.zoneAwareReplication.enabled (not .Values.rollout_operator.enabled) (not .Values.liveStore.zoneAwareReplication.rolloutOperatorManagedExternally) }}
+{{- fail "liveStore.zoneAwareReplication.enabled needs a rollout-operator in this namespace. Zone-aware live-stores use the OnDelete update strategy, so without one no live-store pod is ever restarted on an upgrade. Set rollout_operator.enabled to true, or install a rollout-operator into this namespace yourself and set liveStore.zoneAwareReplication.rolloutOperatorManagedExternally to true." }}
+{{- end }}
