@@ -7,3 +7,24 @@
 {{- if and .Values.liveStore.enabled .Values.liveStore.zoneAwareReplication.enabled (not .Values.rollout_operator.enabled) (not .Values.liveStore.zoneAwareReplication.rolloutOperatorManagedExternally) }}
 {{- fail "liveStore.zoneAwareReplication.enabled needs a rollout-operator in this namespace. Zone-aware live-stores use the OnDelete update strategy, so without one no live-store pod is ever restarted on an upgrade. Set rollout_operator.enabled to true, or install a rollout-operator into this namespace yourself and set liveStore.zoneAwareReplication.rolloutOperatorManagedExternally to true." }}
 {{- end }}
+{{- if .Values.liveStore.enabled }}
+{{- $zoneAware := .Values.liveStore.zoneAwareReplication }}
+{{- $prepareDownscale := $zoneAware.prepareDownscale | default dict }}
+{{- if and $zoneAware.noDownscale $prepareDownscale.enabled }}
+{{- fail "liveStore.zoneAwareReplication.noDownscale and liveStore.zoneAwareReplication.prepareDownscale.enabled are mutually exclusive. noDownscale rejects every scale-down, so a coordinated scale-down can never run. Keep one of the two." }}
+{{- end }}
+{{- if and (not $zoneAware.enabled) (or $zoneAware.noDownscale $prepareDownscale.enabled) }}
+{{- fail "liveStore.zoneAwareReplication.noDownscale and liveStore.zoneAwareReplication.prepareDownscale.enabled only apply to zone-aware live-stores. Set liveStore.zoneAwareReplication.enabled to true, or remove these settings." }}
+{{- end }}
+{{- if and $zoneAware.enabled (or $zoneAware.noDownscale $prepareDownscale.enabled) }}
+{{- if and .Values.rollout_operator.enabled (not .Values.rollout_operator.webhooks.enabled) }}
+{{- fail "liveStore.zoneAwareReplication.noDownscale and liveStore.zoneAwareReplication.prepareDownscale.enabled are enforced by the rollout-operator admission webhooks, which rollout_operator.webhooks.enabled turns off. Turn the webhooks back on, or drop these settings." }}
+{{- end }}
+{{- end }}
+{{- if and $zoneAware.enabled $prepareDownscale.enabled (ne .Values.global.clusterDomain "cluster.local") }}
+{{- $clusterDomainArg := printf "-cluster-domain=%s" .Values.global.clusterDomain }}
+{{- if not (has $clusterDomainArg (.Values.rollout_operator.extraArgs | default list)) }}
+{{- fail (printf "liveStore.zoneAwareReplication.prepareDownscale.enabled builds live-store pod addresses from the cluster domain of the rollout-operator, which defaults to cluster.local and does not follow global.clusterDomain. Add \"%s\" to rollout_operator.extraArgs, or the webhook rejects every scale-down." $clusterDomainArg) }}
+{{- end }}
+{{- end }}
+{{- end }}

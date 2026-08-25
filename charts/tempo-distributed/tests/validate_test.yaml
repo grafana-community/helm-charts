@@ -71,3 +71,57 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: fails when noDownscale and prepareDownscale are both set
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.noDownscale: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: mutually exclusive
+
+  - it: fails when a downscale setting is used without zone-awareness
+    set:
+      ingest.kafka.address: kafka:9092
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: only apply to zone-aware live-stores
+
+  - it: fails when the rollout-operator webhooks are turned off
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      rollout_operator.webhooks.enabled: false
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: rollout-operator admission webhooks
+
+  - it: fails when the cluster domain is not passed to the rollout-operator
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: cluster-domain=custom.local
+
+  - it: accepts a cluster domain passed to the rollout-operator
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      rollout_operator.enabled: true
+      rollout_operator.extraArgs:
+        - -cluster-domain=custom.local
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0

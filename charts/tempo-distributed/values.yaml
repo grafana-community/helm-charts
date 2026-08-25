@@ -1136,6 +1136,25 @@ liveStore:
     # -- Maximum number of live-stores the rollout-operator restarts at the same
     # time inside one zone. The rollout-operator always moves one zone at a time.
     maxUnavailable: 25
+    # -- Reject every scale-down of the live-stores. The live-store count must
+    # match the Kafka partition count, so an accidental scale-down drops the
+    # recent-read tier of the partitions that go away. Needs the rollout-operator
+    # webhooks. Cannot be combined with `prepareDownscale.enabled`.
+    noDownscale: false
+    # Coordinated scale-down through the rollout-operator admission webhook. On a
+    # scale-down the webhook calls `httpPath` on every live-store that goes away,
+    # which moves its partition to INACTIVE before the pod stops. The webhook
+    # rejects the scale-down of a second zone until
+    # `minTimeBetweenZonesDownscale` has passed, so the zones go down one at a
+    # time. A rejected scale-down fails the `helm upgrade`: wait for the window,
+    # then run the upgrade again.
+    prepareDownscale:
+      # -- Enable the coordinated scale-down
+      enabled: false
+      # -- Minimum time between the scale-down of two zones
+      minTimeBetweenZonesDownscale: 12h
+      # -- Endpoint the webhook calls on every live-store that goes away
+      httpPath: live-store/prepare-partition-downscale
     # -- Zones to deploy. At least 2 zones are required. Every zone runs
     # `liveStore.replicas` live-stores.
     zones:

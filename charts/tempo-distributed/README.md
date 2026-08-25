@@ -500,9 +500,50 @@ Notes:
 - Set `zoneAwareReplication.rolloutOperatorManagedExternally: true` when a
   rollout-operator already runs in the namespace and this chart must not
   install one.
-- Scaling down is not coordinated across zones. Reduce the live-stores of one
-  zone at a time, and remember that `liveStore.replicas` must keep matching the
-  Kafka partition count.
+#### Scaling down
+
+A live-store count must keep matching the Kafka partition count, and a partition
+that loses its last owner loses its recent-read tier. Two opt-in settings guard
+the scale-down. Both need the rollout-operator admission webhooks, which the
+subchart enables by default.
+
+`noDownscale` rejects every scale-down of the live-stores:
+
+```yaml
+liveStore:
+  zoneAwareReplication:
+    noDownscale: true
+```
+
+`prepareDownscale` coordinates the scale-down instead. On a scale-down the
+webhook calls `live-store/prepare-partition-downscale` on every live-store that
+goes away, which moves its partition to INACTIVE before the pod stops. The
+webhook then rejects the scale-down of a second zone until
+`minTimeBetweenZonesDownscale` has passed, so the zones go down one at a time:
+
+```yaml
+liveStore:
+  zoneAwareReplication:
+    prepareDownscale:
+      enabled: true
+      minTimeBetweenZonesDownscale: 12h
+```
+
+A rejected scale-down fails the `helm upgrade`, and the zones that were already
+accepted stay scaled down. Wait for the window, then run the upgrade again.
+
+The webhook reaches the live-stores through the pod DNS names of the headless
+service, and it builds them with its own cluster domain, which defaults to
+`cluster.local`. When `global.clusterDomain` differs, pass the same domain to
+the rollout-operator, otherwise the chart refuses to render:
+
+```yaml
+global:
+  clusterDomain: custom.local
+rollout_operator:
+  extraArgs:
+    - -cluster-domain=custom.local
+```
 
 ### Memcached cache configuration
 

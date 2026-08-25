@@ -229,3 +229,80 @@ tests:
     asserts:
       - hasDocuments:
           count: 2
+
+  - it: points the zone StatefulSets at the live-store headless service
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-tempo-live-store
+
+  - it: adds no downscale markers by default
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    documentIndex: 0
+    asserts:
+      - notExists:
+          path: metadata.labels["grafana.com/prepare-downscale"]
+      - notExists:
+          path: metadata.labels["grafana.com/no-downscale"]
+      - notExists:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-path"]
+
+  - it: wires the coordinated scale-down
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: metadata.labels["grafana.com/prepare-downscale"]
+          value: "true"
+      - equal:
+          path: metadata.labels["grafana.com/min-time-between-zones-downscale"]
+          value: 12h
+      - equal:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-path"]
+          value: live-store/prepare-partition-downscale
+      - equal:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-port"]
+          value: "3200"
+
+  - it: honours a custom downscale endpoint and window
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.httpPath: live-store/prepare-downscale
+      liveStore.zoneAwareReplication.prepareDownscale.minTimeBetweenZonesDownscale: 30m
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-path"]
+          value: live-store/prepare-downscale
+      - equal:
+          path: metadata.labels["grafana.com/min-time-between-zones-downscale"]
+          value: 30m
+
+  - it: rejects every scale-down when noDownscale is set
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.noDownscale: true
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.labels["grafana.com/no-downscale"]
+          value: "true"
+      - notExists:
+          path: metadata.labels["grafana.com/prepare-downscale"]
