@@ -84,7 +84,7 @@ deploymentStrategy:
 progressDeadlineSeconds: null
 
 ## Startup probe. Holds off the liveness and readiness probes until it succeeds, useful for slow starts.
-## ref: https://kubernetes.io/docs/tasks/run-application/configure-liveness-readiness-startup-probes/
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 startupProbe: {}
 
 readinessProbe:
