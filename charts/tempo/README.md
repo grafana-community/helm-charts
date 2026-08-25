@@ -63,7 +63,9 @@ What changed in the chart:
   volume still covers it.
 * `tempo.retention` now renders into
   `backend_scheduler.provider.compaction.compaction.block_retention`. The `compactor:` config
-  block is gone. The value and its meaning do not change.
+  block is gone. The value and its meaning do not change. `tempo.backendScheduler` and
+  `tempo.backendWorker` tune the rest of compaction. Settings in `tempo.backendScheduler` win
+  over `tempo.retention`.
 * `tempo.memBallastSizeMbs` is removed, because Tempo 3.0 dropped the
   `-mem-ballast-size-mbs` flag.
 * `tempo.metricsGenerator.traces_storage` is removed, together with the `local_blocks`

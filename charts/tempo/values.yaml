@@ -79,6 +79,22 @@ tempo:
   liveStore: {}
   #  max_block_duration: 30s
   #  complete_block_timeout: 20m
+  # -- Configuration options for the backend scheduler, which creates the compaction and
+  # retention jobs. Replaces the compactor of Tempo 2.x. Merged over the `block_retention`
+  # that `tempo.retention` sets, so a value given here wins.
+  # Refers to: https://grafana.com/docs/tempo/latest/configuration/#backend-scheduler
+  backendScheduler: {}
+  #  provider:
+  #    compaction:
+  #      max_input_blocks: 4
+  #      compaction:
+  #        compaction_window: 1h
+  # -- Configuration options for the backend worker, which runs the jobs of the backend
+  # scheduler.
+  # Refers to: https://grafana.com/docs/tempo/latest/configuration/#backend-worker
+  backendWorker: {}
+  #  compaction:
+  #    max_block_bytes: 107374182400
   # -- Configuration options for the querier.
   # Refers to: https://grafana.com/docs/tempo/latest/configuration/#querier
   querier: {}
@@ -200,11 +216,16 @@ config: |
     multitenancy_enabled: {{ .Values.tempo.multitenancyEnabled }}
     usage_report:
       reporting_enabled: {{ .Values.tempo.reportingEnabled }}
+    {{- $backendScheduler := dict "provider" (dict "compaction" (dict "compaction" (dict "block_retention" .Values.tempo.retention))) }}
+    {{- with .Values.tempo.backendScheduler }}
+    {{- $backendScheduler = mergeOverwrite $backendScheduler (deepCopy .) }}
+    {{- end }}
     backend_scheduler:
-      provider:
-        compaction:
-          compaction:
-            block_retention: {{ .Values.tempo.retention }}
+      {{- toYaml $backendScheduler | nindent 6 }}
+    {{- with .Values.tempo.backendWorker }}
+    backend_worker:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     distributor:
       receivers:
         {{- toYaml .Values.tempo.receivers | nindent 8 }}
