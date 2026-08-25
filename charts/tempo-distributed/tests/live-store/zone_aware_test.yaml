@@ -218,22 +218,35 @@ tests:
           path: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key
           value: dedicated
 
-  - it: renders one PodDisruptionBudget per zone
+  - it: keeps one PodDisruptionBudget for every zone together
     template: live-store/poddisruptionbudget-live-store.yaml
     set:
       rollout_operator.enabled: true
       liveStore.zoneAwareReplication.enabled: true
     asserts:
       - hasDocuments:
-          count: 2
+          count: 1
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-tempo-live-store-zone-a
-        documentIndex: 0
-      - equal:
+          value: RELEASE-NAME-tempo-live-store
+      - notExists:
           path: spec.selector.matchLabels.zone
-          value: zone-b
-        documentIndex: 1
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/component"]
+          value: live-store
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
+
+  - it: budgets the live-stores of every zone once the zones together hold more than one
+    template: live-store/poddisruptionbudget-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.replicas: 1
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
 
   - it: fails when fewer than two zones are defined
     template: live-store/statefulset-live-store.yaml

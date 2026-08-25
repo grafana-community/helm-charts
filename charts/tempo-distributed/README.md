@@ -502,6 +502,10 @@ Notes:
   because the zones already define the spread. `liveStore.affinity` and the node
   selector of the component are kept: a zone merges its own `extraAffinity` and
   `nodeSelector` on top of them.
+- The PodDisruptionBudget covers the live-stores of every zone together, with
+  `liveStore.maxUnavailable` as the budget for the whole set. One budget per zone
+  would let a drain evict the same pod ordinal in two zones at once, and those
+  pods are every owner of one partition.
 - Set `zoneAwareReplication.rolloutOperatorManagedExternally: true` when a
   rollout-operator already runs in the namespace and this chart must not
   install one.
