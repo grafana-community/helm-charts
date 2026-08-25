@@ -375,8 +375,8 @@ route:
     # -- Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1beta1
     # If not set, the latest available version will be auto-detected
     apiVersion: ""
-    # -- Set the route kind
-    # Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
+    # -- Set the route kind. The template renders an HTTPRoute body, so only
+    # HTTPRoute is supported. The field stays configurable for a future route kind.
     kind: HTTPRoute
 
     # -- Route annotations
@@ -394,6 +394,8 @@ route:
 
     # -- Port of the tempo service to route to. Defaults to the Tempo HTTP API port.
     # Use 4318 for the OTLP HTTP receiver or tempoQuery.service.port for the Jaeger UI.
+    # The port must be one that the tempo service exposes. The receiver ports follow
+    # `tempo.receivers`, so a route to a disabled receiver fails the render.
     backendPort: 3200
 
     matches:

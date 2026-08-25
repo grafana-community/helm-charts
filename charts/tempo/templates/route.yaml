@@ -1,5 +1,16 @@
+{{- $servicePorts := include "tempo.servicePorts" . | fromYamlArray }}
+{{- $exposedPorts := list }}
+{{- range $servicePorts }}
+{{- $exposedPorts = append $exposedPorts (.port | int) }}
+{{- end }}
 {{- range $name, $route := .Values.route }}
 {{- if $route.enabled }}
+{{- if not $route.httpsRedirect }}
+{{- $backendPort := $route.backendPort | default 3200 | int }}
+{{- if not (has $backendPort $exposedPorts) }}
+{{- fail (printf "route.%s.backendPort is %d, but the tempo service does not expose that port. Enable the matching receiver, or use one of: %v" $name $backendPort $exposedPorts) }}
+{{- end }}
+{{- end }}
 ---
 apiVersion: {{ $route.apiVersion | default (include "tempo.gatewayApi.apiVersion" $) }}
 kind: {{ $route.kind | default "HTTPRoute" }}

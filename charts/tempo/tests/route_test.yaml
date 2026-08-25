@@ -195,3 +195,42 @@ tests:
       - equal:
           path: spec.hostnames[0]
           value: my-release.example.com
+
+  - it: should render every enabled route and skip the disabled ones
+    set:
+      route.otlp.enabled: true
+      route.otlp.backendPort: 4318
+      route.jaeger.enabled: false
+      route.jaeger.backendPort: 16686
+    release:
+      name: my-release
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: should fail when the backend port is not exposed by the service
+    set:
+      route.main.backendPort: 4318
+      tempo.receivers.otlp.protocols.http: null
+    asserts:
+      - failedTemplate:
+          errorPattern: "route.main.backendPort is 4318, but the tempo service does not expose that port"
+
+  - it: should skip the backend port check for a redirect route
+    set:
+      route.main.httpsRedirect: true
+      route.main.backendPort: 4318
+      tempo.receivers.otlp.protocols.http: null
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: RequestRedirect
+
+  - it: should render the configured route kind
+    set:
+      route.main.kind: GRPCRoute
+    asserts:
+      - isKind:
+          of: GRPCRoute

@@ -81,6 +81,25 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
 {{/*
+Ports of the tempo service, as a YAML list. Mirrors the protocol selection of
+templates/service.yaml, so a caller can check whether a port is reachable.
+*/}}
+{{- define "tempo.servicePorts" -}}
+{{- if (eq .Values.service.type "LoadBalancer") }}
+{{- $protocol := .Values.service.protocol | default "TCP" }}
+{{- if contains "UDP" $protocol }}
+{{- include "tempo.udp" . }}
+{{- end }}
+{{- if contains "TCP" $protocol }}
+{{- include "tempo.tcp" . }}
+{{- end }}
+{{- else }}
+{{- include "tempo.udp" . }}
+{{- include "tempo.tcp" . }}
+{{- end }}
+{{- end -}}
+
+{{/*
 Return the appropriate apiVersion for Gateway API resources.
 */}}
 {{- define "tempo.gatewayApi.apiVersion" -}}
