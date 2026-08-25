@@ -20,7 +20,7 @@ spec:
   selector:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
-  serviceName: live-store
+  serviceName: {{ include "tempo.governingServiceName" (dict "ctx" $ "component" "live-store") }}
   podManagementPolicy: Parallel
   updateStrategy:
     {{- toYaml .Values.liveStore.statefulStrategy | nindent 4 }}

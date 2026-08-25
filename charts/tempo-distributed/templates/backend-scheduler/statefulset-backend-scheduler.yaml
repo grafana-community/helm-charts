@@ -23,7 +23,7 @@ spec:
   selector:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
-  serviceName: backend-scheduler
+  serviceName: {{ include "tempo.governingServiceName" (dict "ctx" $ "component" "backend-scheduler") }}
   podManagementPolicy: Parallel
   updateStrategy:
     {{- toYaml .Values.backendScheduler.statefulStrategy | nindent 4 }}

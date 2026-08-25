@@ -178,6 +178,20 @@ Resource name template
 {{- end -}}
 
 {{/*
+Governing service of a StatefulSet.
+Params:
+  ctx       = root context
+  component = component name string (e.g. "live-store")
+*/}}
+{{- define "tempo.governingServiceName" -}}
+{{- if .ctx.Values.tempo.useHeadlessGoverningService -}}
+{{ include "tempo.resourceName" . }}{{ if eq .component "metrics-generator" }}-discovery{{ end }}
+{{- else -}}
+{{ .component }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Calculate the config from structured and unstructured text input
 */}}
 {{- define "tempo.calculatedConfig" -}}

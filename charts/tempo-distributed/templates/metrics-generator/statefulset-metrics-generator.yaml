@@ -23,7 +23,7 @@ spec:
   selector:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
-  serviceName: metrics-generator
+  serviceName: {{ include "tempo.governingServiceName" (dict "ctx" $ "component" "metrics-generator") }}
   template:
     {{- include "tempo.podTemplate" (dict
         "ctx" .

@@ -137,6 +137,13 @@ tempo:
     # See https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution.
     # Can be overridden per component via <component>.service.trafficDistribution.
     trafficDistribution: null
+  # -- Point every StatefulSet at the headless Service of its own component as the
+  # governing service. The default `false` keeps the short, unprefixed name that the
+  # chart has always written. That name matches no Service, so the stable per-pod DNS
+  # names do not resolve.
+  # `spec.serviceName` is immutable. Enable this only together with the manual
+  # StatefulSet delete described under `Upgrading` in the chart README.
+  useHeadlessGoverningService: false
 
 # -- Default values applied to every pod in this chart.
 # These values are overridden by component-specific settings.

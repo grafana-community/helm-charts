@@ -51,6 +51,35 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### StatefulSet governing service (`tempo.useHeadlessGoverningService`)
+
+Every StatefulSet in this chart writes a short, unprefixed `spec.serviceName`, for example
+`live-store`. No Service carries that name, so the stable per-pod DNS names
+(`<pod>.<service>.<namespace>.svc`) never resolved. Set
+`tempo.useHeadlessGoverningService: true` to point each StatefulSet at the headless Service
+of its own component instead.
+
+The value defaults to `false`, because `spec.serviceName` is immutable. A plain
+`helm upgrade` with the value set to `true` fails with:
+
+```console
+StatefulSet.apps "..." is invalid: spec: Forbidden: updates to statefulset spec for fields
+other than 'replicas', 'ordinals', 'template', 'updateStrategy', ... are forbidden
+```
+
+To enable it, delete each affected StatefulSet first and keep the pods:
+
+```bash
+kubectl delete statefulset --cascade=orphan -n <namespace> \
+  <release>-tempo-live-store <release>-tempo-block-builder \
+  <release>-tempo-backend-scheduler <release>-tempo-backend-worker \
+  <release>-tempo-metrics-generator
+helm upgrade ... --set tempo.useHeadlessGoverningService=true
+```
+
+The Helm upgrade recreates the StatefulSets and adopts the running pods, so no trace data is
+lost. The default flips to `true` in the next major chart version.
+
 ### MinIO subchart removed
 
 The built-in MinIO subchart has been removed in chart v3.0.0. `minio` is no longer a chart

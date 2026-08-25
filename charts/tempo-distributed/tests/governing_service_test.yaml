@@ -1,0 +1,62 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: StatefulSet governing service
+templates:
+  - live-store/statefulset-live-store.yaml
+  - block-builder/statefulset-block-builder.yaml
+  - backend-scheduler/statefulset-backend-scheduler.yaml
+  - backend-worker/statefulset-backend-worker.yaml
+  - metrics-generator/statefulset-metrics-generator.yaml
+  - configmap-tempo.yaml
+
+set:
+  metricsGenerator.enabled: true
+  metricsGenerator.kind: StatefulSet
+
+tests:
+  - it: keeps the unprefixed governing service name by default
+    asserts:
+      - equal:
+          path: spec.serviceName
+          value: live-store
+        template: live-store/statefulset-live-store.yaml
+      - equal:
+          path: spec.serviceName
+          value: block-builder
+        template: block-builder/statefulset-block-builder.yaml
+      - equal:
+          path: spec.serviceName
+          value: backend-scheduler
+        template: backend-scheduler/statefulset-backend-scheduler.yaml
+      - equal:
+          path: spec.serviceName
+          value: backend-worker
+        template: backend-worker/statefulset-backend-worker.yaml
+      - equal:
+          path: spec.serviceName
+          value: metrics-generator
+        template: metrics-generator/statefulset-metrics-generator.yaml
+
+  - it: points every StatefulSet at a headless service when the opt-in is enabled
+    set:
+      tempo.useHeadlessGoverningService: true
+    asserts:
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-tempo-live-store
+        template: live-store/statefulset-live-store.yaml
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-tempo-block-builder
+        template: block-builder/statefulset-block-builder.yaml
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-tempo-backend-scheduler
+        template: backend-scheduler/statefulset-backend-scheduler.yaml
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-tempo-backend-worker
+        template: backend-worker/statefulset-backend-worker.yaml
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-tempo-metrics-generator-discovery
+        template: metrics-generator/statefulset-metrics-generator.yaml
