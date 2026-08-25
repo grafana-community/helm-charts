@@ -1,6 +1,6 @@
 {{/*
- Generate config map data
- */}}
+  Generate config map data
+  */}}
 {{- define "grafana.configData" -}}
 {{ include "grafana.assertNoLeakedSecrets" . }}
 {{- $files := .Files }}
@@ -74,6 +74,7 @@ grafana.ini: |
 download_dashboards.sh: |
   #!/usr/bin/env sh
   set -euf
+  mkdir -p /var/lib/grafana/dashboards/default
   {{- if .Values.dashboardProviders }}
     {{- range $key, $value := .Values.dashboardProviders }}
       {{- range $value.providers }}
@@ -148,8 +149,8 @@ download_dashboards.sh: |
 {{- end -}}
 
 {{/*
- Generate dashboard json config map data
- */}}
+  Generate dashboard json config map data
+  */}}
 {{- define "grafana.configDashboardProviderData" -}}
 provider.yaml: |-
   apiVersion: 1

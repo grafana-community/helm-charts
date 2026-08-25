@@ -91,6 +91,8 @@ The `/tmp` now mounted as emptyDir volume by default and needs to be removed fro
 
 If you need to control the version of bundled plugins, like Elasticsearch, set `shadowBundledPlugins: true`.
 
+`set -x` is no longer used at downloading dashboards.
+
 ## Configuration
 
 Grafana is primarily configured through `grafana.ini`. The `grafana.ini` key in `values.yaml` maps directly to the Grafana configuration file and supports all settings documented in the [official Grafana configuration reference](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/).
