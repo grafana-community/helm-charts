@@ -84,7 +84,7 @@ deploymentStrategy:
 progressDeadlineSeconds: null
 
 ## Startup probe. Holds off the liveness and readiness probes until it succeeds, useful for slow starts.
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+## ref: https://kubernetes.io/docs/tasks/run-application/configure-liveness-readiness-startup-probes/
 startupProbe: {}
 
 readinessProbe:
@@ -912,6 +912,11 @@ dashboardProviders: {}
 ## See the curl documentation for additional options
 ##
 defaultCurlOptions: "-skf"
+
+## Configure shell options for downloading dashboards. The beginning dash is added automatically.
+## Add `x` to enable command tracing. This can expose sensitive values in logs.
+##
+defaultShellOptions: "eufo pipefail"
 
 ## Configure grafana dashboard to import
 ## NOTE: To use dashboards you must also enable/configure dashboardProviders
