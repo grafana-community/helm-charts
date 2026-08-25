@@ -197,6 +197,7 @@ dashboards:
 Dashboards could be stored on a server that does not return JSON directly and instead of it returns a base64 encoded file (e.g. Gerrit)
 A new parameter has been added to the URL use case so if you specify a b64content value equals to true after the URL entry a base64 decoding is applied before save the file to disk.
 If this entry is not set or is equals to false not decoding is applied to the file before saving it to disk.
+
 ### Gerrit use case
 
 Gerrit API for download files has the following schema: <https://yourgerritserver/a/{project-name}/branches/{branch-id}/files/{file-id}/content> where {project-name} and
