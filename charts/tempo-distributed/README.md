@@ -500,6 +500,14 @@ Notes:
 - Set `zoneAwareReplication.rolloutOperatorManagedExternally: true` when a
   rollout-operator already runs in the namespace and this chart must not
   install one.
+#### Turning zone-awareness on
+
+The switch replaces the flat StatefulSet with the per-zone ones, so every
+live-store restarts at once and the recent-read tier is unavailable until the
+pods are ready. Each zone also gets its own Kafka consumer group, which has no
+committed offset yet, so every live-store replays the Kafka lookback period to
+rebuild its query state. Plan the switch like a full live-store restart.
+
 #### Scaling down
 
 A live-store count must keep matching the Kafka partition count, and a partition
