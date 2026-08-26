@@ -1,0 +1,28 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana chart validation
+templates:
+  - validate.yaml
+
+tests:
+  - it: should reject GF __FILE variables with the default distroless image
+    set:
+      env.GF_DATABASE_PASSWORD__FILE: /etc/secrets/database/password
+    asserts:
+      - failedTemplate:
+          errorMessage: "GF_DATABASE_PASSWORD__FILE is not supported with the distroless Grafana image because it depends on /run.sh. Keep the secret mounted and, under env, replace GF_DATABASE_PASSWORD__FILE: /etc/secrets/database/password with GF_DATABASE_PASSWORD: $__file{/etc/secrets/database/password}, or select a non-distroless image tag."
+
+  - it: should allow GF __FILE variables with a non-distroless image
+    set:
+      image.tag: 13.2.0
+      env.GF_DATABASE_PASSWORD__FILE: /etc/secrets/database/password
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should allow other environment variables with a distroless image
+    set:
+      env.DATABASE_PASSWORD__FILE: /etc/secrets/database/password
+      env.GF_DATABASE_PASSWORD: $__file{/etc/secrets/database/password}
+    asserts:
+      - hasDocuments:
+          count: 0

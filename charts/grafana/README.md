@@ -86,8 +86,26 @@ Grafana 13 is configured by default. Grafana 13 explicit requires an image rende
 
 ### To 13.0.0
 
-The Grafana container is running with `readOnlyRootFilesystem: true` and uses the `distroless` image tag by default.
-The `/tmp` now mounted as emptyDir volume by default and needs to be removed from your `extraVolumeMounts`.
+The Grafana container now runs with `readOnlyRootFilesystem: true` and uses the `distroless` image tag by default.
+`/tmp` is now mounted as an `emptyDir` volume by default and must be removed from your `extraVolumeMounts`.
+
+The distroless image does not include Grafana's Docker `/run.sh` entrypoint. As a result, `GF_*__FILE` environment variables and the deprecated `GF_INSTALL_PLUGINS` environment variable are not supported with distroless image tags. The chart fails validation when `GF_*__FILE` is combined with a distroless tag.
+
+Replace `GF_*__FILE` variables with Grafana's native [file provider](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#file-provider). For example, replace:
+
+```yaml
+env:
+  GF_DATABASE_PASSWORD__FILE: /etc/secrets/database/password
+```
+
+with:
+
+```yaml
+env:
+  GF_DATABASE_PASSWORD: $__file{/etc/secrets/database/password}
+```
+
+Continue mounting the referenced secret file with `extraSecretMounts` or `extraVolumeMounts`. To install plugins, use the chart's `plugins` value or `env.GF_PLUGINS_PREINSTALL_SYNC` instead of `env.GF_INSTALL_PLUGINS`.
 
 If you need to control the version of bundled plugins, like Elasticsearch, set `shadowBundledPlugins: true`.
 
