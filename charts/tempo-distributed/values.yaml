@@ -271,9 +271,7 @@ metricsGenerator:
     enabled: true
     # -- Set unhealthyPodEvictionPolicy for the metrics-generator PodDisruptionBudget. Requires policy/v1.
     unhealthyPodEvictionPolicy: ""
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Minimum number of seconds for which a newly created Pod should be ready without any of its containers crashing/terminating
   minReadySeconds: 10
@@ -500,9 +498,7 @@ distributor:
     enabled: true
     # -- Set unhealthyPodEvictionPolicy for the distributor PodDisruptionBudget. Requires policy/v1.
     unhealthyPodEvictionPolicy: ""
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Minimum number of seconds for which a newly created Pod should be ready without any of its containers crashing/terminating
   minReadySeconds: 10
@@ -1031,9 +1027,7 @@ blockBuilder:
     enabled: true
     # -- Set unhealthyPodEvictionPolicy for the block-builder PodDisruptionBudget. Requires policy/v1.
     unhealthyPodEvictionPolicy: ""
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   service:
     # -- Annotations for block-builder service
@@ -1342,9 +1336,7 @@ querier:
     enabled: true
     # -- Set unhealthyPodEvictionPolicy for the querier PodDisruptionBudget. Requires policy/v1.
     unhealthyPodEvictionPolicy: ""
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Max Surge for querier pods
   maxSurge: 0
@@ -1620,9 +1612,7 @@ queryFrontend:
     enabled: true
     # -- Set unhealthyPodEvictionPolicy for the query-frontend PodDisruptionBudget. Requires policy/v1.
     unhealthyPodEvictionPolicy: ""
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Minimum number of seconds for which a newly created Pod should be ready without any of its containers crashing/terminating
   minReadySeconds: 10
@@ -1751,9 +1741,7 @@ enterpriseFederationFrontend:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for enterprise-federation-frontend
     enabled: true
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Node selector for federation-frontend pods
   nodeSelector: {}
@@ -2372,9 +2360,7 @@ memcached:
     enabled: true
     # -- Set unhealthyPodEvictionPolicy for the memcached PodDisruptionBudget. Requires policy/v1.
     unhealthyPodEvictionPolicy: ""
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached pod
   initContainers: []
@@ -2487,9 +2473,7 @@ memcachedBloom:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for memcached-bloom
     enabled: true
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached-bloom pod
   initContainers: []
@@ -2576,9 +2560,7 @@ memcachedParquetFooter:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for memcached-parquet-footer
     enabled: true
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached-parquet-footer pod
   initContainers: []
@@ -2665,9 +2647,7 @@ memcachedFrontendSearch:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for memcached-frontend-search
     enabled: true
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached-frontend-search pod
   initContainers: []
@@ -2917,9 +2897,7 @@ gateway:
     enabled: true
     # -- Set unhealthyPodEvictionPolicy for the gateway PodDisruptionBudget. Requires policy/v1.
     unhealthyPodEvictionPolicy: ""
-  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
-  # budget covers the live-stores of every zone together, because the same pod
-  # ordinal in two zones holds every owner of one partition.
+  # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Minimum number of seconds for which a newly created Pod should be ready without any of its containers crashing/terminating
   minReadySeconds: 10
