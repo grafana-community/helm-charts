@@ -454,8 +454,11 @@ exactly one live-store. If that pod goes away, recent-trace queries for its
 partition fail until the pod comes back.
 
 Zone-aware replication renders one StatefulSet per zone. Each zone runs a full
-set of live-stores, gets its own Kafka consumer group and passes its own
-`-live-store.instance-availability-zone` to Tempo. A partition therefore has one
+set of live-stores and passes its own
+`-live-store.instance-availability-zone` to Tempo. A live-store reads Kafka
+under a consumer group of its own, because the chart leaves
+`ingest.kafka.consumer_group` unset and Tempo then falls back to the pod name,
+so the zones consume every partition independently. A partition therefore has one
 owner per zone, and a querier needs an answer from one zone only. The loss of a
 zone no longer breaks recent-trace queries.
 
@@ -515,8 +518,9 @@ Notes:
 
 The switch replaces the flat StatefulSet with the per-zone ones, so every
 live-store restarts at once and the recent-read tier is unavailable until the
-pods are ready. Each zone also gets its own Kafka consumer group, which has no
-committed offset yet, so every live-store replays the Kafka lookback period to
+pods are ready. The new pods also carry new names, and a live-store takes its
+Kafka consumer group from its pod name, so every consumer group is new and has
+no committed offset. Every live-store replays the Kafka lookback period to
 rebuild its query state. Plan the switch like a full live-store restart.
 
 #### Draining a node

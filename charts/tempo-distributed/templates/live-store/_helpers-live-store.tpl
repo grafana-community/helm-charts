@@ -5,10 +5,11 @@ Returns a map keyed by zone name. The key "" is used when zone-aware replication
 is disabled and renders the single flat StatefulSet.
 
 Each zone runs a full set of live-stores. A live-store derives its Kafka
-partition from the numeric suffix of its pod name and its consumer group from
-the StatefulSet name, so every zone consumes all partitions independently and
-each partition ends up with one owner per zone. Therefore the replica count of a
-zone is liveStore.replicas, not a share of it.
+partition from the numeric suffix of its pod name, and its Kafka consumer group
+defaults to its own pod name because the chart leaves ingest.kafka.consumer_group
+unset. Every zone therefore consumes all partitions independently and each
+partition ends up with one owner per zone. Therefore the replica count of a zone
+is liveStore.replicas, not a share of it.
 
 Params:
   ctx = root context ($)
