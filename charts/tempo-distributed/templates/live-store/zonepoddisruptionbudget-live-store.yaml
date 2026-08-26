@@ -18,8 +18,8 @@ spec:
   {{- with $zpdb.podNamePartitionRegex }}
   podNamePartitionRegex: {{ . | quote }}
   {{- end }}
-  {{- with $zpdb.podNameRegexGroup }}
-  podNameRegexGroup: {{ . | int }}
+  {{- if not (kindIs "invalid" $zpdb.podNameRegexGroup) }}
+  podNameRegexGroup: {{ $zpdb.podNameRegexGroup | int }}
   {{- end }}
   {{- with $zpdb.crossZoneEvictionDelay }}
   crossZoneEvictionDelay: {{ . | quote }}

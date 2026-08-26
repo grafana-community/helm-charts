@@ -335,6 +335,17 @@ tests:
           path: spec.crossZoneEvictionDelay
           value: 20m
 
+  - it: keeps a capture group of 0
+    template: live-store/zonepoddisruptionbudget-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.podDisruptionBudget.podNameRegexGroup: 0
+    asserts:
+      - equal:
+          path: spec.podNameRegexGroup
+          value: 0
+
   - it: fails when fewer than two zones are defined
     template: live-store/statefulset-live-store.yaml
     set:
