@@ -25,8 +25,8 @@ metadata:
     {{- end }}
   {{- $annotations := mergeOverwrite (deepCopy (.Values.liveStore.annotations | default dict)) ($rolloutZone.annotations | default dict) }}
   {{- if $zoneName }}
-  {{- with $zoneAware.maxUnavailable }}
-  {{- $_ := set $annotations "rollout-max-unavailable" (. | toString) }}
+  {{- if not (kindIs "invalid" $zoneAware.maxUnavailable) }}
+  {{- $_ := set $annotations "rollout-max-unavailable" ($zoneAware.maxUnavailable | toString) }}
   {{- end }}
   {{- if and $prepareDownscale.enabled (not $zoneAware.noDownscale) }}
   {{- $_ := set $annotations "grafana.com/prepare-downscale-http-path" $prepareDownscale.httpPath }}

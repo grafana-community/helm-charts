@@ -94,6 +94,29 @@ tests:
           path: spec.template.metadata.labels.name
           value: live-store-zone-a
 
+  - it: keeps a maxUnavailable of 0 on the zone StatefulSet
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.maxUnavailable: 0
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.annotations["rollout-max-unavailable"]
+          value: "0"
+
+  - it: drops the annotation when maxUnavailable is null
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.maxUnavailable: null
+    documentIndex: 0
+    asserts:
+      - notExists:
+          path: metadata.annotations["rollout-max-unavailable"]
+
   - it: scopes the selector of a zone to that zone
     template: live-store/statefulset-live-store.yaml
     set:
