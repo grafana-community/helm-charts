@@ -21,6 +21,9 @@ spec:
     - name: grpc
       port: 9095
       targetPort: 9095
+  {{- if .Values.tempo.useHeadlessGoverningService }}
+  publishNotReadyAddresses: true
+  {{- end }}
   selector:
     {{- include "tempo.selectorLabels" (dict "ctx" . "component" "backend-scheduler") | nindent 4 }}
   ipFamilies: {{ .Values.tempo.service.ipFamilies }}

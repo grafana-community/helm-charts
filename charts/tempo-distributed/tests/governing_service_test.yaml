@@ -6,6 +6,11 @@ templates:
   - backend-scheduler/statefulset-backend-scheduler.yaml
   - backend-worker/statefulset-backend-worker.yaml
   - metrics-generator/statefulset-metrics-generator.yaml
+  - live-store/service-live-store.yaml
+  - block-builder/service-block-builder.yaml
+  - backend-scheduler/service-backend-scheduler.yaml
+  - backend-worker/service-backend-worker.yaml
+  - metrics-generator/service-metrics-generator-discovery.yaml
   - configmap-tempo.yaml
 
 set:
@@ -36,7 +41,7 @@ tests:
           value: metrics-generator
         template: metrics-generator/statefulset-metrics-generator.yaml
 
-  - it: points every StatefulSet at a headless service when the opt-in is enabled
+  - it: points the five StatefulSets at a headless service when the opt-in is enabled
     set:
       tempo.useHeadlessGoverningService: true
     asserts:
@@ -60,3 +65,46 @@ tests:
           path: spec.serviceName
           value: RELEASE-NAME-tempo-metrics-generator-discovery
         template: metrics-generator/statefulset-metrics-generator.yaml
+
+  - it: leaves the governing services publishing ready addresses only by default
+    asserts:
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        template: live-store/service-live-store.yaml
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        template: block-builder/service-block-builder.yaml
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        template: backend-scheduler/service-backend-scheduler.yaml
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        template: backend-worker/service-backend-worker.yaml
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        template: metrics-generator/service-metrics-generator-discovery.yaml
+
+  - it: publishes the not-ready addresses of the governing services when the opt-in is enabled
+    set:
+      tempo.useHeadlessGoverningService: true
+    asserts:
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        template: live-store/service-live-store.yaml
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        template: block-builder/service-block-builder.yaml
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        template: backend-scheduler/service-backend-scheduler.yaml
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        template: backend-worker/service-backend-worker.yaml
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        template: metrics-generator/service-metrics-generator-discovery.yaml
