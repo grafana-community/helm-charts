@@ -49,7 +49,7 @@ spec:
   {{- if $zoneName }}
   serviceName: {{ include "tempo.resourceName" (dict "ctx" . "component" "live-store") }}
   {{- else }}
-  serviceName: live-store
+  serviceName: {{ include "tempo.governingServiceName" (dict "ctx" $ "component" "live-store") }}
   {{- end }}
   podManagementPolicy: Parallel
   updateStrategy:
