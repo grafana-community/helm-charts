@@ -1,0 +1,38 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana version labels
+templates:
+  - configmap.yaml
+  - deployment.yaml
+  - image-renderer-deployment.yaml
+
+tests:
+  - it: should strip the distroless image variant from version labels
+    set:
+      imageRenderer.enabled: true
+    asserts:
+      - template: deployment.yaml
+        equal:
+          path: metadata.labels["app.kubernetes.io/version"]
+          value: 13.2.0
+      - template: image-renderer-deployment.yaml
+        equal:
+          path: metadata.labels["app.kubernetes.io/version"]
+          value: 13.2.0
+
+  - it: should strip a digest and the distroless image variant from version labels
+    set:
+      image.tag: 13.2.0-distroless@sha256:deadbeef
+    asserts:
+      - template: deployment.yaml
+        equal:
+          path: metadata.labels["app.kubernetes.io/version"]
+          value: 13.2.0
+
+  - it: should preserve other image tag suffixes in version labels
+    set:
+      image.tag: 13.2.0-enterprise
+    asserts:
+      - template: deployment.yaml
+        equal:
+          path: metadata.labels["app.kubernetes.io/version"]
+          value: 13.2.0-enterprise

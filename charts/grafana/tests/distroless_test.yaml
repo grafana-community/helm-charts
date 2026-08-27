@@ -1,0 +1,53 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana distroless compatibility
+templates:
+  - configmap.yaml
+  - deployment.yaml
+  - secret.yaml
+
+tests:
+  - it: should preserve GF admin __FILE overrides with a non-distroless image
+    set:
+      image.tag: 13.2.0
+      env:
+        GF_SECURITY_ADMIN_USER__FILE: /etc/secrets/admin/user
+        GF_SECURITY_ADMIN_PASSWORD__FILE: /etc/secrets/admin/password
+    asserts:
+      - template: secret.yaml
+        hasDocuments:
+          count: 0
+      - template: deployment.yaml
+        notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GF_SECURITY_ADMIN_USER
+      - template: deployment.yaml
+        notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GF_SECURITY_ADMIN_PASSWORD
+
+  - it: should use Grafana's native synchronous plugin preinstall setting
+    set:
+      plugins:
+        - grafana-clock-panel
+        - redis-datasource
+    asserts:
+      - template: configmap.yaml
+        equal:
+          path: data.plugins
+          value: grafana-clock-panel,redis-datasource
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GF_PLUGINS_PREINSTALL_SYNC
+            valueFrom:
+              configMapKeyRef:
+                name: RELEASE-NAME-grafana
+                key: plugins
+      - template: deployment.yaml
+        notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GF_INSTALL_PLUGINS

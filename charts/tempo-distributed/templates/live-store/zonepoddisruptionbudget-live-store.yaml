@@ -1,0 +1,28 @@
+{{- if .Values.liveStore.enabled }}
+{{- $zoneAware := .Values.liveStore.zoneAwareReplication }}
+{{- $zpdb := $zoneAware.podDisruptionBudget | default dict }}
+{{- if and $zoneAware.enabled $zpdb.enabled .Values.liveStore.podDisruptionBudget.enabled }}
+{{- $dict := dict "ctx" . "component" "live-store" "memberlist" true }}
+apiVersion: rollout-operator.grafana.com/v1
+kind: ZoneAwarePodDisruptionBudget
+metadata:
+  name: {{ include "tempo.resourceName" $dict }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.labels" $dict | nindent 4 }}
+spec:
+  maxUnavailable: {{ $zpdb.maxUnavailable | int }}
+  selector:
+    matchLabels:
+      {{- include "tempo.selectorLabels" $dict | nindent 6 }}
+  {{- with $zpdb.podNamePartitionRegex }}
+  podNamePartitionRegex: {{ . | quote }}
+  {{- end }}
+  {{- if not (kindIs "invalid" $zpdb.podNameRegexGroup) }}
+  podNameRegexGroup: {{ $zpdb.podNameRegexGroup | int }}
+  {{- end }}
+  {{- with $zpdb.crossZoneEvictionDelay }}
+  crossZoneEvictionDelay: {{ . | quote }}
+  {{- end }}
+{{- end }}
+{{- end }}
