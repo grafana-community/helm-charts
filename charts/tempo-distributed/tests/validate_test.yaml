@@ -45,3 +45,176 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: fails when zone-aware live-stores have no rollout-operator
+    set:
+      ingest.kafka.address: kafka:9092
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: needs a rollout-operator in this namespace
+
+  - it: renders nothing when the rollout-operator is installed by the chart
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders nothing when the rollout-operator is managed outside the chart
+    set:
+      ingest.kafka.address: kafka:9092
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.rolloutOperatorManagedExternally: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: fails when noDownscale and prepareDownscale are both set
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.noDownscale: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: mutually exclusive
+
+  - it: fails when a downscale setting is used without zone-awareness
+    set:
+      ingest.kafka.address: kafka:9092
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: only apply to zone-aware live-stores
+
+  - it: fails when the rollout-operator webhooks are turned off
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      rollout_operator.webhooks.enabled: false
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: rollout-operator admission webhooks
+
+  - it: fails when the cluster domain is not passed to the rollout-operator
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: cluster-domain=custom.local
+
+  - it: accepts a cluster domain passed to the rollout-operator
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      rollout_operator.enabled: true
+      rollout_operator.extraArgs:
+        - -cluster-domain=custom.local
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: accepts a double-dash cluster domain arg
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      rollout_operator.enabled: true
+      rollout_operator.extraArgs:
+        - --cluster-domain=custom.local
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: accepts a space-separated cluster domain arg
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      rollout_operator.enabled: true
+      rollout_operator.extraArgs:
+        - -cluster-domain
+        - custom.local
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: leaves the cluster domain of an externally managed rollout-operator alone
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.rolloutOperatorManagedExternally: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: still rejects a cluster domain that reaches no rollout-operator arg
+    set:
+      ingest.kafka.address: kafka:9092
+      global.clusterDomain: custom.local
+      rollout_operator.enabled: true
+      rollout_operator.extraArgs:
+        - -cluster-domain=other.local
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.prepareDownscale.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: cluster-domain=custom.local
+
+  - it: fails when the pod eviction webhook is turned off
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      rollout_operator.webhooks.enabled: false
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: rollout-operator pod eviction webhook
+
+  - it: fails when the ZoneAwarePodDisruptionBudget CRD is not installed
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      rollout_operator.crds.enabled: false
+      liveStore.zoneAwareReplication.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: needs the ZoneAwarePodDisruptionBudget CRD
+
+  - it: fails on a cross-zone eviction delay without a partition regex
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.podDisruptionBudget.podNamePartitionRegex: null
+      liveStore.zoneAwareReplication.podDisruptionBudget.crossZoneEvictionDelay: 20m
+    asserts:
+      - failedTemplate:
+          errorPattern: crossZoneEvictionDelay needs podNamePartitionRegex
+
+  - it: leaves the webhooks alone when the zone-aware budget is off
+    set:
+      ingest.kafka.address: kafka:9092
+      rollout_operator.enabled: true
+      rollout_operator.webhooks.enabled: false
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.podDisruptionBudget.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

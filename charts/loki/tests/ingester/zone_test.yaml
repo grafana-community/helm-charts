@@ -159,6 +159,70 @@ tests:
         documentIndex: 2
         template: ingester/workload.yaml
 
+  - it: should keep chart-owned zone labels when podLabels sets reserved keys
+    set:
+      ingester.podLabels:
+        name: my-ingester
+        rollout-group: my-group
+        app.kubernetes.io/component: my-component
+        custom-label: kept
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels.name
+          value: ingester-zone-a
+        documentIndex: 0
+        template: ingester/workload.yaml
+      - equal:
+          path: spec.template.metadata.labels.name
+          value: ingester-zone-b
+        documentIndex: 1
+        template: ingester/workload.yaml
+      - equal:
+          path: spec.template.metadata.labels["rollout-group"]
+          value: ingester
+        template: ingester/workload.yaml
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/component"]
+          value: ingester
+        template: ingester/workload.yaml
+      - equal:
+          path: spec.template.metadata.labels["custom-label"]
+          value: kept
+        template: ingester/workload.yaml
+
+  - it: should keep selector matchLabels a subset of template labels when podLabels collides
+    set:
+      loki.podLabels:
+        name: from-loki
+      defaults.podLabels:
+        rollout-group: from-defaults
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels.name
+          value: ingester-zone-a
+        documentIndex: 0
+        template: ingester/workload.yaml
+      - equal:
+          path: spec.selector.matchLabels.name
+          value: ingester-zone-a
+        documentIndex: 0
+        template: ingester/workload.yaml
+      - equal:
+          path: spec.template.metadata.labels["rollout-group"]
+          value: ingester
+        template: ingester/workload.yaml
+
+  - it: should pass through podLabels name when zoneAwareReplication is disabled
+    set:
+      ingester.zoneAwareReplication.enabled: false
+      ingester.podLabels:
+        name: my-ingester
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels.name
+          value: my-ingester
+        template: ingester/workload.yaml
+
   # ── Annotations ──────────────────────────────────────────────────────────────
 
   - it: should set rollout-max-unavailable annotation based on maxUnavailablePct

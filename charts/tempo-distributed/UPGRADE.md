@@ -109,6 +109,31 @@ partition**. If you use `ingest.kafka.auto_create_topic_enabled: true`, set
 `ingest.kafka.auto_create_topic_default_partitions` to the desired partition
 count and set `blockBuilder.replicas` and `liveStore.replicas` to match.
 
+### Live-store headless service name (planned change in 4.0.0)
+
+The flat live-store StatefulSet sets `spec.serviceName: live-store`, which
+matches no Service in the release. `spec.serviceName` names the headless Service
+that governs the pod DNS names: the controller copies it into the `subdomain` of
+every pod, which produces the record
+`<pod>.<serviceName>.<namespace>.svc.<clusterDomain>`. With a name that matches
+no Service, the live-store pods have no resolvable DNS name.
+
+Nothing in the chart depends on that record today. The live-stores join the ring
+through the `gossip-ring` Service, and queriers reach them by the addresses in
+the ring, so the wrong name has no effect. Zone-aware live-stores already use
+the correct name, `<release>-tempo-live-store`, because the rollout-operator
+scale-down webhook addresses the pods through it.
+
+`spec.serviceName` is immutable, so correcting it on the flat StatefulSet needs
+the object to be recreated. Chart 4.0.0 will make the change. Prepare for it
+with:
+
+```bash
+kubectl delete statefulset <release>-tempo-live-store --cascade=orphan
+```
+
+The pods keep running while Helm recreates the StatefulSet on the next upgrade.
+
 ### Legacy overrides format
 
 Tempo 3.0 disables the legacy flat overrides format by default. If your
