@@ -1,0 +1,34 @@
+# Installs the flat live-store from the base branch, then upgrades to the
+# zone-aware live-stores of this branch, so the switch documented in README.md
+# runs on a real cluster. The kind cluster has two worker nodes, so one zone can
+# land on each.
+blockBuilder:
+  replicas: 1
+
+liveStore:
+  replicas: 1
+  zoneAwareReplication:
+    enabled: true
+    topologyKey: kubernetes.io/hostname
+    zones:
+      - name: zone-a
+      - name: zone-b
+    podDisruptionBudget:
+      crossZoneEvictionDelay: 20m
+
+rollout_operator:
+  enabled: true
+
+ingest:
+  kafka:
+    address: "kafka.kafka-ci.svc.cluster.local:9092"
+    auto_create_topic_default_partitions: 1
+
+traces:
+  otlp:
+    http:
+      enabled: true
+
+tests:
+  integration:
+    enabled: true

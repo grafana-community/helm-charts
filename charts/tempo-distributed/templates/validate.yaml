@@ -4,3 +4,42 @@
 {{- if and (or .Values.blockBuilder.enabled .Values.liveStore.enabled) (not .Values.ingest.kafka.address) }}
 {{- fail "ingest.kafka.address is required when blockBuilder or liveStore is enabled. Tempo 3.0 uses a Kafka-backed write path: block-builder and live-store consume spans from Kafka and will not start without a broker. Set ingest.kafka.address to your Kafka broker (e.g. \"kafka.kafka-namespace.svc.cluster.local:9092\"), or disable blockBuilder and liveStore. See UPGRADE.md for details." }}
 {{- end }}
+{{- if and .Values.liveStore.enabled .Values.liveStore.zoneAwareReplication.enabled (not .Values.rollout_operator.enabled) (not .Values.liveStore.zoneAwareReplication.rolloutOperatorManagedExternally) }}
+{{- fail "liveStore.zoneAwareReplication.enabled needs a rollout-operator in this namespace. Zone-aware live-stores use the OnDelete update strategy, so without one no live-store pod is ever restarted on an upgrade. Set rollout_operator.enabled to true, or install a rollout-operator into this namespace yourself and set liveStore.zoneAwareReplication.rolloutOperatorManagedExternally to true." }}
+{{- end }}
+{{- if .Values.liveStore.enabled }}
+{{- $zoneAware := .Values.liveStore.zoneAwareReplication }}
+{{- $prepareDownscale := $zoneAware.prepareDownscale | default dict }}
+{{- if and $zoneAware.noDownscale $prepareDownscale.enabled }}
+{{- fail "liveStore.zoneAwareReplication.noDownscale and liveStore.zoneAwareReplication.prepareDownscale.enabled are mutually exclusive. noDownscale rejects every scale-down, so a coordinated scale-down can never run. Keep one of the two." }}
+{{- end }}
+{{- if and (not $zoneAware.enabled) (or $zoneAware.noDownscale $prepareDownscale.enabled) }}
+{{- fail "liveStore.zoneAwareReplication.noDownscale and liveStore.zoneAwareReplication.prepareDownscale.enabled only apply to zone-aware live-stores. Set liveStore.zoneAwareReplication.enabled to true, or remove these settings." }}
+{{- end }}
+{{- if and $zoneAware.enabled (or $zoneAware.noDownscale $prepareDownscale.enabled) }}
+{{- if and .Values.rollout_operator.enabled (not .Values.rollout_operator.webhooks.enabled) }}
+{{- fail "liveStore.zoneAwareReplication.noDownscale and liveStore.zoneAwareReplication.prepareDownscale.enabled are enforced by the rollout-operator admission webhooks, which rollout_operator.webhooks.enabled turns off. Turn the webhooks back on, or drop these settings." }}
+{{- end }}
+{{- end }}
+{{- $zpdb := $zoneAware.podDisruptionBudget | default dict }}
+{{- if and $zoneAware.enabled $zpdb.enabled .Values.liveStore.podDisruptionBudget.enabled }}
+{{- if .Values.rollout_operator.enabled }}
+{{- if not .Values.rollout_operator.webhooks.enabled }}
+{{- fail "liveStore.zoneAwareReplication.podDisruptionBudget.enabled is enforced by the rollout-operator pod eviction webhook, which rollout_operator.webhooks.enabled turns off. Turn the webhooks back on, or set liveStore.zoneAwareReplication.podDisruptionBudget.enabled to false to keep a native PodDisruptionBudget over all zones." }}
+{{- end }}
+{{- if not .Values.rollout_operator.crds.enabled }}
+{{- fail "liveStore.zoneAwareReplication.podDisruptionBudget.enabled needs the ZoneAwarePodDisruptionBudget CRD, which rollout_operator.crds.enabled turns off. Install the CRD out of band, or set liveStore.zoneAwareReplication.podDisruptionBudget.enabled to false to keep a native PodDisruptionBudget over all zones." }}
+{{- end }}
+{{- end }}
+{{- if and $zpdb.crossZoneEvictionDelay (not $zpdb.podNamePartitionRegex) }}
+{{- fail "liveStore.zoneAwareReplication.podDisruptionBudget.crossZoneEvictionDelay needs podNamePartitionRegex. The delay applies between the owners of one partition, so without the regex the rollout-operator has no partition to compare and rejects the object." }}
+{{- end }}
+{{- end }}
+{{- if and $zoneAware.enabled $prepareDownscale.enabled (ne .Values.global.clusterDomain "cluster.local") (not $zoneAware.rolloutOperatorManagedExternally) }}
+{{- $clusterDomainArg := printf "-cluster-domain=%s" .Values.global.clusterDomain }}
+{{- $extraArgs := join " " (.Values.rollout_operator.extraArgs | default list) }}
+{{- if not (or (contains $clusterDomainArg $extraArgs) (contains (printf "-cluster-domain %s" .Values.global.clusterDomain) $extraArgs)) }}
+{{- fail (printf "liveStore.zoneAwareReplication.prepareDownscale.enabled builds live-store pod addresses from the cluster domain of the rollout-operator, which defaults to cluster.local and does not follow global.clusterDomain. Add \"%s\" to rollout_operator.extraArgs, or the webhook rejects every scale-down." $clusterDomainArg) }}
+{{- end }}
+{{- end }}
+{{- end }}

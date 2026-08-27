@@ -1128,13 +1128,127 @@ liveStore:
   statefulStrategy:
     rollingUpdate:
       partition: 0
+  # Zone-aware replication spreads the live-stores over failure domains such as
+  # availability zones, racks or data centres. Every zone runs a full set of
+  # live-stores, so each Kafka partition gets one owner per zone (RF equals the
+  # number of zones). The read quorum is 1: a querier only needs an answer from
+  # one zone, so recent-trace queries survive the loss of a zone.
+  # Requires `rollout_operator.enabled: true`.
+  zoneAwareReplication:
+    # -- Enable zone-aware replication for the live-store
+    enabled: false
+    # -- Set to true when a rollout-operator already runs in this namespace and is
+    # not installed by this chart. Skips the `rollout_operator.enabled` check.
+    rolloutOperatorManagedExternally: false
+    # -- Topology key of the failure domain. When set, the live-stores of one zone
+    # never share a domain with the live-stores of another zone. The cluster must
+    # hold at least as many domains as there are zones, otherwise the extra zones
+    # stay unschedulable. With neither this nor a `nodeSelector` on every zone,
+    # the zones still give separate pods and one partition owner each, but two
+    # zones can share a failure domain.
+    topologyKey: null
+    # -- Maximum number of live-stores the rollout-operator restarts at the same
+    # time inside one zone. The rollout-operator always moves one zone at a time.
+    # A zone with fewer live-stores than this restarts as a whole, which the read
+    # quorum of 1 covers, at the cost of the read capacity of that zone.
+    maxUnavailable: 25
+    # -- Reject every scale-down of the live-stores. The live-store count must
+    # match the Kafka partition count, so an accidental scale-down drops the
+    # recent-read tier of the partitions that go away. Needs the rollout-operator
+    # webhooks. Cannot be combined with `prepareDownscale.enabled`.
+    noDownscale: false
+    # Coordinated scale-down through the rollout-operator admission webhook. It
+    # guards a lower `liveStore.replicas`, which retires the last Kafka
+    # partitions. On such a scale-down the webhook calls `httpPath` on every
+    # live-store that goes away, which moves its partition to INACTIVE and stops
+    # the writes to it. The webhook then rejects the scale-down of a second zone
+    # until `minTimeBetweenZonesDownscale` has passed, so the zones go down one
+    # at a time. A rejected scale-down fails the `helm upgrade`: wait for the
+    # window, then run the upgrade again.
+    #
+    # The webhook is the only mechanism the chart uses, so a pod stops as soon
+    # as its partition is INACTIVE. The remaining zones still own that partition
+    # and still hold its recent traces, which is what keeps the read path whole
+    # until the last zone goes down. Do not remove a zone from the `zones` list
+    # in the same step: that deletes the StatefulSet, which the webhook never
+    # sees.
+    prepareDownscale:
+      # -- Enable the coordinated scale-down
+      enabled: false
+      # -- Minimum time between the scale-down of two zones. Must be longer than
+      # the period a live-store still serves recent traces, because the last
+      # zone to go down takes the last owner of the retired partitions with it.
+      minTimeBetweenZonesDownscale: 12h
+      # -- Endpoint the webhook calls on every live-store that goes away. Must
+      # accept a POST while the partition is still ACTIVE.
+      # `live-store/prepare-downscale` does not: it answers 409 until the
+      # partition is INACTIVE, so it needs the delayed-downscale mechanism of
+      # the rollout-operator, which this chart does not configure.
+      httpPath: live-store/prepare-partition-downscale
+    # Voluntary evictions of zone-aware live-stores, through the
+    # ZoneAwarePodDisruptionBudget of the rollout-operator. A native
+    # PodDisruptionBudget counts pods, so it cannot tell that the same pod
+    # ordinal in two zones holds every owner of one partition. This one counts
+    # per partition across zones and rejects an eviction that would take the
+    # last owner, whatever the budget of a single zone allows.
+    #
+    # Needs the ZoneAwarePodDisruptionBudget CRD and the pod eviction webhook of
+    # the rollout-operator. The bundled subchart installs both. The webhook
+    # rejects an eviction while the rollout-operator is unreachable, so this
+    # never opens a window. While this is on, it replaces the
+    # `liveStore.podDisruptionBudget` object.
+    podDisruptionBudget:
+      # -- Guard the evictions with a ZoneAwarePodDisruptionBudget. Set to false
+      # to keep a single native PodDisruptionBudget over all zones instead.
+      enabled: true
+      # -- Live-stores of one partition that may be unavailable at the same
+      # time, counted over every zone. 1 keeps a partition served through any
+      # single voluntary eviction. 0 rejects every voluntary eviction.
+      maxUnavailable: 1
+      # -- Regular expression that returns the partition of a live-store from
+      # its pod name. The rollout-operator anchors it with `^` and `$`, so it
+      # must match the whole name. The default reads the pod ordinal, which is
+      # the Kafka partition, and holds for any zone name.
+      podNamePartitionRegex: ".*-([0-9]+)"
+      # -- Capture group of the partition. Only needed when
+      # `podNamePartitionRegex` holds more than one group.
+      podNameRegexGroup: null
+      # -- Minimum time after a live-store becomes ready before another owner of
+      # the same partition may be evicted. A Go duration, so days are not a
+      # unit. Set this when the live-stores run with the default
+      # `readiness-target-lag` of 0, because a live-store then reports ready
+      # while it still replays its partition.
+      crossZoneEvictionDelay: null
+    # -- Zones to deploy. At least 2 zones are required. Every zone runs
+    # `liveStore.replicas` live-stores. A zone name must be a DNS label: it
+    # becomes a StatefulSet name suffix and the value of the zone label.
+    zones:
+      - name: zone-a
+        # -- Node selector for the live-stores of this zone. Merged on top of
+        # `liveStore.nodeSelector`, or of `defaults.nodeSelector`.
+        nodeSelector: null
+        # -- Extra affinity for the live-stores of this zone. Merged on top of
+        # `liveStore.affinity`. The zone anti-affinity of `topologyKey`
+        # overwrites a `podAntiAffinity` here.
+        extraAffinity: {}
+        # -- Extra annotations for the StatefulSet of this zone
+        annotations: {}
+        # -- Extra annotations for the pods of this zone
+        podAnnotations: {}
+      - name: zone-b
+        nodeSelector: null
+        extraAffinity: {}
+        annotations: {}
+        podAnnotations: {}
   # -- Pod Disruption Budget configuration
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for live-store
     enabled: true
     # -- Set unhealthyPodEvictionPolicy for the live-store PodDisruptionBudget. Requires policy/v1.
     unhealthyPodEvictionPolicy: ""
-  # -- Pod Disruption Budget maxUnavailable
+  # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
+  # budget covers the live-stores of every zone together, because the same pod
+  # ordinal in two zones holds every owner of one partition.
   maxUnavailable: 1
   service:
     # -- Annotations for live-store service

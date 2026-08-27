@@ -59,7 +59,8 @@ metrics-generator. `live-store` is one example. No Service carries such a name, 
 stable per-pod DNS names (`<pod>.<service>.<namespace>.svc`) never resolved. Set
 `tempo.useHeadlessGoverningService: true` to point those five StatefulSets at the headless
 Service of their own component instead. The memcached StatefulSets already write the full
-resource name, and the value does not touch them. The value also sets
+resource name, and the value does not touch them. The zone StatefulSets of the live-store
+also write the full resource name, so the value does not change them either. The value also sets
 `publishNotReadyAddresses: true` on the five Services, so a per-pod name resolves while its
 pod is not ready.
 
@@ -491,6 +492,193 @@ traces:
       enabled: true
     grpc:
       enabled: true
+```
+
+### Zone-aware replication for the live-store
+
+The live-store serves the recent part of every trace query. Without zone
+awareness the chart renders one flat StatefulSet, so each Kafka partition has
+exactly one live-store. If that pod goes away, recent-trace queries for its
+partition fail until the pod comes back.
+
+Zone-aware replication renders one StatefulSet per zone. Each zone runs a full
+set of live-stores and passes its own
+`-live-store.instance-availability-zone` to Tempo. A live-store reads Kafka
+under a consumer group of its own, because the chart leaves
+`ingest.kafka.consumer_group` unset and Tempo then falls back to the pod name,
+so the zones consume every partition independently. A partition therefore has one
+owner per zone, and a querier needs an answer from one zone only. The loss of a
+zone no longer breaks recent-trace queries.
+
+The rollout-operator coordinates the rollout. It moves one zone at a time and
+restarts at most `maxUnavailable` live-stores inside that zone, so the other
+zones keep serving. Zone-aware StatefulSets use the `OnDelete` update strategy,
+which means nothing restarts them unless a rollout-operator watches the
+namespace. The chart refuses to render without one.
+
+```yaml
+rollout_operator:
+  enabled: true
+
+liveStore:
+  enabled: true
+  replicas: 3  # partitions per zone; must equal the Kafka partition count
+  zoneAwareReplication:
+    enabled: true
+    topologyKey: topology.kubernetes.io/zone
+    zones:
+      - name: zone-a
+        nodeSelector:
+          topology.kubernetes.io/zone: eu-west-1a
+      - name: zone-b
+        nodeSelector:
+          topology.kubernetes.io/zone: eu-west-1b
+```
+
+The example above runs 6 live-stores: 3 partitions in each of the 2 zones.
+
+Notes:
+
+- `liveStore.replicas` stays the Kafka partition count. It is the size of one
+  zone, not the total. Adding a zone multiplies the live-store count and the
+  Kafka read traffic.
+- At least 2 zones are required.
+- `topologyKey` adds a required anti-affinity rule that keeps the live-stores of
+  one zone off the domains that run another zone. The cluster must hold at least
+  as many domains as there are zones, otherwise the extra zones stay
+  unschedulable. `kubernetes.io/hostname` is the conservative choice, and
+  `topology.kubernetes.io/zone` needs one availability zone per zone. Leave it
+  unset when a `nodeSelector` on every zone already pins the zones.
+- `liveStore.topologySpreadConstraints` is ignored while zone-awareness is on,
+  because the zones already define the spread. `liveStore.affinity` and the node
+  selector of the component are kept: a zone merges its own `extraAffinity` and
+  `nodeSelector` on top of them.
+- Voluntary evictions are guarded per partition, not per pod count. See below.
+- Set `zoneAwareReplication.rolloutOperatorManagedExternally: true` when a
+  rollout-operator already runs in the namespace and this chart must not
+  install one.
+- With no `topologyKey` and no per-zone `nodeSelector`, the zones still give
+  separate pods, separate consumer groups and one partition owner each, but the
+  scheduler can place two zones in one failure domain. Nothing then protects the
+  partition from the loss of that domain.
+
+#### Turning zone-awareness on
+
+The switch replaces the flat StatefulSet with the per-zone ones, so every
+live-store restarts at once and the recent-read tier is unavailable until the
+pods are ready. The new pods also carry new names, and a live-store takes its
+Kafka consumer group from its pod name, so every consumer group is new and has
+no committed offset. Every live-store replays the Kafka lookback period to
+rebuild its query state. Plan the switch like a full live-store restart.
+
+#### Draining a node
+
+The same pod ordinal in every zone holds every owner of one Kafka partition:
+`live-store-zone-a-2` and `live-store-zone-b-2` both own partition 2. A native
+PodDisruptionBudget counts pods and cannot express that, so it either allows
+both to go at once, or it has to be tightened to one eviction for the whole
+live-store set.
+
+Zone-awareness therefore renders a `ZoneAwarePodDisruptionBudget` instead, which
+the rollout-operator enforces on the eviction of a pod. It reads the partition
+from the pod name and counts the unavailable live-stores of that partition over
+every zone:
+
+```yaml
+liveStore:
+  zoneAwareReplication:
+    podDisruptionBudget:
+      enabled: true
+      maxUnavailable: 1
+```
+
+With `maxUnavailable: 1`, a drain can take one live-store per partition and many
+partitions at the same time, and it can never take the last owner of a
+partition. The rollout-operator rejects an eviction while it is unreachable, so
+this opens no window. It replaces the `liveStore.podDisruptionBudget` object.
+
+Set `crossZoneEvictionDelay` when the live-stores run with the default
+`readiness-target-lag` of 0, because a live-store then reports ready while it
+still replays its partition:
+
+```yaml
+liveStore:
+  zoneAwareReplication:
+    podDisruptionBudget:
+      crossZoneEvictionDelay: 20m
+```
+
+The budget needs the `ZoneAwarePodDisruptionBudget` CRD and the pod eviction
+webhook. The bundled rollout-operator installs both, and the chart refuses to
+render when either is turned off. Set `podDisruptionBudget.enabled: false` to
+fall back to a single native PodDisruptionBudget over all zones, with
+`liveStore.maxUnavailable` as the budget for the whole set.
+
+#### Scaling down
+
+A live-store count must keep matching the Kafka partition count, so a lower
+`liveStore.replicas` retires the last Kafka partitions, and a partition that
+loses its last owner loses its recent-read tier. Two opt-in settings guard that
+change. Both need the rollout-operator admission webhooks, which the subchart
+enables by default.
+
+`noDownscale` rejects every scale-down of the live-stores:
+
+```yaml
+liveStore:
+  zoneAwareReplication:
+    noDownscale: true
+```
+
+`prepareDownscale` coordinates the scale-down instead. On a scale-down the
+webhook calls `live-store/prepare-partition-downscale` on every live-store that
+goes away, which moves its partition to INACTIVE and stops the writes to it. The
+webhook then rejects the scale-down of a second zone until
+`minTimeBetweenZonesDownscale` has passed, so the zones go down one at a time:
+
+```yaml
+liveStore:
+  zoneAwareReplication:
+    prepareDownscale:
+      enabled: true
+      minTimeBetweenZonesDownscale: 12h
+```
+
+A rejected scale-down fails the `helm upgrade`, and the zones that were already
+accepted stay scaled down. Wait for the window, then run the upgrade again.
+
+The pod stops as soon as its partition is INACTIVE. The zones that are still up
+own that partition too and hold the same recent traces, so the read path stays
+whole until the last zone goes down. The last zone is the one that takes the
+last owner away, which is why `minTimeBetweenZonesDownscale` must be longer than
+the period a live-store still serves recent traces. Writes to the partition stop
+at the first zone, so the window starts there.
+
+Two limits follow from the same design:
+
+- Remove a zone from the `zones` list and Helm deletes its StatefulSet. A
+  deletion is not a scale-down, so the webhook never sees it and no partition
+  goes INACTIVE. This is safe, because every remaining zone still owns every
+  partition, but do not combine it with a lower `liveStore.replicas` in one
+  step.
+- The chart does not configure the delayed-downscale mechanism of the
+  rollout-operator, which needs a `ReplicaTemplate` resource and the
+  mirror-replicas annotations. That mechanism is what lets the Tempo jsonnet
+  point the webhook at `live-store/prepare-downscale`, the endpoint that also
+  keeps the pod from re-creating its partition on start. Here the zone stagger
+  does that job instead.
+
+The webhook reaches the live-stores through the pod DNS names of the headless
+service, and it builds them with its own cluster domain, which defaults to
+`cluster.local`. When `global.clusterDomain` differs, pass the same domain to
+the rollout-operator, otherwise the chart refuses to render:
+
+```yaml
+global:
+  clusterDomain: custom.local
+rollout_operator:
+  extraArgs:
+    - -cluster-domain=custom.local
 ```
 
 ### Memcached cache configuration

@@ -108,3 +108,14 @@ tests:
           path: spec.publishNotReadyAddresses
           value: true
         template: metrics-generator/service-metrics-generator-discovery.yaml
+
+  - it: keeps the zone StatefulSets on the live-store headless service when the opt-in is disabled
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-tempo-live-store

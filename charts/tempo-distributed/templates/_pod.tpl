@@ -10,10 +10,11 @@ Parameters:
   target         - component name string used in args and volume names (e.g. "distributor")
   rolloutZoneName - (optional) zone name string; when non-empty, emits zone-aware pod labels
                     and uses rolloutZone affinity/nodeSelector instead of component values
-  rolloutZone    - (optional) precomputed zone dict from ingester.zoneAwareReplicationMap
-                    (keys: affinity, nodeSelector, podAnnotations)
+  rolloutZone    - (optional) precomputed zone dict from a component zone map
+                    such as live-store.zoneAwareReplicationMap
+                    (keys: affinity, nodeSelector, podAnnotations, replicas)
   args           - (optional) extra args list prepended before extraArgs concat
-                    (used for -ingester.availability-zone=<zone>)
+                    (used for -<target>.instance-availability-zone=<zone>)
   persistence    - (optional) persistence dict; when provided drives the data volume:
                     enabled=false  → emptyDir (custom spec from dataEmptyDir, else {})
                     enabled=true, inMemory=true → emptyDir medium:Memory with sizeLimit
@@ -55,9 +56,7 @@ metadata:
     {{- end }}
     {{- if .Values.enterprise.legacyLabels }}
     app: {{ include "tempo.name" . }}-{{ $target }}
-    {{- if $rolloutZoneName }}
-    name: {{ $target }}-{{ $rolloutZoneName }}
-    {{- else }}
+    {{- if not $rolloutZoneName }}
     name: {{ $target }}
     {{- end }}
     gossip_ring_member: "true"
@@ -169,9 +168,11 @@ spec:
     {{- end }}
     {{- end }}
   terminationGracePeriodSeconds: {{ $component.terminationGracePeriodSeconds }}
+  {{- if not $rolloutZoneName }}
   {{- with $component.topologySpreadConstraints }}
   topologySpreadConstraints:
     {{- tpl . $ctx | nindent 4 }}
+  {{- end }}
   {{- end }}
   {{- if $rolloutZoneName }}
   {{- with $rolloutZone.affinity }}
