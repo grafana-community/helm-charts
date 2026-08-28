@@ -23,3 +23,20 @@ tests:
           path: spec.minAvailable
       - notExists:
           path: spec.unhealthyPodEvictionPolicy
+
+  - it: should not render a PodDisruptionBudget when no budget is configured
+    set:
+      resultsCache.maxUnavailable: null
+      resultsCache.podDisruptionBudget.maxUnavailable: null
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should let podDisruptionBudget.maxUnavailable override the deprecated field
+    set:
+      resultsCache.maxUnavailable: 1
+      resultsCache.podDisruptionBudget.maxUnavailable: 2
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 2
