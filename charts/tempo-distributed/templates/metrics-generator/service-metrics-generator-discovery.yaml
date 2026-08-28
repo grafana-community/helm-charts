@@ -27,6 +27,9 @@ spec:
       {{- end }}
     {{- end }}
     {{- end }}
+  {{- if .Values.tempo.useHeadlessGoverningService }}
+  publishNotReadyAddresses: true
+  {{- end }}
   selector:
     {{- include "tempo.selectorLabels" $dict | nindent 4 }}
 {{- end }}

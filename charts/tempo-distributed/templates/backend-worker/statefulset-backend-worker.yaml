@@ -22,7 +22,7 @@ spec:
   selector:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
-  serviceName: backend-worker
+  serviceName: {{ include "tempo.governingServiceName" (dict "ctx" $ "component" "backend-worker") }}
   podManagementPolicy: Parallel
   updateStrategy:
     {{- toYaml .Values.backendWorker.statefulStrategy | nindent 4 }}

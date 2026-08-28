@@ -51,6 +51,54 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### StatefulSet governing service (`tempo.useHeadlessGoverningService`)
+
+Five StatefulSets in this chart write a short, unprefixed `spec.serviceName`: the
+live-store, the block-builder, the backend-scheduler, the backend-worker and the
+metrics-generator. `live-store` is one example. No Service carries such a name, so the
+stable per-pod DNS names (`<pod>.<service>.<namespace>.svc`) never resolved. Set
+`tempo.useHeadlessGoverningService: true` to point those five StatefulSets at the headless
+Service of their own component instead. The memcached StatefulSets already write the full
+resource name, and the value does not touch them. The zone StatefulSets of the live-store
+also write the full resource name, so the value does not change them either. The value also sets
+`publishNotReadyAddresses: true` on the five Services, so a per-pod name resolves while its
+pod is not ready.
+
+The value defaults to `false`, because `spec.serviceName` is immutable. A plain
+`helm upgrade` with the value set to `true` fails with:
+
+```console
+StatefulSet.apps "..." is invalid: spec: Forbidden: updates to statefulset spec for fields
+other than 'replicas', 'ordinals', 'template', 'updateStrategy', ... are forbidden
+```
+
+To enable it, delete each affected StatefulSet first and keep the pods, then upgrade, then
+restart the pods:
+
+```bash
+STATEFULSETS="<release>-tempo-live-store <release>-tempo-block-builder \
+  <release>-tempo-backend-scheduler <release>-tempo-backend-worker \
+  <release>-tempo-metrics-generator"
+
+kubectl delete statefulset --cascade=orphan -n <namespace> $STATEFULSETS
+helm upgrade ... --set tempo.useHeadlessGoverningService=true
+kubectl rollout restart statefulset -n <namespace> $STATEFULSETS
+```
+
+The Helm upgrade recreates the StatefulSets and adopts the running pods, so the delete costs
+no trace data.
+
+The restart is required. A pod takes `spec.subdomain` from the governing service at creation
+only, and nothing rewrites it later. `spec.serviceName` is also outside `spec.template`, so
+the recreated StatefulSet keeps the same pod template and rolls nothing on its own. The
+adopted pods therefore keep the old subdomain, and the EndpointSlice controller publishes
+`<pod>.<service>` only where the subdomain of the pod equals the name of the Service. The
+per-pod names start to resolve when the restart has replaced every pod. Plan it as a normal
+rolling restart of those components. Delete the pods by hand instead where a StatefulSet
+runs the `OnDelete` update strategy.
+
+The default flips to `true` in the next major chart version.
+
 ### MinIO subchart removed
 
 The built-in MinIO subchart has been removed in chart v3.0.0. `minio` is no longer a chart

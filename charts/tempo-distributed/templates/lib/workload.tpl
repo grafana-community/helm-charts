@@ -7,7 +7,7 @@ template is delegated to tempo.podTemplate.
 For Deployments: renders minReadySeconds and the rolling-update strategy from
 $component.strategy. Replicas are suppressed when autoscaling.enabled is true.
 
-For StatefulSets: renders serviceName ($target), podManagementPolicy: Parallel,
+For StatefulSets: renders the governing service name, podManagementPolicy: Parallel,
 and updateStrategy from $component.statefulStrategy.
 
 Params:
@@ -51,7 +51,7 @@ spec:
       {{- include "tempo.selectorLabels" (dict "ctx" . "component" $target) | nindent 6 }}
   {{- if eq $kind "StatefulSet" }}
   podManagementPolicy: Parallel
-  serviceName: {{ $target }}
+  serviceName: {{ include "tempo.governingServiceName" (dict "ctx" $ctx "component" $target) }}
   {{- with $component.statefulStrategy }}
   updateStrategy:
     {{- toYaml . | nindent 4 }}

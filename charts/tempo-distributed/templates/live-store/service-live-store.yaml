@@ -18,6 +18,9 @@ spec:
       port: 3200
       targetPort: http-metrics
       protocol: TCP
+  {{- if .Values.tempo.useHeadlessGoverningService }}
+  publishNotReadyAddresses: true
+  {{- end }}
   selector:
     {{- include "tempo.selectorLabels" (dict "ctx" . "component" "live-store") | nindent 4 }}
   ipFamilies: {{ .Values.tempo.service.ipFamilies }}

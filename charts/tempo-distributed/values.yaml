@@ -137,6 +137,16 @@ tempo:
     # See https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution.
     # Can be overridden per component via <component>.service.trafficDistribution.
     trafficDistribution: null
+  # -- Point the live-store, block-builder, backend-scheduler, backend-worker and
+  # metrics-generator StatefulSets at the headless Service of their own component as the
+  # governing service, and publish the not-ready addresses of those Services. The default
+  # `false` keeps the short, unprefixed name that the chart has always written. That name
+  # matches no Service, so the stable per-pod DNS names do not resolve. The memcached
+  # StatefulSets already write the full resource name and are not affected.
+  # `spec.serviceName` is immutable, and a pod takes its subdomain at creation only. Enable
+  # this only together with the manual StatefulSet delete and the pod restart described
+  # under `Upgrading` in the chart README.
+  useHeadlessGoverningService: false
 
 # -- Default values applied to every pod in this chart.
 # These values are overridden by component-specific settings.
@@ -3293,7 +3303,7 @@ enterprise:
     # -- Grafana Enterprise Traces container image repository. Note: for Grafana Tempo use the value 'image.repository'
     repository: grafana/enterprise-traces
     # -- Grafana Enterprise Traces container image tag. Note: for Grafana Tempo use the value 'image.tag'
-    tag: v2.8.10
+    tag: v2.8.11
     # Note: pullPolicy and optional pullSecrets are set in toplevel 'image' section, not here
 
 # In order to use Grafana Enterprise Traces features, you will need to provide the contents of your Grafana Enterprise Traces
