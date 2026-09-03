@@ -9,6 +9,7 @@ tests:
   - it: should strip the distroless image variant from version labels
     set:
       imageRenderer.enabled: true
+      image.tag: 13.2.0-distroless
     asserts:
       - template: deployment.yaml
         equal:
