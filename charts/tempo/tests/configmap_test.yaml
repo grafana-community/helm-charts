@@ -1,0 +1,86 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: tempo config
+templates:
+  - configmap-tempo.yaml
+tests:
+  - it: should not render the config blocks that Tempo 3.0 removed
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?m)^ingester:"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?m)^compactor:"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "traces_storage:"
+
+  - it: should render the retention under the backend scheduler
+    set:
+      tempo.retention: 72h
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?s)backend_scheduler:.*block_retention: 72h"
+
+  - it: should omit the live_store block when no settings are given
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?m)^live_store:"
+
+  - it: should render the live_store block when settings are given
+    set:
+      tempo.liveStore:
+        max_block_duration: 45s
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?s)live_store:\\s+max_block_duration: 45s"
+
+  - it: should merge the backend scheduler settings over the retention default
+    set:
+      tempo.retention: 72h
+      tempo.backendScheduler:
+        provider:
+          compaction:
+            max_input_blocks: 3
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "block_retention: 72h"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "max_input_blocks: 3"
+
+  - it: should let the backend scheduler settings win over tempo.retention
+    set:
+      tempo.retention: 72h
+      tempo.backendScheduler:
+        provider:
+          compaction:
+            compaction:
+              block_retention: 96h
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "block_retention: 96h"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "block_retention: 72h"
+
+  - it: should omit the backend worker block when no settings are given
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?m)^backend_worker:"
+
+  - it: should render the backend worker block when settings are given
+    set:
+      tempo.backendWorker:
+        compaction:
+          compaction_window: 30m
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?s)backend_worker:.*compaction_window: 30m"

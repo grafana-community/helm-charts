@@ -1,0 +1,14 @@
+# The metrics generator lost traces_storage and the local_blocks processor in Tempo 3.0.
+tempo:
+  metricsGenerator:
+    enabled: true
+    remoteWriteUrl: http://prometheus.default.svc:9090/api/v1/write
+    processor:
+      service_graphs: {}
+      span_metrics: {}
+  overrides:
+    defaults:
+      metrics_generator:
+        processors:
+          - service-graphs
+          - span-metrics

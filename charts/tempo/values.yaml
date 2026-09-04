@@ -45,7 +45,6 @@ tempo:
   #    memory: 6Gi
 
   streamOverHttpEnabled: false
-  memBallastSizeMbs: 1024
   multitenancyEnabled: false
   # -- If true, Tempo will report anonymous usage data about the shape of a deployment to Grafana Labs
   reportingEnabled: true
@@ -54,12 +53,8 @@ tempo:
     enabled: false
     remoteWriteUrl: "http://prometheus.monitoring:9090/api/v1/write"
     # -- Processor-specific configuration for metrics generator (optional)
-    # Supports service_graphs, span_metrics, and local_blocks processors
+    # Supports the service_graphs, span_metrics and host_info processors
     processor: {}
-    #   local_blocks:
-    #     flush_to_storage: true
-    #     filter_server_spans: false
-    #     max_block_duration: 1m
     #   service_graphs:
     #     wait: 10s
     #     max_items: 10000
@@ -78,18 +73,28 @@ tempo:
       # -- Optional remote write configuration (will use remoteWriteUrl if not specified)
       # Supports full Prometheus remote_write config: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write
       remote_write: []
-    # -- Traces storage (WAL) configuration for metrics generator
-    # This configures the Write Ahead Log for traces used by the metrics generator
-    traces_storage:
-      # -- Path for traces storage WAL used by metrics generator
-      path: "/tmp/traces"
-  # -- Configuration options for the ingester.
-  # Refers to: https://grafana.com/docs/tempo/latest/configuration/#ingester
-  ingester: {}
-  #  flush_check_period: 10s
-  #  trace_idle_period: 10s
-  #  max_block_duration: 30m
-  #  complete_block_timeout: 1h
+  # -- Configuration options for the live-store, which holds recent traces in memory
+  # and flushes them to storage. Replaces the ingester of Tempo 2.x.
+  # Refers to: https://grafana.com/docs/tempo/latest/configuration/#live-store
+  liveStore: {}
+  #  max_block_duration: 30s
+  #  complete_block_timeout: 20m
+  # -- Configuration options for the backend scheduler, which creates the compaction and
+  # retention jobs. Replaces the compactor of Tempo 2.x. Merged over the `block_retention`
+  # that `tempo.retention` sets, so a value given here wins.
+  # Refers to: https://grafana.com/docs/tempo/latest/configuration/#backend-scheduler
+  backendScheduler: {}
+  #  provider:
+  #    compaction:
+  #      max_input_blocks: 4
+  #      compaction:
+  #        compaction_window: 1h
+  # -- Configuration options for the backend worker, which runs the jobs of the backend
+  # scheduler.
+  # Refers to: https://grafana.com/docs/tempo/latest/configuration/#backend-worker
+  backendWorker: {}
+  #  compaction:
+  #    max_block_bytes: 107374182400
   # -- Configuration options for the querier.
   # Refers to: https://grafana.com/docs/tempo/latest/configuration/#querier
   querier: {}
@@ -99,6 +104,8 @@ tempo:
   queryFrontend: {}
   #  search:
   #    concurrent_jobs: 2000
+  # -- Duration to keep blocks. Rendered into
+  # `backend_scheduler.provider.compaction.compaction.block_retention`.
   retention: 24h
   # -- The standard overrides configuration section. This can include a `defaults` object for applying to all tenants (not to be confused with the `global` property of the same name, which overrides `max_byte_per_trace` for all tenants). For an example on how to enable the metrics generator using the `overrides` object, see the 'Activate metrics generator' section below. Refer to [Standard overrides](https://grafana.com/docs/tempo/latest/configuration/#standard-overrides) for more details.
   overrides:
@@ -209,14 +216,23 @@ config: |
     multitenancy_enabled: {{ .Values.tempo.multitenancyEnabled }}
     usage_report:
       reporting_enabled: {{ .Values.tempo.reportingEnabled }}
-    compactor:
-      compaction:
-        block_retention: {{ .Values.tempo.retention }}
+    {{- $backendScheduler := dict "provider" (dict "compaction" (dict "compaction" (dict "block_retention" .Values.tempo.retention))) }}
+    {{- with .Values.tempo.backendScheduler }}
+    {{- $backendScheduler = mergeOverwrite $backendScheduler (deepCopy .) }}
+    {{- end }}
+    backend_scheduler:
+      {{- toYaml $backendScheduler | nindent 6 }}
+    {{- with .Values.tempo.backendWorker }}
+    backend_worker:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     distributor:
       receivers:
         {{- toYaml .Values.tempo.receivers | nindent 8 }}
-    ingester:
-      {{- toYaml .Values.tempo.ingester | nindent 6 }}
+    {{- with .Values.tempo.liveStore }}
+    live_store:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     server:
       {{- toYaml .Values.tempo.server | nindent 6 }}
     storage:
@@ -246,8 +262,6 @@ config: |
         remote_write:
           - url: {{ .Values.tempo.metricsGenerator.remoteWriteUrl }}
         {{- end }}
-      traces_storage:
-        path: {{ .Values.tempo.metricsGenerator.traces_storage.path | quote }}
       {{- end }}
 
 tempoQuery:

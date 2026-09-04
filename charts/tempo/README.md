@@ -46,6 +46,35 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### From Chart versions < 3.0.0
+
+* Breaking Change *
+The chart now runs Tempo 3.0 in monolithic mode. Tempo 3.0 removes the ingester and the
+compactor, and the live-store takes over the recent-data path. Monolithic mode still runs
+every component in one process and needs no Kafka. Read the
+[Tempo 3.0 release notes](https://grafana.com/docs/tempo/latest/release-notes/v3-0/) and the
+[migration guide](https://grafana.com/docs/tempo/latest/set-up-for-tracing/setup-tempo/migrate-to-3/)
+before you upgrade.
+
+What changed in the chart:
+
+* `tempo.ingester` is removed. Use `tempo.liveStore` for the equivalent settings of the new
+  live-store. The live-store writes its WAL under `/var/tempo`, so the existing persistent
+  volume still covers it.
+* `tempo.retention` now renders into
+  `backend_scheduler.provider.compaction.compaction.block_retention`. The `compactor:` config
+  block is gone. The value and its meaning do not change. `tempo.backendScheduler` and
+  `tempo.backendWorker` tune the rest of compaction. Settings in `tempo.backendScheduler` win
+  over `tempo.retention`.
+* `tempo.memBallastSizeMbs` is removed, because Tempo 3.0 dropped the
+  `-mem-ballast-size-mbs` flag.
+* `tempo.metricsGenerator.traces_storage` is removed, together with the `local_blocks`
+  processor. Tempo 3.0 does not support that processor. Remove `local-blocks` from
+  `metrics_generator.processors` in your overrides before you upgrade.
+
+If you set `config` or any of the removed values yourself, migrate your own file first. The
+`tempo-cli migrate config --mode=monolithic old-config.yaml` command does the conversion.
+
 ### From Chart versions < 2.0.0
 * Breaking Change *
 The minimum required Kubernetes version is now 1.25. All references to deprecated APIs have been removed.
