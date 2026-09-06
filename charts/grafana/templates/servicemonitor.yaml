@@ -12,7 +12,7 @@ metadata:
   labels:
     release: {{ default $.Release.Name .Values.serviceMonitor.labels.release | quote }}
     {{- include "grafana.labels" . | nindent 4 }}
-    {{- with .Values.serviceMonitor.labels }}
+    {{- with (omit .Values.serviceMonitor.labels "release") }}
     {{- tpl (toYaml . | nindent 4) $ }}
     {{- end }}
 spec:
