@@ -2,7 +2,7 @@ apiVersion: v2
 name: grafana
 version: 13.2.2
 # renovate: docker=docker.io/grafana/grafana
-appVersion: 13.2.2
+appVersion: 13.2.1
 kubeVersion: "^1.25.0-0"
 description: The leading tool for querying and visualizing time series and metrics.
 home: https://grafana.com
