@@ -55,3 +55,9 @@ tests:
       - equal:
           path: metadata.annotations["test-annotation"]
           value: test-value
+
+  - it: should be excluded from the ServiceMonitor selector
+    asserts:
+      - equal:
+          path: metadata.labels["prometheus.io/service-monitor"]
+          value: "false"
