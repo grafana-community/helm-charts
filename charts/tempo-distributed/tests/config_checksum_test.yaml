@@ -1,0 +1,31 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: config checksum annotation
+templates:
+  - distributor/deployment-distributor.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: hashes the config data
+    template: distributor/deployment-distributor.yaml
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["checksum/config"]
+          value: 66dce55aab85e8ffddda2d97b7c60a2d9839f6415febbaf53e0d1115887d5202
+
+  - it: keeps the same hash when only the chart version changes
+    template: distributor/deployment-distributor.yaml
+    chart:
+      version: 99.99.99
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["checksum/config"]
+          value: 66dce55aab85e8ffddda2d97b7c60a2d9839f6415febbaf53e0d1115887d5202
+
+  - it: changes the hash when the config changes
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.structuredConfig.stream_over_http_enabled: true
+    asserts:
+      - notEqual:
+          path: spec.template.metadata.annotations["checksum/config"]
+          value: 66dce55aab85e8ffddda2d97b7c60a2d9839f6415febbaf53e0d1115887d5202

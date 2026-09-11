@@ -363,13 +363,23 @@ app.kubernetes.io/part-of: memberlist
 {{- end -}}
 
 {{/*
+compute a ConfigMap or Secret checksum only based on its .data content.
+This function needs to be called with a context object containing the following keys:
+- ctx: the current Helm context (what '.' is at the call site)
+- name: the file name of the ConfigMap or Secret
+*/}}
+{{- define "tempo.configMapOrSecretContentHash" -}}
+{{ get (include (print .ctx.Template.BasePath .name) .ctx | fromYaml) "data" | toYaml | sha256sum }}
+{{- end }}
+
+{{/*
 POD annotations
 */}}
 {{- define "tempo.podAnnotations" -}}
 {{- if .ctx.Values.useExternalConfig }}
 checksum/config: {{ .ctx.Values.externalConfigVersion }}
 {{- else -}}
-checksum/config: {{ include (print .ctx.Template.BasePath "/configmap-tempo.yaml") .ctx | sha256sum }}
+checksum/config: {{ include "tempo.configMapOrSecretContentHash" (dict "ctx" .ctx "name" "/configmap-tempo.yaml") }}
 {{- end }}
 {{- with .ctx.Values.global.podAnnotations }}
 {{ toYaml . }}
