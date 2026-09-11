@@ -981,7 +981,6 @@ grafana.ini:
     check_for_updates: true
   plugins:
     preinstall_auto_update: "false"
-    check_for_plugin_updates: "false"
   log:
     mode: console
   server:

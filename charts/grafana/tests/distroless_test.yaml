@@ -61,8 +61,4 @@ tests:
       - template: configmap.yaml
         matchRegex:
           path: data["grafana.ini"]
-          pattern: "check_for_plugin_updates = false"
-      - template: configmap.yaml
-        matchRegex:
-          path: data["grafana.ini"]
           pattern: "preinstall_auto_update = false"
