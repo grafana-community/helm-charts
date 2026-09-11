@@ -20,7 +20,7 @@ spec:
   selector:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
-  serviceName: block-builder
+  serviceName: {{ include "tempo.governingServiceName" (dict "ctx" $ "component" "block-builder") }}
   podManagementPolicy: Parallel
   updateStrategy:
     {{- toYaml .Values.blockBuilder.statefulStrategy | nindent 4 }}

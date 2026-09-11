@@ -18,6 +18,10 @@ liveStore:
 
 rollout_operator:
   enabled: true
+  webhooks:
+    # The ZoneAwarePodDisruptionBudget and the operator that validates it are in
+    # the same release, so on a cold cluster the webhook has no endpoint yet.
+    failurePolicy: Ignore
 
 ingest:
   kafka:
