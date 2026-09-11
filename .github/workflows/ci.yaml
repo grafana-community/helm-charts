@@ -158,14 +158,18 @@ jobs:
         env:
           CHANGED_LIST: ${{ needs.chart-testing.outputs.changed_list }}
         run: |
+          applied=false
           for chart in $CHANGED_LIST; do
             if [ -f "$chart/ci/integration/it-prerequisites.yaml" ]; then
               echo "Provisioning prerequisites for $chart"
               kubectl apply -f "$chart/ci/integration/it-prerequisites.yaml"
+              applied=true
             fi
           done
-          kubectl wait pod -l ci-managed=true -A \
-            --for=condition=ready --timeout=300s 2>/dev/null || true
+          if [ "$applied" = true ]; then
+            kubectl wait deployment -l ci-managed=true -A \
+              --for=condition=Available --timeout=300s
+          fi
 
       - name: Setup chart dependencies
         id: setup

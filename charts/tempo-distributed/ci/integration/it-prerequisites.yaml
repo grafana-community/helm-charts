@@ -8,6 +8,8 @@ kind: Deployment
 metadata:
   name: kafka
   namespace: kafka-ci
+  labels:
+    ci-managed: "true"
 spec:
   replicas: 1
   selector:
@@ -101,6 +103,8 @@ kind: Deployment
 metadata:
   name: minio
   namespace: minio-ci
+  labels:
+    ci-managed: "true"
 spec:
   replicas: 1
   selector:
@@ -159,6 +163,8 @@ kind: Deployment
 metadata:
   name: rustfs
   namespace: rustfs-ci
+  labels:
+    ci-managed: "true"
 spec:
   replicas: 1
   selector:
@@ -215,6 +221,8 @@ kind: Deployment
 metadata:
   name: rustfs-bucket-init
   namespace: rustfs-ci
+  labels:
+    ci-managed: "true"
 spec:
   replicas: 1
   selector:
