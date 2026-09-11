@@ -327,3 +327,13 @@ as well as plain byte values.
   {{- divf ($mem | float64) 1048576 | int -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+compute a ConfigMap or Secret checksum only based on its .data content.
+This function needs to be called with a context object containing the following keys:
+- ctx: the current Helm context (what '.' is at the call site)
+- name: the file name of the ConfigMap or Secret
+*/}}
+{{- define "grafana.configMapOrSecretContentHash" -}}
+{{ get (include (print .ctx.Template.BasePath .name) .ctx | fromYaml) "data" | toYaml | sha256sum }}
+{{- end }}
