@@ -20,7 +20,7 @@ dependencies:
     condition: minio.enabled
   - name: rollout-operator
     alias: rollout_operator
-    repository: https://grafana.github.io/helm-charts
+    repository: oci://ghcr.io/grafana/helm-charts
     version: 0.51.1
     condition: rollout_operator.enabled
 maintainers:
