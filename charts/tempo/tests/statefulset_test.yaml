@@ -1,0 +1,19 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: tempo StatefulSet
+templates:
+  - statefulset.yaml
+  - configmap-tempo.yaml
+tests:
+  - it: should not pass the memory ballast flag, which Tempo 3.0 removed
+    template: statefulset.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -mem-ballast-size-mbs=1024
+
+  - it: should run the tempo image of the chart appVersion
+    template: statefulset.yaml
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^docker.io/grafana/tempo:3\\."

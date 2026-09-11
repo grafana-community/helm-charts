@@ -63,7 +63,6 @@ spec:
       containers:
       - args:
         - -config.file=/conf/tempo.yaml
-        - -mem-ballast-size-mbs={{ .Values.tempo.memBallastSizeMbs }}
         {{- range $key, $value := .Values.tempo.extraArgs }}
         - "-{{ $key }}{{ if $value }}={{ $value }}{{ end }}"
         {{- end }}
