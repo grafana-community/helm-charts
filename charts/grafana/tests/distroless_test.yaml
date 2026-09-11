@@ -51,3 +51,14 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: GF_INSTALL_PLUGINS
+
+  - it: should disable Grafana plugin auto updates by default
+    asserts:
+      - template: configmap.yaml
+        matchRegex:
+          path: data["grafana.ini"]
+          pattern: "\\[plugins\\]"
+      - template: configmap.yaml
+        matchRegex:
+          path: data["grafana.ini"]
+          pattern: "preinstall_auto_update = false"
