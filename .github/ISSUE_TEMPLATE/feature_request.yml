@@ -1,7 +1,6 @@
 name: Chart Feature Request
 description: Suggest an improvement to a Helm chart
 title: "[name of the chart e.g. grafana] Issue Title"
-labels: [enhancement]
 type: Feature
 assignees:
   -

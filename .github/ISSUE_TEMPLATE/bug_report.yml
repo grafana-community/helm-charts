@@ -1,7 +1,6 @@
 name: Chart Bug Report
 description: Report a bug in a Helm chart
 title: "[name of the chart e.g. grafana] Issue Title"
-labels: [bug]
 type: Bug
 assignees:
   -
