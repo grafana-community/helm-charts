@@ -19,6 +19,11 @@ spec:
   selector:
     matchLabels:
       {{- include "tempo.labels" . | nindent 6 }}
+    matchExpressions:
+      - key: prometheus.io/service-monitor
+        operator: NotIn
+        values:
+          - "false"
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace | quote }}
