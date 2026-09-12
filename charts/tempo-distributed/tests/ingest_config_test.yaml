@@ -17,3 +17,336 @@ tests:
       - notMatchRegex:
           path: data["tempo.yaml"]
           pattern: "^  ingest:"
+
+  - it: omits sasl mechanism when not configured
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_mechanism"
+
+
+  - it: fails when sasl credentials are set directly but configStorageType is not Secret
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.username: myuser
+      ingest.kafka.sasl.password: mypassword
+    asserts:
+      - failedTemplate:
+          errorMessage: "ingest.kafka.sasl is configuring credentials directly (not via existingSecret), but configStorageType is not Secret. Either set ingest.kafka.sasl.existingSecret (recommended) or set configStorageType=Secret."
+
+  - it: succeeds when sasl mechanism is set with no credentials and configStorageType is ConfigMap
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_mechanism: SCRAM-SHA-512"
+
+  - it: succeeds when sasl credentials are set directly and configStorageType is Secret
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.username: myuser
+      ingest.kafka.sasl.password: mypassword
+      configStorageType: Secret
+    asserts:
+      # configStorageType=Secret renders tempo.yaml base64-encoded, so decode before matching.
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_mechanism: SCRAM-SHA-512"
+
+  - it: succeeds when sasl uses existingSecret and configStorageType is ConfigMap
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.existingSecret: kafka-scram-credentials
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_mechanism: SCRAM-SHA-512"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_username: \\$\\{TEMPO_KAFKA_SASL_USERNAME\\}"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_password: \\$\\{TEMPO_KAFKA_SASL_PASSWORD\\}"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "myuser|mypassword"
+
+  - it: ignores literal username/password when existingSecret is also set
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.existingSecret: kafka-scram-credentials
+      ingest.kafka.sasl.username: myuser
+      ingest.kafka.sasl.password: mypassword
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_username: \\$\\{TEMPO_KAFKA_SASL_USERNAME\\}"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "myuser|mypassword"
+
+  - it: fails when the sasl mechanism is not one of the allowed values
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: INVALID
+      configStorageType: Secret
+    asserts:
+      - failedTemplate:
+          errorMessage: "ingest.kafka.sasl.mechanism \"INVALID\" is invalid, must be one of: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER, AWS_MSK_IAM"
+
+
+  - it: sets sasl mechanism to SCRAM-SHA-512 when configured
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.username: myuser
+      ingest.kafka.sasl.password: mypassword
+    asserts:
+      # configStorageType=Secret renders tempo.yaml base64-encoded, so decode before matching.
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_mechanism: SCRAM-SHA-512"
+
+
+  - it: sets tls enabled to true when configured
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.tls.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "tls_enabled: true"
+
+  - it: renders oauthbearer options when mechanism is OAUTHBEARER
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: OAUTHBEARER
+      ingest.kafka.sasl.oauthbearer.token: my-oauth-token
+      ingest.kafka.sasl.oauthbearer.zid: my-authz-id
+      ingest.kafka.sasl.oauthbearer.extensions:
+        traceID: abc123
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_mechanism: OAUTHBEARER"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_oauthbearer_token: my-oauth-token"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_oauthbearer_zid: my-authz-id"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "traceID: abc123"
+
+  - it: renders oauthbearer file/socket options when mechanism is OAUTHBEARER
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: OAUTHBEARER
+      ingest.kafka.sasl.oauthbearer.filePath: /etc/kafka/oauth/token.json
+      ingest.kafka.sasl.oauthbearer.httpSocketPath: /run/kafka/oauth.sock
+      ingest.kafka.sasl.oauthbearer.httpSocketTimeout: 10s
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_oauthbearer_file_path: /etc/kafka/oauth/token.json"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_oauthbearer_http_socket_path: /run/kafka/oauth.sock"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_oauthbearer_http_socket_timeout: 10s"
+
+  - it: does not render username/password when mechanism is OAUTHBEARER
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: OAUTHBEARER
+      ingest.kafka.sasl.oauthbearer.token: my-oauth-token
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_username"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_password"
+
+  - it: succeeds when oauthbearer uses existingSecret and configStorageType is ConfigMap
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: OAUTHBEARER
+      ingest.kafka.sasl.oauthbearer.existingSecret: kafka-oauth-token
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_oauthbearer_token: \\$\\{TEMPO_KAFKA_SASL_OAUTHBEARER_TOKEN\\}"
+
+  - it: ignores literal oauthbearer token when existingSecret is also set
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: OAUTHBEARER
+      ingest.kafka.sasl.oauthbearer.existingSecret: kafka-oauth-token
+      ingest.kafka.sasl.oauthbearer.token: my-oauth-token
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_oauthbearer_token: \\$\\{TEMPO_KAFKA_SASL_OAUTHBEARER_TOKEN\\}"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "my-oauth-token"
+
+  - it: renders aws_msk_iam static credential options when mechanism is AWS_MSK_IAM
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: AWS_MSK_IAM
+      ingest.kafka.sasl.mskIam.accessKey: AKIAEXAMPLE
+      ingest.kafka.sasl.mskIam.secretKey: secretkeyvalue
+      ingest.kafka.sasl.mskIam.sessionToken: sessiontokenvalue
+      ingest.kafka.sasl.mskIam.userAgent: tempo
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_mechanism: AWS_MSK_IAM"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_msk_iam_access_key: AKIAEXAMPLE"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_msk_iam_secret_key: secretkeyvalue"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_msk_iam_session_token: sessiontokenvalue"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_msk_iam_user_agent: tempo"
+
+  - it: renders aws_msk_iam file/socket options when mechanism is AWS_MSK_IAM
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: AWS_MSK_IAM
+      ingest.kafka.sasl.mskIam.filePath: /etc/kafka/aws/credentials.json
+      ingest.kafka.sasl.mskIam.httpSocketPath: /run/kafka/aws.sock
+      ingest.kafka.sasl.mskIam.httpSocketTimeout: 10s
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_msk_iam_file_path: /etc/kafka/aws/credentials.json"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_msk_iam_http_socket_path: /run/kafka/aws.sock"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_msk_iam_http_socket_timeout: 10s"
+
+  - it: does not render username/password when mechanism is AWS_MSK_IAM
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: AWS_MSK_IAM
+      ingest.kafka.sasl.mskIam.accessKey: AKIAEXAMPLE
+      ingest.kafka.sasl.mskIam.secretKey: secretkeyvalue
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_username"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_password"
+
+  - it: succeeds when aws_msk_iam uses existingSecret and configStorageType is ConfigMap
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: AWS_MSK_IAM
+      ingest.kafka.sasl.mskIam.existingSecret: kafka-msk-credentials
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_msk_iam_access_key: \\$\\{TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY\\}"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_msk_iam_secret_key: \\$\\{TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY\\}"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_msk_iam_session_token"
+
+  - it: renders session token placeholder when sessionTokenKey is set alongside existingSecret
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: AWS_MSK_IAM
+      ingest.kafka.sasl.mskIam.existingSecret: kafka-msk-credentials
+      ingest.kafka.sasl.mskIam.sessionTokenKey: session-token
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_msk_iam_session_token: \\$\\{TEMPO_KAFKA_SASL_MSK_IAM_SESSION_TOKEN\\}"
+
+  - it: ignores literal msk_iam static credentials when existingSecret is also set
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: AWS_MSK_IAM
+      ingest.kafka.sasl.mskIam.existingSecret: kafka-msk-credentials
+      ingest.kafka.sasl.mskIam.accessKey: AKIAEXAMPLE
+      ingest.kafka.sasl.mskIam.secretKey: secretkeyvalue
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_msk_iam_access_key: \\$\\{TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY\\}"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "AKIAEXAMPLE|secretkeyvalue"
+
+  - it: combines TLS with OAUTHBEARER when both are configured
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: OAUTHBEARER
+      ingest.kafka.sasl.oauthbearer.token: my-oauth-token
+      ingest.kafka.tls.enabled: true
+      ingest.kafka.tls.caPath: /etc/kafka/tls/ca.crt
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_mechanism: OAUTHBEARER"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "tls_enabled: true"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "tls_ca_path: /etc/kafka/tls/ca.crt"
