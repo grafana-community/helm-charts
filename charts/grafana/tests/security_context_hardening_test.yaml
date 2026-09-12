@@ -1,0 +1,100 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: security context hardening defaults
+tests:
+  - it: should set a non-root podSecurityContext for the helm test framework pod by default
+    template: tests/test.yaml
+    set:
+      testFramework.enabled: true
+    asserts:
+      - equal:
+          path: spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.securityContext.runAsUser
+          value: 472
+      - equal:
+          path: spec.securityContext.runAsGroup
+          value: 472
+      - equal:
+          path: spec.securityContext.seccompProfile.type
+          value: RuntimeDefault
+
+  - it: should set a hardened containerSecurityContext for the helm test framework container by default
+    template: tests/test.yaml
+    set:
+      testFramework.enabled: true
+    asserts:
+      - equal:
+          path: spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+      - equal:
+          path: spec.containers[0].securityContext.privileged
+          value: false
+      - equal:
+          path: spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.containers[0].securityContext.capabilities.drop
+          value:
+            - ALL
+
+  - it: should set readOnlyRootFilesystem for the download-dashboards init container by default
+    template: deployment.yaml
+    set:
+      dashboards.default.some-dashboard.json: "{}"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].securityContext.readOnlyRootFilesystem
+          value: true
+
+  - it: should set readOnlyRootFilesystem for sidecar containers by default
+    template: deployment.yaml
+    set:
+      sidecar.dashboards.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+
+  - it: should set a non-root podSecurityContext for the image-renderer deployment by default
+    template: image-renderer-deployment.yaml
+    set:
+      imageRenderer.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.seccompProfile.type
+          value: RuntimeDefault
+
+  - it: should set a fully hardened containerSecurityContext on the image-renderer container by default
+    template: image-renderer-deployment.yaml
+    set:
+      imageRenderer.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.privileged
+          value: false
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop
+          value:
+            - ALL
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.seccompProfile.type
+          value: RuntimeDefault
