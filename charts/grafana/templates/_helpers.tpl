@@ -335,5 +335,9 @@ This function needs to be called with a context object containing the following 
 - name: the file name of the ConfigMap or Secret
 */}}
 {{- define "grafana.configMapOrSecretContentHash" -}}
-{{ get (include (print .ctx.Template.BasePath .name) .ctx | fromYaml) "data" | toYaml | sha256sum }}
+{{- $data := list -}}
+{{- range regexSplit "(?m)^---$" (include (print .ctx.Template.BasePath .name) .ctx) -1 -}}
+{{- $data = append $data (pick (fromYaml .) "data" "stringData") -}}
+{{- end -}}
+{{ $data | toYaml | sha256sum }}
 {{- end }}

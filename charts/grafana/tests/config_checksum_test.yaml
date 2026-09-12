@@ -1,46 +1,43 @@
 # $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
 suite: config checksum annotations
 templates:
-  - statefulset.yaml
-  - configmap.yaml
-  - configmap-dashboard-provider.yaml
+  - deployment.yaml
   - dashboards-json-configmap.yaml
-  - secret.yaml
 
 set:
-  persistence:
-    enabled: true
-    type: statefulset
-  adminPassword: fixed-password
+  dashboards:
+    default:
+      a-dashboard:
+        json: |
+          {"title": "a"}
+    other:
+      b-dashboard:
+        json: |
+          {"title": "b"}
 
 tests:
-  - it: hashes the config data
-    template: statefulset.yaml
+  - it: hashes the data of every rendered dashboard ConfigMap
+    template: deployment.yaml
     asserts:
       - equal:
-          path: spec.template.metadata.annotations["checksum/config"]
-          value: 457c16ae5fdf9a6ab84c8aeadd5b7e2ca3e10c8b2f0e8c50a2cb40fe8ac9adf3
-      - equal:
-          path: spec.template.metadata.annotations["checksum/secret"]
-          value: 322081ef8c9d721b206210cb1edc1d97a53e99dc85c7ae2b339c5e169b023966
+          path: spec.template.metadata.annotations["checksum/dashboards-json-config"]
+          value: 431de38c7f24f6876cb971b32e7a72867b8c1f0750dd0676c5f7bb33a81ada65
 
-  - it: keeps the same hashes when only the chart version changes
-    template: statefulset.yaml
+  - it: keeps the hash stable when only the chart version changes
+    template: deployment.yaml
     chart:
       version: 99.99.99
     asserts:
       - equal:
-          path: spec.template.metadata.annotations["checksum/config"]
-          value: 457c16ae5fdf9a6ab84c8aeadd5b7e2ca3e10c8b2f0e8c50a2cb40fe8ac9adf3
-      - equal:
-          path: spec.template.metadata.annotations["checksum/secret"]
-          value: 322081ef8c9d721b206210cb1edc1d97a53e99dc85c7ae2b339c5e169b023966
+          path: spec.template.metadata.annotations["checksum/dashboards-json-config"]
+          value: 431de38c7f24f6876cb971b32e7a72867b8c1f0750dd0676c5f7bb33a81ada65
 
-  - it: changes the hashes when the content changes
-    template: statefulset.yaml
+  - it: changes the hash when a dashboard in any provider changes
+    template: deployment.yaml
     set:
-      adminPassword: another-password
+      dashboards.other.b-dashboard.json: |
+        {"title": "b-changed"}
     asserts:
       - notEqual:
-          path: spec.template.metadata.annotations["checksum/secret"]
-          value: 322081ef8c9d721b206210cb1edc1d97a53e99dc85c7ae2b339c5e169b023966
+          path: spec.template.metadata.annotations["checksum/dashboards-json-config"]
+          value: 431de38c7f24f6876cb971b32e7a72867b8c1f0750dd0676c5f7bb33a81ada65
