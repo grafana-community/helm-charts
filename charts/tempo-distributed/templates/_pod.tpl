@@ -40,7 +40,7 @@ metadata:
     {{- with (mergeOverwrite (dict) (.Values.defaults.podAnnotations | default (dict)) (.Values.tempo.podAnnotations | default (dict)) ($component.podAnnotations | default (dict)) ($rolloutZone.podAnnotations | default (dict))) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-    checksum/config: {{ include (print .Template.BasePath "/configmap-tempo.yaml") . | sha256sum }}
+    checksum/config: {{ include "tempo.configMapOrSecretContentHash" (dict "ctx" . "name" "/configmap-tempo.yaml") }}
     {{- if dig "enabled" false $persistence }}
     storage/size: {{ dig "size" "" $persistence | quote }}
     {{- end }}

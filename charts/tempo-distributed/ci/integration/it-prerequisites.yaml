@@ -8,6 +8,8 @@ kind: Deployment
 metadata:
   name: kafka
   namespace: kafka-ci
+  labels:
+    ci-managed: "true"
 spec:
   replicas: 1
   selector:
@@ -21,8 +23,7 @@ spec:
     spec:
       containers:
         - name: kafka
-          # renovate: docker=docker.io/apache/kafka
-          image: apache/kafka:4.0.0
+          image: docker.io/apache/kafka:4.0.0
           ports:
             - containerPort: 9092
               name: plaintext
@@ -101,6 +102,8 @@ kind: Deployment
 metadata:
   name: minio
   namespace: minio-ci
+  labels:
+    ci-managed: "true"
 spec:
   replicas: 1
   selector:
@@ -114,8 +117,7 @@ spec:
     spec:
       containers:
         - name: minio
-          # renovate: docker=docker.io/pgsty/minio
-          image: pgsty/minio:RELEASE.2026-04-17T00-00-00Z
+          image: docker.io/pgsty/minio:RELEASE.2026-04-17T00-00-00Z
           # A directory under the data root is served as a bucket.
           command:
             - sh
@@ -159,6 +161,8 @@ kind: Deployment
 metadata:
   name: rustfs
   namespace: rustfs-ci
+  labels:
+    ci-managed: "true"
 spec:
   replicas: 1
   selector:
@@ -172,8 +176,7 @@ spec:
     spec:
       containers:
         - name: rustfs
-          # renovate: docker=docker.io/rustfs/rustfs
-          image: rustfs/rustfs:1.0.0-beta.8
+          image: docker.io/rustfs/rustfs:1.0.0-beta.8
           ports:
             - containerPort: 9000
               name: s3
@@ -215,6 +218,8 @@ kind: Deployment
 metadata:
   name: rustfs-bucket-init
   namespace: rustfs-ci
+  labels:
+    ci-managed: "true"
 spec:
   replicas: 1
   selector:
@@ -228,7 +233,6 @@ spec:
     spec:
       containers:
         - name: mc
-          # renovate: docker=quay.io/minio/mc
           image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
           command:
             - sh
