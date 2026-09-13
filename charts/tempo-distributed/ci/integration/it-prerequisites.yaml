@@ -228,8 +228,8 @@ spec:
     spec:
       containers:
         - name: mc
-          # renovate: docker=docker.io/minio/mc
-          image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+          # renovate: docker=quay.io/minio/mc
+          image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
           command:
             - sh
             - -ec
