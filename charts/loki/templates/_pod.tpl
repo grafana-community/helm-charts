@@ -20,7 +20,7 @@ metadata:
     {{- end }}
     kubectl.kubernetes.io/default-container: "{{ replace "single-binary" "loki" $target }}"
   labels:
-    {{- include "loki.labels" . | nindent 4 }}
+    {{- include "loki.podTemplateLabels" . | nindent 4 }}
     app.kubernetes.io/component: {{ $target }}
     {{- if $memberlist }}
     app.kubernetes.io/part-of: memberlist

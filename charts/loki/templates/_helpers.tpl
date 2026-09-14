@@ -136,6 +136,15 @@ Create chart name and version as used by the chart label.
 {{/*
 Common labels
 */}}
+{{/*
+Pod labels: the common labels without helm.sh/chart. That label carries the chart version, so
+including it in a pod template recreates every pod on a chart upgrade, even when the image and
+configuration are unchanged.
+*/}}
+{{- define "loki.podTemplateLabels" -}}
+{{- omit (include "loki.labels" . | fromYaml) "helm.sh/chart" | toYaml }}
+{{- end }}
+
 {{- define "loki.labels" -}}
 helm.sh/chart: {{ include "loki.chart" . }}
 {{ include "loki.selectorLabels" . }}
