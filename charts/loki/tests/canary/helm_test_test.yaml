@@ -1,0 +1,72 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: canary helm test hook
+templates:
+  - tests/test-canary.yaml
+  - loki-canary/service.yaml
+release:
+  name: loki
+  namespace: logging
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: should render the helm test pod by default
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: tests/test-canary.yaml
+      - isKind:
+          of: Pod
+        template: tests/test-canary.yaml
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: test
+        template: tests/test-canary.yaml
+
+  - it: should point CANARY_SERVICE_ADDRESS at the canary Service
+    asserts:
+      - equal:
+          path: metadata.name
+          value: loki-canary
+        template: loki-canary/service.yaml
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: CANARY_SERVICE_ADDRESS
+            value: http://loki-canary.logging.svc.cluster.local:3500/metrics
+        template: tests/test-canary.yaml
+
+  - it: should follow fullnameOverride and clusterDomain in the canary address
+    set:
+      fullnameOverride: logs
+      global.clusterDomain: example.local
+    asserts:
+      - equal:
+          path: metadata.name
+          value: logs-canary
+        template: loki-canary/service.yaml
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: CANARY_SERVICE_ADDRESS
+            value: http://logs-canary.logging.svc.example.local:3500/metrics
+        template: tests/test-canary.yaml
+
+  - it: should not render the helm test pod when test is disabled
+    set:
+      test.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: tests/test-canary.yaml
+
+  - it: should not render the helm test pod when the canary is disabled
+    set:
+      lokiCanary.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: tests/test-canary.yaml
