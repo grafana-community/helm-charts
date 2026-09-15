@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.13"
+          python-version: '3.13'
 
       - name: Set up chart-testing
         uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2.8.0
@@ -133,13 +133,36 @@ jobs:
           version: v4.3.0
 
       - name: install helm diff plugin
-        run: helm plugin install https://github.com/databus23/helm-diff --version 3.15.4 --verify=false
+        run: helm plugin install https://github.com/databus23/helm-diff --version "${VERSION}" --verify=false
+        env:
+          # renovate: github=databus23/helm-diff
+          VERSION: 3.15.13
 
       - name: Create kind cluster
         uses: helm/kind-action@06c1ae10762d3b9c1644e7fe69596ae519e015a2 # v1.15.0
         with:
           config: .github/linters/kind.yaml
           ignore_failed_clean: 'true'
+
+      - name: Setup chart dependencies
+        id: setup
+        env:
+          value_file: "${{ matrix.valuefile }}"
+        # language=bash
+        run: |
+          set -euo pipefail
+          IFS=$'\n\t'
+
+          echo "Running diff for value file: $value_file"
+          # extract chart name from path like charts/<chart>/values.yaml or charts/<chart>/ci/<file>
+          chart="${value_file#./}"
+          chart="${chart#charts/}"
+          chart="${chart%%/*}"
+
+          helm dependency update "./target/charts/$chart"
+          helm dependency update "./charts/$chart"
+
+          echo chart="$chart" >> "$GITHUB_OUTPUT"
 
       - name: Apply Gateway API CRDs
         run: kubectl apply -k https://github.com/kubernetes-sigs/gateway-api/config/crd
@@ -171,26 +194,6 @@ jobs:
               --for=condition=Available --timeout=300s
           fi
 
-      - name: Setup chart dependencies
-        id: setup
-        env:
-          value_file: "${{ matrix.valuefile }}"
-        # language=bash
-        run: |
-          set -euo pipefail
-          IFS=$'\n\t'
-
-          echo "Running diff for value file: $value_file"
-          # extract chart name from path like charts/<chart>/values.yaml or charts/<chart>/ci/<file>
-          chart="${value_file#./}"
-          chart="${chart#charts/}"
-          chart="${chart%%/*}"
-
-          helm dependency update "./target/charts/$chart"
-          helm dependency update "./charts/$chart"
-
-          echo chart="$chart" >> "$GITHUB_OUTPUT"
-
       - name: Run helm install from main branch
         id: install
         env:
@@ -199,11 +202,17 @@ jobs:
         # language=bash
         run: |
           # install current target chart into cluster so helm diff has a baseline
+          target_value_file="./target/$value_file"
+          if [[ ! -f "$target_value_file" ]]; then
+            # A new CI values file exists only on the PR branch.
+            target_value_file="./target/charts/$chart/values.yaml"
+          fi
+
           helm upgrade -i "$chart" "./target/charts/$chart" \
             --create-namespace \
             --namespace "$chart" \
             --wait \
-            --values "$value_file"
+            --values "$target_value_file"
 
       - name: Debug failed installation
         if: failure() && steps.install.outcome == 'failure'
@@ -412,8 +421,9 @@ jobs:
           VALIDATE_GITLEAKS: true
           VALIDATE_HTML: true
           VALIDATE_JSON: true
+          # VALIDATE_MARKDOWN: true
           VALIDATE_NATURAL_LANGUAGE: true
-          # VALIDATE_MARKDOWN: true - disable to for now.
+          VALIDATE_PYTHON: true
           VALIDATE_RENOVATE: true
           VALIDATE_SHELL_SHFMT: true
           VALIDATE_SPELL_CODESPELL: true
@@ -448,8 +458,8 @@ jobs:
         with:
           app-id: ${{ secrets.APP_RENOVATE_HELPER_APP_ID }}
           private-key: ${{ secrets.APP_RENOVATE_HELPER_PRIVATE_KEY }}
-          permission-pull-requests: write
           permission-contents: write
+          permission-pull-requests: write
 
       - name: Approve PR
         run: |
