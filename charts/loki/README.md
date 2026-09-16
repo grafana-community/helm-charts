@@ -45,6 +45,64 @@ To remove all of the Kubernetes objects associated with the Helm chart release:
 helm delete RELEASE-NAME
 ```
 
+## Gateway proxy
+
+The chart uses NGINX for the Loki gateway by default. Envoy is available as an opt-in implementation:
+
+```yaml
+gateway:
+  type: envoy
+```
+
+The generated Envoy configuration keeps the same Loki API routing and deployment-mode targets as the generated NGINX configuration. It accepts HTTP/1.1 and cleartext HTTP/2, listens on IPv4 and IPv6 by default, enables frontend and backend keep-alive, and writes access logs to stdout. Envoy exposes native Prometheus metrics from the existing gateway metrics Service at `/stats/prometheus`; its administration listener allows only `/ready` and `/stats/prometheus`. Kubernetes readiness checks use `/livez`, which is excluded from proxy access logs.
+
+Envoy uses Loki's cleartext HTTP/2 support for regular upstream requests by default. WebSocket tail requests use a dedicated HTTP/1.1 upstream cluster. Disable `gateway.envoyConfig.upstreamHTTP2` for older Loki versions or custom upstreams that support only HTTP/1.1.
+
+Use `gateway.envoyConfig` to configure listeners, timeouts, logging, TLS, remote JWKS validation, upstream HTTP/2, or the complete Envoy configuration. The existing `gateway.nginxConfig.schema` and `customReadUrl`/`customWriteUrl`/`customBackendUrl` values are also honored.
+
+Envoy uses its native Basic Auth filter and the existing `gateway.basicAuth` `.htpasswd` Secret contract, so no authorization sidecar is added. The native filter only accepts `{SHA}` htpasswd entries; the chart derives that format from plaintext `password` values, while other `passwordHash` formats remain supported by NGINX only. Generate an Envoy hash with `printf %s 'password' | openssl dgst -sha1 -binary | openssl base64 -A`, then prefix the result with `{SHA}`. When `loki.tenants` is configured, the gateway overwrites any client-supplied `X-Scope-OrgID` header with the mapped tenant name. Only `name`, `password`, and `passwordHash` are shared by both gateway implementations; `basicAuthUsername`, `clientCertificateCN`, and `jwtSubClaim` are Envoy-only. `basicAuthUsername` defaults to the tenant name and can map a distinct username to one or more Loki tenants:
+
+```yaml
+loki:
+  tenants:
+    - name: "cluster1|cluster2|cluster3"
+      basicAuthUsername: grafana
+      passwordHash: "{SHA}eJy+BAeECxwgQcszRS/2Dxm/WMw="
+```
+
+Tenant entries can additionally set lists of `clientCertificateCN` and `jwtSubClaim` aliases. Client-certificate mapping requires Envoy TLS termination with `gateway.envoyConfig.tls.enabled` and a Secret containing `tls.crt`, `tls.key`, and `ca.crt`. JWT mapping requires `gateway.envoyConfig.jwt.enabled`. Its defaults validate Kubernetes projected ServiceAccount tokens with issuer `https://kubernetes.default.svc.cluster.local` and the Helm-templated audience `{{ include "loki.name" . }}.{{ include "loki.namespace" . }}`, and fetch JWKS from `https://kubernetes.default.svc/openid/v1/jwks`, using the namespace `kube-root-ca.crt` ConfigMap. Envoy fetches and caches the JWKS over HTTP(S), validates the token signature, issuer, expiration, and optional audiences, and only then maps `sub`; JWT verification keys are not mounted from disk.
+
+The patched `ghcr.io/jkroepke/loki-canary:jwt` image can authenticate through this path. Enable its projected token and map the canary ServiceAccount subject to its tenant:
+
+```yaml
+lokiCanary:
+  image:
+    registry: ghcr.io
+    repository: jkroepke/loki-canary
+    tag: jwt
+  tenant:
+    bearerToken:
+      enabled: true
+
+gateway:
+  type: envoy
+  envoyConfig:
+    jwt:
+      enabled: true
+
+loki:
+  tenants:
+    - name: self-monitoring
+      jwtSubClaim:
+        - system:serviceaccount:<namespace>:<canary-service-account-name>
+```
+
+By default, the chart binds Kubernetes' built-in `system:service-account-issuer-discovery` ClusterRole to `system:unauthenticated`, permitting only the public OIDC discovery and JWKS paths. Envoy's remote JWKS client cannot send a ServiceAccount bearer token, so this makes the Kubernetes API JWKS endpoint reachable without mounting credentials or signing keys. Set `gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: false` when the cluster already exposes these public endpoints or when using an external issuer.
+
+Clusters configured with a custom Kubernetes ServiceAccount issuer or audience must override `gateway.envoyConfig.jwt.issuer`, `gateway.envoyConfig.jwt.audiences`, `gateway.envoyConfig.jwt.remoteJwks.uri`, and `lokiCanary.tenant.bearerToken.audience` together.
+
+`gateway.configs` accepts any number of extra templated configuration files. Envoy can reference them at `/etc/envoy/<name>` from an overridden `gateway.envoyConfig.file`.
+
 ## Changelog
 
 See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?chart=loki).

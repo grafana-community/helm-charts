@@ -672,6 +672,12 @@ http {
       auth_basic off;
     }
 
+    location = /livez {
+      access_log off;
+      return 200 'OK';
+      auth_basic off;
+    }
+
     location = /stub_status {
       stub_status on;
       satisfy any;
@@ -747,7 +753,7 @@ http {
     {{- end -}}
 
     {{- if .Values.loki.ui.gateway.enabled }}
-    location ^~ /ui {
+    location ^~ /ui/ {
       {{- with .Values.gateway.nginxConfig.locationSnippet }}
       {{- tpl . $ | nindent 6 }}
       {{- end }}
