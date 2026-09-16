@@ -1,0 +1,202 @@
+---
+loki:
+  commonConfig:
+    replication_factor: 1
+  server:
+    log_level: warn
+  schemaConfig:
+    configs:
+      # Write new data to external S3
+      - from: "2026-06-23"  # Adjust this date as needed based on your retention period. Should be in the near future
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  storage:
+    bucketNames:
+      chunks: chunks
+      ruler: ruler
+    type: s3
+  storage_config:
+    use_thanos_objstore: true
+    object_store:
+      s3:
+        endpoint: "rustfs.{{ $.Release.Namespace }}.svc.cluster.local.:9000"
+        insecure: true
+        bucket_name: chunks
+        access_key_id: rustfsadmin
+        secret_access_key: rustfsadmin
+        bucket_lookup_type: path
+  querier:
+    multi_tenant_queries_enabled: true
+  tenants:
+    - name: cluster1|cluster2|cluster3
+      basicAuthUsername: grafana
+      password: test-password
+    - name: websocket
+      password: test-password
+    - name: self-monitoring
+      jwtSubClaim:
+        - 'system:serviceaccount:{{ .Release.Namespace }}:loki-canary'
+
+deploymentMode: Distributed
+
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
+ruler:
+  replicas: 1
+  affinity: null
+  sidecar: true
+  directories:
+    fake:
+      alerts.yaml: |
+        groups: {}
+distributor:
+  replicas: 1
+  affinity: null
+memcached:
+  enabled: false
+  replicas: 1
+compactor:
+  replicas: 1
+  persistence:
+    enabled: true
+    size: 2Gi
+    claims: []
+  statefulSetRecreateJob:
+    enabled: true
+indexGateway:
+  replicas: 1
+  affinity: null
+querier:
+  replicas: 1
+  affinity: null
+queryFrontend:
+  replicas: 1
+  affinity: null
+ingester:
+  zoneAwareReplication:
+    enabled: false
+  replicas: 1
+  affinity: null
+queryScheduler:
+  replicas: 1
+  affinity: null
+bloomBuilder:
+  enabled: true
+  replicas: 1
+  affinity: null
+bloomCompactor:
+  enabled: true
+  replicas: 1
+bloomGateway:
+  enabled: true
+  replicas: 1
+  affinity: null
+bloomPlanner:
+  enabled: true
+  replicas: 1
+  affinity: null
+patternIngester:
+  enabled: true
+  replicas: 1
+  affinity: null
+
+gateway:
+  type: envoy
+  verboseLogging: false
+  affinity: null
+  # Prevent a prior release's Envoy command-line flags from being retained by helm upgrade.
+  extraArgs: []
+  deploymentStrategy:
+    type: Recreate
+  basicAuth:
+    enabled: true
+  envoyConfig:
+    jwt:
+      enabled: true
+  configs:
+    ci.yaml: |
+      release: {{ .Release.Name }}
+  metrics:
+    enabled: true
+
+lokiCanary:
+  image:
+    registry: ghcr.io
+    repository: jkroepke/loki-canary
+    tag: jwt
+  tenant:
+    bearerToken:
+      enabled: true
+
+resultsCache:
+  enabled: false
+
+chunksCache:
+  enabled: false
+
+extraObjects:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: rustfs
+    spec:
+      selector:
+        app: rustfs
+      ports:
+        - name: http
+          port: 9000
+          targetPort: 9000
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: rustfs
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: rustfs
+      template:
+        metadata:
+          labels:
+            app: rustfs
+        spec:
+          containers:
+            - name: rustfs
+              image: rustfs/rustfs:1.0.0-rc.6
+              ports:
+                - containerPort: 9000
+                  name: http
+              env:
+                - name: RUSTFS_ACCESS_KEY
+                  value: "rustfsadmin"
+                - name: RUSTFS_SECRET_KEY
+                  value: "rustfsadmin"
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+              readinessProbe:
+                httpGet:
+                  path: /health
+                  port: http
+                periodSeconds: 10
+              # Create a bucket on startup
+              startupProbe:
+                exec:
+                  command:
+                    - mkdir
+                    - -p
+                    - /data/chunks/
+                initialDelaySeconds: 1
+                periodSeconds: 1
+                failureThreshold: 10
+          volumes:
+            - name: data
+              emptyDir: {}

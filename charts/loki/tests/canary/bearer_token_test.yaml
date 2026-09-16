@@ -1,0 +1,65 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: canary Kubernetes ServiceAccount bearer token authentication
+templates:
+  - loki-canary/daemonset.yaml
+  - config.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: projects a Kubernetes ServiceAccount token and passes its file to the patched canary
+    set:
+      loki.auth_enabled: true
+      lokiCanary.tenant.bearerToken.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -bearer-token-file=/var/run/secrets/loki-canary/bearer-token/token
+        template: loki-canary/daemonset.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -tenant-id=self-monitoring
+        template: loki-canary/daemonset.yaml
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -user=self-monitoring
+        template: loki-canary/daemonset.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: bearer-token
+            mountPath: /var/run/secrets/loki-canary/bearer-token
+            readOnly: true
+        template: loki-canary/daemonset.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: bearer-token
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    audience: loki.NAMESPACE
+                    expirationSeconds: 3600
+        template: loki-canary/daemonset.yaml
+
+  - it: renders a configured projected token audience as a Helm template
+    set:
+      loki.auth_enabled: true
+      lokiCanary.tenant.bearerToken.enabled: true
+      lokiCanary.tenant.bearerToken.audience: '{{ .Release.Name }}.{{ include "loki.namespace" . }}'
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: bearer-token
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    audience: RELEASE-NAME.NAMESPACE
+                    expirationSeconds: 3600
+        template: loki-canary/daemonset.yaml
