@@ -1,0 +1,898 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: gateway Envoy implementation
+templates:
+  - gateway/configmap.yaml
+  - gateway/deployment.yaml
+  - gateway/kubernetes-jwks-rbac.yaml
+  - gateway/secret.yaml
+  - gateway/service.yaml
+  - gateway/service-exporter.yaml
+
+set:
+  gateway.enabled: true
+  gateway.type: envoy
+  gateway.metrics.enabled: true
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: renders Envoy as an opt-in replacement for nginx
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: envoy
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: docker.io/envoyproxy/envoy:distroless-v1.39.1
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - -c
+            - /etc/envoy/envoy.yaml
+            - --service-cluster
+            - RELEASE-NAME-loki-gateway
+            - --log-level
+            - warning
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /etc/envoy
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /livez
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: http
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet
+          value:
+            path: /ready
+            port: 9901
+            scheme: HTTP
+        template: gateway/deployment.yaml
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+        template: gateway/deployment.yaml
+      - exists:
+          path: data["envoy.yaml"]
+        template: gateway/configmap.yaml
+      - notExists:
+          path: data["nginx.conf"]
+        template: gateway/configmap.yaml
+      - notExists:
+          path: data["access-log-exporter.yaml"]
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'early_header_mutation_extensions:|envoy.filters.http.lua.sanitize_tenant'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'overload_manager:[\s\S]*name: envoy.resource_monitors.global_downstream_max_connections[\s\S]*type.googleapis.com/envoy.extensions.resource_monitors.downstream_connections.v3.DownstreamConnectionsConfig[\s\S]*max_active_downstream_connections: 2000000000'
+        template: gateway/configmap.yaml
+
+  - it: removes the client-supplied tenant header before Basic Auth using native mutation
+    set:
+      gateway.basicAuth.enabled: true
+      gateway.basicAuth.username: grafana
+      gateway.basicAuth.password: test-password
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'early_header_mutation_extensions:[\s\S]*name: envoy.http.early_header_mutation.header_mutation[\s\S]*mutations:[\s\S]*remove: x-scope-orgid[\s\S]*name: envoy.filters.http.basic_auth'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'envoy.filters.http.lua.sanitize_tenant|x-loki-basic-auth-user|x-loki-jwt-subject'
+        template: gateway/configmap.yaml
+
+  - it: applies the global image registry to the Envoy image
+    set:
+      global.imageRegistry: registry.example.com
+      gateway.envoy.image.registry: quay.io
+      gateway.envoy.image.repository: custom/envoy
+      gateway.envoy.image.tag: custom-tag
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.example.com/custom/envoy:custom-tag
+        template: gateway/deployment.yaml
+
+  - it: configures HTTP2 dual-stack logs metrics and connection keep-alive
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: loki[\s\S]*address: "::"[\s\S]*ipv4_compat: true'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'socket_options:[\s\S]*description: Enable TCP keep-alive[\s\S]*upstream_connection_options:[\s\S]*tcp_keepalive: \{\}'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'codec_type: AUTO[\s\S]*upgrade_type: websocket'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'normalize_path: true[\s\S]*merge_slashes: true[\s\S]*path_with_escaped_slashes_action: REJECT_REQUEST'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'server_header_transformation:'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'route_config:[\s\S]*name: loki_routes[\s\S]*request_headers_to_remove:[\s\S]*- authorization[\s\S]*response_headers_to_remove:[\s\S]*- server[\s\S]*virtual_hosts:'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: query_frontend[\s\S]*explicit_http_config:[\s\S]*http2_protocol_options: \{\}'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: query_frontend_websocket[\s\S]*explicit_http_config:[\s\S]*http_protocol_options: \{\}'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'envoy.access_loggers.stdout[\s\S]*regex: \^/livez[\s\S]*invert_match: true'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'path: /livez[\s\S]*direct_response:[\s\S]*status: 200'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'path: /livez[\s\S]*envoy.filters.http.lua.tenant:[\s\S]*type.googleapis.com/envoy.extensions.filters.http.lua.v3.LuaPerRoute[\s\S]*disabled: true'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local request_path =|if path == "/" or path == "/livez"'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: '(?m)^\s+path: /$'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'regex: \^/\(api/prom/\|loki/api/v1/\)\.\*\$[\s\S]*cluster: query_frontend'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'prefix: /ui/[\s\S]*cluster: querier'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: '(?m)^\s*prefix: /ui$'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: '(?m)^admin:[\s\S]*address: "::"[\s\S]*port_value: 9901[\s\S]*ipv4_compat: true[\s\S]*allow_paths:[\s\S]*exact: /ready[\s\S]*exact: /stats/prometheus'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: '(?m)^    - name: metrics$|name: envoy_admin|cluster: envoy_admin'
+        template: gateway/configmap.yaml
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: http-metrics
+            containerPort: 9901
+            protocol: TCP
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.ports[0].targetPort
+          value: http-metrics
+        template: gateway/service-exporter.yaml
+
+  - it: logs only HTTP errors when verbose logging is disabled
+    set:
+      gateway.verboseLogging: false
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'envoy.access_loggers.stdout[\s\S]*filter:[\s\S]*status_code_filter:[\s\S]*op: GE[\s\S]*default_value: 400[\s\S]*runtime_key: access_log_min_status'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'access_log_informational_max_status|op: LE|or_filter:|and_filter:|header_filter:'
+        template: gateway/configmap.yaml
+
+  - it: enriches query tags on every route with native Envoy filters
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'request_headers_to_add:[\s\S]*key: x-query-tags[\s\S]*value: "%DYNAMIC_METADATA\(loki.query_tags:base\)%,user=%REQ\(x-grafana-user\)%[\s\S]*rule_type=%REQ\(x-rule-type\)%"[\s\S]*append_action: OVERWRITE_IF_EXISTS_OR_ADD'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: envoy.filters.http.header_to_metadata[\s\S]*header: x-query-tags[\s\S]*on_header_present:[\s\S]*metadata_namespace: loki.query_tags[\s\S]*key: base[\s\S]*regex: \^\$[\s\S]*substitution: noop='
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'on_header_missing:[\s\S]*metadata_namespace: loki.query_tags[\s\S]*key: base[\s\S]*value: noop=[\s\S]*type: STRING[\s\S]*remove: false'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'append_query_tags|string\.sub\(path|google_re2:'
+        template: gateway/configmap.yaml
+
+  - it: uses a custom admin port for the native metrics listener
+    set:
+      gateway.envoyConfig.adminPort: 9910
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: '(?m)^admin:[\s\S]*port_value: 9910'
+        template: gateway/configmap.yaml
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: http-metrics
+            containerPort: 9910
+            protocol: TCP
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 9910
+        template: gateway/deployment.yaml
+
+  - it: preserves custom gateway probes and uses HTTPS on the TLS listener
+    set:
+      gateway.envoyConfig.tls.enabled: true
+      gateway.envoyConfig.tls.existingSecret: gateway-tls
+      gateway.livenessProbe:
+        httpGet:
+          path: /custom-live
+          port: http
+      gateway.readinessProbe:
+        httpGet:
+          path: /custom-ready
+          port: http
+        timeoutSeconds: 3
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet
+          value:
+            path: /custom-live
+            port: http
+            scheme: HTTPS
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet
+          value:
+            path: /custom-ready
+            port: http
+            scheme: HTTPS
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.timeoutSeconds
+          value: 3
+        template: gateway/deployment.yaml
+
+  - it: preserves an explicit Envoy log-level argument without adding the default
+    set:
+      gateway.extraArgs:
+        - --log-level=debug
+        - --concurrency
+        - "2"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - -c
+            - /etc/envoy/envoy.yaml
+            - --service-cluster
+            - RELEASE-NAME-loki-gateway
+            - --log-level=debug
+            - --concurrency
+            - "2"
+        template: gateway/deployment.yaml
+
+  - it: supports IPv4-only HTTP1 upstreams and disabled TCP keep-alive
+    set:
+      gateway.envoyConfig.enableIPv6: false
+      gateway.envoyConfig.upstreamHTTP2: false
+      gateway.envoyConfig.tcpKeepAlive: false
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: loki[\s\S]*address: "0.0.0.0"'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: '(?m)^admin:[\s\S]*address: "0.0.0.0"'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'ipv4_compat: true|socket_options:|upstream_connection_options:|http2_protocol_options:'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'explicit_http_config:[\s\S]*http_protocol_options: \{\}'
+        template: gateway/configmap.yaml
+
+  - it: omits native metrics when metrics are disabled
+    set:
+      gateway.metrics.enabled: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: http-metrics
+            containerPort: 9901
+            protocol: TCP
+        template: gateway/deployment.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: '(?m)^admin:[\s\S]*port_value: 9901[\s\S]*allow_paths:[\s\S]*exact: /ready'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'exact: /stats/prometheus|name: envoy_admin|cluster: envoy_admin'
+        template: gateway/configmap.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 9901
+        template: gateway/deployment.yaml
+      - hasDocuments:
+          count: 0
+        template: gateway/service-exporter.yaml
+
+  - it: uses scalable upstreams and existing custom URL overrides
+    set:
+      deploymentMode: SimpleScalable
+      gateway.nginxConfig.customReadUrl: https://custom-read.example:8443
+      gateway.nginxConfig.customWriteUrl: http://custom-write.example:8080
+      gateway.nginxConfig.customBackendUrl: http://custom-backend.example:8081
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: distributor[\s\S]*address: "custom-write.example"[\s\S]*port_value: 8080'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: query_frontend[\s\S]*address: "custom-read.example"[\s\S]*port_value: 8443[\s\S]*envoy.transport_sockets.tls'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: ruler[\s\S]*address: "custom-backend.example"[\s\S]*port_value: 8081'
+        template: gateway/configmap.yaml
+
+  - it: routes to individual Loki services in distributed mode
+    set:
+      deploymentMode: Distributed
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: distributor[\s\S]*address: "RELEASE-NAME-loki-distributor.NAMESPACE.svc.cluster.local"'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: query_frontend[\s\S]*address: "RELEASE-NAME-loki-query-frontend.NAMESPACE.svc.cluster.local"'
+        template: gateway/configmap.yaml
+
+  - it: uses native Envoy Basic Auth and maps usernames from tenants
+    set:
+      gateway.basicAuth.enabled: true
+      loki.tenants:
+        - name: cluster1|cluster2|cluster3
+          basicAuthUsername: grafana
+          passwordHash: '{SHA}eJy+BAeECxwgQcszRS/2Dxm/WMw='
+    asserts:
+      - notExists:
+          path: data["auth-nginx.conf"]
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: envoy.filters.http.basic_auth[\s\S]*type.googleapis.com/envoy.extensions.filters.http.basic_auth.v3.BasicAuth[\s\S]*filename: /etc/envoy/secrets/.htpasswd[\s\S]*allow_missing: false[\s\S]*emit_dynamic_metadata: true'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local basic_tenants = \{[\s\S]*\["grafana"\] = "cluster1\|cluster2\|cluster3"[\s\S]*local basic_auth = metadata:get\("envoy.filters.http.basic_auth"\)[\s\S]*local basic_username = basic_auth and basic_auth\["username"\]'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'forward_username_header:'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'path: /livez[\s\S]*envoy.filters.http.basic_auth:[\s\S]*type.googleapis.com/envoy.config.route.v3.FilterConfig[\s\S]*disabled: true'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'function envoy_on_response\(handle\) end'
+        template: gateway/configmap.yaml
+      - equal:
+          path: stringData[".htpasswd"]
+          value: |
+            grafana:{SHA}eJy+BAeECxwgQcszRS/2Dxm/WMw=
+        template: gateway/secret.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: auth
+            mountPath: /etc/envoy/secrets
+            readOnly: true
+        template: gateway/deployment.yaml
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+        template: gateway/deployment.yaml
+
+  - it: accepts an existing htpasswd secret without changing its contract
+    set:
+      gateway.basicAuth.enabled: true
+      gateway.basicAuth.existingSecret: gateway-auth
+      gateway.basicAuth.username: grafana
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: gateway/secret.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: auth
+            secret:
+              secretName: gateway-auth
+        template: gateway/deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: auth
+            mountPath: /etc/envoy/secrets
+            readOnly: true
+        template: gateway/deployment.yaml
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+        template: gateway/deployment.yaml
+
+  - it: requires an explicit username to map an external htpasswd user without tenants
+    set:
+      gateway.basicAuth.enabled: true
+      gateway.basicAuth.existingSecret: gateway-auth
+    asserts:
+      - failedTemplate:
+          errorMessage: gateway.basicAuth.username is required for Envoy Basic Auth when loki.tenants is empty
+        template: gateway/deployment.yaml
+
+  - it: rejects non-SHA password hashes for native Envoy Basic Auth
+    set:
+      gateway.basicAuth.enabled: true
+      loki.tenants:
+        - name: tenant-a
+          passwordHash: '$2y$10$7O40CaY1yz7fu9O24k2/u.ct/wELYHRBsn25v/7AyuQ8E8hrLqpva'
+    asserts:
+      - failedTemplate:
+          errorMessage: Envoy Basic Auth passwordHash values must use the {SHA} format
+        template: gateway/secret.yaml
+
+  - it: derives a native Envoy Basic Auth SHA hash from a tenant password
+    set:
+      gateway.basicAuth.enabled: true
+      loki.tenants:
+        - name: tenant-a
+          password: test-password
+    asserts:
+      - equal:
+          path: stringData[".htpasswd"]
+          value: |
+            tenant-a:{SHA}eJy+BAeECxwgQcszRS/2Dxm/WMw=
+        template: gateway/secret.yaml
+
+  - it: supports a top-level native Envoy Basic Auth SHA password hash
+    set:
+      gateway.basicAuth.enabled: true
+      gateway.basicAuth.username: grafana
+      gateway.basicAuth.passwordHash: '{SHA}eJy+BAeECxwgQcszRS/2Dxm/WMw='
+    asserts:
+      - equal:
+          path: stringData[".htpasswd"]
+          value: |
+            grafana:{SHA}eJy+BAeECxwgQcszRS/2Dxm/WMw=
+        template: gateway/secret.yaml
+
+  - it: derives a native Envoy Basic Auth SHA hash from a top-level password
+    set:
+      gateway.basicAuth.enabled: true
+      gateway.basicAuth.username: grafana
+      gateway.basicAuth.password: test-password
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local basic_tenants = \{[\s\S]*\["grafana"\] = "grafana"'
+        template: gateway/configmap.yaml
+      - equal:
+          path: stringData[".htpasswd"]
+          value: |
+            grafana:{SHA}eJy+BAeECxwgQcszRS/2Dxm/WMw=
+        template: gateway/secret.yaml
+
+  - it: permits missing Basic credentials when verified JWT tenancy is also configured
+    set:
+      gateway.basicAuth.enabled: true
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.issuer: https://issuer.example.com/
+      gateway.envoyConfig.jwt.remoteJwks.uri: https://issuer.example.com/.well-known/jwks.json
+      loki.tenants:
+        - name: tenant-a
+          passwordHash: '{SHA}eJy+BAeECxwgQcszRS/2Dxm/WMw='
+          jwtSubClaim:
+            - service-a
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: envoy.filters.http.basic_auth[\s\S]*allow_missing: true'
+        template: gateway/configmap.yaml
+
+  - it: permits JWT-only tenants beside native Basic Auth tenants
+    set:
+      gateway.basicAuth.enabled: true
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.issuer: https://issuer.example.com/
+      gateway.envoyConfig.jwt.remoteJwks.uri: https://issuer.example.com/.well-known/jwks.json
+      loki.tenants:
+        - name: grafana
+          password: test-password
+        - name: self-monitoring
+          jwtSubClaim:
+            - system:serviceaccount:loki:loki-canary
+    asserts:
+      - equal:
+          path: stringData[".htpasswd"]
+          value: |
+            grafana:{SHA}eJy+BAeECxwgQcszRS/2Dxm/WMw=
+        template: gateway/secret.yaml
+
+  - it: rejects unmapped verified identities and unauthenticated requests with distinct statuses
+    set:
+      gateway.basicAuth.enabled: true
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.tls.enabled: true
+      gateway.envoyConfig.tls.existingSecret: gateway-tls
+      loki.tenants:
+        - name: basic-tenant
+          password: test-password
+        - name: jwt-tenant
+          jwtSubClaim:
+            - service-a
+        - name: mtls-tenant
+          clientCertificateCN:
+            - client-a
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local tenant = common_name and mtls_tenants\[common_name\][\s\S]*if tenant == nil then[\s\S]*return deny\(handle, "403", "Forbidden\\n"\)[\s\S]*return allow\(headers, tenant\)'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local tenant = subject and jwt_tenants\[subject\][\s\S]*if tenant == nil then[\s\S]*return deny\(handle, "403", "Forbidden\\n"\)[\s\S]*return allow\(headers, tenant\)'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local tenant = basic_tenants\[basic_username\][\s\S]*if tenant == nil then[\s\S]*return deny\(handle, "403", "Forbidden\\n"\)[\s\S]*return allow\(headers, tenant\)[\s\S]*return deny\(handle, "401", "Unauthorized\\n"\)'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local tenant = basic_username|headers:replace\("x-scope-orgid", basic_username\)'
+        template: gateway/configmap.yaml
+
+  - it: renders any number of additional templated Envoy files
+    set:
+      gateway.configs:
+        teams.map: |
+          grafana {{ .Release.Name }}
+        regions.map: |
+          eu cluster-eu
+          us cluster-us
+    asserts:
+      - equal:
+          path: data["teams.map"]
+          value: |
+            grafana RELEASE-NAME
+        template: gateway/configmap.yaml
+      - equal:
+          path: data["regions.map"]
+          value: |
+            eu cluster-eu
+            us cluster-us
+        template: gateway/configmap.yaml
+
+  - it: rejects reserved additional config names
+    set:
+      gateway.configs:
+        envoy.yaml: custom
+    asserts:
+      - failedTemplate:
+          errorMessage: 'gateway.configs contains reserved Envoy file name "envoy.yaml"'
+        template: gateway/deployment.yaml
+
+  - it: maps multiple verified client certificate CNs to a tenant
+    set:
+      gateway.envoyConfig.tls.enabled: true
+      gateway.envoyConfig.tls.existingSecret: gateway-tls
+      loki.tenants:
+        - name: cluster1|cluster2
+          clientCertificateCN:
+            - Grafana Client
+            - Alternate Client
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local mtls_tenants = \{[\s\S]*\["Grafana Client"\] = "cluster1\|cluster2"[\s\S]*\["Alternate Client"\] = "cluster1\|cluster2"'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'peerCertificatePresented\(\)[\s\S]*peerCertificateValidated\(\)[\s\S]*parsedSubjectPeerCertificate\(\)[\s\S]*commonName\(\)'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'DownstreamTlsContext[\s\S]*alpn_protocols: \[h2, http/1.1\][\s\S]*filename: /etc/envoy/tls/tls.crt[\s\S]*filename: /etc/envoy/tls/ca.crt'
+        template: gateway/configmap.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: envoy-tls
+            secret:
+              secretName: gateway-tls
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.scheme
+          value: HTTPS
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.scheme
+          value: HTTP
+        template: gateway/deployment.yaml
+
+  - it: rejects client certificate mappings without Envoy TLS termination
+    set:
+      loki.tenants:
+        - name: tenant-a
+          clientCertificateCN:
+            - client-a
+    asserts:
+      - failedTemplate:
+          errorMessage: gateway.envoyConfig.tls.enabled must be true when a tenant defines clientCertificateCN
+        template: gateway/deployment.yaml
+
+  - it: verifies JWTs with remote JWKS and maps multiple subject claims
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.issuer: https://issuer.example.com/
+      gateway.envoyConfig.jwt.audiences:
+        - loki
+      gateway.envoyConfig.jwt.remoteJwks.uri: https://issuer.example.com/.well-known/jwks.json
+      loki.tenants:
+        - name: cluster1|cluster2
+          jwtSubClaim:
+            - Grafana Service
+            - system:serviceaccount:grafana:grafana
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: envoy.filters.http.jwt_authn[\s\S]*issuer: "https://issuer.example.com/"[\s\S]*audiences:[\s\S]*- loki[\s\S]*from_headers:[\s\S]*name: Authorization[\s\S]*value_prefix: "Bearer "[\s\S]*remote_jwks:[\s\S]*uri: "https://issuer.example.com/.well-known/jwks.json"[\s\S]*cluster: jwt_jwks[\s\S]*payload_in_metadata: jwt_payload'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'path: /livez[\s\S]*envoy.filters.http.jwt_authn:[\s\S]*type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig[\s\S]*disabled: true'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'from_params:|from_cookies:'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local jwt_tenants = \{[\s\S]*\["Grafana Service"\] = "cluster1\|cluster2"[\s\S]*\["system:serviceaccount:grafana:grafana"\] = "cluster1\|cluster2"'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local jwt_auth = metadata:get\("envoy.filters.http.jwt_authn"\)[\s\S]*local jwt_payload = jwt_auth and jwt_auth\["jwt_payload"\][\s\S]*local subject = jwt_payload\["sub"\][\s\S]*subject = tostring\(subject\)'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'claim_to_headers:|x-loki-jwt-subject'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'prefix: /[\s\S]*requires:[\s\S]*requires_any:[\s\S]*provider_name: loki[\s\S]*allow_missing: \{\}'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: jwt_jwks[\s\S]*address: "issuer.example.com"[\s\S]*port_value: 443[\s\S]*trusted_ca:[\s\S]*filename: "/etc/envoy/kubernetes/ca.crt"[\s\S]*san_type: DNS[\s\S]*exact: "issuer.example.com"'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'local_jwks|jwks\.pem|certificate\.pem'
+        template: gateway/configmap.yaml
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: envoy-jwt
+        template: gateway/deployment.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: envoy-kubernetes-ca
+            configMap:
+              name: kube-root-ca.crt
+              items:
+                - key: ca.crt
+                  path: ca.crt
+        template: gateway/deployment.yaml
+
+  - it: ignores client-supplied Basic Auth identity when only JWT tenancy is enabled
+    set:
+      gateway.basicAuth.enabled: false
+      gateway.envoyConfig.jwt.enabled: true
+      loki.tenants:
+        - name: self-monitoring
+          jwtSubClaim:
+            - system:serviceaccount:default:loki-canary
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'early_header_mutation_extensions:[\s\S]*remove: x-scope-orgid[\s\S]*local jwt_payload = jwt_auth and jwt_auth\["jwt_payload"\][\s\S]*return deny\(handle, "401", "Unauthorized\\n"\)'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: envoy.filters.http.basic_auth|metadata:get\("envoy.filters.http.basic_auth"\)|x-loki-basic-auth-user|x-loki-jwt-subject'
+        template: gateway/configmap.yaml
+
+  - it: defaults JWT verification to Kubernetes ServiceAccount tokens
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      loki.tenants:
+        - name: self-monitoring
+          jwtSubClaim:
+            - 'system:serviceaccount:{{ .Release.Namespace }}:loki-canary'
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'issuer: "https://kubernetes.default.svc.cluster.local"[\s\S]*audiences:[\s\S]*- ''loki.NAMESPACE''[\s\S]*from_headers:[\s\S]*name: Authorization[\s\S]*value_prefix: "Bearer "[\s\S]*uri: "https://kubernetes.default.svc/openid/v1/jwks"[\s\S]*filename: "/etc/envoy/kubernetes/ca.crt"'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: '\["system:serviceaccount:NAMESPACE:loki-canary"\] = "self-monitoring"'
+        template: gateway/configmap.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: envoy-kubernetes-ca
+            mountPath: /etc/envoy/kubernetes
+            readOnly: true
+        template: gateway/deployment.yaml
+      - equal:
+          path: roleRef.name
+          value: system:service-account-issuer-discovery
+        template: gateway/kubernetes-jwks-rbac.yaml
+      - contains:
+          path: subjects
+          content:
+            apiGroup: rbac.authorization.k8s.io
+            kind: Group
+            name: system:unauthenticated
+        template: gateway/kubernetes-jwks-rbac.yaml
+
+  - it: renders configured JWT audiences as Helm templates
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.audiences:
+        - '{{ .Release.Name }}.{{ include "loki.namespace" . }}'
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'audiences:[\s\S]*- ''RELEASE-NAME.NAMESPACE''[\s\S]*from_headers:'
+        template: gateway/configmap.yaml
+
+  - it: can leave Kubernetes issuer discovery RBAC to existing cluster policy
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: gateway/kubernetes-jwks-rbac.yaml
+
+  - it: rejects JWT mappings without remote JWT verification
+    set:
+      loki.tenants:
+        - name: tenant-a
+          jwtSubClaim:
+            - service-a
+    asserts:
+      - failedTemplate:
+          errorMessage: gateway.envoyConfig.jwt.enabled must be true when a tenant defines jwtSubClaim
+        template: gateway/deployment.yaml
+
+  - it: rejects JWT verification without a remote JWKS URI
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.remoteJwks.uri: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: gateway.envoyConfig.jwt.remoteJwks.uri is required when Envoy JWT verification is enabled
+        template: gateway/deployment.yaml
+
+  - it: rejects duplicate identities that map to different tenants
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.issuer: https://issuer.example.com/
+      gateway.envoyConfig.jwt.remoteJwks.uri: https://issuer.example.com/jwks
+      loki.tenants:
+        - name: tenant-a
+          jwtSubClaim:
+            - shared-subject
+        - name: tenant-b
+          jwtSubClaim:
+            - shared-subject
+    asserts:
+      - failedTemplate:
+          errorMessage: 'Tenant identity "shared-subject" from jwtSubClaim maps to more than one tenant'
+        template: gateway/deployment.yaml
+
+  - it: supports Kubernetes dual-stack service settings with Envoy
+    set:
+      gateway.service.ipFamilyPolicy: RequireDualStack
+      gateway.service.ipFamilies:
+        - IPv6
+        - IPv4
+    asserts:
+      - equal:
+          path: spec.ipFamilyPolicy
+          value: RequireDualStack
+        template: gateway/service.yaml
+      - equal:
+          path: spec.ipFamilies
+          value:
+            - IPv6
+            - IPv4
+        template: gateway/service.yaml
+
+  - it: preserves the default nginx gateway implementation with a quiet livez probe
+    set:
+      gateway.type: nginx
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: nginx
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: exporter
+        template: gateway/deployment.yaml
+      - exists:
+          path: data["nginx.conf"]
+        template: gateway/configmap.yaml
+      - exists:
+          path: data["access-log-exporter.yaml"]
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["nginx.conf"]
+          pattern: 'location = /livez \{[\s\S]*access_log off;[\s\S]*return 200'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["nginx.conf"]
+          pattern: 'location \^~ /ui/ \{'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["nginx.conf"]
+          pattern: 'location \^~ /ui \{'
+        template: gateway/configmap.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /livez
+        template: gateway/deployment.yaml
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe
+        template: gateway/deployment.yaml
+      - notExists:
+          path: data["envoy.yaml"]
+        template: gateway/configmap.yaml

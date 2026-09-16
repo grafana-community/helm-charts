@@ -100,6 +100,16 @@ tests:
           pattern: "\\* gateway"
         template: NOTES.txt
 
+  - it: identifies the Envoy gateway implementation
+    set:
+      deploymentMode: Monolithic
+      gateway.enabled: true
+      gateway.type: envoy
+    asserts:
+      - matchRegexRaw:
+          pattern: "Loki has been configured with a gateway \\(envoy\\)"
+        template: NOTES.txt
+
   - it: renders multi-tenancy instructions when auth is enabled
     set:
       loki.auth_enabled: true
