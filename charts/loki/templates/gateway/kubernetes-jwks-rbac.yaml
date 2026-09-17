@@ -1,0 +1,20 @@
+{{- if and .Values.gateway.enabled (eq .Values.gateway.type "envoy") .Values.gateway.envoyConfig.jwt.enabled .Values.gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled }}
+{{- if .Values.rbac.namespaced }}
+{{- fail "gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled must be false when rbac.namespaced is true; use an existing issuer-discovery binding or an external JWKS endpoint" }}
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "loki.gatewayFullname" . }}-kubernetes-jwks
+  labels:
+    {{- include "loki.gatewayLabels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:service-account-issuer-discovery
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: system:unauthenticated
+{{- end }}

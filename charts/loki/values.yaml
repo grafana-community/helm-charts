@@ -565,14 +565,25 @@ loki:
     max_join_retries: 10
     min_join_backoff: 1s
     rejoin_interval: 90s
-  # -- Tenants list to be created on nginx htpasswd file, with name and password or passwordHash keys<br><br>
+  # @schema item:object
+  # @schema itemProperties:{"name":{"type":"string","minLength":1},"password":{"type":["string","null"]},"passwordHash":{"type":["string","null"]},"basicAuthUsername":{"type":["string","null"]},"clientCertificateCN":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},"jwtSubClaim":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true}}
+  # @schema allOf:[{"type":"array","items":{"required":["name"]}}]
+  # -- Tenants used by the gateway for authentication and `X-Scope-OrgID` mapping. Only `name`, `password`, and `passwordHash` are supported by both gateway implementations; `basicAuthUsername`, `clientCertificateCN`, and `jwtSubClaim` are supported only when `gateway.type` is `envoy`. `name` is the value assigned to `X-Scope-OrgID` and the default Basic Auth username. It can be a single Loki tenant ID or, when multi-tenant queries are enabled, a pipe-separated list of tenant IDs. `jwtSubClaim` entries are rendered with `tpl`, allowing values such as `system:serviceaccount:{{ .Release.Namespace }}:loki-canary`. Envoy Basic Auth accepts a `{SHA}` `passwordHash`, or derives one from `password`; JWT-only Envoy tenants do not need either.<br><br>
   # Example:
   # <pre>
   # tenants:<br>
   #   - name: "test-user-1"<br>
   #     password: "test-password-1"<br>
   #   - name: "test-user-2"<br>
-  #     passwordHash: "$2y$10$7O40CaY1yz7fu9O24k2/u.ct/wELYHRBsn25v/7AyuQ8E8hrLqpva" # generated using `htpasswd -nbBC10 test-user-2 test-password-2`
+  #     passwordHash: "$2y$10$7O40CaY1yz7fu9O24k2/u.ct/wELYHRBsn25v/7AyuQ8E8hrLqpva" # NGINX: generated using `htpasswd -nbBC10 test-user-2 test-password-2`
+  #   # Map requests authenticated as the dedicated user "grafana" to all three tenants by<br>
+  #   # setting X-Scope-OrgID to "cluster1|cluster2|cluster3".<br>
+  #   - name: "cluster1|cluster2|cluster3"<br>
+  #     basicAuthUsername: "grafana"<br>
+  #     clientCertificateCN:<br>
+  #       - "grafana-client"<br>
+  #     jwtSubClaim:<br>
+  #       - "system:serviceaccount:grafana:grafana"
   # </pre>
   tenants: []
   # @schema skipProperties:true;additionalProperties:true
@@ -831,7 +842,7 @@ loki:
     # Disabled by default for backwards compatibility. Enable to use the Loki UI.
     enabled: false
     gateway:
-      # enable gateway proxying to UI under /ui
+      # enable gateway proxying to UI under /ui/
       enabled: true
   # @schema skipProperties:true;additionalProperties:true
   # --  Optional querier configuration
@@ -1085,6 +1096,14 @@ lokiCanary:
     # @schema type:[string, null]
     # -- Password of the gateway for Basic auth for loki-canary
     password: null
+    bearerToken:
+      # -- Use a projected Kubernetes ServiceAccount token for the patched loki-canary image's `-bearer-token-file` option.
+      enabled: false
+      # -- Requested audience for the projected ServiceAccount token. Rendered with `tpl`; this must match an Envoy JWT audience when audience validation is enabled.
+      audience: '{{ include "loki.name" . }}.{{ include "loki.namespace" . }}'
+      # @schema minimum:600;maximum:31536000
+      # -- Lifetime in seconds for the projected ServiceAccount token.
+      expirationSeconds: 3600
   serviceAccount:
     # -- Specifies whether a ServiceAccount should be created
     create: true
@@ -1145,6 +1164,10 @@ rbac:
 networkPolicy:
   # -- Specifies whether Network Policies should be created
   enabled: false
+  gatewayJwks:
+    # @schema item:string
+    # -- CIDRs allowed for Envoy gateway JWKS egress in the standard NetworkPolicy. Empty permits the configured JWKS port to any destination because Kubernetes NetworkPolicy cannot select the API server Service by name.
+    cidrs: []
   metrics:
     # -- Specifies the Pods which are allowed to access the metrics port.
     # As this is cross-namespace communication, you also need the namespaceSelector.
@@ -1212,6 +1235,9 @@ memberlist:
 gateway:
   # -- Specifies whether the gateway should be enabled
   enabled: true
+  # @schema enum:[nginx, envoy]
+  # -- Selects the gateway proxy implementation. The Envoy implementation is opt-in.
+  type: nginx
   # -- Number of replicas for the gateway
   replicas: 1
   # -- Default container port
@@ -1276,17 +1302,31 @@ gateway:
   deploymentStrategy:
     type: RollingUpdate
   image:
-    # -- The Docker registry for the gateway image
+    # -- The Docker registry for the NGINX gateway image
     registry: docker.io
-    # -- The gateway image repository
+    # -- The NGINX gateway image repository
     repository: nginxinc/nginx-unprivileged
-    # -- The gateway image tag
+    # -- The NGINX gateway image tag
     tag: 1.31-alpine
     # @schema type:[string, null]
-    # -- Overrides the gateway image tag with an image digest
+    # -- Overrides the NGINX gateway image tag with an image digest
     digest: null
-    # -- The gateway image pull policy
+    # -- The NGINX gateway image pull policy
     pullPolicy: IfNotPresent
+  envoy:
+    image:
+      # -- The Docker registry for the Envoy gateway image
+      registry: docker.io
+      # -- The Envoy gateway image repository
+      repository: envoyproxy/envoy
+      # renovate: docker=docker.io/envoyproxy/envoy
+      # -- The Envoy gateway image tag. Uses the official distroless variant by default.
+      tag: distroless-v1.39.1
+      # @schema type:[string, null]
+      # -- Overrides the Envoy gateway image tag with an image digest
+      digest: null
+      # -- The Envoy gateway image pull policy
+      pullPolicy: IfNotPresent
   # @schema type:[string, null]
   # -- The name of the PriorityClass for gateway pods
   priorityClassName: null
@@ -1478,30 +1518,59 @@ gateway:
     # -- The basic auth username for the gateway
     username: null
     # @schema type:[string, null]
-    # -- The basic auth password for the gateway
+    # -- The basic auth password. The Envoy gateway derives its required `{SHA}` hash from this value.
     password: null
+    # @schema type:[string, null]
+    # -- The `{SHA}` password hash for the Envoy gateway when `loki.tenants` is empty. This takes precedence over `password`. Generate it with `printf %s 'password' | openssl dgst -sha1 -binary | openssl base64 -A` and prefix the result with `{SHA}`.
+    passwordHash: null
     # -- Uses the specified users from the `loki.tenants` list to create the htpasswd file.
-    # if `loki.tenants` is not set, the `gateway.basicAuth.username` and `gateway.basicAuth.password` are used.
+    # If `loki.tenants` is not set, the `gateway.basicAuth.username` and matching password value are used.
     # The value is templated using `tpl`. Override this to use a custom htpasswd, e.g. in case the default causes
-    # high CPU load.
-    # @default -- Either `loki.tenants` or `gateway.basicAuth.username` and `gateway.basicAuth.password`.
+    # high CPU load. The native Envoy Basic Auth filter requires `{SHA}` password hashes; NGINX supports
+    # the existing bcrypt hashes. Envoy derives `{SHA}` hashes from plaintext password inputs.
+    # @default -- Either `loki.tenants` or `gateway.basicAuth.username` and password or passwordHash.
     htpasswd: |
+      {{- $isEnvoy := eq .Values.gateway.type "envoy" }}
       {{- with $tenants := .Values.loki.tenants }}
         {{- range $t := $tenants }}
-          {{- $username := required "All tenants must have a 'name' set" $t.name }}
-          {{- if $passwordHash := $t.passwordHash }}
+          {{- $tenantName := required "All tenants must have a 'name' set" $t.name }}
+          {{- $username := ternary ($t.basicAuthUsername | default $tenantName) $tenantName $isEnvoy }}
+          {{- if and $isEnvoy (or $t.passwordHash $t.password) }}
+            {{- $passwordHash := $t.passwordHash }}
+            {{- if not $passwordHash }}
+              {{- $passwordHash = include "loki.gatewayEnvoySHA1" (required "All tenants must have a 'password' or 'passwordHash' set" $t.password) }}
+            {{- end }}
+            {{- if not (regexMatch "^\\{SHA\\}[A-Za-z0-9+/]{27}=$" $passwordHash) }}
+              {{- fail "Envoy Basic Auth passwordHash values must contain a valid {SHA} Base64-encoded SHA-1 digest" }}
+            {{- end }}
             {{- printf "%s:%s\n" $username $passwordHash }}
-          {{- else if $password := $t.password }}
+          {{- else if not $isEnvoy }}
+            {{- if $passwordHash := $t.passwordHash }}
+            {{- printf "%s:%s\n" $username $passwordHash }}
+            {{- else if $password := $t.password }}
             {{- printf "%s\n" (htpasswd $username $password) }}
-          {{- else }}
+            {{- else }}
             {{- fail "All tenants must have a 'password' or 'passwordHash' set" }}
+            {{- end }}
           {{- end }}
         {{- end }}
       {{- else }}
-        {{- printf "%s\n" (htpasswd (required "'gateway.basicAuth.username' is required" .Values.gateway.basicAuth.username) (required "'gateway.basicAuth.password' is required" .Values.gateway.basicAuth.password)) }}
+        {{- $username := required "'gateway.basicAuth.username' is required" .Values.gateway.basicAuth.username }}
+        {{- if $isEnvoy }}
+          {{- $passwordHash := .Values.gateway.basicAuth.passwordHash }}
+          {{- if not $passwordHash }}
+            {{- $passwordHash = include "loki.gatewayEnvoySHA1" (required "'gateway.basicAuth.password' or 'gateway.basicAuth.passwordHash' is required for the Envoy gateway" .Values.gateway.basicAuth.password) }}
+          {{- end }}
+          {{- if not (hasPrefix "{SHA}" $passwordHash) }}
+            {{- fail "gateway.basicAuth.passwordHash must use the {SHA} format for the Envoy gateway" }}
+          {{- end }}
+          {{- printf "%s:%s\n" $username $passwordHash }}
+        {{- else }}
+          {{- printf "%s\n" (htpasswd $username (required "'gateway.basicAuth.password' is required" .Values.gateway.basicAuth.password)) }}
+        {{- end }}
       {{- end }}
     # @schema type:[string, null]
-    # -- Existing basic auth secret to use. Must contain '.htpasswd'
+    # -- Existing basic auth secret to use. Must contain `.htpasswd`; Envoy requires every entry to use the `{SHA}` format. Envoy reads this file at startup; after rotating an existing Secret, restart the gateway Deployment or change gateway.podAnnotations to trigger a rollout.
     existingSecret: null
   # -- Gateway API routes configuration. Mutually exclusive with gateway.ingress.
   # Use either ingress or route, but not both at once.
@@ -1557,10 +1626,10 @@ gateway:
       # -- Timeouts for the default rule
       timeouts: {}
   # @schema skipProperties:true;additionalProperties:true
-  # -- liveness probe for the nginx container in the gateway pods.
+  # -- Liveness probe for the selected gateway container. Envoy defaults to `/livez` on its HTTP listener when this is empty.
   livenessProbe: {}
   # @schema skipProperties:true;additionalProperties:true
-  # Configures the readiness probe for the gateway
+  # -- Readiness probe for the gateway. The default remains compatible with custom NGINX configurations. Envoy replaces this default with HTTP `/ready` on `gateway.envoyConfig.adminPort`; custom probes are preserved.
   readinessProbe:
     httpGet:
       path: /
@@ -1568,10 +1637,10 @@ gateway:
     initialDelaySeconds: 15
     timeoutSeconds: 1
   # @schema skipProperties:true;additionalProperties:true
-  # -- startup probe for the nginx container in the gateway pods.
+  # -- Startup probe for the selected gateway container.
   startupProbe: {}
   nginxConfig:
-    # -- Which schema to be used when building URLs. Can be 'http' or 'https'.
+    # -- Which schema to be used when building upstream URLs. Can be `http` or `https`. Also used by the generated Envoy configuration.
     schema: http
     # -- Enable listener for IPv6, disable on IPv4-only systems
     enableIPv6: true
@@ -1592,13 +1661,13 @@ gateway:
     # -- Whether ssl should be appended to the listen directive of the server block or not.
     ssl: false
     # @schema type:[string, null]
-    # -- Override Read URL
+    # -- Override Read URL. Also used by the generated Envoy configuration.
     customReadUrl: null
     # @schema type:[string, null]
-    # -- Override Write URL
+    # -- Override Write URL. Also used by the generated Envoy configuration.
     customWriteUrl: null
     # @schema type:[string, null]
-    # -- Override Backend URL
+    # -- Override Backend URL. Also used by the generated Envoy configuration.
     customBackendUrl: null
     # -- Allows overriding the DNS resolver address nginx will use.
     resolver: ""
@@ -1607,19 +1676,92 @@ gateway:
     file: |
       {{- include "loki.nginxFile" . -}}
 
+  envoyConfig:
+    # -- Dual-stack Envoy administration port used by the readiness probe. Only `/ready` is accessible unless gateway metrics are enabled, which also allows `/stats/prometheus`.
+    adminPort: 9901
+    # -- Enable an IPv4-compatible IPv6 listener for dual-stack gateway pods.
+    enableIPv6: true
+    # -- Timeout for connections from Envoy to Loki components.
+    connectTimeout: 5s
+    # -- Request timeout. Use `0s` for streaming Loki requests.
+    requestTimeout: 0s
+    # -- Idle timeout for downstream HTTP streams.
+    streamIdleTimeout: 600s
+    # -- Enable TCP keep-alive on listener and upstream connections.
+    tcpKeepAlive: true
+    # -- Use HTTP/2 over cleartext (h2c) for Loki upstreams. WebSocket streams automatically use HTTP/1.1.
+    upstreamHTTP2: true
+    upstreamTLS:
+      # -- CA bundle for HTTPS Loki upstreams. The default is present in the Envoy distroless image. Mount a custom CA with gateway.extraVolumes and gateway.extraVolumeMounts when needed.
+      caCertificateFile: /etc/ssl/certs/ca-certificates.crt
+      # -- Disable certificate chain and hostname verification for HTTPS Loki upstreams. Use only when explicitly required.
+      insecureSkipVerify: false
+    # -- Envoy access log format. Logs are written to stdout; `/livez` is always excluded.
+    logFormat: |
+      [%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%" %RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT% %DURATION% %UPSTREAM_HOST% "%REQ(USER-AGENT)%" "%REQ(X-FORWARDED-FOR)%"
+    tls:
+      # -- Terminate TLS at Envoy. Required when tenants define `clientCertificateCN`.
+      enabled: false
+      # @schema type:[string, null]
+      # -- Secret containing the server certificate/private key and, for client-certificate authentication, the client CA.
+      existingSecret: null
+      # -- Secret key containing the PEM server certificate.
+      certificateFile: tls.crt
+      # -- Secret key containing the PEM server private key.
+      privateKeyFile: tls.key
+      # -- Secret key containing the CA certificates used to verify client certificates.
+      clientCAFile: ca.crt
+    jwt:
+      # -- Verify bearer JWTs with a remote JWKS before mapping `jwtSubClaim` values to Loki tenants. Defaults target the Kubernetes ServiceAccount issuer.
+      enabled: false
+      # -- Expected JWT issuer (`iss`).
+      issuer: https://kubernetes.default.svc.cluster.local
+      # @schema item:string
+      # -- Allowed JWT audiences (`aud`). Each value is rendered with `tpl`; the default matches the loki-canary projected ServiceAccount token. Leave empty to skip audience validation.
+      audiences:
+        - '{{ include "loki.name" . }}.{{ include "loki.namespace" . }}'
+      kubernetesServiceAccount:
+        discoveryRBAC:
+          # -- Permit unauthenticated reads of Kubernetes' public ServiceAccount issuer-discovery endpoints. This is required because Envoy remote JWKS requests cannot attach a ServiceAccount token. Set to false with rbac.namespaced: true and use an externally accessible JWKS endpoint or an existing equivalent ClusterRoleBinding.
+          enabled: true
+      remoteJwks:
+        # -- HTTPS or HTTP URI used by Envoy to fetch the JWKS. The default is the Kubernetes ServiceAccount JWKS endpoint.
+        uri: https://kubernetes.default.svc/openid/v1/jwks
+        # -- Timeout for each remote JWKS request.
+        requestTimeout: 5s
+        # -- How long Envoy caches the fetched JWKS.
+        cacheDuration: 300s
+        # -- Fetch the JWKS asynchronously during listener initialization.
+        asyncFetch: true
+        # -- CA bundle used to validate an HTTPS JWKS endpoint. The Kubernetes root CA is mounted here when JWT verification is enabled. Override this for an external issuer.
+        caCertificateFile: /etc/envoy/kubernetes/ca.crt
+    # -- Config file contents for Envoy. Passed through the `tpl` function to allow templating.
+    # @default -- See values.yaml
+    file: |
+      {{- include "loki.envoyFile" . -}}
+
+  # @schema additionalProperties:{"type":"string"}
+  # -- Additional Envoy configuration files. Keys are mounted in `/etc/envoy` and values are passed through `tpl`. The name `envoy.yaml` is reserved.
+  configs: {}
+
   metrics:
-    # -- Whether gateway metrics should be exported
+    # -- Whether gateway metrics should be exposed. NGINX uses the exporter sidecar; Envoy exposes native Prometheus metrics.
     enabled: true
     image:
+      # -- NGINX access log exporter image registry. Not used by the Envoy gateway.
       registry: ghcr.io
+      # -- NGINX access log exporter image repository. Not used by the Envoy gateway.
       repository: "jkroepke/access-log-exporter"
+      # -- NGINX access log exporter image tag. Not used by the Envoy gateway.
       tag: "0.4.13"
+      # -- NGINX access log exporter image pull policy. Not used by the Envoy gateway.
       pullPolicy: IfNotPresent
     # @schema additionalProperties:true
+    # -- Resource requests and limits for the NGINX metrics exporter. Not used by the Envoy gateway.
     resources:
       requests: {}
       limits: {}
-    # -- Container resize policy for the gateway metrics exporter
+    # -- Container resize policy for the NGINX gateway metrics exporter. Not used by the Envoy gateway.
     # Example:
     # resizePolicy:
     #   - resourceName: cpu
@@ -1628,7 +1770,7 @@ gateway:
     #     restartPolicy: RestartContainer
     resizePolicy: []
     # @schema skipProperties:true;additionalProperties:true
-    # -- The SecurityContext for memcached exporter containers
+    # -- The SecurityContext for the NGINX gateway metrics exporter. Not used by the Envoy gateway.
     containerSecurityContext:
       allowPrivilegeEscalation: false
       readOnlyRootFilesystem: true
@@ -1640,10 +1782,10 @@ gateway:
       runAsNonRoot: true
       runAsUser: 65532
       runAsGroup: 65532
-    # -- Extra args to add to the exporter container.
+    # -- Extra args to add to the NGINX gateway metrics exporter. Not used by the Envoy gateway.
     extraArgs: []
     # @schema skipProperties:true;additionalProperties:true
-    # -- Liveness probe for memcached exporter
+    # -- Liveness probe for the NGINX gateway metrics exporter. Not used by the Envoy gateway.
     livenessProbe:
       httpGet:
         path: /health
@@ -1653,7 +1795,7 @@ gateway:
       timeoutSeconds: 5
       failureThreshold: 3
     # @schema skipProperties:true;additionalProperties:true
-    # -- Readiness probe for memcached exporter
+    # -- Readiness probe for the NGINX gateway metrics exporter. Not used by the Envoy gateway.
     readinessProbe:
       httpGet:
         path: /health
@@ -1663,7 +1805,7 @@ gateway:
       timeoutSeconds: 3
       failureThreshold: 3
     # @schema skipProperties:true;additionalProperties:true
-    # -- Startup probe for memcached exporter
+    # -- Startup probe for the NGINX gateway metrics exporter. Not used by the Envoy gateway.
     startupProbe: {}
     service:
       # @schema additionalProperties:{"type":"string"}
