@@ -3747,7 +3747,7 @@
                             "type": "boolean"
                         },
                         "existingSecret": {
-                            "description": "Existing basic auth secret to use. Must contain `.htpasswd`; Envoy requires every entry to use the `{SHA}` format.",
+                            "description": "Existing basic auth secret to use. Must contain `.htpasswd`; Envoy requires every entry to use the `{SHA}` format. Envoy reads this file at startup; after rotating an existing Secret, restart the gateway Deployment or change gateway.podAnnotations to trigger a rollout.",
                             "type": [
                                 "string",
                                 "null"
@@ -3890,7 +3890,7 @@
                                             "type": "object",
                                             "properties": {
                                                 "enabled": {
-                                                    "description": "Permit unauthenticated reads of Kubernetes' public ServiceAccount issuer-discovery endpoints. This is required because Envoy remote JWKS requests cannot attach a ServiceAccount token. Disable this when using an externally accessible JWKS endpoint or an existing equivalent ClusterRoleBinding.",
+                                                    "description": "Permit unauthenticated reads of Kubernetes' public ServiceAccount issuer-discovery endpoints. This is required because Envoy remote JWKS requests cannot attach a ServiceAccount token. Set to false with rbac.namespaced: true and use an externally accessible JWKS endpoint or an existing equivalent ClusterRoleBinding.",
                                                     "type": "boolean"
                                                 }
                                             }
@@ -3971,6 +3971,19 @@
                         "upstreamHTTP2": {
                             "description": "Use HTTP/2 over cleartext (h2c) for Loki upstreams. WebSocket streams automatically use HTTP/1.1.",
                             "type": "boolean"
+                        },
+                        "upstreamTLS": {
+                            "type": "object",
+                            "properties": {
+                                "caCertificateFile": {
+                                    "description": "CA bundle for HTTPS Loki upstreams. The default is present in the Envoy distroless image. Mount a custom CA with gateway.extraVolumes and gateway.extraVolumeMounts when needed.",
+                                    "type": "string"
+                                },
+                                "insecureSkipVerify": {
+                                    "description": "Disable certificate chain and hostname verification for HTTPS Loki upstreams. Use only when explicitly required.",
+                                    "type": "boolean"
+                                }
+                            }
                         }
                     }
                 },
@@ -7241,6 +7254,18 @@
                         "ports": {
                             "description": "Specify the port used for external storage, e.g. AWS S3",
                             "type": "array"
+                        }
+                    }
+                },
+                "gatewayJwks": {
+                    "type": "object",
+                    "properties": {
+                        "cidrs": {
+                            "description": "CIDRs allowed for Envoy gateway JWKS egress in the standard NetworkPolicy. Empty permits the configured JWKS port to any destination because Kubernetes NetworkPolicy cannot select the API server Service by name.",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     }
                 },

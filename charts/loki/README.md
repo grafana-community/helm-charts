@@ -58,6 +58,8 @@ The generated Envoy configuration keeps the same Loki API routing and deployment
 
 Envoy uses Loki's cleartext HTTP/2 support for regular upstream requests by default. WebSocket tail requests use a dedicated HTTP/1.1 upstream cluster. Disable `gateway.envoyConfig.upstreamHTTP2` for older Loki versions or custom upstreams that support only HTTP/1.1.
 
+For HTTPS Loki upstreams, Envoy verifies the certificate chain against the image's system CA bundle and checks the upstream hostname. Set `gateway.envoyConfig.upstreamTLS.caCertificateFile` to a mounted custom CA bundle when needed. `gateway.envoyConfig.upstreamTLS.insecureSkipVerify: true` explicitly disables both checks.
+
 Use `gateway.envoyConfig` to configure listeners, timeouts, logging, TLS, remote JWKS validation, upstream HTTP/2, or the complete Envoy configuration. The existing `gateway.nginxConfig.schema` and `customReadUrl`/`customWriteUrl`/`customBackendUrl` values are also honored.
 
 Envoy uses its native Basic Auth filter and the existing `gateway.basicAuth` `.htpasswd` Secret contract, so no authorization sidecar is added. The native filter only accepts `{SHA}` htpasswd entries; the chart derives that format from plaintext `password` values, while other `passwordHash` formats remain supported by NGINX only. Generate an Envoy hash with `printf %s 'password' | openssl dgst -sha1 -binary | openssl base64 -A`, then prefix the result with `{SHA}`. When `loki.tenants` is configured, the gateway overwrites any client-supplied `X-Scope-OrgID` header with the mapped tenant name. Only `name`, `password`, and `passwordHash` are shared by both gateway implementations; `basicAuthUsername`, `clientCertificateCN`, and `jwtSubClaim` are Envoy-only. `basicAuthUsername` defaults to the tenant name and can map a distinct username to one or more Loki tenants:
@@ -69,6 +71,8 @@ loki:
       basicAuthUsername: grafana
       passwordHash: "{SHA}eJy+BAeECxwgQcszRS/2Dxm/WMw="
 ```
+
+Changing chart-managed Basic Auth credentials restarts the Envoy gateway through a pod-template checksum. Envoy reads an `existingSecret` when it starts; after rotating one, restart the gateway Deployment or change `gateway.podAnnotations` to trigger a rollout.
 
 Tenant entries can additionally set lists of `clientCertificateCN` and `jwtSubClaim` aliases. Client-certificate mapping requires Envoy TLS termination with `gateway.envoyConfig.tls.enabled` and a Secret containing `tls.crt`, `tls.key`, and `ca.crt`. JWT mapping requires `gateway.envoyConfig.jwt.enabled`. Its defaults validate Kubernetes projected ServiceAccount tokens with issuer `https://kubernetes.default.svc.cluster.local` and the Helm-templated audience `{{ include "loki.name" . }}.{{ include "loki.namespace" . }}`, and fetch JWKS from `https://kubernetes.default.svc/openid/v1/jwks`, using the namespace `kube-root-ca.crt` ConfigMap. Envoy fetches and caches the JWKS over HTTP(S), validates the token signature, issuer, expiration, and optional audiences, and only then maps `sub`; JWT verification keys are not mounted from disk.
 
@@ -98,6 +102,10 @@ loki:
 ```
 
 By default, the chart binds Kubernetes' built-in `system:service-account-issuer-discovery` ClusterRole to `system:unauthenticated`, permitting only the public OIDC discovery and JWKS paths. Envoy's remote JWKS client cannot send a ServiceAccount bearer token, so this makes the Kubernetes API JWKS endpoint reachable without mounting credentials or signing keys. Set `gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: false` when the cluster already exposes these public endpoints or when using an external issuer.
+
+When `networkPolicy.enabled` and Envoy JWT verification are enabled, the chart allows gateway egress on the JWKS URI's TCP port. Kubernetes NetworkPolicy cannot select the API server Service by name, so the rule permits any destination on that port by default. Set `networkPolicy.gatewayJwks.cidrs` to restrict destinations when your cluster's API server address is stable; verify CIDR matching with your network plugin because Service address translation can affect policy evaluation. Cilium-specific policies are not supported by this chart.
+
+With `rbac.namespaced: true`, set `gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: false` and provide an existing issuer-discovery binding or an externally accessible JWKS endpoint. The chart rejects a request to create the cluster-scoped binding in namespace-only mode.
 
 Clusters configured with a custom Kubernetes ServiceAccount issuer or audience must override `gateway.envoyConfig.jwt.issuer`, `gateway.envoyConfig.jwt.audiences`, `gateway.envoyConfig.jwt.remoteJwks.uri`, and `lokiCanary.tenant.bearerToken.audience` together.
 

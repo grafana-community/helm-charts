@@ -182,6 +182,7 @@ function, so encode the digest with the template arithmetic primitives.
 {{- $scheme := get $parsedUrl "scheme" -}}
 {{- $authority := get $parsedUrl "host" -}}
 {{- $hostname := get $parsedUrl "hostname" -}}
+{{- $sanType := ternary "IP_ADDRESS" "DNS" (or (regexMatch "^[0-9]+(\\.[0-9]+){3}$" $hostname) (contains ":" $hostname)) -}}
 {{- if not (has $scheme (list "http" "https")) -}}
   {{- fail (printf "Envoy gateway upstream URL %q must use http or https" .url) -}}
 {{- end -}}
@@ -225,8 +226,32 @@ function, so encode the digest with the template arithmetic primitives.
         sni: {{ $hostname | quote }}
         common_tls_context:
           validation_context:
+            {{- if $ctx.Values.gateway.envoyConfig.upstreamTLS.insecureSkipVerify }}
             trust_chain_verification: ACCEPT_UNTRUSTED
+            {{- else }}
+            trusted_ca:
+              filename: {{ required "gateway.envoyConfig.upstreamTLS.caCertificateFile is required for HTTPS Loki upstreams" $ctx.Values.gateway.envoyConfig.upstreamTLS.caCertificateFile | quote }}
+            match_typed_subject_alt_names:
+              - san_type: {{ $sanType }}
+                matcher:
+                  exact: {{ $hostname | quote }}
+            {{- end }}
     {{- end }}
+{{- end }}
+
+{{/* Resolve the port used by the remote JWKS endpoint. */}}
+{{- define "loki.gatewayEnvoyJwksPort" -}}
+{{- $uri := required "gateway.envoyConfig.jwt.remoteJwks.uri is required when Envoy JWT verification is enabled" .Values.gateway.envoyConfig.jwt.remoteJwks.uri -}}
+{{- $parsedUrl := urlParse $uri -}}
+{{- $scheme := get $parsedUrl "scheme" -}}
+{{- if not (has $scheme (list "http" "https")) -}}
+  {{- fail "gateway.envoyConfig.jwt.remoteJwks.uri must use http or https" -}}
+{{- end -}}
+{{- $port := ternary 443 80 (eq $scheme "https") -}}
+{{- with regexFind ":[0-9]+$" (get $parsedUrl "host") -}}
+  {{- $port = trimPrefix ":" . | int -}}
+{{- end -}}
+{{- $port -}}
 {{- end }}
 
 {{/* Render the remote JWKS cluster. JWT signing keys are never read from a mounted file. */}}
@@ -234,15 +259,8 @@ function, so encode the digest with the template arithmetic primitives.
 {{- $uri := required "gateway.envoyConfig.jwt.remoteJwks.uri is required when Envoy JWT verification is enabled" .Values.gateway.envoyConfig.jwt.remoteJwks.uri -}}
 {{- $parsedUrl := urlParse $uri -}}
 {{- $scheme := get $parsedUrl "scheme" -}}
-{{- $authority := get $parsedUrl "host" -}}
 {{- $hostname := get $parsedUrl "hostname" -}}
-{{- if not (has $scheme (list "http" "https")) -}}
-  {{- fail "gateway.envoyConfig.jwt.remoteJwks.uri must use http or https" -}}
-{{- end -}}
-{{- $port := ternary 443 80 (eq $scheme "https") -}}
-{{- with regexFind ":[0-9]+$" $authority -}}
-  {{- $port = trimPrefix ":" . | int -}}
-{{- end -}}
+{{- $port := include "loki.gatewayEnvoyJwksPort" . -}}
 {{ printf "  - name: jwt_jwks" }}
     type: STRICT_DNS
     connect_timeout: {{ .Values.gateway.envoyConfig.connectTimeout }}
