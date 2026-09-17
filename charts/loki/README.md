@@ -54,7 +54,7 @@ gateway:
   type: envoy
 ```
 
-The generated Envoy configuration keeps the same Loki API routing and deployment-mode targets as the generated NGINX configuration. It accepts HTTP/1.1 and cleartext HTTP/2, listens on IPv4 and IPv6 by default, enables frontend and backend keep-alive, and writes access logs to stdout. Envoy exposes native Prometheus metrics from the existing gateway metrics Service at `/stats/prometheus`; its administration listener allows only `/ready` and `/stats/prometheus`. Kubernetes readiness checks use `/livez`, which is excluded from proxy access logs.
+The generated Envoy configuration keeps the same Loki API routing and deployment-mode targets as the generated NGINX configuration. It accepts HTTP/1.1 and cleartext HTTP/2, listens on IPv4 and IPv6 by default, enables frontend and backend keep-alive, and writes access logs to stdout. Envoy exposes native Prometheus metrics from the existing gateway metrics Service at `/stats/prometheus`; its administration listener allows only `/ready` and `/stats/prometheus`. Kubernetes readiness checks use `/ready` on the administration listener, while liveness checks use `/livez`, which is excluded from proxy access logs.
 
 Envoy uses Loki's cleartext HTTP/2 support for regular upstream requests by default. WebSocket tail requests use a dedicated HTTP/1.1 upstream cluster. Disable `gateway.envoyConfig.upstreamHTTP2` for older Loki versions or custom upstreams that support only HTTP/1.1.
 
