@@ -1629,10 +1629,10 @@ gateway:
   # -- Liveness probe for the selected gateway container. Envoy defaults to `/livez` on its HTTP listener when this is empty.
   livenessProbe: {}
   # @schema skipProperties:true;additionalProperties:true
-  # -- Readiness probe for the gateway. Envoy replaces this default with HTTP `/ready` on `gateway.envoyConfig.adminPort`; custom probes are preserved.
+  # -- Readiness probe for the gateway. The default remains compatible with custom NGINX configurations. Envoy replaces this default with HTTP `/ready` on `gateway.envoyConfig.adminPort`; custom probes are preserved.
   readinessProbe:
     httpGet:
-      path: /livez
+      path: /
       port: http
     initialDelaySeconds: 15
     timeoutSeconds: 1
