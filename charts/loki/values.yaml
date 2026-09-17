@@ -1164,6 +1164,10 @@ rbac:
 networkPolicy:
   # -- Specifies whether Network Policies should be created
   enabled: false
+  gatewayJwks:
+    # @schema item:string
+    # -- CIDRs allowed for Envoy gateway JWKS egress in the standard NetworkPolicy. Empty permits the configured JWKS port to any destination because Kubernetes NetworkPolicy cannot select the API server Service by name.
+    cidrs: []
   metrics:
     # -- Specifies the Pods which are allowed to access the metrics port.
     # As this is cross-namespace communication, you also need the namespaceSelector.
@@ -1566,7 +1570,7 @@ gateway:
         {{- end }}
       {{- end }}
     # @schema type:[string, null]
-    # -- Existing basic auth secret to use. Must contain `.htpasswd`; Envoy requires every entry to use the `{SHA}` format.
+    # -- Existing basic auth secret to use. Must contain `.htpasswd`; Envoy requires every entry to use the `{SHA}` format. Envoy reads this file at startup; after rotating an existing Secret, restart the gateway Deployment or change gateway.podAnnotations to trigger a rollout.
     existingSecret: null
   # -- Gateway API routes configuration. Mutually exclusive with gateway.ingress.
   # Use either ingress or route, but not both at once.
@@ -1687,6 +1691,11 @@ gateway:
     tcpKeepAlive: true
     # -- Use HTTP/2 over cleartext (h2c) for Loki upstreams. WebSocket streams automatically use HTTP/1.1.
     upstreamHTTP2: true
+    upstreamTLS:
+      # -- CA bundle for HTTPS Loki upstreams. The default is present in the Envoy distroless image. Mount a custom CA with gateway.extraVolumes and gateway.extraVolumeMounts when needed.
+      caCertificateFile: /etc/ssl/certs/ca-certificates.crt
+      # -- Disable certificate chain and hostname verification for HTTPS Loki upstreams. Use only when explicitly required.
+      insecureSkipVerify: false
     # -- Envoy access log format. Logs are written to stdout; `/livez` is always excluded.
     logFormat: |
       [%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%" %RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT% %DURATION% %UPSTREAM_HOST% "%REQ(USER-AGENT)%" "%REQ(X-FORWARDED-FOR)%"
@@ -1713,7 +1722,7 @@ gateway:
         - '{{ include "loki.name" . }}.{{ include "loki.namespace" . }}'
       kubernetesServiceAccount:
         discoveryRBAC:
-          # -- Permit unauthenticated reads of Kubernetes' public ServiceAccount issuer-discovery endpoints. This is required because Envoy remote JWKS requests cannot attach a ServiceAccount token. Disable this when using an externally accessible JWKS endpoint or an existing equivalent ClusterRoleBinding.
+          # -- Permit unauthenticated reads of Kubernetes' public ServiceAccount issuer-discovery endpoints. This is required because Envoy remote JWKS requests cannot attach a ServiceAccount token. Set to false with rbac.namespaced: true and use an externally accessible JWKS endpoint or an existing equivalent ClusterRoleBinding.
           enabled: true
       remoteJwks:
         # -- HTTPS or HTTP URI used by Envoy to fetch the JWKS. The default is the Kubernetes ServiceAccount JWKS endpoint.

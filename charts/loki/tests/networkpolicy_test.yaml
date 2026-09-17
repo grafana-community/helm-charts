@@ -32,6 +32,50 @@ tests:
         documentIndex: 4
         template: networkpolicy.yaml
 
+  - it: allows Envoy gateway egress to the configured JWKS port
+    set:
+      networkPolicy.enabled: true
+      gateway.type: envoy
+      gateway.envoyConfig.jwt.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 6
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.podSelector.matchLabels["app.kubernetes.io/component"]
+          value: gateway
+        documentIndex: 5
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.egress[0].ports[0].port
+          value: 443
+        documentIndex: 5
+        template: networkpolicy.yaml
+      - notExists:
+          path: spec.egress[0].to
+        documentIndex: 5
+        template: networkpolicy.yaml
+
+  - it: restricts JWKS egress to configured CIDRs and uses a custom port
+    set:
+      networkPolicy.enabled: true
+      networkPolicy.gatewayJwks.cidrs:
+        - 10.0.0.1/32
+      gateway.type: envoy
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.remoteJwks.uri: https://kubernetes.default.svc:8443/openid/v1/jwks
+    asserts:
+      - equal:
+          path: spec.egress[0].ports[0].port
+          value: 8443
+        documentIndex: 5
+        template: networkpolicy.yaml
+      - equal:
+          path: spec.egress[0].to[0].ipBlock.cidr
+          value: 10.0.0.1/32
+        documentIndex: 5
+        template: networkpolicy.yaml
+
   - it: does not set ingress source selectors without namespaceSelector
     set:
       networkPolicy.enabled: true
