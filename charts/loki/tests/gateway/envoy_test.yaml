@@ -19,6 +19,9 @@ set:
 tests:
   - it: renders Envoy as an opt-in replacement for nginx
     asserts:
+      - notExists:
+          path: spec.template.metadata.annotations["checksum/auth"]
+        template: gateway/deployment.yaml
       - equal:
           path: spec.template.spec.containers[0].name
           value: envoy
@@ -364,6 +367,49 @@ tests:
           path: data["envoy.yaml"]
           pattern: 'name: ruler[\s\S]*address: "custom-backend.example"[\s\S]*port_value: 8081'
         template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: query_frontend[\s\S]*trusted_ca:[\s\S]*filename: "/etc/ssl/certs/ca-certificates.crt"[\s\S]*san_type: DNS[\s\S]*exact: "custom-read.example"'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'ACCEPT_UNTRUSTED'
+        template: gateway/configmap.yaml
+
+  - it: verifies HTTPS Loki upstreams against a custom CA and service hostname
+    set:
+      deploymentMode: SimpleScalable
+      gateway.nginxConfig.schema: https
+      gateway.envoyConfig.upstreamTLS.caCertificateFile: /etc/envoy/ca/upstream.crt
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: distributor[\s\S]*trusted_ca:[\s\S]*filename: "/etc/envoy/ca/upstream.crt"[\s\S]*san_type: DNS[\s\S]*exact: "RELEASE-NAME-loki-write.NAMESPACE.svc.cluster.local"'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'ACCEPT_UNTRUSTED'
+        template: gateway/configmap.yaml
+
+  - it: permits explicitly insecure HTTPS Loki upstreams
+    set:
+      gateway.nginxConfig.schema: https
+      gateway.envoyConfig.upstreamTLS.insecureSkipVerify: true
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: distributor[\s\S]*trust_chain_verification: ACCEPT_UNTRUSTED'
+        template: gateway/configmap.yaml
+
+  - it: verifies IP subject alternative names for HTTPS IP upstreams
+    set:
+      deploymentMode: SimpleScalable
+      gateway.nginxConfig.customReadUrl: https://192.0.2.10:8443
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'name: query_frontend[\s\S]*san_type: IP_ADDRESS[\s\S]*exact: "192.0.2.10"'
+        template: gateway/configmap.yaml
 
   - it: routes to individual Loki services in distributed mode
     set:
@@ -377,6 +423,39 @@ tests:
           path: data["envoy.yaml"]
           pattern: 'name: query_frontend[\s\S]*address: "RELEASE-NAME-loki-query-frontend.NAMESPACE.svc.cluster.local"'
         template: gateway/configmap.yaml
+
+  - it: rolls out Envoy when a chart-managed Basic Auth password changes
+    set:
+      gateway.basicAuth.enabled: true
+      gateway.basicAuth.username: grafana
+      gateway.basicAuth.password: first-password
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["checksum/auth"]
+          value: ba61add8d96b9fb7541df00b4a577d02ead2f3737b8267bc7a1a2c98aebbc77a
+        template: gateway/deployment.yaml
+
+  - it: changes the Envoy auth checksum for a rotated password
+    set:
+      gateway.basicAuth.enabled: true
+      gateway.basicAuth.username: grafana
+      gateway.basicAuth.password: second-password
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["checksum/auth"]
+          value: dd5b23ece908113938f6bd6959c8187e1c0c7862747d08f142609d409623f14a
+        template: gateway/deployment.yaml
+
+  - it: does not hash generated NGINX bcrypt credentials
+    set:
+      gateway.type: nginx
+      gateway.basicAuth.enabled: true
+      gateway.basicAuth.username: grafana
+      gateway.basicAuth.password: test-password
+    asserts:
+      - notExists:
+          path: spec.template.metadata.annotations["checksum/auth"]
+        template: gateway/deployment.yaml
 
   - it: uses native Envoy Basic Auth and maps usernames from tenants
     set:
@@ -432,6 +511,9 @@ tests:
       gateway.basicAuth.existingSecret: gateway-auth
       gateway.basicAuth.username: grafana
     asserts:
+      - notExists:
+          path: spec.template.metadata.annotations["checksum/auth"]
+        template: gateway/deployment.yaml
       - hasDocuments:
           count: 0
         template: gateway/secret.yaml
@@ -794,6 +876,25 @@ tests:
 
   - it: can leave Kubernetes issuer discovery RBAC to existing cluster policy
     set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: gateway/kubernetes-jwks-rbac.yaml
+
+  - it: rejects cluster issuer discovery RBAC in namespace-only mode
+    set:
+      rbac.namespaced: true
+      gateway.envoyConfig.jwt.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled must be false when rbac.namespaced is true; use an existing issuer-discovery binding or an external JWKS endpoint
+        template: gateway/kubernetes-jwks-rbac.yaml
+
+  - it: permits namespace-only JWT when issuer discovery RBAC already exists
+    set:
+      rbac.namespaced: true
       gateway.envoyConfig.jwt.enabled: true
       gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: false
     asserts:

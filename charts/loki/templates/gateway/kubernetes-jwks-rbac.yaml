@@ -1,4 +1,7 @@
 {{- if and .Values.gateway.enabled (eq .Values.gateway.type "envoy") .Values.gateway.envoyConfig.jwt.enabled .Values.gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled }}
+{{- if .Values.rbac.namespaced }}
+{{- fail "gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled must be false when rbac.namespaced is true; use an existing issuer-discovery binding or an external JWKS endpoint" }}
+{{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
