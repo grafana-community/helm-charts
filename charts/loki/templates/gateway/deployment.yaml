@@ -15,16 +15,24 @@
     {{- $livenessProbe = dict "httpGet" (dict "path" "/livez" "port" "http") "initialDelaySeconds" 15 "timeoutSeconds" 1 }}
   {{- end }}
   {{- $readinessGet := get $readinessProbe "httpGet" }}
-  {{- if and (kindIs "map" $readinessGet) (eq (get $readinessGet "path") "/livez") (eq (toString (get $readinessGet "port")) "http") (not (hasKey $readinessGet "scheme")) }}
+  {{- if and (kindIs "map" $readinessGet) (eq (get $readinessGet "path") "/") (eq (toString (get $readinessGet "port")) "http") (not (hasKey $readinessGet "scheme")) }}
     {{- $_ := set $readinessGet "path" "/ready" }}
     {{- $_ := set $readinessGet "port" .Values.gateway.envoyConfig.adminPort }}
     {{- $_ := set $readinessGet "scheme" "HTTP" }}
   {{- end }}
 {{- end }}
 {{- if and $isEnvoy .Values.gateway.envoyConfig.tls.enabled }}
+  {{- $adminPort := toString .Values.gateway.envoyConfig.adminPort }}
+  {{- $dataPort := toString .Values.gateway.containerPort }}
   {{- range $probe := list $livenessProbe $readinessProbe $startupProbe }}
-    {{- if and (hasKey $probe "httpGet") (ne (get (get $probe "httpGet") "path") "/ready") (not (hasKey (get $probe "httpGet") "scheme")) }}
-      {{- $_ := set (get $probe "httpGet") "scheme" "HTTPS" }}
+    {{- $httpGet := get $probe "httpGet" }}
+    {{- if and (kindIs "map" $httpGet) (not (hasKey $httpGet "scheme")) }}
+      {{- $probePort := toString (get $httpGet "port") }}
+      {{- if or (eq $probePort "http-metrics") (eq $probePort $adminPort) }}
+        {{- $_ := set $httpGet "scheme" "HTTP" }}
+      {{- else if or (eq $probePort "http") (eq $probePort $dataPort) }}
+        {{- $_ := set $httpGet "scheme" "HTTPS" }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}

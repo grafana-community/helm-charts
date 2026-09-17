@@ -4405,7 +4405,7 @@
                     ]
                 },
                 "readinessProbe": {
-                    "description": "Readiness probe for the gateway. Envoy replaces this default with HTTP `/ready` on `gateway.envoyConfig.adminPort`; custom probes are preserved.",
+                    "description": "Readiness probe for the gateway. The default remains compatible with custom NGINX configurations. Envoy replaces this default with HTTP `/ready` on `gateway.envoyConfig.adminPort`; custom probes are preserved.",
                     "type": "object",
                     "additionalProperties": true
                 },

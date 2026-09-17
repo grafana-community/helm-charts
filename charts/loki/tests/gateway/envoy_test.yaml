@@ -279,6 +279,28 @@ tests:
           value: 3
         template: gateway/deployment.yaml
 
+  - it: chooses the TLS probe scheme from the target listener
+    set:
+      gateway.envoyConfig.tls.enabled: true
+      gateway.envoyConfig.tls.existingSecret: gateway-tls
+      gateway.livenessProbe:
+        httpGet:
+          path: /stats/prometheus
+          port: http-metrics
+      gateway.readinessProbe:
+        httpGet:
+          path: /ready
+          port: http
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.scheme
+          value: HTTP
+        template: gateway/deployment.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.scheme
+          value: HTTPS
+        template: gateway/deployment.yaml
+
   - it: preserves an explicit Envoy log-level argument without adding the default
     set:
       gateway.extraArgs:
@@ -553,7 +575,7 @@ tests:
           passwordHash: '$2y$10$7O40CaY1yz7fu9O24k2/u.ct/wELYHRBsn25v/7AyuQ8E8hrLqpva'
     asserts:
       - failedTemplate:
-          errorMessage: Envoy Basic Auth passwordHash values must use the {SHA} format
+          errorMessage: Envoy Basic Auth passwordHash values must contain a valid {SHA} Base64-encoded SHA-1 digest
         template: gateway/secret.yaml
 
   - it: derives a native Envoy Basic Auth SHA hash from a tenant password
@@ -957,7 +979,7 @@ tests:
             - IPv4
         template: gateway/service.yaml
 
-  - it: preserves the default nginx gateway implementation with a quiet livez probe
+  - it: preserves the default nginx gateway implementation with its compatible readiness probe
     set:
       gateway.type: nginx
     asserts:
@@ -989,11 +1011,34 @@ tests:
         template: gateway/configmap.yaml
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.httpGet.path
-          value: /livez
+          value: /
         template: gateway/deployment.yaml
       - notExists:
           path: spec.template.spec.containers[0].livenessProbe
         template: gateway/deployment.yaml
       - notExists:
           path: data["envoy.yaml"]
+        template: gateway/configmap.yaml
+
+  - it: keeps the default readiness probe compatible with custom nginx configurations
+    set:
+      gateway.type: nginx
+      gateway.nginxConfig.file: |
+        events {}
+        http {
+          server {
+            listen 8080;
+            location / {
+              return 200;
+            }
+          }
+        }
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /
+        template: gateway/deployment.yaml
+      - matchRegex:
+          path: data["nginx.conf"]
+          pattern: 'location / \{[\s\S]*return 200'
         template: gateway/configmap.yaml
