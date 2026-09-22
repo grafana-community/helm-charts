@@ -73,7 +73,24 @@ tests:
     asserts:
       - equal:
           path: roleRef.name
-          value: loki
+          value: RELEASE-NAME-loki
       - equal:
           path: roleRef.kind
           value: Role
+
+  - it: uses fullnameOverride for resource name and roleRef
+    set:
+      nameOverride: name-override
+      fullnameOverride: fullname-override
+      rbac.namespaced: true
+      sidecar.rules.enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: fullname-override
+      - equal:
+          path: roleRef.name
+          value: fullname-override
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: name-override
