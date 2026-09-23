@@ -1133,6 +1133,39 @@ liveStore:
   statefulStrategy:
     rollingUpdate:
       partition: 0
+  # -- Persistence configuration for live-store
+  persistence:
+    # -- Enable creating PVCs for the live-store data volume. When enabled the WAL
+    # and locally-cached recent-trace blocks survive pod restarts, so a live-store
+    # rejoins from its committed Kafka offset instead of force-replaying the
+    # configured lookback window.
+    enabled: false
+    # -- Enable StatefulSetRecreation for changes to PVC size
+    enableStatefulSetRecreationForSizeChange: false
+    # -- use emptyDir with ramdisk instead of PVC. **Please note that all data in live-store will be lost on pod restart**
+    inMemory: false
+    # -- Size of persistent or memory disk
+    size: 10Gi
+    # -- Storage class to be used.
+    # If defined, storageClassName: <storageClass>.
+    # If set to "-", storageClassName: "", which disables dynamic provisioning.
+    # If empty or set to null, no storageClassName spec is
+    # set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).
+    storageClass: null
+    # -- Annotations for live-store's persist volume claim
+    annotations: {}
+    # -- Labels for live-store's persist volume claim
+    labels: {}
+  # -- Spec for the `data` volume when persistence is disabled. By default an
+  # empty `emptyDir: {}`; set e.g. `sizeLimit` or `medium: Memory` as needed.
+  walEmptyDir: {}
+  persistentVolumeClaimRetentionPolicy:
+    # -- Enable Persistent volume retention policy for the live-store StatefulSet
+    enabled: false
+    # -- Volume retention behaviour when the StatefulSet replica count is reduced
+    whenScaled: Retain
+    # -- Volume retention behaviour when the StatefulSet is deleted
+    whenDeleted: Retain
   # Zone-aware replication spreads the live-stores over failure domains such as
   # availability zones, racks or data centres. Every zone runs a full set of
   # live-stores, so each Kafka partition gets one owner per zone (RF equals the
