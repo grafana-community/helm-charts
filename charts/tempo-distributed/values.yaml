@@ -660,6 +660,9 @@ backendScheduler:
     annotations: {}
     # -- Labels for backend-scheduler's persist volume claim
     labels: {}
+  # -- Spec for the `data` volume when persistence is disabled. By default an
+  # empty `emptyDir: {}`; set e.g. `sizeLimit` or `medium: Memory` as needed.
+  walEmptyDir: {}
 
   # -- updateStrategy of the backend-scheduler statefulset.
   statefulStrategy:

@@ -3,6 +3,8 @@
 {{- $grpcPort := dict "containerPort" 9095 "name" "grpc" "protocol" "TCP" }}
 {{- $extraPorts := concat (list $grpcPort) (.Values.backendScheduler.extraPorts | default list) | uniq }}
 {{- $component := merge (dict "extraPorts" $extraPorts) .Values.backendScheduler }}
+{{- $storageClass := .Values.backendScheduler.persistence.storageClass | default .Values.global.storageClass }}
+{{- if eq $storageClass "-" }}{{- $storageClass = "" }}{{- end }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -28,5 +30,38 @@ spec:
   updateStrategy:
     {{- toYaml .Values.backendScheduler.statefulStrategy | nindent 4 }}
   template:
-    {{- include "tempo.podTemplate" (dict "ctx" $ "component" $component "target" "backend-scheduler") | nindent 4 }}
+    {{- include "tempo.podTemplate" (dict
+        "ctx" $
+        "component" $component
+        "target" "backend-scheduler"
+        "persistence" .Values.backendScheduler.persistence
+        "dataVolumeName" "data"
+        "dataEmptyDir" .Values.backendScheduler.walEmptyDir) | nindent 4 }}
+  {{- if .Values.backendScheduler.persistence.enabled }}
+  {{- if .Values.backendScheduler.persistentVolumeClaimRetentionPolicy.enabled }}
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: {{ .Values.backendScheduler.persistentVolumeClaimRetentionPolicy.whenDeleted }}
+    whenScaled: {{ .Values.backendScheduler.persistentVolumeClaimRetentionPolicy.whenScaled }}
+  {{- end }}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        {{- with .Values.backendScheduler.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.backendScheduler.persistence.labels }}
+        labels:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: {{ if $storageClass }}{{ $storageClass }}{{ else }}{{- "" }}{{ end }}
+        resources:
+          requests:
+            storage: {{ .Values.backendScheduler.persistence.size | quote }}
+  {{- end }}
 {{- end }}

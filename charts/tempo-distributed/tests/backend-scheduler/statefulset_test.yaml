@@ -114,5 +114,70 @@ tests:
       - contains:
           path: spec.template.spec.volumes
           content:
-            name: tempo-backend-scheduler-store
+            name: data
             emptyDir: {}
+
+  - it: does not render volumeClaimTemplates when persistence is disabled (default)
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+    asserts:
+      - notExists:
+          path: spec.volumeClaimTemplates
+
+  - it: uses a custom walEmptyDir spec for the data volume when persistence is disabled
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+      backendScheduler.walEmptyDir:
+        sizeLimit: 1Gi
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir:
+              sizeLimit: 1Gi
+
+  - it: renders a data volumeClaimTemplate when persistence is enabled
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+      backendScheduler.persistence.enabled: true
+      backendScheduler.persistence.size: 5Gi
+      backendScheduler.persistence.storageClass: standard
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: data
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: ReadWriteOnce
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 5Gi
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: standard
+      # data volume is now backed by the PVC, not an emptyDir
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+
+  - it: renders persistentVolumeClaimRetentionPolicy when enabled
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+      backendScheduler.persistence.enabled: true
+      backendScheduler.persistentVolumeClaimRetentionPolicy.enabled: true
+      backendScheduler.persistentVolumeClaimRetentionPolicy.whenDeleted: Delete
+      backendScheduler.persistentVolumeClaimRetentionPolicy.whenScaled: Retain
+    asserts:
+      - equal:
+          path: spec.persistentVolumeClaimRetentionPolicy.whenDeleted
+          value: Delete
+      - equal:
+          path: spec.persistentVolumeClaimRetentionPolicy.whenScaled
+          value: Retain
