@@ -651,8 +651,7 @@ PVC, so the RAM disk asked for by inMemory would silently become a disk.
 
 Args (dict):
   ctx        - root context
-  component  - component values; reads .persistence and
-               .persistentVolumeClaimRetentionPolicy
+  component  - component values; reads .persistence and .persistentVolumeClaimRetentionPolicy
   name       - name of the data volume; must match the pod template's dataVolumeName
 
 Callers render it at StatefulSet spec level, e.g.
