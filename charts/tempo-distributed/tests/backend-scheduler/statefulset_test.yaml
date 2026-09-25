@@ -181,3 +181,23 @@ tests:
       - equal:
           path: spec.persistentVolumeClaimRetentionPolicy.whenScaled
           value: Retain
+
+  - it: renders a RAM disk and no volumeClaimTemplates when persistence.inMemory is true
+    template: backend-scheduler/statefulset-backend-scheduler.yaml
+    set:
+      backendScheduler.enabled: true
+      backendScheduler.persistence.enabled: true
+      backendScheduler.persistence.inMemory: true
+      backendScheduler.persistence.size: 2Gi
+    asserts:
+      # a claim named `data` would be substituted for the emptyDir by the
+      # StatefulSet controller, silently turning the RAM disk into a disk
+      - notExists:
+          path: spec.volumeClaimTemplates
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir:
+              medium: Memory
+              sizeLimit: 2Gi
