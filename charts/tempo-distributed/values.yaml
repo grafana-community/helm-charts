@@ -1159,6 +1159,15 @@ liveStore:
   # -- Spec for the `data` volume when persistence is disabled. By default an
   # empty `emptyDir: {}`; set e.g. `sizeLimit` or `medium: Memory` as needed.
   walEmptyDir: {}
+  # Note: the retained volume also holds the live-store's shutdown marker
+  # (`/var/tempo/live-store/shutdown-marker`). It is removed on a graceful shutdown,
+  # but if a pod is force-killed after the rollout-operator has called
+  # `prepare-downscale` (grace period exceeded, OOMKill, node loss), a stale marker
+  # is left on the volume. On scale-up that pod then starts with
+  # `create-partition-on-startup=false` and its partition will not become ACTIVE, so
+  # it takes no writes. If a scaled-up live-store never becomes ready, or its
+  # partition stays INACTIVE, remove the shutdown marker from its PVC or call
+  # `DELETE /live-store/prepare-downscale` on it.
   persistentVolumeClaimRetentionPolicy:
     # -- Enable Persistent volume retention policy for the live-store StatefulSet
     enabled: false

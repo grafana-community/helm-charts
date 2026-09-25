@@ -1,0 +1,3 @@
+{{- if and .Values.liveStore.enabled .Values.liveStore.persistence.enabled .Values.liveStore.persistence.enableStatefulSetRecreationForSizeChange -}}
+  {{- include "tempo.statefulset.recreateOnSizeChangeHook" (dict "context" . "pathToStatefulsetTemplate" "/live-store/statefulset-live-store.yaml") -}}
+{{- end -}}
