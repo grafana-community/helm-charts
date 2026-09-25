@@ -182,3 +182,22 @@ tests:
     asserts:
       - isNull:
           path: spec.volumeClaimTemplates[0].metadata.labels
+
+  - it: renders a RAM disk and no volumeClaimTemplates when persistence.inMemory is true
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      metricsGenerator.persistence.enabled: true
+      metricsGenerator.persistence.inMemory: true
+      metricsGenerator.persistence.size: 2Gi
+    asserts:
+      - notExists:
+          path: spec.volumeClaimTemplates
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: wal
+            emptyDir:
+              medium: Memory
+              sizeLimit: 2Gi

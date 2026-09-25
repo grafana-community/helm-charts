@@ -63,7 +63,10 @@ spec:
     {{- if $zoneName }}
     {{- $podArgs = list (printf "-live-store.instance-availability-zone=%s" $zoneName) }}
     {{- end }}
-    {{- include "tempo.podTemplate" (dict "ctx" $ "component" .Values.liveStore "target" "live-store" "rolloutZoneName" $zoneName "rolloutZone" $rolloutZone "args" $podArgs) | nindent 4 }}
+    {{- include "tempo.podTemplate" (dict "ctx" $ "component" .Values.liveStore "target" "live-store" "rolloutZoneName" $zoneName "rolloutZone" $rolloutZone "args" $podArgs "persistence" .Values.liveStore.persistence "dataVolumeName" "data" "dataEmptyDir" .Values.liveStore.walEmptyDir) | nindent 4 }}
+  {{- with include "tempo.statefulset.volumeClaimTemplates" (dict "ctx" $ "component" .Values.liveStore "name" "data") | trim }}
+  {{- . | nindent 2 }}
+  {{- end }}
 {{ end }}
 {{- end }}
 {{- end }}

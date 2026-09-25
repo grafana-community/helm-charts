@@ -1,7 +1,5 @@
 {{- if and (.Values.metricsGenerator.enabled) (eq .Values.metricsGenerator.kind "StatefulSet") }}
 {{ $dict := dict "ctx" . "component" "metrics-generator" "memberlist" true }}
-{{- $storageClass := .Values.metricsGenerator.persistence.storageClass | default .Values.global.storageClass }}
-{{- if eq $storageClass "-" }}{{- $storageClass = "" }}{{- end }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -33,31 +31,7 @@ spec:
         "dataVolumeName" "wal"
         "dataEmptyDir" .Values.metricsGenerator.walEmptyDir
         "ports" .Values.metricsGenerator.ports) | nindent 4 }}
-  {{- if .Values.metricsGenerator.persistence.enabled }}
-  {{- if .Values.metricsGenerator.persistentVolumeClaimRetentionPolicy.enabled }}
-  persistentVolumeClaimRetentionPolicy:
-    whenDeleted: {{ .Values.metricsGenerator.persistentVolumeClaimRetentionPolicy.whenDeleted }}
-    whenScaled: {{ .Values.metricsGenerator.persistentVolumeClaimRetentionPolicy.whenScaled }}
-  {{- end }}
-  volumeClaimTemplates:
-    - apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        {{- with .Values.metricsGenerator.persistence.annotations }}
-        annotations:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with .Values.metricsGenerator.persistence.labels }}
-        labels:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        name: wal
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        storageClassName: {{ if $storageClass }}{{ $storageClass }}{{ else }}{{- "" }}{{ end }}
-        resources:
-          requests:
-            storage: {{ .Values.metricsGenerator.persistence.size | quote }}
+  {{- with include "tempo.statefulset.volumeClaimTemplates" (dict "ctx" $ "component" .Values.metricsGenerator "name" "wal") | trim }}
+  {{- . | nindent 2 }}
   {{- end }}
 {{- end }}

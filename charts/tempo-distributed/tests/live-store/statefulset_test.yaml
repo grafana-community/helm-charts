@@ -63,3 +63,95 @@ tests:
       - equal:
           path: spec.template.spec.priorityClassName
           value: high-priority
+
+  - it: data volume is an emptyDir and no volumeClaimTemplates when persistence is disabled (default)
+    template: live-store/statefulset-live-store.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+      - notExists:
+          path: spec.volumeClaimTemplates
+
+  - it: uses a custom walEmptyDir spec for the data volume when persistence is disabled
+    template: live-store/statefulset-live-store.yaml
+    set:
+      liveStore.walEmptyDir:
+        sizeLimit: 2Gi
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir:
+              sizeLimit: 2Gi
+
+  - it: renders a data volumeClaimTemplate when persistence is enabled
+    template: live-store/statefulset-live-store.yaml
+    set:
+      liveStore.persistence.enabled: true
+      liveStore.persistence.size: 8Gi
+      liveStore.persistence.storageClass: standard
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: data
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: ReadWriteOnce
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 8Gi
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: standard
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+
+  - it: renders persistentVolumeClaimRetentionPolicy when enabled
+    template: live-store/statefulset-live-store.yaml
+    set:
+      liveStore.persistence.enabled: true
+      liveStore.persistentVolumeClaimRetentionPolicy.enabled: true
+      liveStore.persistentVolumeClaimRetentionPolicy.whenDeleted: Delete
+      liveStore.persistentVolumeClaimRetentionPolicy.whenScaled: Retain
+    asserts:
+      - equal:
+          path: spec.persistentVolumeClaimRetentionPolicy.whenDeleted
+          value: Delete
+      - equal:
+          path: spec.persistentVolumeClaimRetentionPolicy.whenScaled
+          value: Retain
+
+  - it: renders a volumeClaimTemplate per zone StatefulSet when zone-aware + persistence enabled
+    template: live-store/statefulset-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.persistence.enabled: true
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: data
+
+  - it: renders a RAM disk and no volumeClaimTemplates when persistence.inMemory is true
+    template: live-store/statefulset-live-store.yaml
+    set:
+      liveStore.persistence.enabled: true
+      liveStore.persistence.inMemory: true
+      liveStore.persistence.size: 2Gi
+    asserts:
+      - notExists:
+          path: spec.volumeClaimTemplates
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir:
+              medium: Memory
+              sizeLimit: 2Gi

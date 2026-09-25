@@ -1,0 +1,3 @@
+{{- if and .Values.backendScheduler.enabled .Values.backendScheduler.persistence.enabled .Values.backendScheduler.persistence.enableStatefulSetRecreationForSizeChange -}}
+  {{- include "tempo.statefulset.recreateOnSizeChangeHook" (dict "context" . "pathToStatefulsetTemplate" "/backend-scheduler/statefulset-backend-scheduler.yaml") -}}
+{{- end -}}

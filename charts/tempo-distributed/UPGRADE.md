@@ -1,5 +1,17 @@
 # Upgrade guide
 
+## v3.7 → v3.8
+
+### backend-scheduler data volume renamed to `data`
+
+The backend-scheduler's data volume is now named `data` (it was
+`tempo-backend-scheduler-store`), so that the volume name matches the PVC name when
+`backendScheduler.persistence.enabled` is set. The mount path is unchanged
+(`/var/tempo`), and with persistence disabled this is only an `emptyDir` rename.
+
+If you reference the old volume name in `backendScheduler.extraVolumeMounts` or
+`backendScheduler.extraContainers`, update it to `data`.
+
 ## v2.x → v3.0 (Tempo 3.0)
 
 Tempo 3.0 replaces the ingester-based write path with a Kafka-backed architecture.
