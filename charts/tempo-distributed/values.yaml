@@ -642,7 +642,8 @@ backendScheduler:
   extraContainers: []
   # -- Persistence configuration for backend-scheduler
   persistence:
-    # -- Enable creating PVCs which is required when using boltdb-shipper
+    # -- Enable creating a PVC for the backend-scheduler data volume, so its local
+    # work path survives a pod restart instead of being lost with the emptyDir.
     enabled: false
     # -- Enable StatefulSetRecreation for changes to PVC size
     enableStatefulSetRecreationForSizeChange: false
@@ -660,6 +661,9 @@ backendScheduler:
     annotations: {}
     # -- Labels for backend-scheduler's persist volume claim
     labels: {}
+  # -- Spec for the `data` volume when persistence is disabled. By default an
+  # empty `emptyDir: {}`; set e.g. `sizeLimit` or `medium: Memory` as needed.
+  walEmptyDir: {}
 
   # -- updateStrategy of the backend-scheduler statefulset.
   statefulStrategy:
@@ -886,7 +890,8 @@ backendWorker:
   extraContainers: []
   # -- Persistence configuration for backend-worker
   persistence:
-    # -- Enable creating PVCs which is required when using boltdb-shipper
+    # -- Enable creating a PVC for the backend-worker data volume. The worker keeps
+    # only scratch state that is re-derived per job, so this is rarely needed.
     enabled: false
     # -- Enable StatefulSetRecreation for changes to PVC size
     enableStatefulSetRecreationForSizeChange: false

@@ -28,5 +28,14 @@ spec:
   updateStrategy:
     {{- toYaml .Values.backendScheduler.statefulStrategy | nindent 4 }}
   template:
-    {{- include "tempo.podTemplate" (dict "ctx" $ "component" $component "target" "backend-scheduler") | nindent 4 }}
+    {{- include "tempo.podTemplate" (dict
+        "ctx" $
+        "component" $component
+        "target" "backend-scheduler"
+        "persistence" .Values.backendScheduler.persistence
+        "dataVolumeName" "data"
+        "dataEmptyDir" .Values.backendScheduler.walEmptyDir) | nindent 4 }}
+  {{- with include "tempo.statefulset.volumeClaimTemplates" (dict "ctx" $ "component" .Values.backendScheduler "name" "data") | trim }}
+  {{- . | nindent 2 }}
+  {{- end }}
 {{- end }}

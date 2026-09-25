@@ -616,3 +616,56 @@ roleRef:
     {{ end }}
   {{ end }}
 {{- end -}}
+
+{{/*
+volumeClaimTemplates (plus persistentVolumeClaimRetentionPolicy) for a stateful component.
+
+Renders nothing when persistence is disabled, and nothing when persistence.inMemory is
+true. In both of those cases tempo.podTemplate already provides the data volume inline --
+an emptyDir, or an emptyDir with medium: Memory for inMemory. Emitting a claim of the same
+name here as well would let the StatefulSet controller replace that inline volume with a
+PVC, so the RAM disk asked for by inMemory would silently become a disk.
+
+Args (dict):
+  ctx        - root context
+  component  - component values; reads .persistence and .persistentVolumeClaimRetentionPolicy
+  name       - name of the data volume; must match the pod template's dataVolumeName
+
+Callers render it at StatefulSet spec level, e.g.
+  {{- with include "tempo.statefulset.volumeClaimTemplates" (dict "ctx" $ "component" .Values.x "name" "data") | trim }}
+  {{- . | nindent 2 }}
+  {{- end }}
+*/}}
+{{- define "tempo.statefulset.volumeClaimTemplates" -}}
+{{- $persistence := .component.persistence -}}
+{{- if and $persistence.enabled (not $persistence.inMemory) -}}
+{{- $storageClass := $persistence.storageClass | default .ctx.Values.global.storageClass -}}
+{{- if eq $storageClass "-" }}{{- $storageClass = "" }}{{- end -}}
+{{- $retention := .component.persistentVolumeClaimRetentionPolicy | default dict -}}
+{{- if $retention.enabled }}
+persistentVolumeClaimRetentionPolicy:
+  whenDeleted: {{ $retention.whenDeleted }}
+  whenScaled: {{ $retention.whenScaled }}
+{{- end }}
+volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      {{- with $persistence.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $persistence.labels }}
+      labels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      name: {{ .name }}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: {{ if $storageClass }}{{ $storageClass }}{{ else }}{{- "" }}{{ end }}
+      resources:
+        requests:
+          storage: {{ $persistence.size | quote }}
+{{- end -}}
+{{- end -}}
