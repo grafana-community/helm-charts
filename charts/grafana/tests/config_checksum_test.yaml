@@ -21,7 +21,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.metadata.annotations["checksum/dashboards-json-config"]
-          value: 431de38c7f24f6876cb971b32e7a72867b8c1f0750dd0676c5f7bb33a81ada65
+          value: 30581df2a999b237032f7b626fea7342c1937fb52029b13c528702f21e1597e1
 
   - it: keeps the hash stable when only the chart version changes
     template: deployment.yaml
@@ -30,7 +30,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.metadata.annotations["checksum/dashboards-json-config"]
-          value: 431de38c7f24f6876cb971b32e7a72867b8c1f0750dd0676c5f7bb33a81ada65
+          value: 30581df2a999b237032f7b626fea7342c1937fb52029b13c528702f21e1597e1
 
   - it: changes the hash when a dashboard in any provider changes
     template: deployment.yaml
@@ -40,4 +40,4 @@ tests:
     asserts:
       - notEqual:
           path: spec.template.metadata.annotations["checksum/dashboards-json-config"]
-          value: 431de38c7f24f6876cb971b32e7a72867b8c1f0750dd0676c5f7bb33a81ada65
+          value: 30581df2a999b237032f7b626fea7342c1937fb52029b13c528702f21e1597e1

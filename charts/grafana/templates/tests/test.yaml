@@ -45,6 +45,8 @@ spec:
         - mountPath: /tests
           name: tests
           readOnly: true
+        - mountPath: /tmp
+          name: tmp
       {{- with .Values.testFramework.resources }}
       resources:
         {{- toYaml . | nindent 8 }}
@@ -53,5 +55,7 @@ spec:
     - name: tests
       configMap:
         name: {{ include "grafana.fullname" . }}-test
+    - name: tmp
+      emptyDir: {}
   restartPolicy: Never
 {{- end }}
