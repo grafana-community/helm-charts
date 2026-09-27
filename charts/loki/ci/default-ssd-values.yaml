@@ -2,7 +2,15 @@
 loki:
   commonConfig:
     replication_factor: 1
-  useTestSchema: true
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
   storage:
     bucketNames:
       chunks: chunks
