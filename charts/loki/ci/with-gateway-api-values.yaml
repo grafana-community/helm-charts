@@ -6,10 +6,12 @@ loki:
       ruler: ruler
       admin: admin
     type: s3
-
-ignoreMinioDeprecation: true
-minio:
-  enabled: true
+    s3:
+      endpoint: rustfs:9000
+      accessKeyId: rustfsadmin
+      secretAccessKey: rustfsadmin
+      s3ForcePathStyle: true
+      insecure: true
 
 read:
   replicas: 1
@@ -38,3 +40,63 @@ gateway:
         - path:
             type: PathPrefix
             value: /
+
+extraObjects:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: rustfs
+    spec:
+      selector:
+        app: rustfs
+      ports:
+        - name: http
+          port: 9000
+          targetPort: 9000
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: rustfs
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: rustfs
+      template:
+        metadata:
+          labels:
+            app: rustfs
+        spec:
+          containers:
+            - name: rustfs
+              image: rustfs/rustfs:1.0.0-beta.8
+              ports:
+                - containerPort: 9000
+                  name: http
+              env:
+                - name: RUSTFS_ACCESS_KEY
+                  value: "rustfsadmin"
+                - name: RUSTFS_SECRET_KEY
+                  value: "rustfsadmin"
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+              readinessProbe:
+                httpGet:
+                  path: /health
+                  port: http
+                periodSeconds: 10
+              startupProbe:
+                exec:
+                  command:
+                    - mkdir
+                    - -p
+                    - /data/chunks/
+                    - /data/ruler/
+                    - /data/admin/
+                initialDelaySeconds: 1
+                periodSeconds: 1
+                failureThreshold: 10
+          volumes:
+            - name: data
+              emptyDir: {}
