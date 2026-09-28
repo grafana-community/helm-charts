@@ -124,3 +124,58 @@ tests:
       - matchRegex:
           path: data["tempo.yaml"]
           pattern: "timeout: 750ms"
+
+  - it: shared disabled, all three enabled - per-role entries, no shared entry
+    set:
+      memcached.enabled: false
+      memcachedBloom.enabled: true
+      memcachedParquetFooter.enabled: true
+      memcachedFrontendSearch.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached-bloom\n"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached-parquet-footer\n"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached-frontend-search\n"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached\n"
+
+  - it: shared disabled, only bloom enabled - bloom entry only, no shared entry
+    set:
+      memcached.enabled: false
+      memcachedBloom.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached-bloom\n"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached\n"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "memcached-parquet-footer"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "memcached-frontend-search"
+
+  - it: nothing enabled - the user-supplied cache block is passed through verbatim
+    set:
+      memcached.enabled: false
+      cache:
+        caches:
+          - memcached:
+              host: external-memcached.example.svc
+              service: memcached-client
+            roles:
+              - parquet-footer
+              - bloom
+              - frontend-search
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: external-memcached.example.svc"
