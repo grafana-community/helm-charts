@@ -1,0 +1,30 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana-mcp deployment
+templates:
+  - deployment.yaml
+tests:
+  - it: should not render args by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].args
+
+  - it: should render --disable-write when it is the only args value set
+    set:
+      disableWrite: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - --disable-write
+
+  - it: should render --disable-write before extraArgs
+    set:
+      disableWrite: true
+      extraArgs:
+        - --transport=streamable-http
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - --disable-write
+            - --transport=streamable-http
