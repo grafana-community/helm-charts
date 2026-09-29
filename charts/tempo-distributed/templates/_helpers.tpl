@@ -221,8 +221,9 @@ Calculate the config from structured and unstructured text input
 Build the cache section for tempo.yaml.
 When the shared memcached cluster or any per-role memcached section is enabled,
 auto-generates cache.caches. Each enabled per-role section gets its own entry;
-roles without a dedicated instance fall back to the shared cluster, and are
-omitted entirely when the shared cluster is disabled.
+roles without a dedicated instance fall back to the shared cluster. When the
+shared cluster is disabled, they fall back to the entries in .Values.cache
+instead, skipping any entry that points at the undeployed shared host.
 When nothing is enabled, outputs the user-defined cache block from values.yaml
 verbatim, which is how an externally managed cache is configured.
 */}}
@@ -246,6 +247,22 @@ verbatim, which is how an externally managed cache is configured.
 {{- end -}}
 {{- if or .Values.memcached.enabled $anyPerRole -}}
 caches:
+{{- if not .Values.memcached.enabled -}}
+{{- $sharedHost := printf "%s-memcached" $fullname -}}
+{{- range $entry := (get (.Values.cache | default dict) "caches" | default list) -}}
+  {{- if ne (tpl (toString (dig "memcached" "host" "" $entry)) $) $sharedHost -}}
+    {{- $keep := list -}}
+    {{- range $r := (get $entry "roles" | default list) -}}
+      {{- if or (has $r $sharedRoles) (not (has $r $roles)) -}}
+        {{- $keep = append $keep $r -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if $keep }}
+  - {{ set (deepCopy $entry) "roles" $keep | toYaml | indent 4 | trim }}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- end }}
 {{- if and .Values.memcached.enabled (gt (len $sharedRoles) 0) }}
   - memcached:
       host: {{ $fullname }}-memcached

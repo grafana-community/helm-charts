@@ -179,3 +179,25 @@ tests:
       - matchRegex:
           path: data["tempo.yaml"]
           pattern: "host: external-memcached.example.svc"
+
+  - it: shared disabled, bloom enabled - user cache entries still serve the remaining roles
+    set:
+      memcached.enabled: false
+      memcachedBloom.enabled: true
+      cache:
+        caches:
+          - memcached:
+              host: external-memcached.example.svc
+              service: memcached-client
+              max_idle_conns: 64
+            roles:
+              - parquet-footer
+              - bloom
+              - frontend-search
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached-bloom\n"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: external-memcached.example.svc\n\\s+max_idle_conns: 64\n\\s+service: memcached-client\n\\s+roles:\n\\s+- parquet-footer\n\\s+- frontend-search\n"
