@@ -18,7 +18,7 @@ With `persistence.enableStatefulSetRecreationForSizeChange: true`, a pre-upgrade
 recreates the StatefulSet when persistence is turned on or the PVC size changes. The hook
 only runs when the new StatefulSet has `volumeClaimTemplates`, so it does not cover turning
 persistence off or switching to `persistence.inMemory: true`. That upgrade fails with the
-immutable-field error. This applies to `backendScheduler` and `metricsGenerator`. Delete the
+immutable-field error. This applies to `backendScheduler`, `liveStore` and `metricsGenerator`. Delete the
 StatefulSet without its pods before upgrading, and remove the old PVCs once you no longer
 need them:
 

@@ -1135,10 +1135,10 @@ liveStore:
       partition: 0
   # -- Persistence configuration for live-store
   persistence:
-    # -- Enable creating PVCs for the live-store data volume. When enabled the WAL
-    # and locally-cached recent-trace blocks survive pod restarts, so a live-store
-    # rejoins from its committed Kafka offset instead of force-replaying the
-    # configured lookback window.
+    # -- Enable creating PVCs for the live-store data volume. The WAL and local
+    # blocks then survive a restart, so the live-store resumes from its committed
+    # Kafka offset (never further back than 2 x complete_block_timeout) instead of
+    # re-reading that whole window, as it must when it starts with no local data.
     enabled: false
     # -- Enable StatefulSetRecreation for changes to PVC size
     enableStatefulSetRecreationForSizeChange: false
