@@ -1,6 +1,6 @@
 # Upgrade guide
 
-## v3.7 → v3.8
+## v3.8 → v3.9
 
 ### backend-scheduler data volume renamed to `data`
 
@@ -11,6 +11,20 @@ The backend-scheduler's data volume is now named `data` (it was
 
 If you reference the old volume name in `backendScheduler.extraVolumeMounts` or
 `backendScheduler.extraContainers`, update it to `data`.
+
+### Turning persistence off on an existing install
+
+With `persistence.enableStatefulSetRecreationForSizeChange: true`, a pre-upgrade hook
+recreates the StatefulSet when persistence is turned on or the PVC size changes. The hook
+only runs when the new StatefulSet has `volumeClaimTemplates`, so it does not cover turning
+persistence off or switching to `persistence.inMemory: true`. That upgrade fails with the
+immutable-field error. This applies to `backendScheduler` and `metricsGenerator`. Delete the
+StatefulSet without its pods before upgrading, and remove the old PVCs once you no longer
+need them:
+
+```bash
+kubectl delete statefulset <release>-tempo-backend-scheduler --cascade=orphan
+```
 
 ## v2.x → v3.0 (Tempo 3.0)
 

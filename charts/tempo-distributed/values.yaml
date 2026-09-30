@@ -890,8 +890,8 @@ backendWorker:
   extraContainers: []
   # -- Persistence configuration for backend-worker
   persistence:
-    # -- Enable creating a PVC for the backend-worker data volume. The worker keeps
-    # only scratch state that is re-derived per job, so this is rarely needed.
+    # -- Not used yet: the backend-worker StatefulSet does not render a PVC from
+    # these persistence values, so setting this currently has no effect.
     enabled: false
     # -- Enable StatefulSetRecreation for changes to PVC size
     enableStatefulSetRecreationForSizeChange: false
