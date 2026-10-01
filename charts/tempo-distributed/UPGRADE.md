@@ -1,5 +1,28 @@
 # Upgrade guide
 
+## v3.9 → v3.10
+
+### live-store data volume renamed to `data`
+
+The live-store's data volume is now named `data` (it was `tempo-live-store-store`), so
+that the volume name matches the PVC name when `liveStore.persistence.enabled` is set.
+The mount path is unchanged (`/var/tempo`), and with persistence disabled this is only an
+`emptyDir` rename.
+
+If you reference the old volume name in `liveStore.extraVolumeMounts` or
+`liveStore.extraContainers`, update it to `data`.
+
+### Turning live-store persistence off on an existing install
+
+The note on turning persistence off from v3.8 → v3.9 also applies to `liveStore`. With
+zone-aware replication, orphan-delete each zone StatefulSet:
+
+```bash
+kubectl delete statefulset <release>-tempo-live-store --cascade=orphan
+# zone-aware replication:
+kubectl delete statefulset <release>-tempo-live-store-zone-<zone> --cascade=orphan
+```
+
 ## v3.8 → v3.9
 
 ### backend-scheduler data volume renamed to `data`
@@ -18,7 +41,7 @@ With `persistence.enableStatefulSetRecreationForSizeChange: true`, a pre-upgrade
 recreates the StatefulSet when persistence is turned on or the PVC size changes. The hook
 only runs when the new StatefulSet has `volumeClaimTemplates`, so it does not cover turning
 persistence off or switching to `persistence.inMemory: true`. That upgrade fails with the
-immutable-field error. This applies to `backendScheduler`, `liveStore` and `metricsGenerator`. Delete the
+immutable-field error. This applies to `backendScheduler` and `metricsGenerator`. Delete the
 StatefulSet without its pods before upgrading, and remove the old PVCs once you no longer
 need them:
 
