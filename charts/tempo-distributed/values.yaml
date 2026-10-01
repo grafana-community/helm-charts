@@ -888,27 +888,6 @@ backendWorker:
   extraVolumes: []
   # -- Containers to add to the backend-worker pods
   extraContainers: []
-  # -- Persistence configuration for backend-worker
-  persistence:
-    # -- Not used yet: the backend-worker StatefulSet does not render a PVC from
-    # these persistence values, so setting this currently has no effect.
-    enabled: false
-    # -- Enable StatefulSetRecreation for changes to PVC size
-    enableStatefulSetRecreationForSizeChange: false
-    # -- use emptyDir with ramdisk instead of PVC. **Please note that all data in backend-worker will be lost on pod restart**
-    inMemory: false
-    # -- Size of persistent or memory disk
-    size: 10Gi
-    # -- Storage class to be used.
-    # If defined, storageClassName: <storageClass>.
-    # If set to "-", storageClassName: "", which disables dynamic provisioning.
-    # If empty or set to null, no storageClassName spec is
-    # set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).
-    storageClass: null
-    # -- Annotations for backend-worker's persist volume claim
-    annotations: {}
-    # -- Labels for backend-worker's persist volume claim
-    labels: {}
 
   # -- updateStrategy of the backend-worker statefulset.
   statefulStrategy:
