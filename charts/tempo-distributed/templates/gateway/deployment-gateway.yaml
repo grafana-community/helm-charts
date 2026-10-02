@@ -20,6 +20,10 @@ spec:
   selector:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
+  {{- with .Values.gateway.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   template:
     metadata:
       annotations:
@@ -89,6 +93,10 @@ spec:
             {{- toYaml .Values.gateway.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.gateway.readinessProbe | nindent 12 }}
+          {{- with .Values.gateway.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: config
               mountPath: /etc/nginx
