@@ -20,8 +20,8 @@ tests:
     set:
       gateway.lifecycle:
         preStop:
-          exec:
-            command: ["/bin/sh", "-c", "sleep 15"]
+          sleep:
+            seconds: 15
     asserts:
       - equal:
           path: spec.template.spec.containers[0].name
@@ -30,8 +30,8 @@ tests:
           path: spec.template.spec.containers[0].lifecycle
           value:
             preStop:
-              exec:
-                command: ["/bin/sh", "-c", "sleep 15"]
+              sleep:
+                seconds: 15
 
   - it: renders gateway.strategy on the Deployment
     template: gateway/deployment-gateway.yaml
