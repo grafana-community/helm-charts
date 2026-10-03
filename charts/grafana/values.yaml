@@ -298,6 +298,16 @@ serviceMonitor:
   # Set these to override the Prometheus global scrape interval/timeout.
   # interval: 30s
   # scrapeTimeout: 30s
+  # Configure scrape protocol negotiation and native histogram handling.
+  # Requires corresponding support in the Prometheus Operator CRDs and Prometheus.
+  # See: https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.ServiceMonitorSpec
+  # scrapeProtocols: ["PrometheusProto", "OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
+  # scrapeNativeHistograms: true
+  # scrapeClassicHistograms: false
+  # convertClassicHistogramsToNHCB: false
+  # nativeHistogramBucketLimit: 0
+  # nativeHistogramMinBucketFactor: "1.1"
+  # fallbackScrapeProtocol: PrometheusText0.0.4
   scheme: http
   tlsConfig: {}
   relabelings: []
@@ -1683,6 +1693,16 @@ imageRenderer:
     # Set these to override the Prometheus global scrape interval/timeout.
     # interval: 1m
     # scrapeTimeout: 30s
+    # Configure scrape protocol negotiation and native histogram handling.
+    # Requires corresponding support in the Prometheus Operator CRDs and Prometheus.
+    # See: https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.ServiceMonitorSpec
+    # scrapeProtocols: ["PrometheusProto", "OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
+    # scrapeNativeHistograms: true
+    # scrapeClassicHistograms: false
+    # convertClassicHistogramsToNHCB: false
+    # nativeHistogramBucketLimit: 0
+    # nativeHistogramMinBucketFactor: "1.1"
+    # fallbackScrapeProtocol: PrometheusText0.0.4
     scheme: http
     tlsConfig: {}
     relabelings: []

@@ -1,0 +1,244 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: service monitor scrape configuration
+templates:
+  - servicemonitor.yaml
+  - image-renderer-servicemonitor.yaml
+tests:
+  - it: should omit optional scrape fields when unset
+    set:
+      serviceMonitor.enabled: true
+      imageRenderer.enabled: true
+      imageRenderer.serviceMonitor.enabled: true
+    asserts:
+      - template: servicemonitor.yaml
+        isKind:
+          of: ServiceMonitor
+      - template: image-renderer-servicemonitor.yaml
+        isKind:
+          of: ServiceMonitor
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.scrapeProtocols
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.scrapeNativeHistograms
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.scrapeClassicHistograms
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.convertClassicHistogramsToNHCB
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.nativeHistogramBucketLimit
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.nativeHistogramMinBucketFactor
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.fallbackScrapeProtocol
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.scrapeProtocols
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.scrapeNativeHistograms
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.scrapeClassicHistograms
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.convertClassicHistogramsToNHCB
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.nativeHistogramBucketLimit
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.nativeHistogramMinBucketFactor
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.fallbackScrapeProtocol
+
+  - it: should render configured Grafana scrape fields including falsey values
+    set:
+      serviceMonitor:
+        enabled: true
+        scrapeProtocols:
+          - PrometheusProto
+          - OpenMetricsText1.0.0
+        scrapeNativeHistograms: true
+        scrapeClassicHistograms: false
+        convertClassicHistogramsToNHCB: false
+        nativeHistogramBucketLimit: 0
+        nativeHistogramMinBucketFactor: "1.1"
+        fallbackScrapeProtocol: PrometheusText0.0.4
+    asserts:
+      - template: servicemonitor.yaml
+        equal:
+          path: spec.scrapeProtocols
+          value:
+            - PrometheusProto
+            - OpenMetricsText1.0.0
+      - template: servicemonitor.yaml
+        equal:
+          path: spec.scrapeNativeHistograms
+          value: true
+      - template: servicemonitor.yaml
+        equal:
+          path: spec.scrapeClassicHistograms
+          value: false
+      - template: servicemonitor.yaml
+        equal:
+          path: spec.convertClassicHistogramsToNHCB
+          value: false
+      - template: servicemonitor.yaml
+        equal:
+          path: spec.nativeHistogramBucketLimit
+          value: 0
+      - template: servicemonitor.yaml
+        equal:
+          path: spec.nativeHistogramMinBucketFactor
+          value: "1.1"
+      - template: servicemonitor.yaml
+        equal:
+          path: spec.fallbackScrapeProtocol
+          value: PrometheusText0.0.4
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].scrapeProtocols
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].scrapeNativeHistograms
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].scrapeClassicHistograms
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].convertClassicHistogramsToNHCB
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].nativeHistogramBucketLimit
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].nativeHistogramMinBucketFactor
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].fallbackScrapeProtocol
+
+  - it: should render configured image renderer scrape fields
+    set:
+      imageRenderer:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+          scrapeProtocols:
+            - OpenMetricsText1.0.0
+            - PrometheusText0.0.4
+          scrapeNativeHistograms: false
+          scrapeClassicHistograms: false
+          convertClassicHistogramsToNHCB: false
+          nativeHistogramBucketLimit: 0
+          nativeHistogramMinBucketFactor: 0
+          fallbackScrapeProtocol: PrometheusText1.0.0
+    asserts:
+      - template: image-renderer-servicemonitor.yaml
+        equal:
+          path: spec.scrapeProtocols
+          value:
+            - OpenMetricsText1.0.0
+            - PrometheusText0.0.4
+      - template: image-renderer-servicemonitor.yaml
+        equal:
+          path: spec.scrapeNativeHistograms
+          value: false
+      - template: image-renderer-servicemonitor.yaml
+        equal:
+          path: spec.scrapeClassicHistograms
+          value: false
+      - template: image-renderer-servicemonitor.yaml
+        equal:
+          path: spec.convertClassicHistogramsToNHCB
+          value: false
+      - template: image-renderer-servicemonitor.yaml
+        equal:
+          path: spec.nativeHistogramBucketLimit
+          value: 0
+      - template: image-renderer-servicemonitor.yaml
+        equal:
+          path: spec.nativeHistogramMinBucketFactor
+          value: "0"
+      - template: image-renderer-servicemonitor.yaml
+        equal:
+          path: spec.fallbackScrapeProtocol
+          value: PrometheusText1.0.0
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].scrapeProtocols
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].scrapeNativeHistograms
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].scrapeClassicHistograms
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].convertClassicHistogramsToNHCB
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].nativeHistogramBucketLimit
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].nativeHistogramMinBucketFactor
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.endpoints[0].fallbackScrapeProtocol
+
+  - it: should omit null scalar scrape fields
+    set:
+      serviceMonitor:
+        enabled: true
+        scrapeNativeHistograms: null
+        scrapeClassicHistograms: null
+        convertClassicHistogramsToNHCB: null
+        nativeHistogramBucketLimit: null
+        nativeHistogramMinBucketFactor: null
+      imageRenderer:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+          scrapeNativeHistograms: null
+          scrapeClassicHistograms: null
+          convertClassicHistogramsToNHCB: null
+          nativeHistogramBucketLimit: null
+          nativeHistogramMinBucketFactor: null
+    asserts:
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.scrapeNativeHistograms
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.scrapeClassicHistograms
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.convertClassicHistogramsToNHCB
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.nativeHistogramBucketLimit
+      - template: servicemonitor.yaml
+        notExists:
+          path: spec.nativeHistogramMinBucketFactor
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.scrapeNativeHistograms
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.scrapeClassicHistograms
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.convertClassicHistogramsToNHCB
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.nativeHistogramBucketLimit
+      - template: image-renderer-servicemonitor.yaml
+        notExists:
+          path: spec.nativeHistogramMinBucketFactor
