@@ -1,0 +1,24 @@
+{{- if .Values.podDisruptionBudget }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "grafana-mcp.fullname" . }}
+  namespace: {{ include "grafana-mcp.namespace" . }}
+  labels:
+    {{- include "grafana-mcp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp-server
+spec:
+  {{- with .Values.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ . }}
+  {{- end }}
+  {{- with .Values.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ . }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "grafana-mcp.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mcp-server
+  {{- with .Values.podDisruptionBudget.unhealthyPodEvictionPolicy }}
+  unhealthyPodEvictionPolicy: {{ . }}
+  {{- end }}
+{{- end }}
