@@ -67,7 +67,7 @@ extraObjects:
         spec:
           containers:
             - name: rustfs
-              image: docker.io/rustfs/rustfs:1.0.0
+              image: docker.io/rustfs/rustfs:1.0.1
               ports:
                 - containerPort: 9000
                   name: http
