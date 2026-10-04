@@ -44,6 +44,22 @@ tests:
       - hasDocuments:
           count: 0
 
+  - it: should not render outside Distributed mode
+    set:
+      deploymentMode: SimpleScalable
+      ingester.zoneAwareReplication.podDisruptionBudget.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render when the ingester is disabled
+    set:
+      ingester.enabled: false
+      ingester.zoneAwareReplication.podDisruptionBudget.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
   - it: should use the native PDB name and custom metadata
     set:
       ingester.zoneAwareReplication.podDisruptionBudget.enabled: true

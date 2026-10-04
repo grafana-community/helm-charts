@@ -1,0 +1,135 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ingester zone-aware ZoneAwarePodDisruptionBudget validation
+templates:
+  - templates/validate.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  backend.replicas: 0
+  read.replicas: 0
+  write.replicas: 0
+  ingester.replicas: 6
+  ingester.zoneAwareReplication.enabled: true
+  ingester.zoneAwareReplication.podDisruptionBudget.enabled: true
+  ingester.podDisruptionBudget.enabled: true
+  rollout_operator.enabled: true
+  rollout_operator.webhooks.enabled: true
+  rollout_operator.crds.enabled: true
+  rollout_operator.webhooks.failurePolicy: Ignore
+  rollout_operator.webhooks.failurePolicies.podEviction: Fail
+  rollout_operator.webhooks.failurePolicies.zpdbValidation: Ignore
+tests:
+  - it: should allow a valid zone-aware PDB configuration
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should reject a zone-aware PDB without zone-aware replication
+    set:
+      ingester.zoneAwareReplication.enabled: false
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires ingester.zoneAwareReplication.enabled=true."
+
+  - it: should reject a zone-aware PDB without the bundled rollout-operator
+    set:
+      rollout_operator.enabled: false
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.enabled=true."
+
+  - it: should reject a zone-aware PDB without rollout-operator webhooks
+    set:
+      rollout_operator.webhooks.enabled: false
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.webhooks.enabled=true."
+
+  - it: should reject a zone-aware PDB without the rollout-operator CRD
+    set:
+      rollout_operator.crds.enabled: false
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.crds.enabled=true or a pre-installed ZoneAwarePodDisruptionBudget CRD."
+
+  - it: should allow a pre-installed rollout-operator CRD
+    capabilities:
+      apiVersions:
+        - rollout-operator.grafana.com/v1/ZoneAwarePodDisruptionBudget
+    set:
+      rollout_operator.crds.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should reject a zone-aware PDB for Deployment ingesters
+    set:
+      ingester.kind: Deployment
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires ingester.kind=StatefulSet."
+
+  - it: should reject a zero max-unavailable percentage
+    set:
+      ingester.zoneAwareReplication.maxUnavailablePct: 0
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires ingester.zoneAwareReplication.maxUnavailablePct >= 1."
+
+  - it: should reject a fail-open pod-eviction webhook
+    set:
+      rollout_operator.webhooks.failurePolicies.podEviction: Ignore
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires the effective pod-eviction webhook failure policy to be Fail."
+
+  - it: should reject a pod-eviction webhook that inherits fail-open behavior
+    set:
+      rollout_operator.webhooks.failurePolicies.podEviction: null
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires the effective pod-eviction webhook failure policy to be Fail."
+
+  - it: should reject a fail-closed ZPDB validation webhook
+    set:
+      rollout_operator.webhooks.failurePolicies.zpdbValidation: Fail
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires the effective ZPDB validation webhook failure policy to be Ignore."
+
+  - it: should reject a ZPDB validation webhook that inherits fail-closed behavior
+    set:
+      rollout_operator.webhooks.failurePolicy: Fail
+      rollout_operator.webhooks.failurePolicies.zpdbValidation: null
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires the effective ZPDB validation webhook failure policy to be Ignore."
+
+  - it: should not validate in SimpleScalable mode
+    set:
+      deploymentMode: SimpleScalable
+      ingester.replicas: 0
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not validate when the ingester is disabled
+    set:
+      ingester.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not validate when the PDB master switch is disabled
+    set:
+      ingester.podDisruptionBudget.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not validate for a single replica
+    set:
+      ingester.replicas: 1
+    asserts:
+      - hasDocuments:
+          count: 0
