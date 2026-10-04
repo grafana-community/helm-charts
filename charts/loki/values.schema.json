@@ -5566,7 +5566,9 @@
                         },
                         "maxUnavailablePct": {
                             "description": "The percent of replicas in each zone that will be restarted at once. In a value of 0-100",
-                            "type": "integer"
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 0
                         },
                         "migration": {
                             "description": "The migration block allows migrating non zone aware ingesters to zone aware ingesters.",
@@ -5582,6 +5584,15 @@
                                     "type": "boolean"
                                 },
                                 "writePath": {
+                                    "type": "boolean"
+                                }
+                            }
+                        },
+                        "podDisruptionBudget": {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "description": "Use a rollout-operator ZoneAwarePodDisruptionBudget instead of the native PodDisruptionBudget. This is opt-in and also requires `ingester.podDisruptionBudget.enabled` and `rollout_operator.enabled`.",
                                     "type": "boolean"
                                 }
                             }

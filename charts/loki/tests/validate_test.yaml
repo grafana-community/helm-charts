@@ -19,3 +19,42 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: should reject a zone-aware PDB without zone-aware replication
+    set:
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.enabled: false
+      ingester.zoneAwareReplication.podDisruptionBudget.enabled: true
+      rollout_operator.enabled: true
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires ingester.zoneAwareReplication.enabled=true."
+
+  - it: should reject a zone-aware PDB without the bundled rollout-operator
+    set:
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.podDisruptionBudget.enabled: true
+      rollout_operator.enabled: false
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.enabled=true."
+
+  - it: should reject a zone-aware PDB without rollout-operator webhooks
+    set:
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.podDisruptionBudget.enabled: true
+      rollout_operator.enabled: true
+      rollout_operator.webhooks.enabled: false
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.webhooks.enabled=true."
+
+  - it: should reject a zone-aware PDB without the rollout-operator CRD
+    set:
+      loki.useTestSchema: true
+      ingester.zoneAwareReplication.podDisruptionBudget.enabled: true
+      rollout_operator.enabled: true
+      rollout_operator.crds.enabled: false
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.crds.enabled=true."

@@ -1,0 +1,27 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- $zoneAware := .Values.ingester.zoneAwareReplication -}}
+{{- $zpdbEnabled := dig "podDisruptionBudget" "enabled" false $zoneAware -}}
+{{- if and $isDistributed $zoneAware.enabled $zpdbEnabled (eq (include "loki.pdb.shouldRender" (dict "component" .Values.ingester)) "true") }}
+apiVersion: rollout-operator.grafana.com/v1
+kind: ZoneAwarePodDisruptionBudget
+metadata:
+  name: {{ include "loki.resourceName" (dict "ctx" . "component" "ingester" "suffix" "rollout") }}
+  namespace: {{ include "loki.namespace" . }}
+  {{- with .Values.ingester.podDisruptionBudget.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "loki.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingester
+    {{- with .Values.ingester.podDisruptionBudget.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  maxUnavailablePercentage: {{ $zoneAware.maxUnavailablePct | int }}
+  selector:
+    matchLabels:
+      {{- include "loki.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ingester
+      rollout-group: {{ include "loki.prefixRolloutGroup" . }}ingester
+{{- end }}

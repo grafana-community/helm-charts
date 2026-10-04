@@ -10,6 +10,20 @@
 {{- fail "The Loki chart builtin MinIO dependency is deprecated and will be removed 2026-10-31. Configure an external object storage backend instead. To proceed temporarily, set ignoreMinioDeprecation=true."}}
 {{- end }}
 
+{{- $zoneAwarePDBEnabled := and .Values.ingester.podDisruptionBudget.enabled (dig "podDisruptionBudget" "enabled" false .Values.ingester.zoneAwareReplication) }}
+{{- if and $zoneAwarePDBEnabled (not .Values.ingester.zoneAwareReplication.enabled) }}
+{{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires ingester.zoneAwareReplication.enabled=true." }}
+{{- end }}
+{{- if and $zoneAwarePDBEnabled (not .Values.rollout_operator.enabled) }}
+{{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.enabled=true." }}
+{{- end }}
+{{- if and $zoneAwarePDBEnabled (not .Values.rollout_operator.webhooks.enabled) }}
+{{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.webhooks.enabled=true." }}
+{{- end }}
+{{- if and $zoneAwarePDBEnabled (not (dig "crds" "enabled" true .Values.rollout_operator)) }}
+{{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.crds.enabled=true." }}
+{{- end }}
+
 {{- $monolithicReplicas := int .Values.singleBinary.replicas }}
 {{- $isUsingFilesystem := eq (include "loki.isUsingObjectStorage" .) "false" }}
 {{- $atLeastOneScalableReplica := or (gt (int .Values.backend.replicas) 0) (gt (int .Values.read.replicas) 0) (gt (int .Values.write.replicas) 0) }}

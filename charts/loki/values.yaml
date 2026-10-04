@@ -3249,8 +3249,12 @@ ingester:
   zoneAwareReplication:
     # -- Enable zone awareness.
     enabled: true
+    # @schema minimum:0;maximum:100
     # -- The percent of replicas in each zone that will be restarted at once. In a value of 0-100
     maxUnavailablePct: 33
+    podDisruptionBudget:
+      # -- Use a rollout-operator ZoneAwarePodDisruptionBudget instead of the native PodDisruptionBudget. This is opt-in and also requires `ingester.podDisruptionBudget.enabled` and `rollout_operator.enabled`.
+      enabled: false
     # -- zoneA configuration
     zoneA:
       # @schema type:[object, null]
@@ -6850,6 +6854,11 @@ rollout_operator:
     timeoutSeconds: 10
     # -- Validating and mutating webhook failure policy. `Ignore` or `Fail`.
     failurePolicy: "Ignore"
+    # @schema skipProperties:true;additionalProperties:true
+    # -- Per-webhook failure policy overrides. The ZPDB validation webhook must ignore an unavailable operator during a fresh install, while pod eviction must fail closed.
+    failurePolicies:
+      podEviction: "Fail"
+      zoneAwarePodDisruptionBudgetValidation: "Ignore"
 # -- Ignore MinIO deprecation validation when `minio.enabled=true`. This is a temporary compatibility escape hatch.
 ignoreMinioDeprecation: false
 
