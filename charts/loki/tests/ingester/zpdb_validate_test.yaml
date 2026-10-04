@@ -62,6 +62,23 @@ tests:
       - hasDocuments:
           count: 0
 
+  - it: should reject an upgrade when the CRD is not installed
+    release:
+      upgrade: true
+    asserts:
+      - failedTemplate:
+          message: "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires the ZoneAwarePodDisruptionBudget CRD to be installed before upgrading. Helm installs bundled CRDs only on first install; apply the rollout-operator CRDs manually."
+
+  - it: should allow an upgrade when the CRD is installed
+    release:
+      upgrade: true
+    capabilities:
+      apiVersions:
+        - rollout-operator.grafana.com/v1/ZoneAwarePodDisruptionBudget
+    asserts:
+      - hasDocuments:
+          count: 0
+
   - it: should reject a zone-aware PDB for Deployment ingesters
     set:
       ingester.kind: Deployment

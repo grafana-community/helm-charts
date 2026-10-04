@@ -3253,7 +3253,7 @@ ingester:
     # -- The percent of replicas in each zone that will be restarted at once. Must be 1-100 when the zone-aware PodDisruptionBudget is enabled.
     maxUnavailablePct: 33
     podDisruptionBudget:
-      # -- Use a rollout-operator ZoneAwarePodDisruptionBudget instead of the native PodDisruptionBudget. This is opt-in, Distributed-mode only, and requires zone-aware StatefulSet ingesters, the native PDB master switch, rollout-operator webhooks, and either the bundled or a pre-installed CRD. Configure the pod-eviction webhook to `Fail` and ZPDB validation webhook to `Ignore`. When enabled, native PDB availability fields such as `minAvailable`, `maxUnavailable`, and `unhealthyPodEvictionPolicy` are ignored; `maxUnavailablePct` controls per-zone voluntary disruption instead.
+      # -- Use a rollout-operator ZoneAwarePodDisruptionBudget instead of the native zone-aware ingester PodDisruptionBudget. This is opt-in, Distributed-mode only, and requires zone-aware StatefulSet ingesters, the native PDB master switch, the bundled rollout-operator (`rollout_operator.enabled=true`) with webhooks enabled, and the ZoneAwarePodDisruptionBudget CRD. Helm installs the bundled CRD only on first install; on upgrade, apply it manually first. Configure the pod-eviction webhook to `Fail` and the ZPDB validation webhook to `Ignore`. With `Fail`, every voluntary eviction in the release namespace is rejected while the rollout-operator is unavailable. When enabled, `minAvailable`, `maxUnavailable`, and `unhealthyPodEvictionPolicy` no longer apply to zone-aware ingesters (the legacy ingester PDB in migration mode still uses them); `maxUnavailablePct` controls per-zone voluntary disruption instead.
       enabled: false
     # -- zoneA configuration
     zoneA:

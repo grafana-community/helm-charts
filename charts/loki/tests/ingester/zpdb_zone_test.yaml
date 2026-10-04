@@ -60,6 +60,14 @@ tests:
       - hasDocuments:
           count: 0
 
+  - it: should not render without zone-aware replication
+    set:
+      ingester.zoneAwareReplication.enabled: false
+      ingester.zoneAwareReplication.podDisruptionBudget.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
   - it: should use the native PDB name and custom metadata
     set:
       ingester.zoneAwareReplication.podDisruptionBudget.enabled: true

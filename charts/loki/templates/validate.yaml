@@ -39,8 +39,12 @@
   {{- if ne $zpdbValidationPolicy "Ignore" }}
     {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires the effective ZPDB validation webhook failure policy to be Ignore." }}
   {{- end }}
-  {{- if and (not (dig "crds" "enabled" true .Values.rollout_operator)) (not (.Capabilities.APIVersions.Has "rollout-operator.grafana.com/v1/ZoneAwarePodDisruptionBudget")) }}
+  {{- $zpdbCRDInstalled := .Capabilities.APIVersions.Has "rollout-operator.grafana.com/v1/ZoneAwarePodDisruptionBudget" }}
+  {{- if and (not $zpdbCRDInstalled) (not (dig "crds" "enabled" true .Values.rollout_operator)) }}
     {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.crds.enabled=true or a pre-installed ZoneAwarePodDisruptionBudget CRD." }}
+  {{- end }}
+  {{- if and (not $zpdbCRDInstalled) .Release.IsUpgrade }}
+    {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires the ZoneAwarePodDisruptionBudget CRD to be installed before upgrading. Helm installs bundled CRDs only on first install; apply the rollout-operator CRDs manually." }}
   {{- end }}
 {{- end }}
 
