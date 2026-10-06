@@ -84,19 +84,11 @@ tempo:
     # -- Overrides the image tag whose default is the chart's appVersion
     tag: null
     pullPolicy: IfNotPresent
-  livenessProbe:
-    httpGet:
-      path: /ready
-      port: http-metrics
-    initialDelaySeconds: 60
-    timeoutSeconds: 5
-  readinessProbe:
-    httpGet:
-      path: /ready
-      port: http-metrics
-    initialDelaySeconds: 30
-    timeoutSeconds: 1
-  # -- Startup probe for all Tempo binary pods. Disabled by default.
+  # -- Liveness probe for all Tempo binary pods. Deep-merged over `defaults.livenessProbe`.
+  livenessProbe: {}
+  # -- Readiness probe for all Tempo binary pods. Deep-merged over `defaults.readinessProbe`.
+  readinessProbe: {}
+  # -- Startup probe for all Tempo binary pods. Deep-merged over `defaults.startupProbe`.
   startupProbe: {}
   # -- Global labels for all tempo pods
   podLabels: {}
@@ -183,11 +175,23 @@ defaults:
   extraVolumeMounts: []
   # -- Default extra volumes for all pods
   extraVolumes: []
-  # -- Default liveness probe for all Tempo binary pods. Overridden by `tempo.livenessProbe` and `<component>.livenessProbe`.
-  livenessProbe: {}
-  # -- Default readiness probe for all Tempo binary pods. Overridden by `tempo.readinessProbe` and `<component>.readinessProbe`.
-  readinessProbe: {}
-  # -- Default startup probe for all Tempo binary pods. Overridden by `tempo.startupProbe` and `<component>.startupProbe`.
+  # -- Default liveness probe for all Tempo binary pods.
+  # `tempo.livenessProbe` and `<component>.livenessProbe` are deep-merged over it, in that order.
+  # A handler (`httpGet`, `tcpSocket`, `exec`, `grpc`) set at a higher level replaces an inherited handler of a different type.
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 60
+    timeoutSeconds: 5
+  # -- Default readiness probe for all Tempo binary pods. Merged like `defaults.livenessProbe`.
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 30
+    timeoutSeconds: 1
+  # -- Default startup probe for all Tempo binary pods. Disabled by default. Merged like `defaults.livenessProbe`.
   startupProbe: {}
 
 serviceAccount:
@@ -248,7 +252,7 @@ metricsGenerator:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the metrics-generator pods
   extraEnvFrom: []
-  # -- Startup probe for metrics-generator pods. Uses `tempo.startupProbe` as default if not set.
+  # -- Startup probe for metrics-generator pods. Deep-merged over `tempo.startupProbe`.
   startupProbe: {}
   # -- Resource requests and limits for the metrics-generator
   resources: {}
@@ -465,11 +469,11 @@ distributor:
   # -- Additional ports to expose on the distributor container (e.g. trace receiver ports).
   # Standard ports (http-metrics, http-memberlist) are always added automatically.
   extraPorts: []
-  # -- Liveness probe for distributor pods. Uses `tempo.livenessProbe` as default if not set.
+  # -- Liveness probe for distributor pods. Deep-merged over `tempo.livenessProbe`.
   livenessProbe: {}
-  # -- Readiness probe for distributor pods. Uses `tempo.readinessProbe` as default if not set.
+  # -- Readiness probe for distributor pods. Deep-merged over `tempo.readinessProbe`.
   readinessProbe: {}
-  # -- Startup probe for distributor pods. Uses `tempo.startupProbe` as default if not set.
+  # -- Startup probe for distributor pods. Deep-merged over `tempo.startupProbe`.
   startupProbe: {}
   # -- Resource requests and limits for the distributor
   resources: {}
@@ -604,11 +608,11 @@ backendScheduler:
   # -- Additional ports to expose on the backend-scheduler container
   # Standard ports (grpc, http-metrics, http-memberlist) are always added automatically.
   extraPorts: []
-  # -- Liveness probe for backend-scheduler pod. Uses `tempo.livenessProbe` as default if not set.
+  # -- Liveness probe for backend-scheduler pod. Deep-merged over `tempo.livenessProbe`.
   livenessProbe: {}
-  # -- Readiness probe for backend-scheduler pod. Uses `tempo.readinessProbe` as default if not set.
+  # -- Readiness probe for backend-scheduler pod. Deep-merged over `tempo.readinessProbe`.
   readinessProbe: {}
-  # -- Startup probe for backend-scheduler pod. Uses `tempo.startupProbe` as default if not set.
+  # -- Startup probe for backend-scheduler pod. Deep-merged over `tempo.startupProbe`.
   startupProbe: {}
   # -- Resource requests and limits for the backend-scheduler
   resources: {}
@@ -854,11 +858,11 @@ backendWorker:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the backend-worker pods
   extraEnvFrom: []
-  # -- Liveness probe for backend-worker pods. Uses `tempo.livenessProbe` as default if not set.
+  # -- Liveness probe for backend-worker pods. Deep-merged over `tempo.livenessProbe`.
   livenessProbe: {}
-  # -- Readiness probe for backend-worker pods. Uses `tempo.readinessProbe` as default if not set.
+  # -- Readiness probe for backend-worker pods. Deep-merged over `tempo.readinessProbe`.
   readinessProbe: {}
-  # -- Startup probe for backend-worker pods. Uses `tempo.startupProbe` as default if not set.
+  # -- Startup probe for backend-worker pods. Deep-merged over `tempo.startupProbe`.
   startupProbe: {}
   # -- Resource requests and limits for the backend-worker
   resources: {}
@@ -987,11 +991,11 @@ blockBuilder:
   extraEnvFrom: []
   # -- Additional ports to expose on the block-builder container
   extraPorts: []
-  # -- Liveness probe for block-builder pods. Uses `tempo.livenessProbe` as default if not set.
+  # -- Liveness probe for block-builder pods. Deep-merged over `tempo.livenessProbe`.
   livenessProbe: {}
-  # -- Readiness probe for block-builder pods. Uses `tempo.readinessProbe` as default if not set.
+  # -- Readiness probe for block-builder pods. Deep-merged over `tempo.readinessProbe`.
   readinessProbe: {}
-  # -- Startup probe for block-builder pods. Uses `tempo.startupProbe` as default if not set.
+  # -- Startup probe for block-builder pods. Deep-merged over `tempo.startupProbe`.
   startupProbe: {}
   # -- Resource requests and limits for the block-builder
   resources: {}
@@ -1086,11 +1090,11 @@ liveStore:
   extraEnvFrom: []
   # -- Additional ports to expose on the live-store container
   extraPorts: []
-  # -- Liveness probe for live-store pods. Uses `tempo.livenessProbe` as default if not set.
+  # -- Liveness probe for live-store pods. Deep-merged over `tempo.livenessProbe`.
   livenessProbe: {}
-  # -- Readiness probe for live-store pods. Uses `tempo.readinessProbe` as default if not set.
+  # -- Readiness probe for live-store pods. Deep-merged over `tempo.readinessProbe`.
   readinessProbe: {}
-  # -- Startup probe for live-store pods. Uses `tempo.startupProbe` as default if not set.
+  # -- Startup probe for live-store pods. Deep-merged over `tempo.startupProbe`.
   startupProbe: {}
   # -- Resource requests and limits for the live-store
   resources: {}
@@ -1349,11 +1353,11 @@ querier:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the querier pods
   extraEnvFrom: []
-  # -- Liveness probe for querier pods. Uses `tempo.livenessProbe` as default if not set.
+  # -- Liveness probe for querier pods. Deep-merged over `tempo.livenessProbe`.
   livenessProbe: {}
-  # -- Readiness probe for querier pods. Uses `tempo.readinessProbe` as default if not set.
+  # -- Readiness probe for querier pods. Deep-merged over `tempo.readinessProbe`.
   readinessProbe: {}
-  # -- Startup probe for querier pods. Uses `tempo.startupProbe` as default if not set.
+  # -- Startup probe for querier pods. Deep-merged over `tempo.startupProbe`.
   startupProbe: {}
   # -- Resource requests and limits for the querier
   resources: {}
@@ -1627,11 +1631,11 @@ queryFrontend:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the query-frontend pods
   extraEnvFrom: []
-  # -- Liveness probe for query-frontend pods. Uses `tempo.livenessProbe` as default if not set.
+  # -- Liveness probe for query-frontend pods. Deep-merged over `tempo.livenessProbe`.
   livenessProbe: {}
-  # -- Readiness probe for query-frontend pods. Uses `tempo.readinessProbe` as default if not set.
+  # -- Readiness probe for query-frontend pods. Deep-merged over `tempo.readinessProbe`.
   readinessProbe: {}
-  # -- Startup probe for query-frontend pods. Uses `tempo.startupProbe` as default if not set.
+  # -- Startup probe for query-frontend pods. Deep-merged over `tempo.startupProbe`.
   startupProbe: {}
   # -- Resource requests and limits for the query-frontend
   resources: {}
