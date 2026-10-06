@@ -183,11 +183,11 @@ defaults:
   extraVolumeMounts: []
   # -- Default extra volumes for all pods
   extraVolumes: []
-  # -- Default liveness probe for all Tempo binary pods (overrides tempo.livenessProbe)
+  # -- Default liveness probe for all Tempo binary pods. Overridden by `tempo.livenessProbe` and `<component>.livenessProbe`.
   livenessProbe: {}
-  # -- Default readiness probe for all Tempo binary pods (overrides tempo.readinessProbe)
+  # -- Default readiness probe for all Tempo binary pods. Overridden by `tempo.readinessProbe` and `<component>.readinessProbe`.
   readinessProbe: {}
-  # -- Default startup probe for all Tempo binary pods (overrides tempo.startupProbe)
+  # -- Default startup probe for all Tempo binary pods. Overridden by `tempo.startupProbe` and `<component>.startupProbe`.
   startupProbe: {}
 
 serviceAccount:
