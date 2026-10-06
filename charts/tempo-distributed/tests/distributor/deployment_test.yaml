@@ -298,6 +298,46 @@ tests:
           path: spec.template.spec.containers[0].livenessProbe.httpGet.path
           value: /ready
 
+  - it: does not render startupProbe by default
+    template: distributor/deployment-distributor.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].startupProbe
+
+  - it: uses tempo.startupProbe when no component override
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.startupProbe:
+        httpGet:
+          path: /ready
+          port: http-metrics
+        failureThreshold: 30
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe
+          value:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            failureThreshold: 30
+
+  - it: distributor.startupProbe overrides tempo.startupProbe
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.startupProbe:
+        httpGet:
+          path: /ready
+          port: http-metrics
+      distributor.startupProbe:
+        tcpSocket:
+          port: http-metrics
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe
+          value:
+            tcpSocket:
+              port: http-metrics
+
   - it: autoscaling disabled uses static replicas
     template: distributor/deployment-distributor.yaml
     set:

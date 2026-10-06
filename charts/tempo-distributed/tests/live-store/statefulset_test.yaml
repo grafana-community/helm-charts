@@ -155,3 +155,20 @@ tests:
             emptyDir:
               medium: Memory
               sizeLimit: 2Gi
+
+  - it: renders liveStore.startupProbe on the live-store container
+    template: live-store/statefulset-live-store.yaml
+    set:
+      liveStore.startupProbe:
+        httpGet:
+          path: /ready
+          port: http-metrics
+        failureThreshold: 60
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe
+          value:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            failureThreshold: 60

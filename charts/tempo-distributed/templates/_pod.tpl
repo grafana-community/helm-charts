@@ -134,6 +134,10 @@ spec:
       readinessProbe:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with (coalesce $component.startupProbe .Values.tempo.startupProbe .Values.defaults.startupProbe) }}
+      startupProbe:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with $resolvedResources }}
       resources:
         {{- toYaml . | nindent 8 }}

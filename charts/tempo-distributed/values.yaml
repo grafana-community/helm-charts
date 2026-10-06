@@ -96,6 +96,8 @@ tempo:
       port: http-metrics
     initialDelaySeconds: 30
     timeoutSeconds: 1
+  # -- Startup probe for all Tempo binary pods. Disabled by default.
+  startupProbe: {}
   # -- Global labels for all tempo pods
   podLabels: {}
   # -- Common annotations for all pods
@@ -185,6 +187,8 @@ defaults:
   livenessProbe: {}
   # -- Default readiness probe for all Tempo binary pods (overrides tempo.readinessProbe)
   readinessProbe: {}
+  # -- Default startup probe for all Tempo binary pods (overrides tempo.startupProbe)
+  startupProbe: {}
 
 serviceAccount:
   # -- Specifies whether a ServiceAccount should be created
@@ -244,6 +248,8 @@ metricsGenerator:
   extraEnv: []
   # -- Environment variables from secrets or configmaps to add to the metrics-generator pods
   extraEnvFrom: []
+  # -- Startup probe for metrics-generator pods. Uses `tempo.startupProbe` as default if not set.
+  startupProbe: {}
   # -- Resource requests and limits for the metrics-generator
   resources: {}
   # -- Grace period to allow the metrics-generator to shutdown before it is killed. Especially for the ingestor,
@@ -463,6 +469,8 @@ distributor:
   livenessProbe: {}
   # -- Readiness probe for distributor pods. Uses `tempo.readinessProbe` as default if not set.
   readinessProbe: {}
+  # -- Startup probe for distributor pods. Uses `tempo.startupProbe` as default if not set.
+  startupProbe: {}
   # -- Resource requests and limits for the distributor
   resources: {}
   # -- On SIGTERM, report not-ready and wait this long before shutdown so the LB drains the pod before connections are cut.
@@ -600,6 +608,8 @@ backendScheduler:
   livenessProbe: {}
   # -- Readiness probe for backend-scheduler pod. Uses `tempo.readinessProbe` as default if not set.
   readinessProbe: {}
+  # -- Startup probe for backend-scheduler pod. Uses `tempo.startupProbe` as default if not set.
+  startupProbe: {}
   # -- Resource requests and limits for the backend-scheduler
   resources: {}
   # -- Grace period to allow the backend-scheduler to shutdown before it is killed
@@ -848,6 +858,8 @@ backendWorker:
   livenessProbe: {}
   # -- Readiness probe for backend-worker pods. Uses `tempo.readinessProbe` as default if not set.
   readinessProbe: {}
+  # -- Startup probe for backend-worker pods. Uses `tempo.startupProbe` as default if not set.
+  startupProbe: {}
   # -- Resource requests and limits for the backend-worker
   resources: {}
   # -- Grace period to allow the backend-worker to shutdown before it is killed
@@ -979,6 +991,8 @@ blockBuilder:
   livenessProbe: {}
   # -- Readiness probe for block-builder pods. Uses `tempo.readinessProbe` as default if not set.
   readinessProbe: {}
+  # -- Startup probe for block-builder pods. Uses `tempo.startupProbe` as default if not set.
+  startupProbe: {}
   # -- Resource requests and limits for the block-builder
   resources: {}
   # -- Grace period to allow the block-builder to flush its WAL before being killed
@@ -1076,6 +1090,8 @@ liveStore:
   livenessProbe: {}
   # -- Readiness probe for live-store pods. Uses `tempo.readinessProbe` as default if not set.
   readinessProbe: {}
+  # -- Startup probe for live-store pods. Uses `tempo.startupProbe` as default if not set.
+  startupProbe: {}
   # -- Resource requests and limits for the live-store
   resources: {}
   # -- Grace period to allow the live-store to shut down before being killed
@@ -1337,6 +1353,8 @@ querier:
   livenessProbe: {}
   # -- Readiness probe for querier pods. Uses `tempo.readinessProbe` as default if not set.
   readinessProbe: {}
+  # -- Startup probe for querier pods. Uses `tempo.startupProbe` as default if not set.
+  startupProbe: {}
   # -- Resource requests and limits for the querier
   resources: {}
   # -- Grace period to allow the querier to shutdown before it is killed
@@ -1613,6 +1631,8 @@ queryFrontend:
   livenessProbe: {}
   # -- Readiness probe for query-frontend pods. Uses `tempo.readinessProbe` as default if not set.
   readinessProbe: {}
+  # -- Startup probe for query-frontend pods. Uses `tempo.startupProbe` as default if not set.
+  startupProbe: {}
   # -- Resource requests and limits for the query-frontend
   resources: {}
   # -- Grace period to allow the query-frontend to shutdown before it is killed
