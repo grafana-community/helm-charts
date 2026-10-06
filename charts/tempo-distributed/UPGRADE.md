@@ -11,7 +11,8 @@ using the first non-empty one. The chart's default probes moved from `tempo.*` t
 
 A probe accepts one handler (`httpGet`, `tcpSocket`, `exec`, `grpc`). When a level sets a
 handler of a different type than the one it inherits, the inherited handler is dropped;
-a handler of the same type is merged field by field.
+a handler of the same type is merged field by field. Setting a top-level probe field to
+`null` removes the inherited value.
 
 This changes rendered probes in two cases:
 

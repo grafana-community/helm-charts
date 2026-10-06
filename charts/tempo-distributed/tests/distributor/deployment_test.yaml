@@ -351,6 +351,36 @@ tests:
             initialDelaySeconds: 30
             timeoutSeconds: 1
 
+  - it: removes an inherited livenessProbe field set to null
+    template: distributor/deployment-distributor.yaml
+    set:
+      distributor.livenessProbe:
+        initialDelaySeconds: null
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            timeoutSeconds: 5
+
+  - it: replaces the inherited livenessProbe handler when it is nulled alongside a new one
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.livenessProbe:
+        httpGet: null
+        tcpSocket:
+          port: http-metrics
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            tcpSocket:
+              port: http-metrics
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+
   - it: merges component livenessProbe httpGet fields over the inherited ones
     template: distributor/deployment-distributor.yaml
     set:
