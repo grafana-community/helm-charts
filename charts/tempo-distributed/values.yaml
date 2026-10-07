@@ -2922,6 +2922,17 @@ gateway:
   resources: {}
   # -- Grace period to allow the gateway to shutdown before it is killed
   terminationGracePeriodSeconds: 30
+  # -- Container lifecycle hooks for the gateway. Endpoint removal is asynchronous, so clients can
+  # still route to a terminating pod after nginx has stopped accepting connections; a preStop
+  # sleep keeps nginx serving while the endpoint drains. Keep terminationGracePeriodSeconds above
+  # the sleep. The built-in sleep action needs Kubernetes 1.30+.
+  lifecycle: {}
+  #  preStop:
+  #    sleep:
+  #      seconds: 15
+  # -- Strategy of updating the gateway pods, e.g. maxSurge 1 / maxUnavailable 0 to start the new
+  # pod before an old one is removed
+  strategy: {}
   # -- topologySpread for gateway pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ
   topologySpreadConstraints: |
