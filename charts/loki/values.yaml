@@ -3317,10 +3317,11 @@ ingester:
         # `ingester.zoneAwareReplication.zoneA.persistence.storageClass` for details. If null, the
         # claim-level `storageClass` is used as before.
         storageClass: null
-    # -- The migration block allows migrating non zone aware ingesters to zone aware ingesters.
+    # -- The migration block allows migrating non zone aware ingesters to zone aware ingesters. To exclude `zone-default`
+    # from the distributor and ruler during migration, add `-distributor.excluded-zone=zone-default` to both
+    # `distributor.extraArgs` and `ruler.extraArgs`.
     migration:
       enabled: false
-      excludeDefaultZone: false
       readPath: false
       writePath: false
 

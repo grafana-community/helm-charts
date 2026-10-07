@@ -5569,13 +5569,10 @@
                             "type": "integer"
                         },
                         "migration": {
-                            "description": "The migration block allows migrating non zone aware ingesters to zone aware ingesters.",
+                            "description": "The migration block allows migrating non zone aware ingesters to zone aware ingesters. To exclude `zone-default` from the distributor and ruler during migration, add `-distributor.excluded-zone=zone-default` to both `distributor.extraArgs` and `ruler.extraArgs`.",
                             "type": "object",
                             "properties": {
                                 "enabled": {
-                                    "type": "boolean"
-                                },
-                                "excludeDefaultZone": {
                                     "type": "boolean"
                                 },
                                 "readPath": {
