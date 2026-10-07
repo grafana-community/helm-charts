@@ -1,0 +1,71 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: RustFS CI storage schemas
+templates:
+  - config.yaml
+
+tests:
+  - it: should use the S3 schema for default-ssd CI values
+    values:
+      - ../ci/default-ssd-values.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: '(?ms)^schema_config:\n  configs:\n.*?^    object_store: s3$'
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: '(?m)^    object_store: .*filesystem.*$'
+
+  - it: should use the S3 schema for default CI values
+    values:
+      - ../ci/default-values.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: '(?ms)^schema_config:\n  configs:\n.*?^    object_store: s3$'
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: '(?m)^    object_store: .*filesystem.*$'
+
+  - it: should use the S3 schema for ingress CI values
+    values:
+      - ../ci/ingress-values.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: '(?ms)^schema_config:\n  configs:\n.*?^    object_store: s3$'
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: '(?m)^    object_store: .*filesystem.*$'
+
+  - it: should use the S3 schema for keda-querier CI values
+    values:
+      - ../ci/keda-querier-values.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: '(?ms)^schema_config:\n  configs:\n.*?^    object_store: s3$'
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: '(?m)^    object_store: .*filesystem.*$'
+
+  - it: should use the S3 schema for with-direct-route-api CI values
+    values:
+      - ../ci/with-direct-route-api-values.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: '(?ms)^schema_config:\n  configs:\n.*?^    object_store: s3$'
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: '(?m)^    object_store: .*filesystem.*$'
+
+  - it: should use the S3 schema for with-gateway-api CI values
+    values:
+      - ../ci/with-gateway-api-values.yaml
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: '(?ms)^schema_config:\n  configs:\n.*?^    object_store: s3$'
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: '(?m)^    object_store: .*filesystem.*$'
