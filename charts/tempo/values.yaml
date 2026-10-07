@@ -80,8 +80,9 @@ tempo:
   #  max_block_duration: 30s
   #  complete_block_timeout: 20m
   # -- Configuration options for the backend scheduler, which creates the compaction and
-  # retention jobs. Replaces the compactor of Tempo 2.x. Merged over the `block_retention`
-  # that `tempo.retention` sets, so a value given here wins.
+  # retention jobs. Replaces the compactor of Tempo 2.x. Compaction settings are inherited
+  # by the backend worker and override `tempo.retention`, unless overridden in
+  # `tempo.backendWorker.compaction`.
   # Refers to: https://grafana.com/docs/tempo/latest/configuration/#backend-scheduler
   backendScheduler: {}
   #  provider:
@@ -90,7 +91,8 @@ tempo:
   #      compaction:
   #        compaction_window: 1h
   # -- Configuration options for the backend worker, which runs the jobs of the backend
-  # scheduler.
+  # scheduler. Compaction settings override those inherited from `tempo.backendScheduler`,
+  # including the `block_retention` set by `tempo.retention`.
   # Refers to: https://grafana.com/docs/tempo/latest/configuration/#backend-worker
   backendWorker: {}
   #  compaction:
@@ -105,7 +107,9 @@ tempo:
   #  search:
   #    concurrent_jobs: 2000
   # -- Duration to keep blocks. Rendered into
-  # `backend_scheduler.provider.compaction.compaction.block_retention`.
+  # `backend_worker.compaction.block_retention`, where Tempo enforces retention, and
+  # `backend_scheduler.provider.compaction.compaction.block_retention`. Explicit compaction
+  # settings in `tempo.backendScheduler` or `tempo.backendWorker` take precedence.
   retention: 24h
   # -- The standard overrides configuration section. This can include a `defaults` object for applying to all tenants (not to be confused with the `global` property of the same name, which overrides `max_byte_per_trace` for all tenants). For an example on how to enable the metrics generator using the `overrides` object, see the 'Activate metrics generator' section below. Refer to [Standard overrides](https://grafana.com/docs/tempo/latest/configuration/#standard-overrides) for more details.
   overrides:
@@ -222,10 +226,12 @@ config: |
     {{- end }}
     backend_scheduler:
       {{- toYaml $backendScheduler | nindent 6 }}
+    {{- $backendWorker := dict "compaction" (deepCopy $backendScheduler.provider.compaction.compaction) }}
     {{- with .Values.tempo.backendWorker }}
-    backend_worker:
-      {{- toYaml . | nindent 6 }}
+    {{- $backendWorker = mergeOverwrite $backendWorker (deepCopy .) }}
     {{- end }}
+    backend_worker:
+      {{- toYaml $backendWorker | nindent 6 }}
     distributor:
       receivers:
         {{- toYaml .Values.tempo.receivers | nindent 8 }}

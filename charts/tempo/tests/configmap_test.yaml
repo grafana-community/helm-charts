@@ -15,13 +15,16 @@ tests:
           path: data["tempo.yaml"]
           pattern: "traces_storage:"
 
-  - it: should render the retention under the backend scheduler
+  - it: should render the retention under the backend scheduler and worker
     set:
       tempo.retention: 72h
     asserts:
       - matchRegex:
           path: data["tempo.yaml"]
-          pattern: "(?s)backend_scheduler:.*block_retention: 72h"
+          pattern: '(?m)^backend_scheduler:\n(?:[ \t]+[^\n]*\n)*?[ \t]+block_retention: 72h$'
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^backend_worker:\n(?:[ \t]+[^\n]*\n)*?[ \t]+block_retention: 72h$'
 
   - it: should omit the live_store block when no settings are given
     asserts:
@@ -64,23 +67,87 @@ tests:
     asserts:
       - matchRegex:
           path: data["tempo.yaml"]
-          pattern: "block_retention: 96h"
+          pattern: '(?m)^backend_scheduler:\n(?:[ \t]+[^\n]*\n)*?[ \t]+block_retention: 96h$'
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^backend_worker:\n(?:[ \t]+[^\n]*\n)*?[ \t]+block_retention: 96h$'
       - notMatchRegex:
           path: data["tempo.yaml"]
           pattern: "block_retention: 72h"
 
-  - it: should omit the backend worker block when no settings are given
+  - it: should render the default retention under the backend worker when no settings are given
     asserts:
-      - notMatchRegex:
+      - matchRegex:
           path: data["tempo.yaml"]
-          pattern: "(?m)^backend_worker:"
+          pattern: '(?m)^backend_worker:\n(?:[ \t]+[^\n]*\n)*?[ \t]+block_retention: 24h$'
 
-  - it: should render the backend worker block when settings are given
+  - it: should merge backend worker compaction settings over inherited settings
     set:
+      tempo.backendScheduler:
+        provider:
+          compaction:
+            compaction:
+              compaction_window: 1h
+              max_block_bytes: 107374182400
       tempo.backendWorker:
         compaction:
           compaction_window: 30m
     asserts:
       - matchRegex:
           path: data["tempo.yaml"]
-          pattern: "(?s)backend_worker:.*compaction_window: 30m"
+          pattern: '(?m)^backend_worker:\n(?:[ \t]+[^\n]*\n)*?[ \t]+block_retention: 24h$'
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^backend_worker:\n(?:[ \t]+[^\n]*\n)*?[ \t]+compaction_window: 30m$'
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^backend_worker:\n(?:[ \t]+[^\n]*\n)*?[ \t]+max_block_bytes: 107374182400$'
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^backend_scheduler:\n(?:[ \t]+[^\n]*\n)*?[ \t]+compaction_window: 1h$'
+
+  - it: should let backend worker retention win without changing scheduler retention
+    set:
+      tempo.retention: 72h
+      tempo.backendScheduler:
+        provider:
+          compaction:
+            compaction:
+              block_retention: 96h
+      tempo.backendWorker:
+        compaction:
+          block_retention: 168h
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^backend_worker:\n(?:[ \t]+[^\n]*\n)*?[ \t]+block_retention: 168h$'
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^backend_scheduler:\n(?:[ \t]+[^\n]*\n)*?[ \t]+block_retention: 96h$'
+
+  - it: should inherit retention when unrelated backend worker settings are given
+    set:
+      tempo.retention: 72h
+      tempo.backendWorker:
+        finish_on_shutdown_timeout: 45s
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^backend_worker:\n(?:[ \t]+[^\n]*\n)*?[ \t]+block_retention: 72h$'
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^backend_worker:\n(?:[ \t]+[^\n]*\n)*?[ \t]+finish_on_shutdown_timeout: 45s$'
+
+  - it: should preserve an explicitly supplied config
+    set:
+      config: |
+        backend_worker:
+          compaction:
+            block_retention: 336h
+    asserts:
+      - equal:
+          path: data["tempo.yaml"]
+          value: |
+            backend_worker:
+              compaction:
+                block_retention: 336h
