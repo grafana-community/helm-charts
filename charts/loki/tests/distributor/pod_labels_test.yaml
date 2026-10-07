@@ -1,0 +1,36 @@
+suite: distributor pod labels
+templates:
+  - distributor/workload.yaml
+  - config.yaml
+
+tests:
+  - it: should not put the chart version in the pod labels
+    template: distributor/workload.yaml
+    set:
+      deploymentMode: Distributed
+      loki.storage.bucketNames.chunks: chunks
+      loki.storage.bucketNames.ruler: ruler
+      loki.storage.bucketNames.admin: admin
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+
+  - it: should keep the pod labels unchanged when only the chart version changes
+    template: distributor/workload.yaml
+    chart:
+      version: 99.99.99
+    set:
+      deploymentMode: Distributed
+      loki.storage.bucketNames.chunks: chunks
+      loki.storage.bucketNames.ruler: ruler
+      loki.storage.bucketNames.admin: admin
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            app.kubernetes.io/component: distributor
+            app.kubernetes.io/part-of: memberlist
