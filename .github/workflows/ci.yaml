@@ -221,28 +221,33 @@ jobs:
           chart: "${{ steps.setup.outputs.chart }}"
         # language=bash
         run: |
+          echo "::group::kind export logs"
+          kind export logs "$RUNNER_TEMP/kind-logs" --name chart-testing || true
+          echo "::endgroup::"
           echo "::group::kubectl describe nodes"
-          kubectl describe nodes
+          kubectl describe nodes || true
           echo "::endgroup::"
           echo "::group::kubectl get ns"
-          kubectl get ns --show-labels
+          kubectl get ns --show-labels || true
           echo "::endgroup::"
           echo "::group::kubectl get events"
-          kubectl events --namespace "$chart"
+          kubectl events --namespace "$chart" || true
           echo "::endgroup::"
-          echo "::group::kubectl get deploy,ds,sts"
-          kubectl get deploy,ds,sts --namespace "$chart"
+          echo "::group::kubectl describe deploy,ds,sts"
+          kubectl describe deploy,ds,sts --namespace "$chart" || true
           echo "::endgroup::"
           echo "::group::kubectl get pods"
-          kubectl get pods --namespace "$chart" -o wide
+          kubectl get pods --namespace "$chart" -o wide || true
           echo "::endgroup::"
           for pod in $(kubectl get pods --namespace "$chart" -o jsonpath='{.items[*].metadata.name}'); do
             echo "::group::pods/$pod"
             kubectl describe --namespace "$chart" "pods/$pod" || true
             echo "--------------------------------"
-            kubectl logs --namespace "$chart" "$pod" || true
+            kubectl logs --namespace "$chart" "$pod" \
+              --all-containers=true --prefix=true --timestamps=true --ignore-errors=true || true
             echo "--------------------------------"
-            kubectl logs --namespace "$chart" "$pod" -p || true
+            kubectl logs --namespace "$chart" "$pod" --previous \
+              --all-containers=true --prefix=true --timestamps=true --ignore-errors=true || true
             echo "::endgroup::"
           done
 
@@ -288,32 +293,38 @@ jobs:
 
       - name: Debug failed upgrade
         if: failure() && steps.upgrade.outcome == 'failure'
+        timeout-minutes: 6
         env:
           chart: "${{ steps.setup.outputs.chart }}"
         # language=bash
         run: |
+          echo "::group::kind export logs"
+          kind export logs "$RUNNER_TEMP/kind-logs" --name chart-testing || true
+          echo "::endgroup::"
           echo "::group::kubectl describe nodes"
-          kubectl describe nodes
+          kubectl describe nodes || true
           echo "::endgroup::"
           echo "::group::kubectl get ns"
-          kubectl get ns --show-labels
+          kubectl get ns --show-labels || true
           echo "::endgroup::"
           echo "::group::kubectl get events"
-          kubectl events --namespace "$chart"
+          kubectl events --namespace "$chart" || true
           echo "::endgroup::"
-          echo "::group::kubectl get deploy,ds,sts"
-          kubectl get deploy,ds,sts --namespace "$chart"
+          echo "::group::kubectl describe deploy,ds,sts"
+          kubectl describe deploy,ds,sts --namespace "$chart" || true
           echo "::endgroup::"
           echo "::group::kubectl get pods"
-          kubectl get pods --namespace "$chart" -o wide
+          kubectl get pods --namespace "$chart" -o wide || true
           echo "::endgroup::"
           for pod in $(kubectl get pods --namespace "$chart" -o jsonpath='{.items[*].metadata.name}'); do
             echo "::group::pods/$pod"
             kubectl describe --namespace "$chart" "pods/$pod" || true
             echo "--------------------------------"
-            kubectl logs --namespace "$chart" "$pod" || true
+            kubectl logs --namespace "$chart" "$pod" \
+              --all-containers=true --prefix=true --timestamps=true --ignore-errors=true || true
             echo "--------------------------------"
-            kubectl logs --namespace "$chart" "$pod" -p || true
+            kubectl logs --namespace "$chart" "$pod" --previous \
+              --all-containers=true --prefix=true --timestamps=true --ignore-errors=true || true
             echo "::endgroup::"
           done
 
@@ -325,6 +336,14 @@ jobs:
         # language=bash
         run: |
           helm test "$chart" --namespace "$chart" --logs
+
+      - name: Upload integration test logs
+        if: always() && (steps.install.outcome == 'failure' || steps.upgrade.outcome == 'failure')
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: integration-logs-${{ steps.setup.outputs.chart }}-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/kind-logs
+          retention-days: 7
 
   fail:
     if: "${{ cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}"
