@@ -39,6 +39,13 @@ tests:
       - hasDocuments:
           count: 0
 
+  - it: should not render when the zone-aware PodDisruptionBudget is enabled
+    set:
+      ingester.zoneAwareReplication.podDisruptionBudget.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
   - it: should have correct name with rollout suffix
     asserts:
       - equal:

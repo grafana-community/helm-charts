@@ -10,6 +10,44 @@
 {{- fail "The Loki chart builtin MinIO dependency is deprecated and will be removed 2026-10-31. Configure an external object storage backend instead. To proceed temporarily, set ignoreMinioDeprecation=true."}}
 {{- end }}
 
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" }}
+{{- $zoneAwarePDBRequested := dig "podDisruptionBudget" "enabled" false .Values.ingester.zoneAwareReplication }}
+{{- $ingesterPDBShouldRender := eq (include "loki.pdb.shouldRender" (dict "component" .Values.ingester)) "true" }}
+{{- $zoneAwarePDBEnabled := and $isDistributed $zoneAwarePDBRequested $ingesterPDBShouldRender }}
+{{- if $zoneAwarePDBEnabled }}
+  {{- if not .Values.ingester.zoneAwareReplication.enabled }}
+    {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires ingester.zoneAwareReplication.enabled=true." }}
+  {{- end }}
+  {{- if ne .Values.ingester.kind "StatefulSet" }}
+    {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires ingester.kind=StatefulSet." }}
+  {{- end }}
+  {{- if lt (int .Values.ingester.zoneAwareReplication.maxUnavailablePct) 1 }}
+    {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires ingester.zoneAwareReplication.maxUnavailablePct >= 1." }}
+  {{- end }}
+  {{- if not .Values.rollout_operator.enabled }}
+    {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.enabled=true." }}
+  {{- end }}
+  {{- if not .Values.rollout_operator.webhooks.enabled }}
+    {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.webhooks.enabled=true." }}
+  {{- end }}
+  {{- $failurePolicies := default (dict) .Values.rollout_operator.webhooks.failurePolicies }}
+  {{- $podEvictionPolicy := default .Values.rollout_operator.webhooks.failurePolicy (get $failurePolicies "podEviction") }}
+  {{- $zpdbValidationPolicy := default .Values.rollout_operator.webhooks.failurePolicy (get $failurePolicies "zpdbValidation") }}
+  {{- if ne $podEvictionPolicy "Fail" }}
+    {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires the effective pod-eviction webhook failure policy to be Fail." }}
+  {{- end }}
+  {{- if ne $zpdbValidationPolicy "Ignore" }}
+    {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires the effective ZPDB validation webhook failure policy to be Ignore." }}
+  {{- end }}
+  {{- $zpdbCRDInstalled := .Capabilities.APIVersions.Has "rollout-operator.grafana.com/v1/ZoneAwarePodDisruptionBudget" }}
+  {{- if and (not $zpdbCRDInstalled) (not (dig "crds" "enabled" true .Values.rollout_operator)) }}
+    {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires rollout_operator.crds.enabled=true or a pre-installed ZoneAwarePodDisruptionBudget CRD." }}
+  {{- end }}
+  {{- if and (not $zpdbCRDInstalled) .Release.IsUpgrade }}
+    {{- fail "ingester.zoneAwareReplication.podDisruptionBudget.enabled requires the ZoneAwarePodDisruptionBudget CRD to be installed before upgrading. Helm installs bundled CRDs only on first install; apply the rollout-operator CRDs manually." }}
+  {{- end }}
+{{- end }}
+
 {{- $monolithicReplicas := int .Values.singleBinary.replicas }}
 {{- $isUsingFilesystem := eq (include "loki.isUsingObjectStorage" .) "false" }}
 {{- $atLeastOneScalableReplica := or (gt (int .Values.backend.replicas) 0) (gt (int .Values.read.replicas) 0) (gt (int .Values.write.replicas) 0) }}

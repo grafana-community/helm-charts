@@ -1,5 +1,6 @@
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
-{{- if and $isDistributed (.Values.ingester.zoneAwareReplication.enabled) }}
+{{- $zpdbEnabled := dig "podDisruptionBudget" "enabled" false .Values.ingester.zoneAwareReplication -}}
+{{- if and $isDistributed (.Values.ingester.zoneAwareReplication.enabled) (not $zpdbEnabled) }}
 {{- $extraMatchLabels := dict
   "rollout-group" (printf "%singester" (include "loki.prefixRolloutGroup" .))
 -}}
