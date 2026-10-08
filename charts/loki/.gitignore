@@ -9,3 +9,4 @@ hack/*.git
 hack/tmp/
 hack/venv/
 hack/pyvenv.cfg
+hack/logcli

@@ -90,3 +90,28 @@ tests:
             sourceLabels:
               - job
             targetLabel: "job"
+
+  - it: uses the native Envoy metrics path only for the gateway exporter Service
+    set:
+      monitoring.serviceMonitor.enabled: true
+      gateway.type: envoy
+      gateway.metrics.enabled: true
+    asserts:
+      - contains:
+          path: spec.endpoints[0].relabelings
+          content:
+            sourceLabels:
+              - __meta_kubernetes_service_name
+            regex: "^RELEASE-NAME-loki-gateway-exporter$"
+            replacement: /stats/prometheus
+            targetLabel: __metrics_path__
+
+  - it: keeps the default metrics path with the NGINX gateway
+    set:
+      monitoring.serviceMonitor.enabled: true
+      gateway.type: nginx
+    asserts:
+      - notContains:
+          path: spec.endpoints[0].relabelings
+          content:
+            targetLabel: __metrics_path__
