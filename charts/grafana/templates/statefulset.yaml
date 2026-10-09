@@ -18,6 +18,9 @@ spec:
   selector:
     matchLabels:
       {{- include "grafana.selectorLabels" . | nindent 6 }}
+  {{- with .Values.podManagementPolicy }}
+  podManagementPolicy: {{ . }}
+  {{- end }}
   serviceName: {{ include "grafana.fullname" . }}-headless
   {{- if .Values.persistence.enabled }}
   {{- with .Values.persistence.persistentVolumeClaimRetentionPolicy }}
