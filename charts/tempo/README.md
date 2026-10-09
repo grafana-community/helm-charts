@@ -46,6 +46,30 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### From Chart versions 3.0.0 through 3.1.0
+
+Chart 3.1.1 fixes retention enforcement by copying the backend scheduler's compaction
+settings into `backend_worker.compaction`. In chart versions 3.0.0 through 3.1.0,
+`tempo.retention` only configured the scheduler, while the worker used Tempo's default
+retention of `336h` (14 days), unless worker or tenant retention overrides were set.
+
+**Review retention before upgrading.** The chart default of `tempo.retention: 24h` now
+takes effect for tenants without retention overrides. Older blocks may be removed during
+subsequent retention processing. To preserve the previous 14-day retention while reviewing
+your settings, explicitly configure:
+
+```yaml
+tempo:
+  backendWorker:
+    compaction:
+      block_retention: 336h
+```
+
+Worker compaction settings take precedence over scheduler compaction settings, which take
+precedence over `tempo.retention`. Tenant retention overrides still take precedence over
+the worker's retention. If you supply your own `config`, configure
+`backend_worker.compaction.block_retention` in that file.
+
 ### From Chart versions < 3.0.0
 
 * Breaking Change *
@@ -61,11 +85,12 @@ What changed in the chart:
 * `tempo.ingester` is removed. Use `tempo.liveStore` for the equivalent settings of the new
   live-store. The live-store writes its WAL under `/var/tempo`, so the existing persistent
   volume still covers it.
-* `tempo.retention` now renders into
-  `backend_scheduler.provider.compaction.compaction.block_retention`. The `compactor:` config
-  block is gone. The value and its meaning do not change. `tempo.backendScheduler` and
-  `tempo.backendWorker` tune the rest of compaction. Settings in `tempo.backendScheduler` win
-  over `tempo.retention`.
+* `tempo.retention` renders into `backend_worker.compaction.block_retention`, where Tempo
+  enforces retention, and `backend_scheduler.provider.compaction.compaction.block_retention`.
+  The `compactor:` config block is gone. `tempo.backendScheduler` and `tempo.backendWorker`
+  tune the rest of compaction. Worker settings win over scheduler settings, which win over
+  `tempo.retention`. See the retention warning above when upgrading from chart 3.0.0 through
+  3.1.0.
 * `tempo.memBallastSizeMbs` is removed, because Tempo 3.0 dropped the
   `-mem-ballast-size-mbs` flag.
 * `tempo.metricsGenerator.traces_storage` is removed, together with the `local_blocks`
