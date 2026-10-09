@@ -692,3 +692,29 @@ volumeClaimTemplates:
           storage: {{ $persistence.size | quote }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Resolve a container probe from layers ordered lowest to highest precedence.
+Layers are deep-merged, and a top-level key set to null removes the inherited
+value. A probe accepts a single handler, so when a layer sets a handler,
+inherited handlers of a different type are dropped.
+Usage:
+  {{ include "tempo.resolveProbe" (list .Values.defaults.livenessProbe .Values.tempo.livenessProbe $component.livenessProbe) }}
+*/}}
+{{- define "tempo.resolveProbe" -}}
+{{- $handlers := list "exec" "grpc" "httpGet" "tcpSocket" -}}
+{{- $probe := dict -}}
+{{- range $layer := . -}}
+{{- $layer = $layer | default dict -}}
+{{- if pick $layer "exec" "grpc" "httpGet" "tcpSocket" -}}
+{{- range $handlers -}}
+{{- if not (hasKey $layer .) }}{{- $_ := unset $probe . -}}{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- $probe = mergeOverwrite $probe (deepCopy $layer) -}}
+{{- range $k, $v := $layer -}}
+{{- if kindIs "invalid" $v }}{{- $_ := unset $probe $k -}}{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- toYaml $probe -}}
+{{- end -}}

@@ -291,12 +291,108 @@ tests:
           path: spec.template.spec.priorityClassName
           value: low-priority
 
-  - it: uses tempo.livenessProbe when no component override
+  - it: renders the default livenessProbe when nothing is overridden
     template: distributor/deployment-distributor.yaml
     asserts:
       - equal:
-          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
-          value: /ready
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+
+  - it: merges component livenessProbe timings over the inherited handler
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.livenessProbe:
+        failureThreshold: 10
+      distributor.livenessProbe:
+        initialDelaySeconds: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            initialDelaySeconds: 0
+            timeoutSeconds: 5
+            failureThreshold: 10
+
+  - it: replaces the inherited livenessProbe handler when a component sets one
+    template: distributor/deployment-distributor.yaml
+    set:
+      distributor.livenessProbe:
+        tcpSocket:
+          port: http-metrics
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            tcpSocket:
+              port: http-metrics
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+
+  - it: replaces the default readinessProbe handler when tempo sets one
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.readinessProbe:
+        exec:
+          command: ["true"]
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe
+          value:
+            exec:
+              command: ["true"]
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+
+  - it: removes an inherited livenessProbe field set to null
+    template: distributor/deployment-distributor.yaml
+    set:
+      distributor.livenessProbe:
+        initialDelaySeconds: null
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            timeoutSeconds: 5
+
+  - it: replaces the inherited livenessProbe handler when it is nulled alongside a new one
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.livenessProbe:
+        httpGet: null
+        tcpSocket:
+          port: http-metrics
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            tcpSocket:
+              port: http-metrics
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+
+  - it: merges component livenessProbe httpGet fields over the inherited ones
+    template: distributor/deployment-distributor.yaml
+    set:
+      distributor.livenessProbe:
+        httpGet:
+          path: /live
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet
+          value:
+            path: /live
+            port: http-metrics
 
   - it: does not render startupProbe by default
     template: distributor/deployment-distributor.yaml
@@ -321,13 +417,14 @@ tests:
               port: http-metrics
             failureThreshold: 30
 
-  - it: distributor.startupProbe overrides tempo.startupProbe
+  - it: distributor.startupProbe handler replaces tempo.startupProbe handler and keeps its timings
     template: distributor/deployment-distributor.yaml
     set:
       tempo.startupProbe:
         httpGet:
           path: /ready
           port: http-metrics
+        failureThreshold: 60
       distributor.startupProbe:
         tcpSocket:
           port: http-metrics
@@ -337,6 +434,7 @@ tests:
           value:
             tcpSocket:
               port: http-metrics
+            failureThreshold: 60
 
   - it: uses defaults.startupProbe when tempo.startupProbe is not set
     template: distributor/deployment-distributor.yaml
@@ -353,7 +451,7 @@ tests:
               path: /ready
               port: http-metrics
 
-  - it: tempo.startupProbe overrides defaults.startupProbe
+  - it: merges tempo.startupProbe over defaults.startupProbe
     template: distributor/deployment-distributor.yaml
     set:
       defaults.startupProbe:
@@ -361,14 +459,15 @@ tests:
           path: /ready
           port: http-metrics
       tempo.startupProbe:
-        tcpSocket:
-          port: http-metrics
+        failureThreshold: 60
     asserts:
       - equal:
           path: spec.template.spec.containers[0].startupProbe
           value:
-            tcpSocket:
+            httpGet:
+              path: /ready
               port: http-metrics
+            failureThreshold: 60
 
   - it: autoscaling disabled uses static replicas
     template: distributor/deployment-distributor.yaml
