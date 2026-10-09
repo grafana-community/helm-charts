@@ -1837,6 +1837,14 @@ networkPolicy:
 enableKubeBackwardCompatibility: false
 useStatefulSet: false
 
+## podManagementPolicy controls how Pods are created during scale-up and during
+## replacements when the StatefulSet's .spec.template is updated. Only applies
+## when Grafana is deployed as a StatefulSet (useStatefulSet: true or
+## persistence.type: statefulset). Valid values: OrderedReady (default) or Parallel.
+## Note: this field is immutable after StatefulSet creation; changing it requires
+## deleting and recreating the StatefulSet.
+podManagementPolicy: OrderedReady
+
 # extraObjects could be utilized to add dynamic manifests via values
 extraObjects: []
 # Examples:
