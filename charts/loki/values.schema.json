@@ -2564,6 +2564,18 @@
                     "description": "Volumes to add to the compactor pods",
                     "type": "array"
                 },
+                "headless": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotation overrides for headless Distributed compactor Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
                 "hostAliases": {
                     "description": "hostAliases to add",
                     "type": "array"
@@ -5080,6 +5092,18 @@
                 "extraVolumes": {
                     "description": "Volumes to add to the ingester pods",
                     "type": "array"
+                },
+                "headless": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotation overrides for headless Distributed ingester Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
                 },
                 "hostAliases": {
                     "description": "hostAliases to add",
@@ -9258,6 +9282,18 @@
                     "description": "Override for the read fullname. By default, this is generated using the fullname template with \"-backend\"",
                     "type": "string"
                 },
+                "headless": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotation overrides for headless SimpleScalable read Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
                 "hostUsers": {
                     "description": "Use the host's user namespace in the read pods.",
                     "type": [
@@ -10672,6 +10708,18 @@
                     "description": "Volumes to add to the single binary pods",
                     "type": "array"
                 },
+                "headless": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotation overrides for headless Monolithic Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
                 "hostUsers": {
                     "description": "Use the host's user namespace in the single binary pods",
                     "type": [
@@ -11448,6 +11496,18 @@
                 "fullnameOverride": {
                     "description": "Override for the write fullname. By default, this is generated using the fullname template with \"-backend\"",
                     "type": "string"
+                },
+                "headless": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotation overrides for headless SimpleScalable write Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
                 },
                 "hostUsers": {
                     "description": "Use the host's user namespace in the write pods.",
