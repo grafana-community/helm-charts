@@ -1,0 +1,77 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: service annotation overrides
+templates:
+  - monolithic/service.yaml
+  - config.yaml
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  singleBinary.service.annotations:
+    k8s.grafana.com/scrape: "true"
+    k8s.another.dev/annotation: "is_applied"
+
+tests:
+  - it: should apply annotation to loki and headless service by default
+    asserts:
+      - equal:
+          path: metadata.annotations["k8s.grafana.com/scrape"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["k8s.another.dev/annotation"]
+          value: "is_applied"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["k8s.grafana.com/scrape"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      - equal:
+          path: metadata.annotations["k8s.another.dev/annotation"]
+          value: "is_applied"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+
+  - it: should override annotation on headless service
+    set:
+      singleBinary.headless.annotations:
+        k8s.grafana.com/scrape: "false"
+    asserts:
+      - equal:
+          path: metadata.annotations["k8s.grafana.com/scrape"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["k8s.another.dev/annotation"]
+          value: "is_applied"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["k8s.grafana.com/scrape"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      - notExists:
+          path: metadata.annotations["k8s.another.dev/annotation"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"

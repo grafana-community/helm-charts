@@ -1995,6 +1995,10 @@ singleBinary:
     # @schema type:[string, null]
     # -- Pod Disruption Budget unhealthyPodEvictionPolicy
     unhealthyPodEvictionPolicy: null
+  headless:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotation overrides for headless Monolithic Service
+    annotations: {}
   service:
     # @schema additionalProperties:{"type":"string"}
     # -- Annotations for single binary Service
@@ -2229,6 +2233,10 @@ write:
   # @schema additionalProperties:{"type":"string"}
   # -- Additional selector labels for each `write` pod
   selectorLabels: {}
+  headless:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotation overrides for headless SimpleScalable write Service
+    annotations: {}
   service:
     # @schema additionalProperties:{"type":"string"}
     # -- Annotations for write Service
@@ -2501,6 +2509,10 @@ read:
   # @schema additionalProperties:{"type":"string"}
   # -- Additional selector labels for each `read` pod
   selectorLabels: {}
+  headless:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotation overrides for headless SimpleScalable read Service
+    annotations: {}
   service:
     # @schema additionalProperties:{"type":"string"}
     # -- Annotations for read Service
@@ -3050,6 +3062,10 @@ ingester:
   # -- Service type for ingester service
   # @deprecated -- This option is deprecated in favor of `ingester.service.type`
   serviceType: "ClusterIP"
+  headless:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotation overrides for headless Distributed ingester Service
+    annotations: {}
   service:
     # @schema additionalProperties:{"type":"string"}
     # -- Annotations for ingester Service
@@ -4634,6 +4650,10 @@ compactor:
   # -- Service type for compactor service
   # @deprecated -- This option is deprecated in favor of `compactor.service.type`
   serviceType: "ClusterIP"
+  headless:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotation overrides for headless Distributed compactor Service
+    annotations: {}
   service:
     # @schema additionalProperties:{"type":"string"}
     # -- Annotations for compactor Service
