@@ -1,5 +1,17 @@
 # Upgrade guide
 
+## v3.11 → v3.12
+
+### Querier and query-frontend default to soft anti-affinity
+
+The default `querier.affinity` and `queryFrontend.affinity` change from hard node / soft zone
+anti-affinity to soft node / soft zone anti-affinity, matching `backendWorker` and
+`backendScheduler`. Replicas still spread across nodes and zones when capacity allows, but a
+scale-up no longer needs a free node for every replica.
+
+This only affects installs that use the default values. To keep the previous behaviour, set
+`querier.affinity` and `queryFrontend.affinity` to the hard rule from v3.11.
+
 ## v3.9 → v3.10
 
 ### live-store data volume renamed to `data`

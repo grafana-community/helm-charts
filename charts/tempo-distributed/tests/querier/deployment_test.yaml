@@ -292,3 +292,24 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].args
           content: -config.file=/conf/tempo.yaml
+
+  - it: defaults to soft node and soft zone anti-affinity
+    template: querier/deployment-querier.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].weight
+          value: 100
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].podAffinityTerm.topologyKey
+          value: kubernetes.io/hostname
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].podAffinityTerm.labelSelector.matchLabels["app.kubernetes.io/component"]
+          value: querier
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[1].weight
+          value: 75
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[1].podAffinityTerm.topologyKey
+          value: topology.kubernetes.io/zone
