@@ -1,5 +1,42 @@
 # Upgrade guide
 
+## v3.20 → v3.21
+
+### Stateless components default to soft anti-affinity
+
+The default `affinity` for `distributor`, `querier`, `queryFrontend`, `gateway` and
+`enterpriseFederationFrontend` changes from hard node / soft zone anti-affinity to soft node /
+soft zone anti-affinity, matching `backendWorker` and `backendScheduler`. Replicas still spread
+across nodes and zones when capacity allows, but a scale-up no longer needs a free node for
+every replica.
+
+This only affects installs that use the default values. To keep the previous behaviour, copy
+the component's `affinity` block from the
+[3.20.0 `values.yaml`](https://github.com/grafana-community/helm-charts/blob/tempo-distributed-3.20.0/charts/tempo-distributed/values.yaml).
+For example, the previous querier default was:
+
+```yaml
+querier:
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "querier" "memberlist" true) | nindent 10 }}
+          topologyKey: kubernetes.io/hostname
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "querier" "memberlist" true) | nindent 12 }}
+            topologyKey: topology.kubernetes.io/zone
+```
+
+The selector labels differ per component (for example, only some components pass
+`"memberlist" true`), so copy each block from the 3.20.0 `values.yaml` rather than renaming
+the component in this example.
+
 ## v3.19 → v3.20
 
 ### StatefulSet recreate hook image configured via `defaults.statefulSetRecreateJob.image`
