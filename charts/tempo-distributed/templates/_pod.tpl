@@ -126,15 +126,15 @@ spec:
       envFrom:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with (coalesce $component.livenessProbe .Values.tempo.livenessProbe .Values.defaults.livenessProbe) }}
+      {{- with (include "tempo.resolveProbe" (list .Values.defaults.livenessProbe .Values.tempo.livenessProbe $component.livenessProbe) | fromYaml) }}
       livenessProbe:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with (coalesce $component.readinessProbe .Values.tempo.readinessProbe .Values.defaults.readinessProbe) }}
+      {{- with (include "tempo.resolveProbe" (list .Values.defaults.readinessProbe .Values.tempo.readinessProbe $component.readinessProbe) | fromYaml) }}
       readinessProbe:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with (coalesce $component.startupProbe .Values.tempo.startupProbe .Values.defaults.startupProbe) }}
+      {{- with (include "tempo.resolveProbe" (list .Values.defaults.startupProbe .Values.tempo.startupProbe $component.startupProbe) | fromYaml) }}
       startupProbe:
         {{- toYaml . | nindent 8 }}
       {{- end }}

@@ -1,5 +1,36 @@
 # Upgrade guide
 
+## v3.11 → v3.12
+
+### Probes are deep-merged across `defaults`, `tempo` and the component
+
+`livenessProbe`, `readinessProbe` and `startupProbe` are now resolved by deep-merging
+`defaults.<probe>`, `tempo.<probe>` and `<component>.<probe>`, in that order, instead of
+using the first non-empty one. The chart's default probes moved from `tempo.*` to
+`defaults.*`; the rendered default probes are unchanged.
+
+A probe accepts one handler (`httpGet`, `tcpSocket`, `exec`, `grpc`). When a level sets a
+handler of a different type than the one it inherits, the inherited handler is dropped;
+a handler of the same type is merged field by field. Setting a top-level probe field to
+`null` removes the inherited value.
+
+Helm drops `null` values set in a parent chart's own `values.yaml`, so from an umbrella
+chart, override an inherited field with its Kubernetes default instead (e.g.
+`initialDelaySeconds: 0`).
+
+To disable a probe, set `enabled: false` on it at any level, for example
+`distributor.livenessProbe.enabled: false`. A higher level can set `enabled: true` to restore
+the inherited probe.
+
+This changes rendered probes in two cases:
+
+- A component probe that sets only some fields now inherits the rest. For example,
+  `distributor.livenessProbe: {httpGet: {path: /ready, port: http-metrics}}` previously
+  rendered without `initialDelaySeconds` and `timeoutSeconds`; it now inherits `60` and `5`
+  from `defaults.livenessProbe`.
+- Setting `tempo.livenessProbe: null` (or `readinessProbe`) no longer removes the probe.
+  Set `tempo.livenessProbe.enabled: false` instead.
+
 ## v3.9 → v3.10
 
 ### live-store data volume renamed to `data`
