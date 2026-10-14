@@ -14,6 +14,14 @@ handler of a different type than the one it inherits, the inherited handler is d
 a handler of the same type is merged field by field. Setting a top-level probe field to
 `null` removes the inherited value.
 
+Helm drops `null` values set in a parent chart's own `values.yaml`, so from an umbrella
+chart, override an inherited field with its Kubernetes default instead (e.g.
+`initialDelaySeconds: 0`).
+
+To disable a probe, set `enabled: false` on it at any level, for example
+`distributor.livenessProbe.enabled: false`. A higher level can set `enabled: true` to restore
+the inherited probe.
+
 This changes rendered probes in two cases:
 
 - A component probe that sets only some fields now inherits the rest. For example,
@@ -21,7 +29,7 @@ This changes rendered probes in two cases:
   rendered without `initialDelaySeconds` and `timeoutSeconds`; it now inherits `60` and `5`
   from `defaults.livenessProbe`.
 - Setting `tempo.livenessProbe: null` (or `readinessProbe`) no longer removes the probe.
-  To disable a probe for all Tempo binary pods, also set `defaults.livenessProbe: null`.
+  Set `tempo.livenessProbe.enabled: false` instead.
 
 ## v3.9 → v3.10
 

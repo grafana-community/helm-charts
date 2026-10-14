@@ -546,3 +546,41 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].args
           content: -log.level=debug
+
+  - it: disables the livenessProbe for a component with enabled false
+    template: distributor/deployment-distributor.yaml
+    set:
+      distributor.livenessProbe:
+        enabled: false
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe
+      - exists:
+          path: spec.template.spec.containers[0].readinessProbe
+
+  - it: re-enables a livenessProbe disabled by tempo with the inherited fields
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.livenessProbe:
+        enabled: false
+      distributor.livenessProbe:
+        enabled: true
+        timeoutSeconds: 9
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            initialDelaySeconds: 60
+            timeoutSeconds: 9
+
+  - it: does not render startupProbe when only enabled is set
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.startupProbe:
+        enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].startupProbe

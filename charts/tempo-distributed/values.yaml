@@ -178,6 +178,7 @@ defaults:
   # -- Default liveness probe for all Tempo binary pods.
   # `tempo.livenessProbe` and `<component>.livenessProbe` are deep-merged over it, in that order.
   # A handler (`httpGet`, `tcpSocket`, `exec`, `grpc`) set at a higher level replaces an inherited handler of a different type.
+  # Set `enabled: false` at any level to disable the probe; a higher level can set `enabled: true` to restore it.
   livenessProbe:
     httpGet:
       path: /ready
