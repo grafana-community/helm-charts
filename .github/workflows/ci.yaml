@@ -35,10 +35,10 @@ jobs:
           python-version: '3.13'
 
       - name: Set up chart-testing
-        uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2.8.0
+        uses: helm/chart-testing-action@720270857a28afd41e2426521a7801db09e9b510 # v2.9.0
         with:
           # renovate: github=helm/chart-testing
-          version: v3.14.0
+          version: v3.15.0
 
       - name: Run chart-testing (list-changed)
         id: list-changed
@@ -139,7 +139,7 @@ jobs:
           VERSION: 3.15.15
 
       - name: Create kind cluster
-        uses: helm/kind-action@06c1ae10762d3b9c1644e7fe69596ae519e015a2 # v1.15.0
+        uses: helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa # v1.15.1
         with:
           config: .github/linters/kind.yaml
           ignore_failed_clean: 'true'
@@ -221,28 +221,33 @@ jobs:
           chart: "${{ steps.setup.outputs.chart }}"
         # language=bash
         run: |
+          echo "::group::kind export logs"
+          kind export logs "$RUNNER_TEMP/kind-logs" --name chart-testing || true
+          echo "::endgroup::"
           echo "::group::kubectl describe nodes"
-          kubectl describe nodes
+          kubectl describe nodes || true
           echo "::endgroup::"
           echo "::group::kubectl get ns"
-          kubectl get ns --show-labels
+          kubectl get ns --show-labels || true
           echo "::endgroup::"
           echo "::group::kubectl get events"
-          kubectl events --namespace "$chart"
+          kubectl events --namespace "$chart" || true
           echo "::endgroup::"
-          echo "::group::kubectl get deploy,ds,sts"
-          kubectl get deploy,ds,sts --namespace "$chart"
+          echo "::group::kubectl describe deploy,ds,sts"
+          kubectl describe deploy,ds,sts --namespace "$chart" || true
           echo "::endgroup::"
           echo "::group::kubectl get pods"
-          kubectl get pods --namespace "$chart" -o wide
+          kubectl get pods --namespace "$chart" -o wide || true
           echo "::endgroup::"
           for pod in $(kubectl get pods --namespace "$chart" -o jsonpath='{.items[*].metadata.name}'); do
             echo "::group::pods/$pod"
             kubectl describe --namespace "$chart" "pods/$pod" || true
             echo "--------------------------------"
-            kubectl logs --namespace "$chart" "$pod" || true
+            kubectl logs --namespace "$chart" "$pod" \
+              --all-containers=true --prefix=true --timestamps=true --ignore-errors=true || true
             echo "--------------------------------"
-            kubectl logs --namespace "$chart" "$pod" -p || true
+            kubectl logs --namespace "$chart" "$pod" --previous \
+              --all-containers=true --prefix=true --timestamps=true --ignore-errors=true || true
             echo "::endgroup::"
           done
 
@@ -288,32 +293,38 @@ jobs:
 
       - name: Debug failed upgrade
         if: failure() && steps.upgrade.outcome == 'failure'
+        timeout-minutes: 6
         env:
           chart: "${{ steps.setup.outputs.chart }}"
         # language=bash
         run: |
+          echo "::group::kind export logs"
+          kind export logs "$RUNNER_TEMP/kind-logs" --name chart-testing || true
+          echo "::endgroup::"
           echo "::group::kubectl describe nodes"
-          kubectl describe nodes
+          kubectl describe nodes || true
           echo "::endgroup::"
           echo "::group::kubectl get ns"
-          kubectl get ns --show-labels
+          kubectl get ns --show-labels || true
           echo "::endgroup::"
           echo "::group::kubectl get events"
-          kubectl events --namespace "$chart"
+          kubectl events --namespace "$chart" || true
           echo "::endgroup::"
-          echo "::group::kubectl get deploy,ds,sts"
-          kubectl get deploy,ds,sts --namespace "$chart"
+          echo "::group::kubectl describe deploy,ds,sts"
+          kubectl describe deploy,ds,sts --namespace "$chart" || true
           echo "::endgroup::"
           echo "::group::kubectl get pods"
-          kubectl get pods --namespace "$chart" -o wide
+          kubectl get pods --namespace "$chart" -o wide || true
           echo "::endgroup::"
           for pod in $(kubectl get pods --namespace "$chart" -o jsonpath='{.items[*].metadata.name}'); do
             echo "::group::pods/$pod"
             kubectl describe --namespace "$chart" "pods/$pod" || true
             echo "--------------------------------"
-            kubectl logs --namespace "$chart" "$pod" || true
+            kubectl logs --namespace "$chart" "$pod" \
+              --all-containers=true --prefix=true --timestamps=true --ignore-errors=true || true
             echo "--------------------------------"
-            kubectl logs --namespace "$chart" "$pod" -p || true
+            kubectl logs --namespace "$chart" "$pod" --previous \
+              --all-containers=true --prefix=true --timestamps=true --ignore-errors=true || true
             echo "::endgroup::"
           done
 
@@ -325,6 +336,14 @@ jobs:
         # language=bash
         run: |
           helm test "$chart" --namespace "$chart" --logs
+
+      - name: Upload integration test logs
+        if: always() && (steps.install.outcome == 'failure' || steps.upgrade.outcome == 'failure')
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: integration-logs-${{ steps.setup.outputs.chart }}-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/kind-logs
+          retention-days: 7
 
   fail:
     if: "${{ cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}"
@@ -453,7 +472,7 @@ jobs:
       # Used App:
       # https://github.com/organizations/prometheus-community/settings/apps/helm-charts-renovate-helper.
       # Ref: https://github.com/prometheus-community/helm-charts/issues/5213.
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: app-token
         with:
           app-id: ${{ secrets.APP_RENOVATE_HELPER_APP_ID }}

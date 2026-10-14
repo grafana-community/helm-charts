@@ -1083,7 +1083,7 @@ sidecar:
     # -- The Docker registry
     registry: quay.io
     repository: kiwigrid/k8s-sidecar
-    tag: 2.13.1
+    tag: 2.14.1
     sha: ""
   imagePullPolicy: IfNotPresent
   resources: {}
@@ -1836,6 +1836,15 @@ networkPolicy:
 # Enable backward compatibility of kubernetes where version below 1.13 doesn't have the enableServiceLinks option
 enableKubeBackwardCompatibility: false
 useStatefulSet: false
+
+## podManagementPolicy controls how Pods are created and deleted during initial
+## deployment and scaling operations. It does not affect rolling updates, which
+## remain ordered regardless of this setting. Only applies when Grafana is deployed
+## as a StatefulSet (useStatefulSet: true or persistence.type: statefulset).
+## Valid values: OrderedReady (default) or Parallel.
+## Note: this field is immutable after StatefulSet creation; changing it requires
+## deleting and recreating the StatefulSet.
+podManagementPolicy: OrderedReady
 
 # extraObjects could be utilized to add dynamic manifests via values
 extraObjects: []

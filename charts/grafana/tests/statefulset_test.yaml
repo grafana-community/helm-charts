@@ -48,3 +48,25 @@ tests:
       - template: statefulset.yaml
         notExists:
           path: spec.replicas
+  - it: should set podManagementPolicy to OrderedReady by default
+    asserts:
+      - template: statefulset.yaml
+        equal:
+          path: spec.podManagementPolicy
+          value: OrderedReady
+  - it: should set podManagementPolicy to Parallel when configured
+    set:
+      podManagementPolicy: Parallel
+    asserts:
+      - template: statefulset.yaml
+        equal:
+          path: spec.podManagementPolicy
+          value: Parallel
+  - it: should set podManagementPolicy to OrderedReady when explicitly configured
+    set:
+      podManagementPolicy: OrderedReady
+    asserts:
+      - template: statefulset.yaml
+        equal:
+          path: spec.podManagementPolicy
+          value: OrderedReady
