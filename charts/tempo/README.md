@@ -46,9 +46,9 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
-### From Chart versions 3.0.0 through 3.1.0
+### From Chart versions < 3.2.0
 
-Chart 3.1.1 fixes retention enforcement by copying the backend scheduler's compaction
+Chart 3.2.0 fixes retention enforcement by copying the backend scheduler's compaction
 settings into `backend_worker.compaction`. In chart versions 3.0.0 through 3.1.0,
 `tempo.retention` only configured the scheduler, while the worker used Tempo's default
 retention of `336h` (14 days), unless worker or tenant retention overrides were set.

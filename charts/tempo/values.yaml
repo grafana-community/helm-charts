@@ -226,7 +226,7 @@ config: |
     {{- end }}
     backend_scheduler:
       {{- toYaml $backendScheduler | nindent 6 }}
-    {{- $backendWorker := dict "compaction" (deepCopy $backendScheduler.provider.compaction.compaction) }}
+    {{- $backendWorker := dict "compaction" (deepCopy ($backendScheduler.provider.compaction.compaction | default dict)) }}
     {{- with .Values.tempo.backendWorker }}
     {{- $backendWorker = mergeOverwrite $backendWorker (deepCopy .) }}
     {{- end }}

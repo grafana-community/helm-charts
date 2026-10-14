@@ -81,6 +81,17 @@ tests:
           path: data["tempo.yaml"]
           pattern: '(?m)^backend_worker:\n(?:[ \t]+[^\n]*\n)*?[ \t]+block_retention: 24h$'
 
+  - it: should render an empty worker compaction config when scheduler compaction is null
+    set:
+      tempo.backendScheduler:
+        provider:
+          compaction:
+            compaction: null
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^backend_worker:\n[ \t]+compaction: \{\}$'
+
   - it: should merge backend worker compaction settings over inherited settings
     set:
       tempo.backendScheduler:
