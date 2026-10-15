@@ -111,13 +111,15 @@ If you need to control the version of bundled plugins, like Elasticsearch, set `
 
 `set -x` is no longer enabled by default when downloading dashboards. Add `x` to `defaultShellOptions` to enable command tracing.
 
-### To 13.8.0
+### To 14.0.0
 
-The chart now ships a `values.schema.json`, and Helm validates supplied values against it. Some values that used to render are now rejected because they have the wrong type:
+The chart now ships a `values.schema.json`, and Helm validates the supplied values against it on `install`, `upgrade`, `template` and `lint`. Values that used to render despite having the wrong type are now rejected with an error such as `at '/replicas': got string, want null or integer`. Fix the type in your values before upgrading. Common cases:
 
 - A numeric `image.tag` (e.g. `11.2`). Quote it: `tag: "11.2"`.
-- A non-string `serviceMonitor.labels.release` (e.g. `release: 1`). Quote it like any other label value.
-- Non-string label or annotation values in general, which the Kubernetes API rejected anyway.
+- A non-string label or annotation value, including `serviceMonitor.labels.release` (e.g. `release: 1`). Quote it.
+- Quoted numbers or booleans for numeric or boolean settings, e.g. `service.port: "80"`, `autoscaling.maxReplicas: "5"`, `goMemLimit.factor: "0.8"` or `persistence.enabled: "true"`. Remove the quotes (or use `--set` instead of `--set-string`).
+
+Keys that are not declared in `values.yaml` are still accepted.
 
 `extraContainers` now also accepts a list of containers in addition to a string.
 
