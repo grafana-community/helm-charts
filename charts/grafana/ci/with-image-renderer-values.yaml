@@ -7,10 +7,6 @@ imageRenderer:
     RENDERING_MODE: clustered
   podLabels:
     customLableB: Bbbbb
-  readinessProbe:
-    httpGet:
-      path: /healthz
-      port: http
   networkPolicy:
     limitIngress: true
     limitEgress: true
