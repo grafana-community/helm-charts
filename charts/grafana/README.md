@@ -111,6 +111,16 @@ If you need to control the version of bundled plugins, like Elasticsearch, set `
 
 `set -x` is no longer enabled by default when downloading dashboards. Add `x` to `defaultShellOptions` to enable command tracing.
 
+### To 13.8.0
+
+The chart now ships a `values.schema.json`, and Helm validates supplied values against it. Some values that used to render are now rejected because they have the wrong type:
+
+- A numeric `image.tag` (e.g. `11.2`). Quote it: `tag: "11.2"`.
+- A non-string `serviceMonitor.labels.release` (e.g. `release: 1`). Quote it like any other label value.
+- Non-string label or annotation values in general, which the Kubernetes API rejected anyway.
+
+`extraContainers` now also accepts a list of containers in addition to a string.
+
 ## Configuration
 
 Grafana is primarily configured through `grafana.ini`. The `grafana.ini` key in `values.yaml` maps directly to the Grafana configuration file and supports all settings documented in the [official Grafana configuration reference](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/).

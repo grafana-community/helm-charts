@@ -521,7 +521,8 @@ topologySpreadConstraints: []
 extraInitContainers: []
 
 ## Enable an Specify container in extraContainers. This is meant to allow adding an authentication proxy to a grafana pod
-# @schema type:[string, null]
+## Accepts either a list of containers or a string. Both are evaluated as template.
+# @schema type:[string, array, null]
 extraContainers: ""
 # extraContainers: |
 # - name: proxy

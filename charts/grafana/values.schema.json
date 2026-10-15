@@ -176,6 +176,7 @@
         "extraContainers": {
             "type": [
                 "string",
+                "array",
                 "null"
             ]
         },

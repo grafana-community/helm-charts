@@ -154,13 +154,3 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: annotations
-
-  - it: should reject a list for extraContainers
-    template: deployment.yaml
-    set:
-      extraContainers:
-        - name: proxy
-          image: proxy:latest
-    asserts:
-      - failedTemplate:
-          errorPattern: extraContainers

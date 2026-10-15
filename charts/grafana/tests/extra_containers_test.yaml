@@ -1,0 +1,43 @@
+suite: extra containers
+templates:
+  - deployment.yaml
+tests:
+  - it: should not render extra containers for an empty list
+    set:
+      extraContainers: []
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+
+  - it: should render extra containers from a templated string
+    set:
+      extraContainers: |
+        - name: proxy
+          image: proxy:latest
+          args:
+            - --release={{ .Release.Name }}
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1]
+          value:
+            name: proxy
+            image: proxy:latest
+            args:
+              - --release=RELEASE-NAME
+
+  - it: should render extra containers from a templated list
+    set:
+      extraContainers:
+        - name: proxy
+          image: proxy:latest
+          args:
+            - --release={{ .Release.Name }}
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1]
+          value:
+            name: proxy
+            image: proxy:latest
+            args:
+              - --release=RELEASE-NAME

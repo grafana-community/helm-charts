@@ -1553,7 +1553,11 @@ containers:
       {{- toYaml . | nindent 6 }}
     {{- end }}
 {{- with .Values.extraContainers }}
-  {{- tpl . $ | nindent 2 }}
+  {{- if kindIs "string" . }}
+  {{- tpl . $root | nindent 2 }}
+  {{- else }}
+  {{- tpl (toYaml .) $root | nindent 2 }}
+  {{- end }}
 {{- end }}
 {{- with .Values.nodeSelector }}
 nodeSelector:
