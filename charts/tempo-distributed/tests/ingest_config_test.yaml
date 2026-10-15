@@ -463,3 +463,47 @@ tests:
           path: data["tempo.yaml"]
           decodeBase64: true
           pattern: "tls_ca_path: /etc/kafka/tls/ca.crt"
+
+  - it: renders username/password as PLAIN when mechanism is empty
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.username: myuser
+      ingest.kafka.sasl.password: mypassword
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_username: myuser"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_mechanism"
+
+  - it: fails when oauthbearer is configured but mechanism is not OAUTHBEARER
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+      ingest.kafka.sasl.oauthbearer.filePath: /var/run/token.json
+    asserts:
+      - failedTemplate:
+          errorMessage: "ingest.kafka.sasl.oauthbearer is configured, but mechanism is SCRAM-SHA-512; set ingest.kafka.sasl.mechanism=OAUTHBEARER"
+
+  - it: fails when mskIam is configured but mechanism is empty
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mskIam.existingSecret: msk-credentials
+    asserts:
+      - failedTemplate:
+          errorMessage: "ingest.kafka.sasl.mskIam is configured, but mechanism is PLAIN; set ingest.kafka.sasl.mechanism=AWS_MSK_IAM"
+
+  - it: fails when username/password credentials are set for OAUTHBEARER
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: OAUTHBEARER
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+      ingest.kafka.sasl.oauthbearer.filePath: /var/run/token.json
+    asserts:
+      - failedTemplate:
+          errorMessage: "ingest.kafka.sasl.existingSecret/username/password only apply to PLAIN and SCRAM-SHA-*, but mechanism is OAUTHBEARER"

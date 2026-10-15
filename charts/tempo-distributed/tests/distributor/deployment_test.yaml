@@ -866,3 +866,16 @@ tests:
       - notContains:
           path: spec.template.spec.containers[0].args
           content: "-ingest.sasl-msk-iam-secret-key=$(TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY)"
+
+  - it: passes kafka SASL credentials from existingSecret when mechanism is empty
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)"

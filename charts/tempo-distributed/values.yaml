@@ -2286,21 +2286,30 @@ config: |
       auto_create_topic_default_partitions: {{ $.Values.ingest.kafka.auto_create_topic_default_partitions }}
       {{- /*
         SASL authentication. Tempo's Kafka client accepts a fixed set of
-        sasl_mechanism values; anything else fails at startup. When no mechanism
-        is configured we default to PLAIN (which, with no username/password, means
-        SASL is disabled — the historical unauthenticated behaviour). When a
-        mechanism is configured we validate it and render only the options that
-        apply to it.
+        sasl_mechanism values; anything else fails at startup. An empty mechanism
+        means PLAIN, Tempo's default, which with no username/password leaves SASL
+        disabled. sasl_mechanism is only rendered when set explicitly; the options
+        that apply to the effective mechanism are rendered either way.
       */}}
       {{- $sasl := $.Values.ingest.kafka.sasl | default dict }}
-      {{- if $sasl.mechanism }}
-      {{- $mechanism := $sasl.mechanism }}
+      {{- $mechanism := $sasl.mechanism | default "PLAIN" }}
       {{- $allowedMechanisms := list "PLAIN" "SCRAM-SHA-256" "SCRAM-SHA-512" "OAUTHBEARER" "AWS_MSK_IAM" }}
       {{- if not (has $mechanism $allowedMechanisms) }}
         {{- fail (printf "ingest.kafka.sasl.mechanism %q is invalid, must be one of: %s" $mechanism (join ", " $allowedMechanisms)) }}
       {{- end }}
       {{- $oauthbearer := $sasl.oauthbearer | default dict }}
       {{- $mskIam := $sasl.mskIam | default dict }}
+      {{- /* Credentials for a mechanism other than the effective one would be silently ignored. */}}
+      {{- $userPassMechanisms := list "PLAIN" "SCRAM-SHA-256" "SCRAM-SHA-512" }}
+      {{- if and (not (has $mechanism $userPassMechanisms)) (or $sasl.existingSecret $sasl.username $sasl.password) }}
+        {{- fail (printf "ingest.kafka.sasl.existingSecret/username/password only apply to PLAIN and SCRAM-SHA-*, but mechanism is %s" $mechanism) }}
+      {{- end }}
+      {{- if and (ne $mechanism "OAUTHBEARER") (or $oauthbearer.existingSecret $oauthbearer.token $oauthbearer.filePath $oauthbearer.httpSocketPath) }}
+        {{- fail (printf "ingest.kafka.sasl.oauthbearer is configured, but mechanism is %s; set ingest.kafka.sasl.mechanism=OAUTHBEARER" $mechanism) }}
+      {{- end }}
+      {{- if and (ne $mechanism "AWS_MSK_IAM") (or $mskIam.existingSecret $mskIam.accessKey $mskIam.secretKey $mskIam.sessionToken $mskIam.filePath $mskIam.httpSocketPath) }}
+        {{- fail (printf "ingest.kafka.sasl.mskIam is configured, but mechanism is %s; set ingest.kafka.sasl.mechanism=AWS_MSK_IAM" $mechanism) }}
+      {{- end }}
       {{- /*
         Mirror Tempo's startup validation so misconfigurations fail at install
         time instead of crash-looping: SCRAM-SHA-* needs credentials, PLAIN
@@ -2363,7 +2372,9 @@ config: |
       {{- if and $inlinesCredential (not (eq $.Values.configStorageType "Secret")) }}
         {{- fail "ingest.kafka.sasl is configuring credentials directly (not via existingSecret), but configStorageType is not Secret. Either set ingest.kafka.sasl.existingSecret (recommended) or set configStorageType=Secret." }}
       {{- end }}
-      sasl_mechanism: {{ $mechanism }}
+      {{- with $sasl.mechanism }}
+      sasl_mechanism: {{ . }}
+      {{- end }}
       {{- if or (eq $mechanism "PLAIN") (eq $mechanism "SCRAM-SHA-256") (eq $mechanism "SCRAM-SHA-512") }}
       {{- if not $sasl.existingSecret }}
       {{- with $sasl.username }}
@@ -2421,7 +2432,6 @@ config: |
       {{- end }}
       {{- with .httpSocketTimeout }}
       sasl_msk_iam_http_socket_timeout: {{ . }}
-      {{- end }}
       {{- end }}
       {{- end }}
       {{- end }}

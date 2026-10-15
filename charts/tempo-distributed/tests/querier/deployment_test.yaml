@@ -292,3 +292,22 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].args
           content: -config.file=/conf/tempo.yaml
+
+  - it: does not inject kafka SASL credentials into the querier
+    template: querier/deployment-querier.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: username

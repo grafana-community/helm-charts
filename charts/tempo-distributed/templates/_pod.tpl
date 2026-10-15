@@ -43,7 +43,12 @@ Parameters:
 */}}
 {{- $kafkaSasl := $ctx.Values.ingest.kafka.sasl | default dict }}
 {{- $kafkaSaslExtraArgs := list }}
-{{- $kafkaMechanism := $kafkaSasl.mechanism | default "" }}
+{{- /* Tempo validates SASL only in the modules that open a Kafka client. */}}
+{{- $kafkaClientTargets := list "distributor" "block-builder" "live-store" "metrics-generator" }}
+{{- $kafkaMechanism := "" }}
+{{- if has $target $kafkaClientTargets }}
+{{- $kafkaMechanism = $kafkaSasl.mechanism | default "PLAIN" }}
+{{- end }}
 {{- if or (eq $kafkaMechanism "PLAIN") (eq $kafkaMechanism "SCRAM-SHA-256") (eq $kafkaMechanism "SCRAM-SHA-512") }}
 {{- with $kafkaSasl.existingSecret }}
 {{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_USERNAME" "valueFrom" (dict "secretKeyRef" (dict "name" . "key" ($kafkaSasl.usernameKey | default "username")))) }}
