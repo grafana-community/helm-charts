@@ -1,0 +1,34 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: image renderer probes
+templates:
+  - image-renderer-deployment.yaml
+  - configmap.yaml
+set:
+  imageRenderer:
+    enabled: true
+tests:
+  - it: should render the livenessProbe and no readinessProbe by default
+    template: image-renderer-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /healthz
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe
+  - it: should render a readinessProbe when set
+    set:
+      imageRenderer:
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          periodSeconds: 10
+    template: image-renderer-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe
+          value:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10

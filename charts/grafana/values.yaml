@@ -1672,6 +1672,12 @@ imageRenderer:
   priorityClassName: ''
   # Path to the healthcheck endpoint. On Image Renderer v5.0.0 or newer, this is '/healthz'. Older versions use '/'.
   healthcheckPath: '/healthz'
+  # image-renderer container readinessProbe. Disabled by default.
+  # readinessProbe:
+  #   httpGet:
+  #     path: /healthz
+  #     port: http
+  readinessProbe: {}
   service:
     # Enable the image-renderer service
     enabled: true
