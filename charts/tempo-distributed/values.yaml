@@ -2927,6 +2927,10 @@ gateway:
   resources: {}
   # -- Grace period to allow the gateway to shutdown before it is killed
   terminationGracePeriodSeconds: 30
+  # -- Container lifecycle hooks for the gateway
+  lifecycle: {}
+  # -- Strategy of updating the gateway pods
+  strategy: {}
   # -- topologySpread for gateway pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ
   topologySpreadConstraints: |
