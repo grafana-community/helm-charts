@@ -19,6 +19,9 @@ spec:
     - name: http
       port: 3200
       targetPort: http-metrics
+      {{- if .Values.queryFrontend.appProtocol.http }}
+      appProtocol: {{ .Values.queryFrontend.appProtocol.http }}
+      {{- end }}
     - name: grpc
       port: 9095
       protocol: TCP
