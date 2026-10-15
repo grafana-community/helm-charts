@@ -1097,7 +1097,7 @@ lokiCanary:
     # -- Password of the gateway for Basic auth for loki-canary
     password: null
     bearerToken:
-      # -- Use a projected Kubernetes ServiceAccount token for the patched loki-canary image's `-bearer-token-file` option.
+      # -- Use a projected Kubernetes ServiceAccount token with loki-canary's `-bearer-token-file` option instead of Basic Auth. Requires a loki-canary build that supports this option.
       enabled: false
       # -- Requested audience for the projected ServiceAccount token. Rendered with `tpl`; this must match an Envoy JWT audience when audience validation is enabled.
       audience: '{{ include "loki.name" . }}.{{ include "loki.namespace" . }}'

@@ -38,6 +38,7 @@ loki:
     - name: websocket
       password: test-password
     - name: self-monitoring
+      password: test-password
       jwtSubClaim:
         - 'system:serviceaccount:{{ .Release.Namespace }}:loki-canary'
 
@@ -128,13 +129,8 @@ gateway:
     enabled: true
 
 lokiCanary:
-  image:
-    registry: ghcr.io
-    repository: jkroepke/loki-canary
-    tag: jwt
   tenant:
-    bearerToken:
-      enabled: true
+    password: test-password
 
 resultsCache:
   enabled: false

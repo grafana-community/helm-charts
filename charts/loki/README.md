@@ -76,14 +76,10 @@ Changing chart-managed Basic Auth credentials restarts the Envoy gateway through
 
 Tenant entries can additionally set lists of `clientCertificateCN` and `jwtSubClaim` aliases. Client-certificate mapping requires Envoy TLS termination with `gateway.envoyConfig.tls.enabled` and a Secret containing `tls.crt`, `tls.key`, and `ca.crt`. JWT mapping requires `gateway.envoyConfig.jwt.enabled`. Its defaults validate Kubernetes projected ServiceAccount tokens with issuer `https://kubernetes.default.svc.cluster.local` and the Helm-templated audience `{{ include "loki.name" . }}.{{ include "loki.namespace" . }}`, and fetch JWKS from `https://kubernetes.default.svc/openid/v1/jwks`, using the namespace `kube-root-ca.crt` ConfigMap. Envoy fetches and caches the JWKS over HTTP(S), validates the token signature, issuer, expiration, and optional audiences, and only then maps `sub`; JWT verification keys are not mounted from disk.
 
-The patched `ghcr.io/jkroepke/loki-canary:jwt` image can authenticate through this path. Enable its projected token and map the canary ServiceAccount subject to its tenant:
+The chart's loki-canary authenticates with Basic Auth by default. A loki-canary build that supports the `-bearer-token-file` option (see [grafana/loki#24533](https://github.com/grafana/loki/pull/24533)) can authenticate through the JWT path instead. Enable its projected token and map the canary ServiceAccount subject to its tenant:
 
 ```yaml
 lokiCanary:
-  image:
-    registry: ghcr.io
-    repository: jkroepke/loki-canary
-    tag: jwt
   tenant:
     bearerToken:
       enabled: true

@@ -6654,7 +6654,7 @@
                                     "type": "string"
                                 },
                                 "enabled": {
-                                    "description": "Use a projected Kubernetes ServiceAccount token for the patched loki-canary image's `-bearer-token-file` option.",
+                                    "description": "Use a projected Kubernetes ServiceAccount token with loki-canary's `-bearer-token-file` option instead of Basic Auth. Requires a loki-canary build that supports this option.",
                                     "type": "boolean"
                                 },
                                 "expirationSeconds": {
