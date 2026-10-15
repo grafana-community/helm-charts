@@ -39,7 +39,7 @@ When changing `values.yaml` in a schema-enabled chart:
 - Add `# @schema` annotations when inferred schema types would be wrong or too loose.
 - Keep `# @schema` comments before helm-docs comments (`# -- ...`) when both are present.
 - Regenerate `values.schema.json` and include it in the change.
-- For Loki, run `make helm-schema HELM_CHART=loki`.
+- Run `make helm-schema HELM_CHART=<chart-name>` (e.g. `loki`, `grafana`).
 - Add or update helm-unittest coverage for rendered behavior controlled by the changed values.
 
 ## pre-commit testing

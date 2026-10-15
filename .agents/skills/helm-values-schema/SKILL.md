@@ -141,19 +141,34 @@ Multiple schema annotations can be separated with semicolons.
 
 ## Commands
 
-For Loki, use the repository target:
+Use the repository target:
 
 ```bash
-make helm-schema HELM_CHART=loki
+make helm-schema HELM_CHART=<chart-name>
 ```
 
-The underlying command currently runs:
+The target only regenerates charts whose `values.yaml` contains `# $schema: ./values.schema.json`. For each such chart it runs:
 
 ```bash
-helm schema --config .github/linters/.schema.yaml -f charts/loki/values.yaml -o charts/loki/values.schema.json
+helm schema --config .github/linters/.schema.yaml -f charts/<chart-name>/values.yaml -o charts/<chart-name>/values.schema.json
 ```
 
-If adding schema generation for another chart, follow the chart's local Makefile or CI pattern instead of inventing a one-off command.
+When enabling the schema for another chart, add the `# $schema: ./values.schema.json` header to `values.yaml` and a `charts/<chart-name>/ci/lint.sh` that runs the target and fails on a diff (see `charts/loki/ci/lint.sh`).
+
+## Known Caveats
+
+Inferred types are often too strict. Each of these needed a follow-up fix in Loki:
+
+- Values whose default is `null` infer `"type": "null"` and reject everything else. Always annotate them, e.g. `type:[string, null]`.
+- Replica counts that may be omitted for HPA/KEDA need `type:[integer, null]`.
+- PodDisruptionBudget `minAvailable`/`maxUnavailable` and rollout `maxSurge`/`maxUnavailable` accept percentages: `type:[string, integer, null]`.
+- Durations and Kubernetes quantities accept strings and numbers: `type:[string, integer]` (or `number` for fractional CPU).
+- Use `integer`, not `number`, for counts and ports.
+- Kubernetes objects with non-empty defaults (probes, security contexts, strategies) and free-form config maps need `skipProperties:true;additionalProperties:true`, otherwise default sub-keys get pinned to their inferred type (e.g. a probe `port: http` rejects `port: 3000`).
+- Label and annotation maps are rendered with `toYaml`, so constrain them with `additionalProperties:{"type":"string"}`. Env maps rendered through `quote` must stay unconstrained.
+- Check the template before choosing a type: values passed through `tpl` must be strings, values passed through `join` accept a string or a list.
+- helm-unittest validates `set` values against the schema, so tests that deliberately pass wrong types must be removed or turned into `failedTemplate` assertions.
+- helm-unittest `set` cannot address top-level keys containing a dot (e.g. `grafana.ini`).
 
 ## Rules
 

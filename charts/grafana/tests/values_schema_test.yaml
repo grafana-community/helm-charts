@@ -1,0 +1,166 @@
+suite: values schema
+templates:
+  - configmap.yaml
+  - deployment.yaml
+  - hpa.yaml
+  - image-renderer-deployment.yaml
+  - poddisruptionbudget.yaml
+  - vpa.yaml
+tests:
+  - it: should accept null replicas
+    template: deployment.yaml
+    set:
+      replicas: null
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: null
+
+  - it: should accept integer HPA utilization targets
+    template: hpa.yaml
+    set:
+      autoscaling:
+        enabled: true
+        targetCPU: 70
+        targetMemory: 80
+    asserts:
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 70
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: memory
+              target:
+                type: Utilization
+                averageUtilization: 80
+
+  - it: should accept percentage PodDisruptionBudget values
+    template: poddisruptionbudget.yaml
+    set:
+      podDisruptionBudget:
+        maxUnavailable: 25%
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 25%
+
+  - it: should accept percentage rolling update values
+    template: deployment.yaml
+    set:
+      deploymentStrategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 25%
+          maxUnavailable: 0
+    asserts:
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 25%
+
+  - it: should accept numeric probe ports
+    template: deployment.yaml
+    set:
+      readinessProbe:
+        httpGet:
+          path: /api/health
+          port: 3000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 3000
+
+  - it: should accept a list of sidecar search namespaces
+    template: deployment.yaml
+    set:
+      sidecar:
+        dashboards:
+          enabled: true
+          searchNamespace:
+            - team-a
+            - team-b
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NAMESPACE
+            value: team-a,team-b
+
+  - it: should accept a single sidecar search namespace
+    template: deployment.yaml
+    set:
+      sidecar:
+        dashboards:
+          enabled: true
+          searchNamespace: ALL
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NAMESPACE
+            value: ALL
+
+  - it: should accept non-string image renderer env values
+    template: image-renderer-deployment.yaml
+    set:
+      imageRenderer:
+        enabled: true
+        env:
+          IGNORE_HTTPS_ERRORS: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: IGNORE_HTTPS_ERRORS
+            value: "true"
+
+  - it: should accept numeric VPA resource bounds
+    template: vpa.yaml
+    capabilities:
+      apiVersions:
+        - autoscaling.k8s.io/v1/VerticalPodAutoscaler
+    set:
+      verticalPodAutoscaler:
+        enabled: true
+        minAllowed:
+          cpu: 0.5
+    asserts:
+      - equal:
+          path: spec.resourcePolicy.containerPolicies[0].minAllowed.cpu
+          value: 0.5
+
+  - it: should reject non-integer replicas
+    template: deployment.yaml
+    set:
+      replicas: two
+    asserts:
+      - failedTemplate:
+          errorPattern: replicas
+
+  - it: should reject non-string annotation values
+    template: deployment.yaml
+    set:
+      service:
+        annotations:
+          example.com/port: 3000
+    asserts:
+      - failedTemplate:
+          errorPattern: annotations
+
+  - it: should reject a list for extraContainers
+    template: deployment.yaml
+    set:
+      extraContainers:
+        - name: proxy
+          image: proxy:latest
+    asserts:
+      - failedTemplate:
+          errorPattern: extraContainers

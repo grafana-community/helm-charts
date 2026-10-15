@@ -115,6 +115,8 @@ If you need to control the version of bundled plugins, like Elasticsearch, set `
 
 Grafana is primarily configured through `grafana.ini`. The `grafana.ini` key in `values.yaml` maps directly to the Grafana configuration file and supports all settings documented in the [official Grafana configuration reference](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/).
 
+The chart ships a `values.schema.json`. Helm validates the supplied values against it on `install`, `upgrade`, `template` and `lint`, and fails early when a known value has the wrong type (for example `replicas: "two"` or a non-string annotation value). Keys that are not declared in `values.yaml` are still accepted.
+
 ### Example ingress with path
 
 With grafana 6.3 and above
