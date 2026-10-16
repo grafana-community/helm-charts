@@ -6,8 +6,11 @@ liveStore:
 
 ingest:
   kafka:
-    address: "kafka.kafka-ci.svc.cluster.local:9092"
+    address: "kafka.kafka-ci.svc.cluster.local:9094"
     auto_create_topic_default_partitions: 1
+    sasl:
+      mechanism: SCRAM-SHA-512
+      existingSecret: tempo-kafka-scram
 
 traces:
   otlp:
