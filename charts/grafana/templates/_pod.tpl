@@ -1640,7 +1640,12 @@ volumes:
       sizeLimit: {{ . }}
       {{- end }}
     {{- else }}
+    {{- with .Values.persistence.emptyDir.sizeLimit }}
+    emptyDir:
+      sizeLimit: {{ . }}
+    {{- else }}
     emptyDir: {}
+    {{- end }}
     {{- end }}
   {{- end }}
   - name: search

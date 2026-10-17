@@ -591,6 +591,14 @@ persistence:
     ##
     # sizeLimit: 300Mi
 
+  ## If persistence and inMemory are both disabled, the storage volume
+  ## is an emptyDir on the node's disk. Set sizeLimit to cap its size.
+  ## The pod is evicted if it uses more than this limit.
+  ##
+  emptyDir:
+    # @schema type:[string, integer]
+    sizeLimit: ""
+
   ## If 'lookupVolumeName' is set to true, Helm will attempt to retrieve
   ## the current value of 'spec.volumeName' and incorporate it into the template.
   lookupVolumeName: true

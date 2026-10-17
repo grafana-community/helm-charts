@@ -1,0 +1,38 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana storage emptyDir sizeLimit
+templates:
+  - deployment.yaml
+
+tests:
+  - it: should render an empty emptyDir by default
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: storage
+            emptyDir: {}
+
+  - it: should set sizeLimit on the storage emptyDir when configured
+    set:
+      persistence.emptyDir.sizeLimit: 1Gi
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: storage
+            emptyDir:
+              sizeLimit: 1Gi
+
+  - it: should keep the inMemory settings when inMemory is enabled
+    set:
+      persistence.inMemory.enabled: true
+      persistence.inMemory.sizeLimit: 300Mi
+      persistence.emptyDir.sizeLimit: 1Gi
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: storage
+            emptyDir:
+              medium: Memory
+              sizeLimit: 300Mi

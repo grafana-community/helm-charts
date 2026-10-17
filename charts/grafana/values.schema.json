@@ -726,6 +726,17 @@
                 "disableWarning": {
                     "type": "boolean"
                 },
+                "emptyDir": {
+                    "type": "object",
+                    "properties": {
+                        "sizeLimit": {
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
+                        }
+                    }
+                },
                 "enabled": {
                     "type": "boolean"
                 },
