@@ -41,6 +41,18 @@ grafana:
     # -- Key within the secret that contains the API key
     key: ""
 
+# -- Caller authentication for the MCP HTTP endpoint (sets `MCP_GRAFANA_SERVER_TOKEN`).
+# Clients must send `Authorization: Bearer <token>`.
+serverAuth:
+  # -- Bearer token (if not using a secret)
+  token: ""
+  # -- Secret containing the bearer token
+  tokenSecret:
+    # -- Name of the secret containing the bearer token
+    name: ""
+    # -- Key within the secret that contains the bearer token
+    key: ""
+
 # -- Enable debug mode
 debug: false
 
