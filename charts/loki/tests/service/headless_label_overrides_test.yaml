@@ -1,0 +1,197 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: headless service annotation overrides
+templates:
+  - monolithic/service.yaml
+  - config.yaml
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: should have completely separate merge paths for primary and headless service labels
+    set:
+      # Primary service merge order `defaults.service.labels`, `$component.serviceLabels` and `$component.service.labels`
+      defaults.service.labels:
+        defaults.service.labels.inherit: "defaults.service"
+        defaults.service.labels.merge/componentServiceLabels: "defaults.service"
+        defaults.service.labels.merge/serviceLabels: "defaults.service"
+      singleBinary.serviceLabels:
+        defaults.service.labels.merge/componentServiceLabels: "singleBinary.serviceLabels"
+        component.serviceLabels.merge: "singleBinary.serviceLabels"
+        component.serviceLabels.inherit: "singleBinary.serviceLabels"
+      singleBinary.service.labels:
+        defaults.service.labels.merge/serviceLabels: "singleBinary.service.labels"
+        component.serviceLabels.merge: "singleBinary.service.labels"
+        service.primary.inherit: "singleBinary.service.labels"
+
+      # Headless service merge order `defaults.service.headlessService.labels`, `$component.service.headlessService.labels`
+      defaults.service.headlessService.labels:
+        defaults.service.headlessService.inherit: "defaults.service.headlessService"
+        defaults.service.headlessService.merge: "defaults.service.headlessService"
+      singleBinary.service.headlessService.labels:
+        defaults.service.headlessService.merge: "component.service.headlessService"
+        service.headlessService.inherit: "component.service.headlessService"
+    asserts:
+      ###################
+      # Primary Service #
+      ###################
+      ###########################
+      # defaults.service.labels #
+      ###########################
+      #asserts[1]
+      - equal:
+          path: metadata.labels["defaults.service.labels.inherit"]
+          value: "defaults.service"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[2]
+      - equal:
+          path: metadata.labels["defaults.service.labels.merge/componentServiceLabels"]
+          value: "singleBinary.serviceLabels"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[3]
+      - equal:
+          path: metadata.labels["defaults.service.labels.merge/serviceLabels"]
+          value: "singleBinary.service.labels"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      ############################
+      # $component.serviceLabels #
+      ############################
+      #asserts[4]
+      - equal:
+          path: metadata.labels["component.serviceLabels.inherit"]
+          value: "singleBinary.serviceLabels"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[5]
+      - equal:
+          path: metadata.labels["component.serviceLabels.merge"]
+          value: "singleBinary.service.labels"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #############################
+      # $component.service.labels #
+      #############################
+      #asserts[6]
+      - equal:
+          path: metadata.labels["service.primary.inherit"]
+          value: "singleBinary.service.labels"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #############################
+      # Ensure no headless labels #
+      #############################
+      #asserts[7]
+      - notExists:
+          path: metadata.labels["defaults.service.headlessService.inherit"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[8]
+      - notExists:
+          path: metadata.labels["defaults.service.headlessService.merge"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[9]
+      - notExists:
+          path: metadata.labels["service.headlessService.inherit"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      ####################
+      # Headless Service #
+      ####################
+      ###########################################
+      # defaults.service.headlessService.labels #
+      ###########################################
+      #asserts[10]
+      - equal:
+          path: metadata.labels["defaults.service.headlessService.inherit"]
+          value: "defaults.service.headlessService"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[11]
+      - equal:
+          path: metadata.labels["defaults.service.headlessService.merge"]
+          value: "component.service.headlessService"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #############################################
+      # $component.service.headlessService.labels #
+      #############################################
+      #asserts[12]
+      - equal:
+          path: metadata.labels["service.headlessService.inherit"]
+          value: "component.service.headlessService"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      ####################################
+      # Ensure no primary service labels #
+      ####################################
+      #asserts[13]
+      - notExists:
+          path: metadata.labels["defaults.service.labels.inherit"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[14]
+      - notExists:
+          path: metadata.labels["defaults.service.labels.merge/componentServiceLabels"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[15]
+      - notExists:
+          path: metadata.labels["defaults.service.labels.merge/serviceLabels"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[16]
+      - notExists:
+          path: metadata.labels["component.serviceLabels.inherit"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[17]
+      - notExists:
+          path: metadata.labels["component.serviceLabels.merge"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[18]
+      - notExists:
+          path: metadata.labels["service.primary.inherit"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"

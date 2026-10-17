@@ -95,6 +95,14 @@ This chart emits `apiVersion: v1` and `kind: PersistentVolumeClaim` on each VCT.
 
 ## Upgrading
 
+### From 18.x to 19.0.0 ([#883](https://github.com/grafana-community/helm-charts/pull/883))
+
+The `.Values.component.service.headlessService` block has been introduced to allow the annotations and labels applied to headless services to be managed separately from the primary service.
+
+**Breaking** The labels and annotations that had previously been inherited by the headless service from `.Values.component.service` are no longer applied to the headless service, and will only apply to the primary service.
+
+If you wish to continue applying the same labels or annotations to both the headless and primary service, these values need to be copied directly into `.Values.component.service.headlessService.annotations` or `.Values.component.service.headlessService.labels` respectively.
+
 ### From 17.x to 18.0.0 ([#193](https://github.com/grafana-community/helm-charts/pull/193))
 
 The `.Values.monitoring` block has been refactored and the root `.Values.clusterLabelOverride` field removed and merged into `.Values.monitoring`. Users should not assume backwards compatibility with any prior monitoring configuration — review this section in full before upgrading.
