@@ -1,0 +1,516 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: headless service annotation overrides
+templates:
+  - monolithic/service.yaml
+  - config.yaml
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: is backwards-compatible with `$component.serviceAnnotations` and applies these annotations to both the loki and headless service
+    set:
+      singleBinary.serviceAnnotations:
+        component.serviceAnnotations.inherit: "true"
+    asserts:
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+
+  - it: is backwards-compatible with `loki.serviceAnnotations` and applies these annotations to both the loki and headless service
+    set:
+      loki.serviceAnnotations:
+        loki.serviceAnnotations.inherit: "true"
+    asserts:
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+
+  - it: is backwards-compatible with `defaults.service.annotations` and applies these annotations to both the loki and headless service
+    set:
+      defaults.service.annotations:
+        defaults.service.annotations.inherit: "true"
+    asserts:
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+
+  - it: is backwards-compatible with `loki.serviceAnnotations`/`$component.serviceAnnotations` and merges these annotations for both the loki and headless service
+    set:
+      loki.serviceAnnotations:
+        loki.serviceAnnotations.inherit: "true"
+        loki.serviceAnnotations.merge: "false"
+      singleBinary.serviceAnnotations:
+        loki.serviceAnnotations.merge: "true"
+        component.serviceAnnotations.inherit: "true"
+    asserts:
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.merge"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.merge"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+
+  - it: is not backwards-compatible with `$component.service.annotations` which applies these annotations to only the primary loki service
+    set:
+      singleBinary.service.annotations:
+        component.service_annotation.inherit: "true"
+    asserts:
+      - equal:
+          path: metadata.annotations["component.service_annotation.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - notExists:
+          path: metadata.annotations["component.service_annotation.inherit"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+
+  - it: should only apply `$component.service.headlessAnnotations` to theprimary service
+    set:
+      singleBinary.service.annotations:
+        service.annotations.inherit: "true"
+        service.annotations.merge: "true"
+    asserts:
+      # Primary
+      - equal:
+          path: metadata.annotations["service.annotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["service.annotations.merge"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      # Headless
+      - notExists:
+          path: metadata.annotations["service.annotations.inherit"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      - notExists:
+          path: metadata.annotations["service.annotations.merge"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+
+  - it: should only apply `$component.service.headlessService.annotations` to the headless service
+    set:
+      singleBinary.service.headlessService.annotations:
+        service.headlessService.io: "true"
+    asserts:
+      - notExists:
+          path: metadata.annotations["service.headlessService.io"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["service.headlessService.io"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+
+  - it: should merge annotations from `$component.serviceAnnotations` with `$component.service.headlessService.annotations` when provided
+    set:
+      singleBinary.serviceAnnotations:
+        component.serviceAnnotations.inherit: "true"
+        component.serviceAnnotations.merge: "true"
+      singleBinary.service.headlessService.annotations:
+        component.serviceAnnotations.merge: "false"
+        service.headlessAnnotation.inherit: "true"
+    asserts:
+      # Primary
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.merge"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      - notExists:
+          path: metadata.annotations["service.headlessAnnotation.inherit"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      # Headless
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.merge"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      - equal:
+          path: metadata.annotations["service.headlessAnnotation.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+
+  # The "kitchen sink"
+  - it: should merge annotations from `loki.serviceAnnotations`, `defaults.service.annotations`, `$component.serviceAnnotations` and merge or replace `$component.service.annotations` with `$component.service.headlessService.annotations` when provided
+    set:
+      loki.serviceAnnotations:
+        loki.serviceAnnotations.merge/defaultServiceAnnotation: "true"
+        loki.serviceAnnotations.merge/componentServiceAnnotations: "true"
+        loki.serviceAnnotations.merge/headlessAnnotations: "true"
+        loki.serviceAnnotations.merge/serviceAnnotation: "true"
+        loki.serviceAnnotations.merge/allLevels: "0"
+        loki.serviceAnnotations.inherit: "true"
+      defaults.service.annotations:
+        loki.serviceAnnotations.merge/defaultServiceAnnotation: "false"
+        loki.serviceAnnotations.merge/allLevels: "1"
+        defaults.service.annotations.inherit: "true"
+        defaults.service.annotations.merge/componentServiceAnnotations: "true"
+        defaults.service.annotations.merge/serviceAnnotations: "true"
+        defaults.service.annotations.merge/headlessAnnotations: "true"
+        defaults.service.annotations.merge/allLevels: "0"
+      singleBinary.serviceAnnotations:
+        loki.serviceAnnotations.merge/componentServiceAnnotations: "false"
+        loki.serviceAnnotations.merge/allLevels: "2"
+        defaults.service.annotations.merge/allLevels: "1"
+        defaults.service.annotations.merge/componentServiceAnnotations: "false"
+        component.serviceAnnotations.merge/serviceAnnotation: "true"
+        component.serviceAnnotations.merge/headlessAnnotation: "true"
+        component.serviceAnnotations.inherit: "true"
+      singleBinary.service.annotations:
+        loki.serviceAnnotations.merge/serviceAnnotation: "false"
+        loki.serviceAnnotations.merge/allLevels: "3"
+        defaults.service.annotations.merge/allLevels: "2"
+        defaults.service.annotations.merge/serviceAnnotations: "false"
+        component.serviceAnnotations.merge/serviceAnnotation: "false"
+        service.primary_annotation.inherit: "true"
+      singleBinary.service.headlessService.annotations:
+        loki.serviceAnnotations.merge/headlessAnnotations: "false"
+        loki.serviceAnnotations.merge/allLevels: "4"
+        defaults.service.annotations.merge/allLevels: "3"
+        defaults.service.annotations.merge/headlessAnnotations: "false"
+        component.serviceAnnotations.merge/headlessAnnotation: "false"
+        service.headless_annotation.inherit: "true"
+    asserts:
+      # Primary
+      #asserts[1]
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[2]
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.merge/componentServiceAnnotations"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[3]
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.merge/serviceAnnotation"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[4]
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.merge/allLevels"]
+          value: "3"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #####################
+      #asserts[5]
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[6]
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.merge/componentServiceAnnotations"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[7]
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.merge/serviceAnnotations"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[8]
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.merge/headlessAnnotations"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[9]
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.merge/allLevels"]
+          value: "2"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[10]
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[11]
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.merge/serviceAnnotation"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[12]
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.merge/headlessAnnotation"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[13]
+      - equal:
+          path: metadata.annotations["service.primary_annotation.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+      #asserts[14]
+      - notExists:
+          path: metadata.annotations["service.headless_annotation.inherit"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki"
+
+      # Headless
+      #asserts[15]
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[16]
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.merge/componentServiceAnnotations"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[17]
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.merge/serviceAnnotation"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[18]
+      - equal:
+          path: metadata.annotations["loki.serviceAnnotations.merge/allLevels"]
+          value: "4"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[19]
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[20]
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.merge/componentServiceAnnotations"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[21]
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.merge/serviceAnnotations"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[22]
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.merge/headlessAnnotations"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[23]
+      - equal:
+          path: metadata.annotations["defaults.service.annotations.merge/allLevels"]
+          value: "3"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[24]
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[25]
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.merge/serviceAnnotation"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[26]
+      - equal:
+          path: metadata.annotations["component.serviceAnnotations.merge/headlessAnnotation"]
+          value: "false"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[27]
+      - equal:
+          path: metadata.annotations["service.headless_annotation.inherit"]
+          value: "true"
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
+      #asserts[28]
+      - notExists:
+          path: metadata.annotations["service.primary_annotation.inherit"]
+        template: monolithic/service.yaml
+        documentSelector:
+          path: metadata.name
+          value: "RELEASE-NAME-loki-headless"
