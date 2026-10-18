@@ -285,7 +285,7 @@ function, so encode the digest with the template arithmetic primitives.
             trusted_ca:
               filename: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.caCertificateFile | quote }}
             match_typed_subject_alt_names:
-              - san_type: DNS
+              - san_type: {{ ternary "IP_ADDRESS" "DNS" (or (regexMatch "^[0-9]+(\\.[0-9]+){3}$" $hostname) (contains ":" $hostname)) }}
                 matcher:
                   exact: {{ $hostname | quote }}
     {{- end }}
