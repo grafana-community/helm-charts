@@ -171,7 +171,7 @@ spec:
               readOnly: true
             {{- end }}
             {{- if and $isEnvoy .Values.gateway.envoyConfig.jwt.enabled }}
-            - name: envoy-kubernetes-ca
+            - name: envoy-kubernetes
               mountPath: /etc/envoy/kubernetes
               readOnly: true
             {{- end }}
@@ -276,12 +276,19 @@ spec:
             secretName: {{ required "gateway.envoyConfig.tls.existingSecret is required when Envoy TLS is enabled" .Values.gateway.envoyConfig.tls.existingSecret }}
         {{- end }}
         {{- if and $isEnvoy .Values.gateway.envoyConfig.jwt.enabled }}
-        - name: envoy-kubernetes-ca
-          configMap:
-            name: kube-root-ca.crt
-            items:
-              - key: ca.crt
-                path: ca.crt
+        - name: envoy-kubernetes
+          projected:
+            sources:
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+              {{- if eq (include "loki.gatewayEnvoyJwksBearerTokenFile" .) (include "loki.gatewayEnvoyJwksProjectedTokenFile" .) }}
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 3600
+              {{- end }}
         {{- end }}
         - name: tmp
           emptyDir: {}

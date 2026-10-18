@@ -294,6 +294,116 @@ function, so encode the digest with the template arithmetic primitives.
     {{- end }}
 {{- end }}
 
+{{/*
+Bearer token file used to authenticate remote JWKS requests. Empty when JWT verification is
+disabled or gateway.envoyConfig.jwt.remoteJwks.bearerTokenFile is unset.
+*/}}
+{{- define "loki.gatewayEnvoyJwksBearerTokenFile" -}}
+{{- if .Values.gateway.envoyConfig.jwt.enabled -}}
+{{- .Values.gateway.envoyConfig.jwt.remoteJwks.bearerTokenFile | default "" -}}
+{{- end -}}
+{{- end }}
+
+{{/* Chart-managed projected ServiceAccount token path for remote JWKS requests. */}}
+{{- define "loki.gatewayEnvoyJwksProjectedTokenFile" -}}
+/etc/envoy/kubernetes/token
+{{- end }}
+
+{{/* ConfigMap key holding the SDS resource that exposes the JWKS bearer token to Envoy. */}}
+{{- define "loki.gatewayEnvoyJwksCredentialSdsFile" -}}
+jwks-credential-sds.yaml
+{{- end }}
+
+{{/*
+Render the loopback listener that injects the bearer token into remote JWKS requests.
+jwt_authn cannot attach credentials itself, so its requests are routed through this listener,
+where the credential injector adds the Authorization header read from the SDS generic secret
+before the request leaves through the jwt_jwks cluster. A loopback TCP listener is used instead
+of an Envoy internal listener because the asynchronous JWKS fetch runs on the main thread, which
+cannot reach internal listeners.
+*/}}
+{{- define "loki.gatewayEnvoyJwksCredentialListener" -}}
+{{- $port := include "loki.gatewayEnvoyJwksCredentialInjectorPort" . -}}
+{{ printf "    - name: jwt_jwks_credential_injector" }}
+      address:
+        socket_address:
+          address: 127.0.0.1
+          port_value: {{ $port }}
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: jwt_jwks_credential_injector
+                codec_type: AUTO
+                route_config:
+                  name: jwt_jwks_credential_injector
+                  virtual_hosts:
+                    - name: jwt_jwks
+                      domains: ["*"]
+                      routes:
+                        - match:
+                            prefix: /
+                          route:
+                            cluster: jwt_jwks
+                            timeout: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.requestTimeout }}
+                http_filters:
+                  - name: envoy.filters.http.credential_injector
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.credential_injector.v3.CredentialInjector
+                      overwrite: true
+                      credential:
+                        name: envoy.http.injected_credentials.generic
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.http.injected_credentials.generic.v3.Generic
+                          header: Authorization
+                          header_value_prefix: "Bearer "
+                          credential:
+                            name: jwt_jwks_bearer_token
+                            sds_config:
+                              resource_api_version: V3
+                              path_config_source:
+                                path: /etc/envoy/{{ include "loki.gatewayEnvoyJwksCredentialSdsFile" . }}
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+{{- end }}
+
+{{/* Loopback port of the credential-injecting listener; must not clash with the other listeners. */}}
+{{- define "loki.gatewayEnvoyJwksCredentialInjectorPort" -}}
+{{- $port := int .Values.gateway.envoyConfig.jwt.remoteJwks.credentialInjectorPort -}}
+{{- if has $port (list (int .Values.gateway.containerPort) (int .Values.gateway.envoyConfig.adminPort)) -}}
+  {{- fail "gateway.envoyConfig.jwt.remoteJwks.credentialInjectorPort must differ from gateway.containerPort and gateway.envoyConfig.adminPort" -}}
+{{- end -}}
+{{- $port -}}
+{{- end }}
+
+{{/* Render the cluster that jwt_authn uses to reach the credential-injecting loopback listener. */}}
+{{- define "loki.gatewayEnvoyJwksCredentialCluster" -}}
+{{ printf "  - name: jwt_jwks_credential_injector" }}
+    type: STATIC
+    connect_timeout: {{ .Values.gateway.envoyConfig.connectTimeout }}
+    load_assignment:
+      cluster_name: jwt_jwks_credential_injector
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 127.0.0.1
+                    port_value: {{ include "loki.gatewayEnvoyJwksCredentialInjectorPort" . }}
+{{- end }}
+
+{{/* SDS resource file that exposes the JWKS bearer token file as a generic secret. */}}
+{{- define "loki.gatewayEnvoyJwksCredentialSds" -}}
+resources:
+  - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
+    name: jwt_jwks_bearer_token
+    generic_secret:
+      secret:
+        filename: {{ include "loki.gatewayEnvoyJwksBearerTokenFile" . | quote }}
+{{- end }}
+
 {{/* Generated Envoy configuration used by the opt-in gateway implementation. */}}
 {{- define "loki.envoyFile" -}}
 {{- $hasClientCertificateTenant := false -}}
@@ -320,6 +430,7 @@ function, so encode the digest with the template arithmetic primitives.
   {{- $_ := required "gateway.envoyConfig.jwt.remoteJwks.uri is required when Envoy JWT verification is enabled" .Values.gateway.envoyConfig.jwt.remoteJwks.uri -}}
 {{- end -}}
 {{- $authActive := or .Values.gateway.basicAuth.enabled (or $hasClientCertificateTenant $hasJWTTenant) -}}
+{{- $jwksBearerTokenFile := include "loki.gatewayEnvoyJwksBearerTokenFile" . -}}
 {{- $distributorUrl := include "loki.gatewayBackendUrl" (dict "ctx" . "target" "distributor") -}}
 {{- $ingesterUrl := include "loki.gatewayBackendUrl" (dict "ctx" . "target" "ingester") -}}
 {{- $rulerUrl := include "loki.gatewayBackendUrl" (dict "ctx" . "target" "ruler") -}}
@@ -328,6 +439,12 @@ function, so encode the digest with the template arithmetic primitives.
 {{- $querySchedulerUrl := include "loki.gatewayBackendUrl" (dict "ctx" . "target" "query-scheduler") -}}
 {{- $queryFrontendUrl := include "loki.gatewayBackendUrl" (dict "ctx" . "target" "query-frontend") -}}
 {{- $querierUrl := include "loki.gatewayBackendUrl" (dict "ctx" . "target" "querier") -}}
+{{- if $jwksBearerTokenFile }}
+# SDS requires a node identity even when the secret is read from a local file.
+node:
+  id: {{ include "loki.gatewayFullname" . }}
+  cluster: {{ include "loki.gatewayFullname" . }}
+{{- end }}
 overload_manager:
   resource_monitors:
     - name: envoy.resource_monitors.global_downstream_max_connections
@@ -539,7 +656,7 @@ static_resources:
                           remote_jwks:
                             http_uri:
                               uri: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.uri | quote }}
-                              cluster: jwt_jwks
+                              cluster: {{ ternary "jwt_jwks_credential_injector" "jwt_jwks" (ne $jwksBearerTokenFile "") }}
                               timeout: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.requestTimeout }}
                             cache_duration: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.cacheDuration }}
                             {{- if .Values.gateway.envoyConfig.jwt.remoteJwks.asyncFetch }}
@@ -658,6 +775,9 @@ static_resources:
               disable_stateless_session_resumption: true
               disable_stateful_session_resumption: true
           {{- end }}
+    {{- if $jwksBearerTokenFile }}
+{{ include "loki.gatewayEnvoyJwksCredentialListener" . }}
+    {{- end }}
   clusters:
 {{ include "loki.gatewayEnvoyCluster" (dict "ctx" . "name" "distributor" "url" $distributorUrl "websocket" false) }}
 {{ include "loki.gatewayEnvoyCluster" (dict "ctx" . "name" "ingester" "url" $ingesterUrl "websocket" false) }}
@@ -670,6 +790,9 @@ static_resources:
 {{ include "loki.gatewayEnvoyCluster" (dict "ctx" . "name" "querier" "url" $querierUrl "websocket" false) }}
   {{- if .Values.gateway.envoyConfig.jwt.enabled }}
 {{ include "loki.gatewayEnvoyJwksCluster" . }}
+  {{- end }}
+  {{- if $jwksBearerTokenFile }}
+{{ include "loki.gatewayEnvoyJwksCredentialCluster" . }}
   {{- end }}
 admin:
   address:

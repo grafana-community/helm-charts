@@ -10,8 +10,13 @@ data:
   {{- if eq .Values.gateway.type "envoy" }}
   envoy.yaml: |
     {{- tpl .Values.gateway.envoyConfig.file . | nindent 4 }}
+  {{- $jwksSdsFile := include "loki.gatewayEnvoyJwksCredentialSdsFile" . }}
+  {{- if include "loki.gatewayEnvoyJwksBearerTokenFile" . }}
+  {{ $jwksSdsFile | quote }}: |
+    {{- include "loki.gatewayEnvoyJwksCredentialSds" . | nindent 4 }}
+  {{- end }}
   {{- range $name := keys .Values.gateway.configs | sortAlpha }}
-    {{- if eq $name "envoy.yaml" }}
+    {{- if has $name (list "envoy.yaml" $jwksSdsFile) }}
       {{- fail (printf "gateway.configs contains reserved Envoy file name %q" $name) }}
     {{- end }}
     {{- if not (regexMatch "^[A-Za-z0-9._-]+$" $name) }}

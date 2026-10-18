@@ -833,12 +833,123 @@ tests:
       - contains:
           path: spec.template.spec.volumes
           content:
-            name: envoy-kubernetes-ca
-            configMap:
-              name: kube-root-ca.crt
-              items:
-                - key: ca.crt
-                  path: ca.crt
+            name: envoy-kubernetes
+            projected:
+              sources:
+                - configMap:
+                    name: kube-root-ca.crt
+                    items:
+                      - key: ca.crt
+                        path: ca.crt
+                - serviceAccountToken:
+                    path: token
+                    expirationSeconds: 3600
+        template: gateway/deployment.yaml
+
+  - it: authenticates remote JWKS requests with the gateway ServiceAccount token by default
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: '(?m)^node:\n  id: RELEASE-NAME-loki-gateway\n  cluster: RELEASE-NAME-loki-gateway$'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'remote_jwks:[\s\S]*uri: "https://kubernetes.default.svc/openid/v1/jwks"[\s\S]*cluster: jwt_jwks_credential_injector'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: '- name: jwt_jwks_credential_injector\n      address:\n        socket_address:\n          address: 127.0.0.1\n          port_value: 9902[\s\S]*cluster: jwt_jwks[\s\S]*envoy.filters.http.credential_injector[\s\S]*overwrite: true[\s\S]*envoy.http.injected_credentials.generic[\s\S]*header: Authorization\n[\s\S]*header_value_prefix: "Bearer "[\s\S]*name: jwt_jwks_bearer_token[\s\S]*path: /etc/envoy/jwks-credential-sds.yaml'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: '- name: jwt_jwks_credential_injector\n    type: STATIC[\s\S]*address: 127.0.0.1\n                    port_value: 9902'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'internal_listener|envoy_internal_address'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["jwks-credential-sds.yaml"]
+          pattern: 'name: jwt_jwks_bearer_token\n    generic_secret:\n      secret:\n        filename: "/etc/envoy/kubernetes/token"'
+        template: gateway/configmap.yaml
+      - hasDocuments:
+          count: 0
+        template: gateway/kubernetes-jwks-rbac.yaml
+
+  - it: fetches the remote JWKS anonymously when no bearer token file is set
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.remoteJwks.bearerTokenFile: null
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'remote_jwks:[\s\S]*uri: "https://kubernetes.default.svc/openid/v1/jwks"[\s\S]*cluster: jwt_jwks\n'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'jwt_jwks_credential_injector|credential_injector|jwt_jwks_bearer_token|^node:'
+        template: gateway/configmap.yaml
+      - isNull:
+          path: data["jwks-credential-sds.yaml"]
+        template: gateway/configmap.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: envoy-kubernetes
+            projected:
+              sources:
+                - configMap:
+                    name: kube-root-ca.crt
+                    items:
+                      - key: ca.crt
+                        path: ca.crt
+        template: gateway/deployment.yaml
+
+  - it: uses a custom bearer token file for remote JWKS requests without projecting a token
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.remoteJwks.bearerTokenFile: /var/run/secrets/tokens/jwks
+      gateway.envoyConfig.jwt.remoteJwks.credentialInjectorPort: 15000
+    asserts:
+      - matchRegex:
+          path: data["jwks-credential-sds.yaml"]
+          pattern: 'filename: "/var/run/secrets/tokens/jwks"'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'address: 127.0.0.1\n          port_value: 15000'
+        template: gateway/configmap.yaml
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'port_value: 9902'
+        template: gateway/configmap.yaml
+      - notContains:
+          path: spec.template.spec.volumes[?(@.name == "envoy-kubernetes")].projected.sources
+          content:
+            serviceAccountToken:
+              path: token
+              expirationSeconds: 3600
+        template: gateway/deployment.yaml
+
+  - it: rejects a credential injector port that clashes with the gateway listener
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.remoteJwks.credentialInjectorPort: 8080
+    asserts:
+      - failedTemplate:
+          errorMessage: gateway.envoyConfig.jwt.remoteJwks.credentialInjectorPort must differ from gateway.containerPort and gateway.envoyConfig.adminPort
+        template: gateway/deployment.yaml
+
+  - it: rejects the reserved JWKS credential config name
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.configs:
+        jwks-credential-sds.yaml: custom
+    asserts:
+      - failedTemplate:
+          errorMessage: 'gateway.configs contains reserved Envoy file name "jwks-credential-sds.yaml"'
         template: gateway/deployment.yaml
 
   - it: ignores client-supplied Basic Auth identity when only JWT tenancy is enabled
@@ -879,7 +990,7 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
-            name: envoy-kubernetes-ca
+            name: envoy-kubernetes
             mountPath: /etc/envoy/kubernetes
             readOnly: true
         template: gateway/deployment.yaml

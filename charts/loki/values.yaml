@@ -1722,11 +1722,16 @@ gateway:
         - '{{ include "loki.name" . }}.{{ include "loki.namespace" . }}'
       kubernetesServiceAccount:
         discoveryRBAC:
-          # -- Create a ClusterRoleBinding that grants `system:unauthenticated` the built-in `system:service-account-issuer-discovery` ClusterRole, so Envoy can fetch the Kubernetes JWKS without credentials (Envoy remote JWKS requests cannot attach a ServiceAccount token). This is a cluster-wide grant and only works when the API server accepts anonymous requests (`--anonymous-auth=true` without `anonymous.conditions` restricting it to health endpoints). Leave disabled when the cluster already exposes the public discovery endpoints, when using an external JWKS endpoint, or with `rbac.namespaced: true`.
+          # -- Create a ClusterRoleBinding that grants `system:unauthenticated` the built-in `system:service-account-issuer-discovery` ClusterRole, so Envoy can fetch the Kubernetes JWKS anonymously. Only needed when `remoteJwks.bearerTokenFile` is unset, because the gateway ServiceAccount already holds that ClusterRole through `system:serviceaccounts`. This is a cluster-wide grant and only works when the API server accepts anonymous requests (`--anonymous-auth=true` without `anonymous.conditions` restricting it to health endpoints). Leave disabled when the cluster already exposes the public discovery endpoints, when using an external JWKS endpoint, or with `rbac.namespaced: true`.
           enabled: false
       remoteJwks:
         # -- HTTPS or HTTP URI used by Envoy to fetch the JWKS. The default is the Kubernetes ServiceAccount JWKS endpoint.
         uri: https://kubernetes.default.svc/openid/v1/jwks
+        # @schema type:[string, null]
+        # -- File whose contents Envoy sends as `Authorization: Bearer` when fetching the JWKS, through a loopback credential-injector listener. The default path is a projected token of the gateway ServiceAccount that the chart mounts and Envoy reloads on rotation; the Kubernetes API accepts it for the JWKS endpoint without extra RBAC. Point this at another mounted file for a different credential, or set it to `null` to fetch the JWKS anonymously.
+        bearerTokenFile: /etc/envoy/kubernetes/token
+        # -- Loopback port of the Envoy listener that adds the bearer token to JWKS requests. Only bound on 127.0.0.1 inside the gateway pod. Used when `bearerTokenFile` is set.
+        credentialInjectorPort: 9902
         # -- Timeout for each remote JWKS request.
         requestTimeout: 5s
         # -- How long Envoy caches the fetched JWKS.
