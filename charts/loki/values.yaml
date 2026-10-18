@@ -1561,7 +1561,7 @@ gateway:
           {{- if not $passwordHash }}
             {{- $passwordHash = include "loki.gatewayEnvoySHA1" (required "'gateway.basicAuth.password' or 'gateway.basicAuth.passwordHash' is required for the Envoy gateway" .Values.gateway.basicAuth.password) }}
           {{- end }}
-          {{- if not (hasPrefix "{SHA}" $passwordHash) }}
+          {{- if not (regexMatch "^\\{SHA\\}[A-Za-z0-9+/]{27}=$" $passwordHash) }}
             {{- fail "gateway.basicAuth.passwordHash must use the {SHA} format for the Envoy gateway" }}
           {{- end }}
           {{- printf "%s:%s\n" $username $passwordHash }}
