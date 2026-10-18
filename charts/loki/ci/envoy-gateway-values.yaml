@@ -122,6 +122,9 @@ gateway:
   envoyConfig:
     jwt:
       enabled: true
+      kubernetesServiceAccount:
+        discoveryRBAC:
+          enabled: true
   configs:
     ci.yaml: |
       release: {{ .Release.Name }}

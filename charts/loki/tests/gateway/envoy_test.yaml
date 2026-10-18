@@ -168,11 +168,11 @@ tests:
         template: gateway/configmap.yaml
       - matchRegex:
           path: data["envoy.yaml"]
-          pattern: 'prefix: /ui/[\s\S]*cluster: querier'
+          pattern: '(?m)^\s*prefix: /ui$[\s\S]*cluster: querier'
         template: gateway/configmap.yaml
       - notMatchRegex:
           path: data["envoy.yaml"]
-          pattern: '(?m)^\s*prefix: /ui$'
+          pattern: 'prefix: /ui/'
         template: gateway/configmap.yaml
       - matchRegex:
           path: data["envoy.yaml"]
@@ -397,6 +397,15 @@ tests:
           path: data["envoy.yaml"]
           pattern: 'ACCEPT_UNTRUSTED'
         template: gateway/configmap.yaml
+
+  - it: rejects custom upstream URLs that carry a path
+    set:
+      deploymentMode: SimpleScalable
+      gateway.nginxConfig.customReadUrl: https://proxy.example/loki
+    asserts:
+      - failedTemplate:
+          errorMessage: 'Envoy gateway upstream URL "https://proxy.example/loki" must not contain a path'
+        template: gateway/deployment.yaml
 
   - it: verifies HTTPS Loki upstreams against a custom CA and service hostname
     set:
@@ -853,6 +862,7 @@ tests:
   - it: defaults JWT verification to Kubernetes ServiceAccount tokens
     set:
       gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: true
       loki.tenants:
         - name: self-monitoring
           jwtSubClaim:
@@ -896,10 +906,9 @@ tests:
           pattern: 'audiences:[\s\S]*- ''RELEASE-NAME.NAMESPACE''[\s\S]*from_headers:'
         template: gateway/configmap.yaml
 
-  - it: can leave Kubernetes issuer discovery RBAC to existing cluster policy
+  - it: leaves Kubernetes issuer discovery RBAC to existing cluster policy by default
     set:
       gateway.envoyConfig.jwt.enabled: true
-      gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: false
     asserts:
       - hasDocuments:
           count: 0
@@ -909,6 +918,7 @@ tests:
     set:
       rbac.namespaced: true
       gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: true
     asserts:
       - failedTemplate:
           errorMessage: gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled must be false when rbac.namespaced is true; use an existing issuer-discovery binding or an external JWKS endpoint
@@ -918,7 +928,6 @@ tests:
     set:
       rbac.namespaced: true
       gateway.envoyConfig.jwt.enabled: true
-      gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: false
     asserts:
       - hasDocuments:
           count: 0
@@ -1003,11 +1012,11 @@ tests:
         template: gateway/configmap.yaml
       - matchRegex:
           path: data["nginx.conf"]
-          pattern: 'location \^~ /ui/ \{'
+          pattern: 'location \^~ /ui \{'
         template: gateway/configmap.yaml
       - notMatchRegex:
           path: data["nginx.conf"]
-          pattern: 'location \^~ /ui \{'
+          pattern: 'location \^~ /ui/ \{'
         template: gateway/configmap.yaml
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.httpGet.path

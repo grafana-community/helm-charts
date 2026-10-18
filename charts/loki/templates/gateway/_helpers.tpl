@@ -179,6 +179,9 @@ function, so encode the digest with the template arithmetic primitives.
 {{- $ctx := .ctx -}}
 {{- $name := .name -}}
 {{- $parsedUrl := urlParse .url -}}
+{{- if not (has (get $parsedUrl "path") (list "" "/")) -}}
+  {{- fail (printf "Envoy gateway upstream URL %q must not contain a path" .url) -}}
+{{- end -}}
 {{- $scheme := get $parsedUrl "scheme" -}}
 {{- $authority := get $parsedUrl "host" -}}
 {{- $hostname := get $parsedUrl "hostname" -}}
@@ -433,7 +436,7 @@ static_resources:
                               disabled: true
                         {{- if .Values.loki.ui.gateway.enabled }}
                         - match:
-                            prefix: /ui/
+                            prefix: /ui
                           route:
                             cluster: querier
                             timeout: {{ .Values.gateway.envoyConfig.requestTimeout }}

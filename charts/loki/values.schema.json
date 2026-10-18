@@ -3890,7 +3890,7 @@
                                             "type": "object",
                                             "properties": {
                                                 "enabled": {
-                                                    "description": "Permit unauthenticated reads of Kubernetes' public ServiceAccount issuer-discovery endpoints. This is required because Envoy remote JWKS requests cannot attach a ServiceAccount token. Set to false with rbac.namespaced: true and use an externally accessible JWKS endpoint or an existing equivalent ClusterRoleBinding.",
+                                                    "description": "Create a ClusterRoleBinding that grants `system:unauthenticated` the built-in `system:service-account-issuer-discovery` ClusterRole, so Envoy can fetch the Kubernetes JWKS without credentials (Envoy remote JWKS requests cannot attach a ServiceAccount token). This is a cluster-wide grant and only works when the API server accepts anonymous requests (`--anonymous-auth=true` without `anonymous.conditions` restricting it to health endpoints). Leave disabled when the cluster already exposes the public discovery endpoints, when using an external JWKS endpoint, or with `rbac.namespaced: true`.",
                                                     "type": "boolean"
                                                 }
                                             }
@@ -4269,21 +4269,21 @@
                             "type": "string"
                         },
                         "customBackendUrl": {
-                            "description": "Override Backend URL. Also used by the generated Envoy configuration.",
+                            "description": "Override Backend URL. Also used by the generated Envoy configuration, which accepts scheme, host and port only (no path).",
                             "type": [
                                 "string",
                                 "null"
                             ]
                         },
                         "customReadUrl": {
-                            "description": "Override Read URL. Also used by the generated Envoy configuration.",
+                            "description": "Override Read URL. Also used by the generated Envoy configuration, which accepts scheme, host and port only (no path).",
                             "type": [
                                 "string",
                                 "null"
                             ]
                         },
                         "customWriteUrl": {
-                            "description": "Override Write URL. Also used by the generated Envoy configuration.",
+                            "description": "Override Write URL. Also used by the generated Envoy configuration, which accepts scheme, host and port only (no path).",
                             "type": [
                                 "string",
                                 "null"
