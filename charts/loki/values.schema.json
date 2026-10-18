@@ -3905,7 +3905,7 @@
                                             "type": "boolean"
                                         },
                                         "bearerTokenFile": {
-                                            "description": "File whose contents Envoy sends as `Authorization: Bearer` when fetching the JWKS, through a loopback credential-injector listener. The default path is a projected token of the gateway ServiceAccount that the chart mounts and Envoy reloads on rotation; the Kubernetes API accepts it for the JWKS endpoint without extra RBAC. Point this at another mounted file for a different credential, or set it to `null` to fetch the JWKS anonymously.",
+                                            "description": "File whose contents Envoy sends as `Authorization: Bearer` when fetching the JWKS, through a loopback credential-injector listener. The default is the gateway ServiceAccount token; the Envoy gateway mounts it regardless of `gateway.automountServiceAccountToken` while this default is in use, Envoy reloads it on rotation, and the Kubernetes API accepts it for the JWKS endpoint without extra RBAC. Point this at another mounted file for a different credential, or set it to `null` to fetch the JWKS anonymously.",
                                             "type": [
                                                 "string",
                                                 "null"

@@ -833,23 +833,22 @@ tests:
       - contains:
           path: spec.template.spec.volumes
           content:
-            name: envoy-kubernetes
-            projected:
-              sources:
-                - configMap:
-                    name: kube-root-ca.crt
-                    items:
-                      - key: ca.crt
-                        path: ca.crt
-                - serviceAccountToken:
-                    path: token
-                    expirationSeconds: 3600
+            name: envoy-kubernetes-ca
+            configMap:
+              name: kube-root-ca.crt
+              items:
+                - key: ca.crt
+                  path: ca.crt
         template: gateway/deployment.yaml
 
   - it: authenticates remote JWKS requests with the gateway ServiceAccount token by default
     set:
       gateway.envoyConfig.jwt.enabled: true
     asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: true
+        template: gateway/deployment.yaml
       - matchRegex:
           path: data["envoy.yaml"]
           pattern: '(?m)^node:\n  id: RELEASE-NAME-loki-gateway\n  cluster: RELEASE-NAME-loki-gateway$'
@@ -872,7 +871,7 @@ tests:
         template: gateway/configmap.yaml
       - matchRegex:
           path: data["jwks-credential-sds.yaml"]
-          pattern: 'name: jwt_jwks_bearer_token\n    generic_secret:\n      secret:\n        filename: "/etc/envoy/kubernetes/token"'
+          pattern: 'name: jwt_jwks_bearer_token\n    generic_secret:\n      secret:\n        filename: "/var/run/secrets/kubernetes.io/serviceaccount/token"'
         template: gateway/configmap.yaml
       - hasDocuments:
           count: 0
@@ -894,20 +893,12 @@ tests:
       - isNull:
           path: data["jwks-credential-sds.yaml"]
         template: gateway/configmap.yaml
-      - contains:
-          path: spec.template.spec.volumes
-          content:
-            name: envoy-kubernetes
-            projected:
-              sources:
-                - configMap:
-                    name: kube-root-ca.crt
-                    items:
-                      - key: ca.crt
-                        path: ca.crt
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
         template: gateway/deployment.yaml
 
-  - it: uses a custom bearer token file for remote JWKS requests without projecting a token
+  - it: uses a custom bearer token file for remote JWKS requests without mounting the ServiceAccount token
     set:
       gateway.envoyConfig.jwt.enabled: true
       gateway.envoyConfig.jwt.remoteJwks.bearerTokenFile: /var/run/secrets/tokens/jwks
@@ -925,12 +916,9 @@ tests:
           path: data["envoy.yaml"]
           pattern: 'port_value: 9902'
         template: gateway/configmap.yaml
-      - notContains:
-          path: spec.template.spec.volumes[?(@.name == "envoy-kubernetes")].projected.sources
-          content:
-            serviceAccountToken:
-              path: token
-              expirationSeconds: 3600
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
         template: gateway/deployment.yaml
 
   - it: rejects a credential injector port that clashes with the gateway listener
@@ -990,7 +978,7 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
-            name: envoy-kubernetes
+            name: envoy-kubernetes-ca
             mountPath: /etc/envoy/kubernetes
             readOnly: true
         template: gateway/deployment.yaml
