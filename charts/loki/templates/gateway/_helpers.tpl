@@ -525,7 +525,7 @@ static_resources:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
                       providers:
                         loki:
-                          issuer: {{ .Values.gateway.envoyConfig.jwt.issuer | quote }}
+                          issuer: {{ tpl .Values.gateway.envoyConfig.jwt.issuer $ | quote }}
                           {{- with .Values.gateway.envoyConfig.jwt.audiences }}
                           audiences:
                             {{- tpl (toYaml .) $ | nindent 28 }}
