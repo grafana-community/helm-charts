@@ -1715,7 +1715,7 @@ gateway:
       # -- Verify bearer JWTs with a remote JWKS before mapping `jwtSubClaim` values to Loki tenants. Defaults target the Kubernetes ServiceAccount issuer.
       enabled: false
       # -- Expected JWT issuer (`iss`).
-      issuer: https://kubernetes.default.svc.cluster.local
+      issuer: 'https://kubernetes.default.svc.{{ .Values.global.clusterDomain }}'
       # @schema item:string
       # -- Allowed JWT audiences (`aud`). Each value is rendered with `tpl`; the default matches the loki-canary projected ServiceAccount token. Leave empty to skip audience validation.
       audiences:
