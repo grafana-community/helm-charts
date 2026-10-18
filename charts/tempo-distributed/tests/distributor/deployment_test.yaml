@@ -584,3 +584,298 @@ tests:
     asserts:
       - notExists:
           path: spec.template.spec.containers[0].startupProbe
+
+  - it: passes kafka SASL username/password from existingSecret as CLI args when mechanism is PLAIN
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: PLAIN
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: username
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: password
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)"
+
+  - it: passes kafka SASL username/password from existingSecret as CLI args when mechanism is SCRAM-SHA-256
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-256
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: username
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: password
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)"
+
+  - it: passes kafka SASL username/password from existingSecret as CLI args when mechanism is SCRAM-SHA-512
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: username
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: password
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)"
+
+  - it: honors custom usernameKey/passwordKey with existingSecret
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+      ingest.kafka.sasl.usernameKey: kafka-user
+      ingest.kafka.sasl.passwordKey: kafka-pass
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: kafka-user
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: kafka-pass
+
+  - it: passes kafka SASL oauthbearer token from existingSecret as CLI arg
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: OAUTHBEARER
+      ingest.kafka.sasl.oauthbearer.existingSecret: kafka-oauth-token
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_OAUTHBEARER_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: kafka-oauth-token
+                key: token
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-oauthbearer-token=$(TEMPO_KAFKA_SASL_OAUTHBEARER_TOKEN)"
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+
+  - it: does not inject kafka SASL env vars or args when credentials are set inline
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.username: myuser
+      ingest.kafka.sasl.password: mypassword
+      configStorageType: Secret
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_USERNAME
+          any: true
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)"
+
+  - it: does not add kafka SASL CLI args for OAUTHBEARER without existingSecret
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: OAUTHBEARER
+      ingest.kafka.sasl.oauthbearer.filePath: /etc/kafka/oauth/token.json
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-oauthbearer-token=$(TEMPO_KAFKA_SASL_OAUTHBEARER_TOKEN)"
+
+  - it: keeps user extraArgs alongside kafka SASL CLI args
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: PLAIN
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+      distributor.extraArgs:
+        - -log.level=debug
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-log.level=debug"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+
+  - it: passes kafka SASL msk_iam keys from existingSecret as CLI args
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: AWS_MSK_IAM
+      ingest.kafka.sasl.mskIam.existingSecret: kafka-msk-credentials
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: kafka-msk-credentials
+                key: access-key
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: kafka-msk-credentials
+                key: secret-key
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-msk-iam-access-key=$(TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY)"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-msk-iam-secret-key=$(TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY)"
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-msk-iam-session-token=$(TEMPO_KAFKA_SASL_MSK_IAM_SESSION_TOKEN)"
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_MSK_IAM_SESSION_TOKEN
+          any: true
+
+  - it: passes kafka SASL msk_iam session token as CLI arg only when sessionTokenKey is set
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: AWS_MSK_IAM
+      ingest.kafka.sasl.mskIam.existingSecret: kafka-msk-credentials
+      ingest.kafka.sasl.mskIam.accessKeyKey: aws-access
+      ingest.kafka.sasl.mskIam.secretKeyKey: aws-secret
+      ingest.kafka.sasl.mskIam.sessionTokenKey: session-token
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: kafka-msk-credentials
+                key: aws-access
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: kafka-msk-credentials
+                key: aws-secret
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_MSK_IAM_SESSION_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: kafka-msk-credentials
+                key: session-token
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-msk-iam-access-key=$(TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY)"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-msk-iam-secret-key=$(TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY)"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-msk-iam-session-token=$(TEMPO_KAFKA_SASL_MSK_IAM_SESSION_TOKEN)"
+
+  - it: does not add kafka SASL msk_iam CLI args when using filePath
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: AWS_MSK_IAM
+      ingest.kafka.sasl.mskIam.filePath: /etc/kafka/aws/credentials.json
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-msk-iam-access-key=$(TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY)"
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-msk-iam-secret-key=$(TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY)"
+
+  - it: passes kafka SASL credentials from existingSecret when mechanism is empty
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)"

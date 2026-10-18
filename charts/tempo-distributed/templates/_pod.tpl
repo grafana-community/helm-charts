@@ -34,6 +34,45 @@ Parameters:
 {{- $dataVolumeName := .dataVolumeName | default "" }}
 {{- $dataEmptyDir := .dataEmptyDir | default (dict) }}
 {{- $customPorts := .ports | default list }}
+{{- $componentExtraEnv := concat $ctx.Values.global.extraEnv ($ctx.Values.defaults.extraEnv | default list) $component.extraEnv }}
+{{- /*
+  Kafka SASL credentials sourced from an existingSecret are injected as env
+  vars via secretKeyRef and passed to tempo as CLI flags using Kubernetes
+  $(VAR) substitution in args, so no credential is rendered into tempo.yaml.
+  See the ingest.kafka.sasl block in values.yaml (.Values.config).
+*/}}
+{{- $kafkaSasl := $ctx.Values.ingest.kafka.sasl | default dict }}
+{{- $kafkaSaslExtraArgs := list }}
+{{- /* Tempo validates SASL only in the modules that open a Kafka client. */}}
+{{- $kafkaClientTargets := list "distributor" "block-builder" "live-store" "metrics-generator" }}
+{{- $kafkaMechanism := "" }}
+{{- if has $target $kafkaClientTargets }}
+{{- $kafkaMechanism = $kafkaSasl.mechanism | default "PLAIN" }}
+{{- end }}
+{{- if or (eq $kafkaMechanism "PLAIN") (eq $kafkaMechanism "SCRAM-SHA-256") (eq $kafkaMechanism "SCRAM-SHA-512") }}
+{{- with $kafkaSasl.existingSecret }}
+{{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_USERNAME" "valueFrom" (dict "secretKeyRef" (dict "name" . "key" ($kafkaSasl.usernameKey | default "username")))) }}
+{{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_PASSWORD" "valueFrom" (dict "secretKeyRef" (dict "name" . "key" ($kafkaSasl.passwordKey | default "password")))) }}
+{{- $kafkaSaslExtraArgs = concat $kafkaSaslExtraArgs (list "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)" "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)") }}
+{{- end }}
+{{- else if eq $kafkaMechanism "OAUTHBEARER" }}
+{{- $kafkaOauthbearer := $kafkaSasl.oauthbearer | default dict }}
+{{- with $kafkaOauthbearer.existingSecret }}
+{{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_OAUTHBEARER_TOKEN" "valueFrom" (dict "secretKeyRef" (dict "name" . "key" ($kafkaOauthbearer.tokenKey | default "token")))) }}
+{{- $kafkaSaslExtraArgs = append $kafkaSaslExtraArgs "-ingest.sasl-oauthbearer-token=$(TEMPO_KAFKA_SASL_OAUTHBEARER_TOKEN)" }}
+{{- end }}
+{{- else if eq $kafkaMechanism "AWS_MSK_IAM" }}
+{{- $kafkaMskIam := $kafkaSasl.mskIam | default dict }}
+{{- with $kafkaMskIam.existingSecret }}
+{{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY" "valueFrom" (dict "secretKeyRef" (dict "name" . "key" ($kafkaMskIam.accessKeyKey | default "access-key")))) }}
+{{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY" "valueFrom" (dict "secretKeyRef" (dict "name" . "key" ($kafkaMskIam.secretKeyKey | default "secret-key")))) }}
+{{- $kafkaSaslExtraArgs = concat $kafkaSaslExtraArgs (list "-ingest.sasl-msk-iam-access-key=$(TEMPO_KAFKA_SASL_MSK_IAM_ACCESS_KEY)" "-ingest.sasl-msk-iam-secret-key=$(TEMPO_KAFKA_SASL_MSK_IAM_SECRET_KEY)") }}
+{{- with $kafkaMskIam.sessionTokenKey }}
+{{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_MSK_IAM_SESSION_TOKEN" "valueFrom" (dict "secretKeyRef" (dict "name" $kafkaMskIam.existingSecret "key" .))) }}
+{{- $kafkaSaslExtraArgs = append $kafkaSaslExtraArgs "-ingest.sasl-msk-iam-session-token=$(TEMPO_KAFKA_SASL_MSK_IAM_SESSION_TOKEN)" }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- with $ctx }}
 metadata:
   annotations:
@@ -100,7 +139,7 @@ spec:
         {{- with $extraArgs }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- with (concat .Values.global.extraArgs (.Values.defaults.extraArgs | default list) $component.extraArgs) | uniq }}
+        {{- with (concat .Values.global.extraArgs (.Values.defaults.extraArgs | default list) $component.extraArgs $kafkaSaslExtraArgs) | uniq }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       ports:
@@ -121,7 +160,7 @@ spec:
         {{- end }}
         {{- end }}
       {{- $resolvedResources := coalesce $component.resources .Values.tempo.resources .Values.defaults.resources | default (dict) }}
-      {{- include "tempo.componentEnv" (dict "extraEnv" (concat .Values.global.extraEnv (.Values.defaults.extraEnv | default list) $component.extraEnv) "resources" $resolvedResources "factor" .Values.global.goSettings.goMemLimitFactor "gogc" .Values.global.goSettings.gogc) | nindent 6 }}
+      {{- include "tempo.componentEnv" (dict "extraEnv" $componentExtraEnv "resources" $resolvedResources "factor" .Values.global.goSettings.goMemLimitFactor "gogc" .Values.global.goSettings.gogc) | nindent 6 }}
       {{- with (concat .Values.global.extraEnvFrom (.Values.defaults.extraEnvFrom | default list) $component.extraEnvFrom) | uniq }}
       envFrom:
         {{- toYaml . | nindent 8 }}

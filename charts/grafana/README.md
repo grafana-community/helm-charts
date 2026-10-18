@@ -517,6 +517,39 @@ grafana.ini:
     root_url: http://localhost:3000/grafana # this host can be localhost
 ```
 
+## Admin user and password
+
+The chart passes the admin credentials to Grafana as `GF_SECURITY_ADMIN_USER` and
+`GF_SECURITY_ADMIN_PASSWORD`. They come from the Secret named in `admin.existingSecret`,
+or from a Secret the chart creates from `adminUser` and `adminPassword`.
+
+Grafana reads these variables only when it creates the admin user, that is on the first
+start with an empty database. When the database survives pod restarts
+(`persistence.enabled: true`, or an external database), keep the following in mind:
+
+- Changing `adminPassword`, or the password in `admin.existingSecret`, and running
+  `helm upgrade` restarts the pod but does not change the password stored in the database.
+  The old password keeps working and the new one is rejected.
+- The sidecars (`sidecar.dashboards`, `sidecar.datasources`, `sidecar.alerts`, ...) call
+  the Grafana reload API with the user and password from the same Secret. Once the Secret
+  and the database disagree, these calls fail with `401 Unauthorized`.
+- When neither `adminPassword` nor `admin.existingSecret` is set, the chart generates a
+  random password and uses `lookup` to keep it across upgrades. Tools that render the chart
+  with `helm template`, where `lookup` returns nothing (for example Argo CD), get a new
+  random password on every render, so the Secret no longer matches the password Grafana
+  stored on the first start. Set `adminPassword` or `admin.existingSecret` in that case.
+
+To rotate the password of a running installation, change it in Grafana first and then
+update the Secret (or `adminPassword`) to the same value:
+
+```console
+printf '%s\n' "$NEW_PASSWORD" | kubectl exec -i -n NAMESPACE deploy/RELEASE-NAME -c grafana -- \
+  grafana cli --config /etc/grafana/grafana.ini admin reset-admin-password --password-from-stdin
+```
+
+See [Grafana CLI](https://grafana.com/docs/grafana/latest/administration/cli/#reset-admin-password) for
+the other ways to reset the admin password.
+
 ## How to securely reference secrets in grafana.ini
 
 This example uses Grafana [file providers](https://grafana.com/docs/grafana/latest/administration/configuration/#file-provider) for secret values and the `extraSecretMounts` configuration flag (Additional grafana server secret mounts) to mount the secrets.

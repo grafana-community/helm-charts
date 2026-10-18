@@ -681,6 +681,92 @@ rollout_operator:
     - -cluster-domain=custom.local
 ```
 
+### Kafka SASL Authentication
+
+Set `ingest.kafka.sasl.mechanism` to enable SASL for the Kafka client used by the write path. Combine it with `ingest.kafka.tls.enabled: true` so credentials are encrypted in transit.
+
+| Mechanism | Credential sources | Rotation |
+|-----------|--------------------|----------|
+| `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512` | `existingSecret` (recommended), or `username`/`password` | Pod restart |
+| `OAUTHBEARER` | `oauthbearer.filePath` / `httpSocketPath` (recommended), `oauthbearer.existingSecret`, or `oauthbearer.token` | No restart with file/socket; otherwise pod restart |
+| `AWS_MSK_IAM` | `mskIam.filePath` / `httpSocketPath` (recommended), `mskIam.existingSecret`, or `accessKey`/`secretKey` | No restart with file/socket; otherwise pod restart |
+
+OAUTHBEARER and AWS_MSK_IAM need exactly one credential source. Tempo does not fall back to the AWS default credential chain, so IRSA alone is not enough for AWS_MSK_IAM. The chart fails at render time if a mechanism is missing its credentials or has more than one source.
+
+**How credentials reach Tempo**
+
+- **`existingSecret`**: the chart injects each Secret key as a `TEMPO_KAFKA_SASL_*` env var through `secretKeyRef` and passes it to Tempo as a CLI flag (for example `-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)`), so no credential is rendered into `tempo.yaml`. For AWS_MSK_IAM, the session token flag is added only when `mskIam.sessionTokenKey` is set, and that key must exist in the Secret.
+- **Inline values** (`username`/`password`, `oauthbearer.token`) are rendered into `tempo.yaml`, so the chart requires `configStorageType: Secret` and fails to render otherwise.
+- **File/socket sources** (OAUTHBEARER, AWS_MSK_IAM) are read by Tempo on every authentication, so you can rotate the Secret without restarting pods. Mount the file on all Tempo pods with `defaults.extraVolumes` / `defaults.extraVolumeMounts`.
+
+#### Example: SCRAM-SHA-512 with an existing Secret
+
+```bash
+kubectl create secret generic kafka-scram-credentials -n tempo \
+  --from-literal=username=tempo \
+  --from-literal=password='<password>'
+```
+
+```yaml
+ingest:
+  kafka:
+    address: kafka.kafka.svc.cluster.local:9092
+    sasl:
+      mechanism: SCRAM-SHA-512
+      existingSecret: kafka-scram-credentials
+      # usernameKey: username   # defaults; override if your Secret uses other keys
+      # passwordKey: password
+    tls:
+      enabled: true
+```
+
+#### Example: OAUTHBEARER with a rotating token file
+
+The file must be JSON with a `token` key (optionally `zid` and `extensions`).
+
+```bash
+kubectl create secret generic kafka-oauth-token -n tempo --from-file=token.json
+```
+
+```yaml
+ingest:
+  kafka:
+    address: kafka.kafka.svc.cluster.local:9092
+    sasl:
+      mechanism: OAUTHBEARER
+      oauthbearer:
+        filePath: /etc/kafka/oauth/token.json
+    tls:
+      enabled: true
+
+defaults:
+  extraVolumes:
+    - name: kafka-oauth-token
+      secret:
+        secretName: kafka-oauth-token
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: kafka-oauth-token
+      mountPath: /etc/kafka/oauth
+      readOnly: true
+```
+
+To use a static token from a Secret instead, set `oauthbearer.existingSecret` (and `oauthbearer.tokenKey`, default `token`) in place of `filePath`.
+
+#### Troubleshooting
+
+```bash
+# SASL settings Tempo was configured with (use `kubectl get secret ... | base64 -d` if configStorageType=Secret)
+kubectl get configmap <release>-tempo-config -n tempo -o jsonpath='{.data.tempo\.yaml}' | grep -A10 sasl
+
+# Env vars and args injected for existingSecret
+kubectl get pod -n tempo -l app.kubernetes.io/component=distributor \
+  -o jsonpath='{.items[0].spec.containers[0].env}{"\n"}{.items[0].spec.containers[0].args}'
+
+# Kafka client errors
+kubectl logs -n tempo -l app.kubernetes.io/component=block-builder | grep -i -E 'kafka|sasl'
+```
+
 ### Memcached cache configuration
 
 By default, the chart deploys a single shared memcached StatefulSet (`memcached`) used for all cache roles — bloom filters, parquet footer, and frontend search. This is the simplest setup and works well for most deployments.
