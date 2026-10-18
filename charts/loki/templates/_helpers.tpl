@@ -753,7 +753,7 @@ http {
     {{- end -}}
 
     {{- if .Values.loki.ui.gateway.enabled }}
-    location ^~ /ui/ {
+    location ^~ /ui {
       {{- with .Values.gateway.nginxConfig.locationSnippet }}
       {{- tpl . $ | nindent 6 }}
       {{- end }}
