@@ -3,6 +3,47 @@ kind: Namespace
 metadata:
   name: kafka-ci
 ---
+# 9092 is PLAINTEXT. 9094 only accepts SASL SCRAM-SHA-512, as user tempo
+# (tempo-kafka-scram Secret below). SCRAM users exist only once storage is
+# formatted with --add-scram, which the image's env-driven startup cannot do.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-config
+  namespace: kafka-ci
+data:
+  server.properties: |
+    node.id=1
+    process.roles=broker,controller
+    listeners=PLAINTEXT://:9092,CONTROLLER://:9093,SASL_PLAINTEXT://:9094
+    advertised.listeners=PLAINTEXT://kafka.kafka-ci.svc.cluster.local:9092,SASL_PLAINTEXT://kafka.kafka-ci.svc.cluster.local:9094
+    controller.listener.names=CONTROLLER
+    listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT
+    inter.broker.listener.name=PLAINTEXT
+    controller.quorum.voters=1@localhost:9093
+    listener.name.sasl_plaintext.sasl.enabled.mechanisms=SCRAM-SHA-512
+    listener.name.sasl_plaintext.scram-sha-512.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
+    log.dirs=/var/lib/kafka/data
+    offsets.topic.replication.factor=1
+    transaction.state.log.replication.factor=1
+    transaction.state.log.min.isr=1
+    group.initial.rebalance.delay.ms=0
+    auto.create.topics.enable=true
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tempo-distributed
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tempo-kafka-scram
+  namespace: tempo-distributed
+stringData:
+  username: tempo
+  password: tempo-ci-secret
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,34 +65,21 @@ spec:
       containers:
         - name: kafka
           image: docker.io/apache/kafka:4.3.1
+          command:
+            - bash
+            - -ec
+            - |
+              /opt/kafka/bin/kafka-storage.sh format -c /config/server.properties \
+                -t "$(/opt/kafka/bin/kafka-storage.sh random-uuid)" \
+                --add-scram 'SCRAM-SHA-512=[name=tempo,password=tempo-ci-secret]' \
+                --ignore-formatted
+              exec /opt/kafka/bin/kafka-server-start.sh /config/server.properties
           ports:
             - containerPort: 9092
               name: plaintext
+            - containerPort: 9094
+              name: sasl-scram
           env:
-            - name: KAFKA_NODE_ID
-              value: "1"
-            - name: KAFKA_PROCESS_ROLES
-              value: "broker,controller"
-            - name: KAFKA_LISTENERS
-              value: "PLAINTEXT://:9092,CONTROLLER://:9093"
-            - name: KAFKA_ADVERTISED_LISTENERS
-              value: "PLAINTEXT://kafka.kafka-ci.svc.cluster.local:9092"
-            - name: KAFKA_CONTROLLER_LISTENER_NAMES
-              value: "CONTROLLER"
-            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
-            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
-              value: "1@localhost:9093"
-            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-              value: "1"
-            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
-              value: "1"
-            - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
-              value: "1"
-            - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
-              value: "0"
-            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
-              value: "true"
             # Bound heap prevents the JVM from requesting memory beyond this limit.
             - name: KAFKA_HEAP_OPTS
               value: "-Xmx256m -Xms256m"
@@ -75,9 +103,14 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/kafka/data
+            - name: config
+              mountPath: /config
       volumes:
         - name: data
           emptyDir: {}
+        - name: config
+          configMap:
+            name: kafka-config
 ---
 apiVersion: v1
 kind: Service
@@ -91,6 +124,9 @@ spec:
     - name: plaintext
       port: 9092
       targetPort: 9092
+    - name: sasl-scram
+      port: 9094
+      targetPort: 9094
 ---
 apiVersion: v1
 kind: Namespace
