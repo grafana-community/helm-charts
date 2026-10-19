@@ -129,8 +129,13 @@ gateway:
     enabled: true
 
 lokiCanary:
+  image:
+    registry: ghcr.io
+    repository: jkroepke/loki-canary
+    tag: jwt
   tenant:
-    password: test-password
+    bearerToken:
+      enabled: true
 
 resultsCache:
   enabled: false
@@ -166,7 +171,7 @@ extraObjects:
         spec:
           containers:
             - name: rustfs
-              image: rustfs/rustfs:1.0.0-rc.6
+              image: docker.io/rustfs/rustfs:1.0.3
               ports:
                 - containerPort: 9000
                   name: http
