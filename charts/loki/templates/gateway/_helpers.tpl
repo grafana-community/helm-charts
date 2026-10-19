@@ -304,9 +304,9 @@ disabled or gateway.envoyConfig.jwt.remoteJwks.bearerTokenFile is unset.
 {{- end -}}
 {{- end }}
 
-{{/* Kubelet-mounted ServiceAccount token path; the Envoy gateway mounts it when this is the JWKS bearer token file. */}}
-{{- define "loki.gatewayEnvoyJwksServiceAccountTokenFile" -}}
-/var/run/secrets/kubernetes.io/serviceaccount/token
+{{/* Chart-managed projected ServiceAccount token path for remote JWKS requests. */}}
+{{- define "loki.gatewayEnvoyJwksProjectedTokenFile" -}}
+/etc/envoy/kubernetes/token
 {{- end }}
 
 {{/* ConfigMap key holding the SDS resource that exposes the JWKS bearer token to Envoy. */}}

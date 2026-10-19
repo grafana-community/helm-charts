@@ -1728,8 +1728,8 @@ gateway:
         # -- HTTPS or HTTP URI used by Envoy to fetch the JWKS. The default is the Kubernetes ServiceAccount JWKS endpoint.
         uri: https://kubernetes.default.svc/openid/v1/jwks
         # @schema type:[string, null]
-        # -- File whose contents Envoy sends as `Authorization: Bearer` when fetching the JWKS, through a loopback credential-injector listener. The default is the gateway ServiceAccount token; the Envoy gateway mounts it regardless of `gateway.automountServiceAccountToken` while this default is in use, Envoy reloads it on rotation, and the Kubernetes API accepts it for the JWKS endpoint without extra RBAC. Point this at another mounted file for a different credential, or set it to `null` to fetch the JWKS anonymously.
-        bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+        # -- File whose contents Envoy sends as `Authorization: Bearer` when fetching the JWKS, through a loopback credential-injector listener. The default path is a projected token of the gateway ServiceAccount that the chart mounts and Envoy reloads on rotation; the Kubernetes API accepts it for the JWKS endpoint without extra RBAC. Point this at another mounted file for a different credential, or set it to `null` to fetch the JWKS anonymously.
+        bearerTokenFile: /etc/envoy/kubernetes/token
         # -- Loopback port of the Envoy listener that adds the bearer token to JWKS requests. Only bound on 127.0.0.1 inside the gateway pod. Used when `bearerTokenFile` is set.
         credentialInjectorPort: 9902
         # -- Timeout for each remote JWKS request.
