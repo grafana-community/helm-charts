@@ -71,7 +71,8 @@ spec:
             - |
               /opt/kafka/bin/kafka-storage.sh format -c /config/server.properties \
                 -t "$(/opt/kafka/bin/kafka-storage.sh random-uuid)" \
-                --add-scram 'SCRAM-SHA-512=[name=tempo,password=tempo-ci-secret]'
+                --add-scram 'SCRAM-SHA-512=[name=tempo,password=tempo-ci-secret]' \
+                --ignore-formatted
               exec /opt/kafka/bin/kafka-server-start.sh /config/server.properties
           ports:
             - containerPort: 9092
