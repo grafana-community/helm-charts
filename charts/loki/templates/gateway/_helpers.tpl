@@ -343,7 +343,7 @@ cannot reach internal listeners.
                       domains: ["*"]
                       routes:
                         - match:
-                            prefix: /
+                            path: {{ (urlParse .Values.gateway.envoyConfig.jwt.remoteJwks.uri).path | quote }}
                           route:
                             cluster: jwt_jwks
                             timeout: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.requestTimeout }}
