@@ -242,9 +242,14 @@ function, so encode the digest with the template arithmetic primitives.
     {{- end }}
 {{- end }}
 
+{{/* Render the remote JWKS URI; the value is passed through tpl. */}}
+{{- define "loki.gatewayEnvoyJwksUri" -}}
+{{- tpl (required "gateway.envoyConfig.jwt.remoteJwks.uri is required when Envoy JWT verification is enabled" .Values.gateway.envoyConfig.jwt.remoteJwks.uri) . -}}
+{{- end }}
+
 {{/* Resolve the port used by the remote JWKS endpoint. */}}
 {{- define "loki.gatewayEnvoyJwksPort" -}}
-{{- $uri := required "gateway.envoyConfig.jwt.remoteJwks.uri is required when Envoy JWT verification is enabled" .Values.gateway.envoyConfig.jwt.remoteJwks.uri -}}
+{{- $uri := include "loki.gatewayEnvoyJwksUri" . -}}
 {{- $parsedUrl := urlParse $uri -}}
 {{- $scheme := get $parsedUrl "scheme" -}}
 {{- if not (has $scheme (list "http" "https")) -}}
@@ -259,10 +264,12 @@ function, so encode the digest with the template arithmetic primitives.
 
 {{/* Render the remote JWKS cluster. JWT signing keys are never read from a mounted file. */}}
 {{- define "loki.gatewayEnvoyJwksCluster" -}}
-{{- $uri := required "gateway.envoyConfig.jwt.remoteJwks.uri is required when Envoy JWT verification is enabled" .Values.gateway.envoyConfig.jwt.remoteJwks.uri -}}
+{{- $uri := include "loki.gatewayEnvoyJwksUri" . -}}
 {{- $parsedUrl := urlParse $uri -}}
 {{- $scheme := get $parsedUrl "scheme" -}}
 {{- $hostname := get $parsedUrl "hostname" -}}
+{{- /* TLS names never carry the trailing dot of an absolute DNS name. */ -}}
+{{- $tlsHostname := trimSuffix "." $hostname -}}
 {{- $port := include "loki.gatewayEnvoyJwksPort" . -}}
 {{ printf "  - name: jwt_jwks" }}
     type: STRICT_DNS
@@ -282,15 +289,15 @@ function, so encode the digest with the template arithmetic primitives.
       name: envoy.transport_sockets.tls
       typed_config:
         "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-        sni: {{ $hostname | quote }}
+        sni: {{ $tlsHostname | quote }}
         common_tls_context:
           validation_context:
             trusted_ca:
               filename: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.caCertificateFile | quote }}
             match_typed_subject_alt_names:
-              - san_type: {{ ternary "IP_ADDRESS" "DNS" (or (regexMatch "^[0-9]+(\\.[0-9]+){3}$" $hostname) (contains ":" $hostname)) }}
+              - san_type: {{ ternary "IP_ADDRESS" "DNS" (or (regexMatch "^[0-9]+(\\.[0-9]+){3}$" $tlsHostname) (contains ":" $tlsHostname)) }}
                 matcher:
-                  exact: {{ $hostname | quote }}
+                  exact: {{ $tlsHostname | quote }}
     {{- end }}
 {{- end }}
 
@@ -343,7 +350,7 @@ cannot reach internal listeners.
                       domains: ["*"]
                       routes:
                         - match:
-                            path: {{ (urlParse .Values.gateway.envoyConfig.jwt.remoteJwks.uri).path | quote }}
+                            path: {{ (urlParse (include "loki.gatewayEnvoyJwksUri" .)).path | quote }}
                           route:
                             cluster: jwt_jwks
                             timeout: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.requestTimeout }}
@@ -427,7 +434,7 @@ resources:
 {{- end -}}
 {{- if .Values.gateway.envoyConfig.jwt.enabled -}}
   {{- $_ := required "gateway.envoyConfig.jwt.issuer is required when Envoy JWT verification is enabled" .Values.gateway.envoyConfig.jwt.issuer -}}
-  {{- $_ := required "gateway.envoyConfig.jwt.remoteJwks.uri is required when Envoy JWT verification is enabled" .Values.gateway.envoyConfig.jwt.remoteJwks.uri -}}
+  {{- $_ := include "loki.gatewayEnvoyJwksUri" . -}}
 {{- end -}}
 {{- $authActive := or .Values.gateway.basicAuth.enabled (or $hasClientCertificateTenant $hasJWTTenant) -}}
 {{- $jwksBearerTokenFile := include "loki.gatewayEnvoyJwksBearerTokenFile" . -}}
@@ -655,7 +662,7 @@ static_resources:
                               value_prefix: "Bearer "
                           remote_jwks:
                             http_uri:
-                              uri: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.uri | quote }}
+                              uri: {{ include "loki.gatewayEnvoyJwksUri" $ | quote }}
                               cluster: {{ ternary "jwt_jwks_credential_injector" "jwt_jwks" (ne $jwksBearerTokenFile "") }}
                               timeout: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.requestTimeout }}
                             cache_duration: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.cacheDuration }}

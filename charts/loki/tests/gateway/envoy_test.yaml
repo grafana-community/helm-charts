@@ -855,7 +855,7 @@ tests:
         template: gateway/configmap.yaml
       - matchRegex:
           path: data["envoy.yaml"]
-          pattern: 'remote_jwks:[\s\S]*uri: "https://kubernetes.default.svc/openid/v1/jwks"[\s\S]*cluster: jwt_jwks_credential_injector'
+          pattern: 'remote_jwks:[\s\S]*uri: "https://kubernetes.default.svc.cluster.local./openid/v1/jwks"[\s\S]*cluster: jwt_jwks_credential_injector'
         template: gateway/configmap.yaml
       - matchRegex:
           path: data["envoy.yaml"]
@@ -881,7 +881,7 @@ tests:
     asserts:
       - matchRegex:
           path: data["envoy.yaml"]
-          pattern: 'remote_jwks:[\s\S]*uri: "https://kubernetes.default.svc/openid/v1/jwks"[\s\S]*cluster: jwt_jwks\n'
+          pattern: 'remote_jwks:[\s\S]*uri: "https://kubernetes.default.svc.cluster.local./openid/v1/jwks"[\s\S]*cluster: jwt_jwks\n'
         template: gateway/configmap.yaml
       - notMatchRegex:
           path: data["envoy.yaml"]
@@ -976,7 +976,7 @@ tests:
     asserts:
       - matchRegex:
           path: data["envoy.yaml"]
-          pattern: 'issuer: "https://kubernetes.default.svc.cluster.local"[\s\S]*audiences:[\s\S]*- ''loki.NAMESPACE''[\s\S]*from_headers:[\s\S]*name: Authorization[\s\S]*value_prefix: "Bearer "[\s\S]*uri: "https://kubernetes.default.svc/openid/v1/jwks"[\s\S]*filename: "/etc/envoy/kubernetes/ca.crt"'
+          pattern: 'issuer: "https://kubernetes.default.svc.cluster.local"[\s\S]*audiences:[\s\S]*- ''loki.NAMESPACE''[\s\S]*from_headers:[\s\S]*name: Authorization[\s\S]*value_prefix: "Bearer "[\s\S]*uri: "https://kubernetes.default.svc.cluster.local./openid/v1/jwks"[\s\S]*filename: "/etc/envoy/kubernetes/ca.crt"'
         template: gateway/configmap.yaml
       - matchRegex:
           path: data["envoy.yaml"]
@@ -989,6 +989,24 @@ tests:
             mountPath: /etc/envoy/kubernetes
             readOnly: true
         template: gateway/deployment.yaml
+
+  - it: resolves the default JWKS host as an absolute DNS name and strips the dot for TLS
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      global.clusterDomain: example.internal
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'uri: "https://kubernetes.default.svc.example.internal./openid/v1/jwks"'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: '- name: jwt_jwks\n    type: STRICT_DNS[\s\S]*address: "kubernetes.default.svc.example.internal."\n\s+port_value: 443[\s\S]*sni: "kubernetes.default.svc.example.internal"\n[\s\S]*san_type: DNS\n\s+matcher:\n\s+exact: "kubernetes.default.svc.example.internal"\n'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'path: "/openid/v1/jwks"\n\s+route:\n\s+cluster: jwt_jwks\n'
+        template: gateway/configmap.yaml
 
   - it: renders configured JWT audiences as Helm templates
     set:

@@ -3914,7 +3914,7 @@
                                             "type": "string"
                                         },
                                         "uri": {
-                                            "description": "HTTPS or HTTP URI used by Envoy to fetch the JWKS. The default is the Kubernetes ServiceAccount JWKS endpoint.",
+                                            "description": "HTTPS or HTTP URI used by Envoy to fetch the JWKS. The value is rendered with `tpl`. The default is the Kubernetes ServiceAccount JWKS endpoint, addressed by its absolute DNS name to skip resolver search-domain lookups.",
                                             "type": "string"
                                         }
                                     }
