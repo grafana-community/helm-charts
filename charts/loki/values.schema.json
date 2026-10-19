@@ -3883,20 +3883,6 @@
                                     "description": "Expected JWT issuer (`iss`).",
                                     "type": "string"
                                 },
-                                "kubernetesServiceAccount": {
-                                    "type": "object",
-                                    "properties": {
-                                        "discoveryRBAC": {
-                                            "type": "object",
-                                            "properties": {
-                                                "enabled": {
-                                                    "description": "Create a ClusterRoleBinding that grants `system:unauthenticated` the built-in `system:service-account-issuer-discovery` ClusterRole, so Envoy can fetch the Kubernetes JWKS anonymously. Only needed when `remoteJwks.bearerTokenFile` is unset, because the gateway ServiceAccount already holds that ClusterRole through `system:serviceaccounts`. This is a cluster-wide grant and only works when the API server accepts anonymous requests (`--anonymous-auth=true` without `anonymous.conditions` restricting it to health endpoints). Leave disabled when the cluster already exposes the public discovery endpoints, when using an external JWKS endpoint, or with `rbac.namespaced: true`.",
-                                                    "type": "boolean"
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
                                 "remoteJwks": {
                                     "type": "object",
                                     "properties": {

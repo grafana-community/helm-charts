@@ -1720,10 +1720,6 @@ gateway:
       # -- Allowed JWT audiences (`aud`). Each value is rendered with `tpl`; the default matches the loki-canary projected ServiceAccount token. Leave empty to skip audience validation.
       audiences:
         - '{{ include "loki.name" . }}.{{ include "loki.namespace" . }}'
-      kubernetesServiceAccount:
-        discoveryRBAC:
-          # -- Create a ClusterRoleBinding that grants `system:unauthenticated` the built-in `system:service-account-issuer-discovery` ClusterRole, so Envoy can fetch the Kubernetes JWKS anonymously. Only needed when `remoteJwks.bearerTokenFile` is unset, because the gateway ServiceAccount already holds that ClusterRole through `system:serviceaccounts`. This is a cluster-wide grant and only works when the API server accepts anonymous requests (`--anonymous-auth=true` without `anonymous.conditions` restricting it to health endpoints). Leave disabled when the cluster already exposes the public discovery endpoints, when using an external JWKS endpoint, or with `rbac.namespaced: true`.
-          enabled: false
       remoteJwks:
         # -- HTTPS or HTTP URI used by Envoy to fetch the JWKS. The default is the Kubernetes ServiceAccount JWKS endpoint.
         uri: https://kubernetes.default.svc/openid/v1/jwks

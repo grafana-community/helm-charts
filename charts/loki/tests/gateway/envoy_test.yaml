@@ -3,7 +3,6 @@ suite: gateway Envoy implementation
 templates:
   - gateway/configmap.yaml
   - gateway/deployment.yaml
-  - gateway/kubernetes-jwks-rbac.yaml
   - gateway/secret.yaml
   - gateway/service.yaml
   - gateway/service-exporter.yaml
@@ -874,9 +873,6 @@ tests:
           path: data["jwks-credential-sds.yaml"]
           pattern: 'name: jwt_jwks_bearer_token\n    generic_secret:\n      secret:\n        filename: "/etc/envoy/kubernetes/token"'
         template: gateway/configmap.yaml
-      - hasDocuments:
-          count: 0
-        template: gateway/kubernetes-jwks-rbac.yaml
 
   - it: fetches the remote JWKS anonymously when no bearer token file is set
     set:
@@ -973,7 +969,6 @@ tests:
   - it: defaults JWT verification to Kubernetes ServiceAccount tokens
     set:
       gateway.envoyConfig.jwt.enabled: true
-      gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: true
       loki.tenants:
         - name: self-monitoring
           jwtSubClaim:
@@ -994,17 +989,6 @@ tests:
             mountPath: /etc/envoy/kubernetes
             readOnly: true
         template: gateway/deployment.yaml
-      - equal:
-          path: roleRef.name
-          value: system:service-account-issuer-discovery
-        template: gateway/kubernetes-jwks-rbac.yaml
-      - contains:
-          path: subjects
-          content:
-            apiGroup: rbac.authorization.k8s.io
-            kind: Group
-            name: system:unauthenticated
-        template: gateway/kubernetes-jwks-rbac.yaml
 
   - it: renders configured JWT audiences as Helm templates
     set:
@@ -1016,33 +1000,6 @@ tests:
           path: data["envoy.yaml"]
           pattern: 'audiences:[\s\S]*- ''RELEASE-NAME.NAMESPACE''[\s\S]*from_headers:'
         template: gateway/configmap.yaml
-
-  - it: leaves Kubernetes issuer discovery RBAC to existing cluster policy by default
-    set:
-      gateway.envoyConfig.jwt.enabled: true
-    asserts:
-      - hasDocuments:
-          count: 0
-        template: gateway/kubernetes-jwks-rbac.yaml
-
-  - it: rejects cluster issuer discovery RBAC in namespace-only mode
-    set:
-      rbac.namespaced: true
-      gateway.envoyConfig.jwt.enabled: true
-      gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled: true
-    asserts:
-      - failedTemplate:
-          errorMessage: gateway.envoyConfig.jwt.kubernetesServiceAccount.discoveryRBAC.enabled must be false when rbac.namespaced is true; use an existing issuer-discovery binding or an external JWKS endpoint
-        template: gateway/kubernetes-jwks-rbac.yaml
-
-  - it: permits namespace-only JWT when issuer discovery RBAC already exists
-    set:
-      rbac.namespaced: true
-      gateway.envoyConfig.jwt.enabled: true
-    asserts:
-      - hasDocuments:
-          count: 0
-        template: gateway/kubernetes-jwks-rbac.yaml
 
   - it: rejects JWT mappings without remote JWT verification
     set:
