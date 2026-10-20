@@ -6204,7 +6204,7 @@ overridesExporter:
       grpc: ""
     headlessService:
       # @schema additionalProperties:{"type":"string"}
-      # -- Additional annotations for headless overrdiesExporter service
+      # -- Additional annotations for headless overridesExporter service
       annotations: {}
       # @schema additionalProperties:{"type":"string"}
       # -- Additional labels for headless overridesExporter Service
