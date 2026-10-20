@@ -130,9 +130,9 @@ gateway:
 
 lokiCanary:
   image:
-    registry: ghcr.io
-    repository: jkroepke/loki-canary
-    tag: jwt
+    registry: docker.io
+    repository: grafana/loki-canary
+    tag: main-0ac839b
   tenant:
     bearerToken:
       enabled: true
