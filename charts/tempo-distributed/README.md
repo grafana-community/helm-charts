@@ -839,6 +839,25 @@ memcachedFrontendSearch:
 
 Each role gets its own StatefulSet and Service, and Tempo is configured to use the matching host for every cache type.
 
+#### Sizing
+
+Every memcached section takes `allocatedMemory` (MB, `-m`), `maxItemMemory` (MB, `-I`) and
+`connectionLimit` (`-c`). The defaults of 1024, 5 and 4096 match Tempo's own
+[jsonnet](https://github.com/grafana/tempo/tree/main/operations/jsonnet/microservices).
+`maxItemMemory` is also set as the cache's `max_item_size`, so Tempo skips values memcached
+would reject. When a section's `resources` is empty, the chart derives them from
+`allocatedMemory` the way mimir-distributed does: requests of 500m CPU and
+`round(1.2 * allocatedMemory) + 100Mi` memory, and a memory limit of
+`round(1.5 * allocatedMemory)`. Size a cache with `allocatedMemory`: setting `resources`
+replaces the derived values but does not change `-m`.
+
+```yaml
+memcachedParquetFooter:
+  enabled: true
+  # -m 4096, memory request 5015Mi, memory limit 6144Mi
+  allocatedMemory: 4096
+```
+
 ### Enabling gRPC Open Telemetry
 
 gRPC for Open Telemetry is disabled by default, simply flip the bool in the `traces` block to turn it on.

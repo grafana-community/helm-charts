@@ -58,9 +58,15 @@ spec:
         - image: {{ include "tempo.imageReference" $dict }}
           imagePullPolicy: {{ .Values.memcached.image.pullPolicy }}
           name: memcached
-          {{- with .Values.memcached.extraArgs }}
+          {{- $sizingArgs := include "tempo.memcached.sizingArgs" .Values.memcached }}
+          {{- if or $sizingArgs .Values.memcached.extraArgs }}
           args:
+            {{- with $sizingArgs }}
+            {{- . | nindent 12 }}
+            {{- end }}
+            {{- with .Values.memcached.extraArgs }}
             {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- end }}
           ports:
             - containerPort: 11211
@@ -96,7 +102,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
-            {{- toYaml .Values.memcached.resources | nindent 12 }}
+            {{- include "tempo.memcached.resources" .Values.memcached | nindent 12 }}
           {{- with .Values.tempo.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}

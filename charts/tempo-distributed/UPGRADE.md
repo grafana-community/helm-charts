@@ -1,5 +1,26 @@
 # Upgrade guide
 
+## v3.22 → v3.23
+
+### memcached starts with explicit sizing flags
+
+The memcached StatefulSets used to start with no arguments, so memcached ran on its built-in
+64 MB of memory, 1 MB maximum item size and 1024 connections, and rejected larger parquet
+footers with `SERVER_ERROR object too large for cache`. Each memcached section (`memcached`,
+`memcachedBloom`, `memcachedParquetFooter`, `memcachedFrontendSearch`) now has
+`allocatedMemory`, `maxItemMemory` and `connectionLimit`, rendered as `-m 1024 -I 5m -c 4096`
+by default. The generated cache config sets Tempo's `max_item_size` to match `maxItemMemory`.
+
+Each memcached pod can now use about 1 GB instead of 64 MB. A section whose `resources` is
+empty now gets them derived from `allocatedMemory`, as in mimir-distributed: at the default,
+requests of 500m CPU and 1329Mi memory and a 1536Mi memory limit, so the pods need that much
+room to schedule. A section with `resources` set keeps them as is; if its memory limit is not
+well above `allocatedMemory`, raise it or lower `allocatedMemory`, or the pod is OOM-killed
+once the cache fills. Flags in `extraArgs` are rendered after these and take precedence. To
+keep the previous behaviour, set the three values to `null`.
+
+The memcached pods restart on upgrade because their arguments change.
+
 ## v3.20 → v3.21
 
 ### Stateless components default to soft anti-affinity
