@@ -1,0 +1,103 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: monolithic StatefulSet recreate job
+templates:
+  - templates/monolithic/workload.yaml
+  - templates/config.yaml
+
+set:
+  deploymentMode: SingleBinary
+  loki.storage.type: filesystem
+  loki.commonConfig.replication_factor: 1
+  singleBinary.replicas: 1
+  singleBinary.persistence.enabled: true
+  singleBinary.persistence.size: 20Gi
+  singleBinary.statefulSetRecreateJob.enabled: true
+
+tests:
+  - it: should render a recreate Job with a single component label and a Role that can wait for the StatefulSet deletion
+    template: templates/monolithic/workload.yaml
+    release:
+      upgrade: true
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-loki
+            namespace: NAMESPACE
+          spec:
+            # string: the fake lookup client cannot deep copy an int
+            replicas: "2"
+            volumeClaimTemplates:
+              - metadata:
+                  name: storage
+                spec:
+                  resources:
+                    requests:
+                      storage: 10Gi
+    asserts:
+      - hasDocuments:
+          count: 5
+      # a duplicate key is dropped by the YAML parse of the asserts, so check the raw output
+      - notMatchRegexRaw:
+          pattern: 'component: [^\n]*\n\s*app.kubernetes.io/component:'
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: single-binary-recreate-job
+        documentIndex: 1
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/component"]
+          value: single-binary-recreate-job
+        documentIndex: 1
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: single-binary-recreate-job
+        documentIndex: 2
+      - isKind:
+          of: Role
+        documentIndex: 3
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: single-binary-recreate-job
+        documentIndex: 3
+      # kubectl delete --wait=true gets, lists and watches the StatefulSet after deleting it
+      - equal:
+          path: rules[0]
+          value:
+            apiGroups:
+              - apps
+            resources:
+              - statefulsets
+            resourceNames:
+              - RELEASE-NAME-loki
+            verbs:
+              - get
+              - list
+              - watch
+              - delete
+        documentIndex: 3
+      - equal:
+          path: rules[1]
+          value:
+            apiGroups:
+              - ""
+            resources:
+              - persistentvolumeclaims
+            resourceNames:
+              - storage-RELEASE-NAME-loki-0
+              - storage-RELEASE-NAME-loki-1
+            verbs:
+              - patch
+              - get
+        documentIndex: 3
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: single-binary-recreate-job
+        documentIndex: 4
