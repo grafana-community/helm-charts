@@ -4046,6 +4046,11 @@
                                             "description": "Timeout for each remote JWKS request.",
                                             "type": "string"
                                         },
+                                        "retries": {
+                                            "description": "Number of times Envoy retries a failed JWKS request (connection failure, reset or 5xx) with a short exponential backoff before giving up on that fetch. Retries during startup keep the listener from serving JWT requests until the JWKS arrives, which also covers the first fetch racing the loopback credential-injector listener. Set to `0` to disable retries.",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
                                         "uri": {
                                             "description": "HTTPS or HTTP URI used by Envoy to fetch the JWKS. The value is rendered with `tpl`. The default is the Kubernetes ServiceAccount JWKS endpoint, addressed by its absolute DNS name to skip resolver search-domain lookups.",
                                             "type": "string"

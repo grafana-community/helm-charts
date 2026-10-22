@@ -1741,6 +1741,9 @@ gateway:
         credentialInjectorPort: 9902
         # -- Timeout for each remote JWKS request.
         requestTimeout: 5s
+        # @schema minimum:0
+        # -- Number of times Envoy retries a failed JWKS request (connection failure, reset or 5xx) with a short exponential backoff before giving up on that fetch. Retries during startup keep the listener from serving JWT requests until the JWKS arrives, which also covers the first fetch racing the loopback credential-injector listener. Set to `0` to disable retries.
+        retries: 3
         # -- How long Envoy caches the fetched JWKS.
         cacheDuration: 300s
         # -- Fetch the JWKS asynchronously during listener initialization.

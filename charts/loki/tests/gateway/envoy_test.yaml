@@ -1008,6 +1008,29 @@ tests:
           pattern: 'path: "/openid/v1/jwks"\n\s+route:\n\s+cluster: jwt_jwks\n'
         template: gateway/configmap.yaml
 
+  - it: retries failed remote JWKS requests by default and allows disabling retries
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'remote_jwks:\n[\s\S]*?timeout: 5s\n                            retry_policy:\n                              num_retries: 3\n                              retry_back_off:\n                                base_interval: 0.1s\n                                max_interval: 1s\n                            cache_duration: 300s'
+        template: gateway/configmap.yaml
+
+  - it: omits the remote JWKS retry policy when retries are disabled
+    set:
+      gateway.envoyConfig.jwt.enabled: true
+      gateway.envoyConfig.jwt.remoteJwks.retries: 0
+    asserts:
+      - notMatchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'retry_policy:'
+        template: gateway/configmap.yaml
+      - matchRegex:
+          path: data["envoy.yaml"]
+          pattern: 'timeout: 5s\n                            cache_duration: 300s'
+        template: gateway/configmap.yaml
+
   - it: renders configured JWT audiences as Helm templates
     set:
       gateway.envoyConfig.jwt.enabled: true

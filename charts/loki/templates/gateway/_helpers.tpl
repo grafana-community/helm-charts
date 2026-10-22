@@ -665,6 +665,13 @@ static_resources:
                               uri: {{ include "loki.gatewayEnvoyJwksUri" $ | quote }}
                               cluster: {{ ternary "jwt_jwks_credential_injector" "jwt_jwks" (ne $jwksBearerTokenFile "") }}
                               timeout: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.requestTimeout }}
+                            {{- if gt (int .Values.gateway.envoyConfig.jwt.remoteJwks.retries) 0 }}
+                            retry_policy:
+                              num_retries: {{ int .Values.gateway.envoyConfig.jwt.remoteJwks.retries }}
+                              retry_back_off:
+                                base_interval: 0.1s
+                                max_interval: 1s
+                            {{- end }}
                             cache_duration: {{ .Values.gateway.envoyConfig.jwt.remoteJwks.cacheDuration }}
                             {{- if .Values.gateway.envoyConfig.jwt.remoteJwks.asyncFetch }}
                             async_fetch: {}
