@@ -6393,7 +6393,7 @@ memcachedExporter:
     # -- Memcached exporter Docker image repository
     repository: prom/memcached-exporter
     # -- Memcached exporter Docker image tag
-    tag: v0.17.0
+    tag: v0.18.0
     # -- Memcached exporter Docker image pull policy
     pullPolicy: IfNotPresent
   # @schema additionalProperties:true
