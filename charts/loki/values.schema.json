@@ -3980,6 +3980,7 @@
                     }
                 },
                 "envoyConfig": {
+                    "description": "EXPERIMENTAL: Settings for the Envoy gateway implementation, used when `gateway.type` is `envoy`.",
                     "type": "object",
                     "properties": {
                         "adminPort": {
@@ -4769,7 +4770,7 @@
                     }
                 },
                 "type": {
-                    "description": "Selects the gateway proxy implementation. The Envoy implementation is opt-in.",
+                    "description": "Selects the gateway proxy implementation. The Envoy implementation is EXPERIMENTAL and opt-in; its values under `gateway.envoyConfig` and the rendered Envoy configuration may change in minor releases.",
                     "type": "string",
                     "enum": [
                         "nginx",

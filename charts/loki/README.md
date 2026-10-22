@@ -47,7 +47,7 @@ helm delete RELEASE-NAME
 
 ## Gateway proxy
 
-The chart uses NGINX for the Loki gateway by default. Envoy is available as an opt-in implementation:
+The chart uses NGINX for the Loki gateway by default. Envoy is available as an opt-in, experimental implementation; its `gateway.envoyConfig` values and the rendered Envoy configuration may change in minor releases:
 
 ```yaml
 gateway:

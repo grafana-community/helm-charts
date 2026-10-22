@@ -1247,7 +1247,7 @@ gateway:
   # -- Specifies whether the gateway should be enabled
   enabled: true
   # @schema enum:[nginx, envoy]
-  # -- Selects the gateway proxy implementation. The Envoy implementation is opt-in.
+  # -- Selects the gateway proxy implementation. The Envoy implementation is EXPERIMENTAL and opt-in; its values under `gateway.envoyConfig` and the rendered Envoy configuration may change in minor releases.
   type: nginx
   # -- Number of replicas for the gateway
   replicas: 1
@@ -1687,6 +1687,8 @@ gateway:
     file: |
       {{- include "loki.nginxFile" . -}}
 
+  # -- EXPERIMENTAL: Settings for the Envoy gateway implementation, used when `gateway.type` is `envoy`.
+  # @default -- See values.yaml
   envoyConfig:
     # -- Dual-stack Envoy administration port used by the readiness probe. Only `/ready` is accessible unless gateway metrics are enabled, which also allows `/stats/prometheus`.
     adminPort: 9901
