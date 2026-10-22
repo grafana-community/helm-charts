@@ -41,6 +41,20 @@ grafana:
     # -- Key within the secret that contains the API key
     key: ""
 
+# -- Caller authentication for the MCP HTTP endpoint (sets `MCP_GRAFANA_SERVER_TOKEN`).
+# Clients must send `Authorization: Bearer <token>`.
+# If neither `token` nor `tokenSecret.name` is set, a random token is generated and reused on upgrade.
+# Set `token: null` to disable authentication. `tokenSecret.name` takes precedence over `token`.
+serverAuth:
+  # -- Bearer token (if not using a secret). Leave empty to generate one, set to `null` to disable.
+  token: ""
+  # -- Secret containing the bearer token
+  tokenSecret:
+    # -- Name of the secret containing the bearer token
+    name: ""
+    # -- Key within the secret that contains the bearer token
+    key: ""
+
 # -- Enable debug mode
 debug: false
 

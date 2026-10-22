@@ -122,6 +122,18 @@ spec:
                   key: {{ .Values.grafana.apiKeySecret.key }}
                   {{- end }}
             {{- end }}
+            {{- if or .Values.serverAuth.tokenSecret.name (hasKey .Values.serverAuth "token") }}
+            - name: MCP_GRAFANA_SERVER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  {{- if .Values.serverAuth.tokenSecret.name }}
+                  name: {{ .Values.serverAuth.tokenSecret.name }}
+                  key: {{ .Values.serverAuth.tokenSecret.key }}
+                  {{- else }}
+                  name: {{ include "grafana-mcp.fullname" . }}
+                  key: server-token
+                  {{- end }}
+            {{- end }}
             {{- range $key, $value := .Values.env }}
             - name: {{ $key | quote }}
               value: {{ $value | quote }}

@@ -46,6 +46,19 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### From Chart versions < 0.29.0
+The MCP HTTP endpoint is now protected by a bearer token (`MCP_GRAFANA_SERVER_TOKEN`). If `serverAuth.token` and
+`serverAuth.tokenSecret.name` are not set, the chart generates a random token and stores it as `server-token` in the
+chart-managed Secret. Clients must send `Authorization: Bearer <token>`.
+
+To read the generated token:
+
+```console
+kubectl get secret RELEASE-NAME-grafana-mcp -o jsonpath="{.data.server-token}" | base64 --decode ; echo
+```
+
+To keep the previous behavior without authentication, set `serverAuth.token: null`.
+
 ### From Chart versions < 0.1.3
 If you are upgrading from a chart version older than 0.1.3, we have changed the image to be pulled from
 `grafana/mcp-grafana` instead of `mcp/grafana` and the default tag to be the chart's appVersion instead of `latest`.

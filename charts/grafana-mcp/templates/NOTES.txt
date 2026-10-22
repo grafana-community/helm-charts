@@ -1,0 +1,19 @@
+{{- $secretName := include "grafana-mcp.fullname" . -}}
+{{- $secretKey := "server-token" -}}
+{{- if .Values.serverAuth.tokenSecret.name -}}
+  {{- $secretName = .Values.serverAuth.tokenSecret.name -}}
+  {{- $secretKey = .Values.serverAuth.tokenSecret.key -}}
+{{- end }}
+{{- if or .Values.serverAuth.tokenSecret.name (hasKey .Values.serverAuth "token") }}
+The MCP HTTP endpoint is protected by a bearer token. Clients must send "Authorization: Bearer <token>".
+
+To read the token:
+
+  kubectl get secret --namespace {{ include "grafana-mcp.namespace" . }} {{ $secretName }} -o jsonpath="{.data.{{ $secretKey }}}" | base64 --decode ; echo
+{{- if not .Values.serverAuth.tokenSecret.name }}
+
+To disable authentication, set `serverAuth.token: null`.
+{{- end }}
+{{- else }}
+WARNING: The MCP HTTP endpoint is not protected by authentication (serverAuth.token is null).
+{{- end }}

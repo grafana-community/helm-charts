@@ -74,6 +74,18 @@ app.kubernetes.io/name: {{ include "grafana-mcp.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+{{/*
+Looks if there's an existing secret and reuse its token. If not it generates
+new token and use it.
+*/}}
+{{- define "grafana-mcp.serverToken" -}}
+{{- $secret := (lookup "v1" "Secret" (include "grafana-mcp.namespace" .) (include "grafana-mcp.fullname" .) ) }}
+{{- if $secret }}
+{{- index $secret "data" "server-token" }}
+{{- else }}
+{{- (randAlphaNum 40) | b64enc | quote }}
+{{- end }}
+{{- end }}
 
 {{/*
 Formats imagePullSecrets. Input is (dict "root" . "imagePullSecrets" .{specific imagePullSecrets})

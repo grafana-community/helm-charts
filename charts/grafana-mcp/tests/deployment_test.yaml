@@ -28,3 +28,51 @@ tests:
           value:
             - --disable-write
             - --transport=streamable-http
+
+  - it: should read generated MCP_GRAFANA_SERVER_TOKEN from chart-managed secret by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MCP_GRAFANA_SERVER_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-grafana-mcp
+                key: server-token
+
+  - it: should not render MCP_GRAFANA_SERVER_TOKEN when serverAuth.token is null
+    set:
+      serverAuth.token: null
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MCP_GRAFANA_SERVER_TOKEN
+          any: true
+
+  - it: should read MCP_GRAFANA_SERVER_TOKEN from chart-managed secret
+    set:
+      serverAuth.token: caller-token
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MCP_GRAFANA_SERVER_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-grafana-mcp
+                key: server-token
+
+  - it: should read MCP_GRAFANA_SERVER_TOKEN from existing secret
+    set:
+      serverAuth.tokenSecret.name: my-secret
+      serverAuth.tokenSecret.key: token
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MCP_GRAFANA_SERVER_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: my-secret
+                key: token

@@ -1,6 +1,6 @@
 apiVersion: v2
 name: grafana-mcp
-version: 0.28.1
+version: 0.29.0
 # renovate: docker=docker.io/grafana/mcp-grafana
 appVersion: 2.1.1
 kubeVersion: "^1.25.0-0"
