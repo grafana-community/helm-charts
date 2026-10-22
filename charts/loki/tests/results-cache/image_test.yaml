@@ -11,6 +11,7 @@ set:
   memcached.enabled: true
   resultsCache.enabled: true
   memcached.image.tag: 1.6.41-alpine
+  memcachedExporter.image.tag: 0.0.0
 
 tests:
   - it: should set resizePolicy for memcached and exporter containers
@@ -39,7 +40,7 @@ tests:
         template: results-cache/statefulset.yaml
       - equal:
           path: spec.template.spec.containers[1].image
-          value: docker.io/prom/memcached-exporter:v0.17.0
+          value: docker.io/prom/memcached-exporter:0.0.0
         template: results-cache/statefulset.yaml
 
   - it: should preserve the upstream memcached path when global imageRegistry is set for result-cache
@@ -52,7 +53,7 @@ tests:
         template: results-cache/statefulset.yaml
       - equal:
           path: spec.template.spec.containers[1].image
-          value: registry.example.com/docker.io/prom/memcached-exporter:v0.17.0
+          value: registry.example.com/docker.io/prom/memcached-exporter:0.0.0
         template: results-cache/statefulset.yaml
 
   - it: should override repository and tag for memcached in result-cache
