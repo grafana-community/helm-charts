@@ -64,7 +64,7 @@ spec:
     spec:
       containers:
         - name: kafka
-          image: docker.io/apache/kafka:4.3.2
+          image: docker.io/apache/kafka:4.4.0
           command:
             - bash
             - -ec
