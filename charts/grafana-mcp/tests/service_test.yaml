@@ -1,0 +1,38 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana-mcp service
+templates:
+  - service.yaml
+tests:
+  - it: should only expose the MCP port by default
+    asserts:
+      - equal:
+          path: spec.ports
+          value:
+            - port: 8000
+              targetPort: mcp-http
+              protocol: TCP
+              name: mcp-http
+
+  - it: should expose the metrics port when metrics.port is set
+    set:
+      metrics.enabled: true
+      metrics.port: 9090
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            port: 9090
+            targetPort: metrics
+            protocol: TCP
+            name: metrics
+      - lengthEqual:
+          path: spec.ports
+          count: 2
+
+  - it: should not expose the metrics port when metrics are disabled
+    set:
+      metrics.port: 9090
+    asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 1

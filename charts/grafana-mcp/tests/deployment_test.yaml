@@ -76,3 +76,46 @@ tests:
               secretKeyRef:
                 name: my-secret
                 key: token
+
+  - it: should not render --metrics-address or metrics port by default when metrics are enabled
+    set:
+      metrics.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - --metrics
+      - notContains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: metrics
+          any: true
+
+  - it: should render --metrics-address and metrics container port when metrics.port is set
+    set:
+      metrics.enabled: true
+      metrics.port: 9090
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - --metrics
+            - --metrics-address=:9090
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: metrics
+            containerPort: 9090
+            protocol: TCP
+
+  - it: should ignore metrics.port when metrics are disabled
+    set:
+      metrics.port: 9090
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].args
+      - notContains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: metrics
+          any: true

@@ -107,6 +107,11 @@ spec:
             - name: mcp-http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+            {{- if and .Values.metrics.enabled .Values.metrics.port }}
+            - name: metrics
+              containerPort: {{ .Values.metrics.port }}
+              protocol: TCP
+            {{- end }}
           env:
             - name: GRAFANA_URL
               value: {{ .Values.grafana.url | quote }}
@@ -154,6 +159,9 @@ spec:
             {{- end }}
             {{- if .Values.metrics.enabled }}
             - --metrics
+            {{- with .Values.metrics.port }}
+            - --metrics-address=:{{ . }}
+            {{- end }}
             {{- end }}
             {{- if .Values.disableWrite }}
             - --disable-write

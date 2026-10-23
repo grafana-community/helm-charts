@@ -314,6 +314,10 @@ extraContainers: []
 metrics:
   # -- Enable Prometheus metrics endpoint (adds --metrics flag)
   enabled: false
+  # -- Serve metrics on a separate port (adds `--metrics-address=:<port>`). The port is exposed on the
+  # container and the Service as `metrics` and scraped by the ServiceMonitor. Unlike the MCP port, the
+  # separate listener does not enforce Host/Origin validation. Leave empty to serve metrics on the MCP port.
+  port: ""
 
 # -- ServiceMonitor configuration for Prometheus Operator
 serviceMonitor:
@@ -329,6 +333,8 @@ serviceMonitor:
   scrapeTimeout: 10s
   # -- Metrics path
   path: /metrics
+  # -- Service port name to scrape. Defaults to `metrics` when `metrics.port` is set, otherwise `mcp-http`
+  port: ""
   # -- Additional relabelings
   relabelings: []
   # -- Additional metric relabelings

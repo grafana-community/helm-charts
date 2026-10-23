@@ -1,0 +1,9 @@
+grafana:
+  apiKey: "test"
+
+metrics:
+  enabled: true
+  port: 9090
+
+serviceMonitor:
+  enabled: true

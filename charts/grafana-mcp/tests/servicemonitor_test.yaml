@@ -1,0 +1,38 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana-mcp servicemonitor
+templates:
+  - servicemonitor.yaml
+tests:
+  - it: should not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should scrape the MCP port by default
+    set:
+      serviceMonitor.enabled: true
+    asserts:
+      - equal:
+          path: spec.endpoints[0].port
+          value: mcp-http
+
+  - it: should scrape the metrics port when metrics.port is set
+    set:
+      metrics.enabled: true
+      metrics.port: 9090
+      serviceMonitor.enabled: true
+    asserts:
+      - equal:
+          path: spec.endpoints[0].port
+          value: metrics
+
+  - it: should scrape serviceMonitor.port when set
+    set:
+      metrics.enabled: true
+      metrics.port: 9090
+      serviceMonitor.enabled: true
+      serviceMonitor.port: custom-metrics
+    asserts:
+      - equal:
+          path: spec.endpoints[0].port
+          value: custom-metrics
