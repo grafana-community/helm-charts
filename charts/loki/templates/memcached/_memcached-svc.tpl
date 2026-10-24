@@ -32,7 +32,7 @@ spec:
       targetPort: client
     {{ if $.ctx.Values.memcachedExporter.enabled -}}
     - name: http-metrics
-      port: 9150
+      port: {{ $.ctx.Values.memcachedExporter.port }}
       targetPort: http-metrics
     {{ end }}
   selector:

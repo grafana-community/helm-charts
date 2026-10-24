@@ -6387,6 +6387,8 @@ memcached:
 memcachedExporter:
   # -- Whether memcached metrics should be exported
   enabled: true
+  # -- Port used by the memcached exporter to expose metrics
+  port: 9150
   image:
     # -- Memcached exporter Docker image registry
     registry: docker.io

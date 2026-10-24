@@ -6768,6 +6768,10 @@
                     "type": "object",
                     "additionalProperties": true
                 },
+                "port": {
+                    "description": "Port used by the memcached exporter to expose metrics",
+                    "type": "integer"
+                },
                 "readinessProbe": {
                     "description": "Readiness probe for memcached exporter",
                     "type": "object",
