@@ -5,7 +5,7 @@ Params:
   valuesSection = name of the section in values.yaml
   memcacheConfig = cache config
   component = name of the component
-valuesSection and component are specified separately because helm prefers camelcase for naming convetion and k8s components are named with snake case.
+valuesSection and component are specified separately because helm prefers camelcase for naming convention and k8s components are named with snake case.
 */}}
 {{- define "loki.memcached.service" -}}
 {{ with $.memcacheConfig }}
