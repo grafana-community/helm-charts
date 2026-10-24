@@ -2,6 +2,7 @@
 suite: results-cache memcached image
 templates:
   - results-cache/statefulset.yaml
+  - results-cache/service.yaml
   - config.yaml
 set:
   deploymentMode: Distributed
@@ -14,6 +15,31 @@ set:
   memcachedExporter.image.tag: 0.0.0
 
 tests:
+  - it: should configure the memcached exporter port without changing the memcached port
+    set:
+      memcachedExporter.port: 9151
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 11211
+        template: results-cache/statefulset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].containerPort
+          value: 9151
+        template: results-cache/statefulset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].args[1]
+          value: --web.listen-address=0.0.0.0:9151
+        template: results-cache/statefulset.yaml
+      - equal:
+          path: spec.ports[0].port
+          value: 11211
+        template: results-cache/service.yaml
+      - equal:
+          path: spec.ports[1].port
+          value: 9151
+        template: results-cache/service.yaml
+
   - it: should set resizePolicy for memcached and exporter containers
     set:
       resultsCache.resizePolicy:
