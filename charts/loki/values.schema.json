@@ -5747,6 +5747,7 @@
                                     "type": "boolean"
                                 },
                                 "excludeDefaultZone": {
+                                    "description": "Exclude the `zone-default` ingesters from the distributor and ruler ring by adding `-distributor.excluded-zones=zone-default`. Enable it once the zone aware ingesters receive all writes, before scaling down the default ingesters.",
                                     "type": "boolean"
                                 },
                                 "readPath": {
