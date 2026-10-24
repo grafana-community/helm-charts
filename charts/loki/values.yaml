@@ -1555,7 +1555,11 @@ gateway:
               {{- fail "Envoy Basic Auth passwordHash values must contain a valid {SHA} Base64-encoded SHA-1 digest" }}
             {{- end }}
             {{- printf "%s:%s\n" $username $passwordHash }}
-          {{- else if not $isEnvoy }}
+          {{- else if $isEnvoy }}
+            {{- if not (or $t.jwtSubClaim $t.clientCertificateCN) }}
+              {{- fail (printf "Tenant %q must set 'password' or 'passwordHash', or an Envoy identity (jwtSubClaim or clientCertificateCN)" $tenantName) }}
+            {{- end }}
+          {{- else }}
             {{- if $passwordHash := $t.passwordHash }}
             {{- printf "%s:%s\n" $username $passwordHash }}
             {{- else if $password := $t.password }}

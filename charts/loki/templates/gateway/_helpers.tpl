@@ -119,9 +119,10 @@ priorityClassName: {{ $pcn }}
 {{/* Render Envoy Basic Auth username-to-tenant Lua table entries. */}}
 {{- define "loki.gatewayEnvoyBasicAuthLuaMap" -}}
 {{- $seen := dict -}}
-{{- if .Values.loki.tenants -}}
 {{- range $tenant := .Values.loki.tenants -}}
   {{- $tenantName := required "All tenants must have a 'name' set" $tenant.name -}}
+  {{- /* A tenant with another Envoy identity is reachable through Basic Auth only when it also carries a Basic credential. */ -}}
+  {{- if or $tenant.password $tenant.passwordHash (not (or $tenant.jwtSubClaim $tenant.clientCertificateCN)) -}}
   {{- $identity := $tenant.basicAuthUsername | default $tenantName -}}
   {{- if regexMatch "[:\r\n]" $identity -}}
     {{- fail (printf "Envoy Basic Auth username %q must not contain colons or newlines" $identity) -}}
@@ -137,13 +138,7 @@ priorityClassName: {{ $pcn }}
     {{- $_ := set $seen $identity $tenantName -}}
 {{ printf "[%s] = %s,\n" (quote $identity) (quote $tenantName) -}}
   {{- end -}}
-{{- end -}}
-{{- else -}}
-  {{- $username := required "gateway.basicAuth.username is required for Envoy Basic Auth when loki.tenants is empty" .Values.gateway.basicAuth.username -}}
-  {{- if regexMatch "[:\r\n]" $username -}}
-    {{- fail (printf "Envoy Basic Auth username %q must not contain colons or newlines" $username) -}}
   {{- end -}}
-{{ printf "[%s] = %s,\n" (quote $username) (quote $username) -}}
 {{- end -}}
 {{- end }}
 
@@ -436,7 +431,20 @@ resources:
   {{- $_ := required "gateway.envoyConfig.jwt.issuer is required when Envoy JWT verification is enabled" .Values.gateway.envoyConfig.jwt.issuer -}}
   {{- $_ := include "loki.gatewayEnvoyJwksUri" . -}}
 {{- end -}}
+{{- if and .Values.gateway.basicAuth.enabled .Values.loki.tenants (not .Values.gateway.basicAuth.existingSecret) -}}
+  {{- $hasBasicCredential := false -}}
+  {{- range $tenant := .Values.loki.tenants -}}
+    {{- if or $tenant.password $tenant.passwordHash -}}
+      {{- $hasBasicCredential = true -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $hasBasicCredential -}}
+    {{- fail "gateway.basicAuth.enabled is true but no tenant in loki.tenants sets password or passwordHash; the Envoy Basic Auth filter cannot start with an empty htpasswd file. Disable gateway.basicAuth or give a tenant a Basic credential." -}}
+  {{- end -}}
+{{- end -}}
 {{- $authActive := or .Values.gateway.basicAuth.enabled (or $hasClientCertificateTenant $hasJWTTenant) -}}
+{{- /* Tenant mapping overwrites X-Scope-OrgID only when loki.tenants is configured; a single Basic Auth user leaves the client header alone like NGINX. */ -}}
+{{- $tenantMappingActive := and $authActive (not (empty .Values.loki.tenants)) -}}
 {{- $jwksBearerTokenFile := include "loki.gatewayEnvoyJwksBearerTokenFile" . -}}
 {{- $distributorUrl := include "loki.gatewayBackendUrl" (dict "ctx" . "target" "distributor") -}}
 {{- $ingesterUrl := include "loki.gatewayBackendUrl" (dict "ctx" . "target" "ingester") -}}
@@ -484,7 +492,7 @@ static_resources:
                 "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
                 stat_prefix: loki_gateway
                 codec_type: AUTO
-                {{- if $authActive }}
+                {{- if $tenantMappingActive }}
                 early_header_mutation_extensions:
                   - name: envoy.http.early_header_mutation.header_mutation
                     typed_config:
@@ -496,7 +504,7 @@ static_resources:
                 use_remote_address: true
                 normalize_path: true
                 merge_slashes: true
-                path_with_escaped_slashes_action: REJECT_REQUEST
+                path_with_escaped_slashes_action: KEEP_UNCHANGED
                 upgrade_configs:
                   - upgrade_type: websocket
                 access_log:
@@ -538,19 +546,21 @@ static_resources:
                     - name: loki
                       domains: ["*"]
                       routes:
+                        {{- /* "/" and "/livez" answer 200 without authentication, like the NGINX gateway. */}}
+                        {{- range $unauthenticatedPath := list "/livez" "/" }}
                         - match:
-                            path: /livez
+                            path: {{ $unauthenticatedPath }}
                           direct_response:
                             status: 200
                             body:
                               inline_string: OK
                           typed_per_filter_config:
-                            {{- if .Values.gateway.envoyConfig.jwt.enabled }}
+                            {{- if $.Values.gateway.envoyConfig.jwt.enabled }}
                             envoy.filters.http.jwt_authn:
                               "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig
                               disabled: true
                             {{- end }}
-                            {{- if .Values.gateway.basicAuth.enabled }}
+                            {{- if $.Values.gateway.basicAuth.enabled }}
                             envoy.filters.http.basic_auth:
                               "@type": type.googleapis.com/envoy.config.route.v3.FilterConfig
                               disabled: true
@@ -558,6 +568,7 @@ static_resources:
                             envoy.filters.http.lua.tenant:
                               "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.LuaPerRoute
                               disabled: true
+                        {{- end }}
                         {{- if .Values.loki.ui.gateway.enabled }}
                         - match:
                             prefix: /ui
@@ -719,7 +730,7 @@ static_resources:
 
                           function envoy_on_request(handle)
                             local headers = handle:headers()
-                            {{- if $authActive }}
+                            {{- if $tenantMappingActive }}
                             local stream_info = handle:streamInfo()
                             local metadata = stream_info:dynamicMetadata()
                             {{- if .Values.gateway.basicAuth.enabled }}

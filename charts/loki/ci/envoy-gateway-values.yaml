@@ -113,7 +113,6 @@ gateway:
   type: envoy
   verboseLogging: false
   affinity: null
-  # Prevent a prior release's Envoy command-line flags from being retained by helm upgrade.
   extraArgs: []
   deploymentStrategy:
     type: Recreate

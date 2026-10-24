@@ -6,7 +6,8 @@
 {{- $startupProbe := deepCopy .Values.gateway.startupProbe }}
 {{- $hasEnvoyLogLevelArg := false }}
 {{- range .Values.gateway.extraArgs }}
-  {{- if or (eq . "-l") (eq . "--log-level") (hasPrefix "--log-level=" .) }}
+  {{- $arg := toString . }}
+  {{- if or (eq $arg "-l") (eq $arg "--log-level") (hasPrefix "--log-level=" $arg) }}
     {{- $hasEnvoyLogLevelArg = true }}
   {{- end }}
 {{- end }}
@@ -68,9 +69,6 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include "loki.configMapOrSecretContentHash" (dict "ctx" . "name" "/gateway/configmap.yaml") }}
-        {{- if and $isEnvoy .Values.gateway.basicAuth.enabled (not .Values.gateway.basicAuth.existingSecret) }}
-        checksum/auth: {{ tpl .Values.gateway.basicAuth.htpasswd . | sha256sum }}
-        {{- end }}
         {{- with .Values.gateway.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -118,8 +116,8 @@ spec:
             - --log-level
             - warning
             {{- end }}
-            {{- with .Values.gateway.extraArgs }}
-            {{- toYaml . | nindent 12 }}
+            {{- range .Values.gateway.extraArgs }}
+            - {{ toString . | quote }}
             {{- end }}
           {{- end }}
           ports:
