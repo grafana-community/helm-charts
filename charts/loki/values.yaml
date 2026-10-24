@@ -1770,7 +1770,7 @@ gateway:
       # -- NGINX access log exporter image repository. Not used by the Envoy gateway.
       repository: "jkroepke/access-log-exporter"
       # -- NGINX access log exporter image tag. Not used by the Envoy gateway.
-      tag: "0.5.1"
+      tag: "0.5.2"
       # -- NGINX access log exporter image pull policy. Not used by the Envoy gateway.
       pullPolicy: IfNotPresent
     # @schema additionalProperties:true
@@ -6535,13 +6535,15 @@ memcached:
 memcachedExporter:
   # -- Whether memcached metrics should be exported
   enabled: true
+  # -- Port used by the memcached exporter to expose metrics
+  port: 9150
   image:
     # -- Memcached exporter Docker image registry
     registry: docker.io
     # -- Memcached exporter Docker image repository
     repository: prom/memcached-exporter
     # -- Memcached exporter Docker image tag
-    tag: v0.17.0
+    tag: v0.18.0
     # -- Memcached exporter Docker image pull policy
     pullPolicy: IfNotPresent
   # @schema additionalProperties:true

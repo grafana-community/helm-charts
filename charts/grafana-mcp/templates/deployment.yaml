@@ -107,6 +107,11 @@ spec:
             - name: mcp-http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+            {{- if and .Values.metrics.enabled .Values.metrics.port }}
+            - name: metrics
+              containerPort: {{ .Values.metrics.port }}
+              protocol: TCP
+            {{- end }}
           env:
             - name: GRAFANA_URL
               value: {{ .Values.grafana.url | quote }}
@@ -120,6 +125,18 @@ spec:
                   {{- else }}
                   name: {{ .Values.grafana.apiKeySecret.name }}
                   key: {{ .Values.grafana.apiKeySecret.key }}
+                  {{- end }}
+            {{- end }}
+            {{- if or .Values.serverAuth.tokenSecret.name (hasKey .Values.serverAuth "token") }}
+            - name: MCP_GRAFANA_SERVER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  {{- if .Values.serverAuth.tokenSecret.name }}
+                  name: {{ .Values.serverAuth.tokenSecret.name }}
+                  key: {{ .Values.serverAuth.tokenSecret.key }}
+                  {{- else }}
+                  name: {{ include "grafana-mcp.fullname" . }}
+                  key: server-token
                   {{- end }}
             {{- end }}
             {{- range $key, $value := .Values.env }}
@@ -142,6 +159,9 @@ spec:
             {{- end }}
             {{- if .Values.metrics.enabled }}
             - --metrics
+            {{- with .Values.metrics.port }}
+            - --metrics-address=:{{ . }}
+            {{- end }}
             {{- end }}
             {{- if .Values.disableWrite }}
             - --disable-write

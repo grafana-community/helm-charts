@@ -1,4 +1,8 @@
 {{- if .Values.serviceMonitor.enabled }}
+{{- $port := "mcp-http" }}
+{{- if and .Values.metrics.enabled .Values.metrics.port }}
+{{- $port = "metrics" }}
+{{- end }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -20,7 +24,7 @@ spec:
       {{- include "grafana-mcp.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: mcp-server
   endpoints:
-    - port: mcp-http
+    - port: {{ .Values.serviceMonitor.port | default $port }}
       path: {{ .Values.serviceMonitor.path }}
       interval: {{ .Values.serviceMonitor.interval }}
       scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
