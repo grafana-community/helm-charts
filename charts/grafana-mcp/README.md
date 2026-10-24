@@ -68,7 +68,23 @@ To read the generated token:
 kubectl get secret RELEASE-NAME-grafana-mcp -o jsonpath="{.data.server-token}" | base64 --decode ; echo
 ```
 
-To keep the previous behavior without authentication, set `serverAuth.token: null`.
+To keep the previous behavior without authentication, set `serverAuth.token: null`:
+
+```yaml
+serverAuth:
+  token: null
+```
+
+If you forward the client's `Authorization` header to Grafana (`env.GRAFANA_FORWARD_HEADERS` contains
+`Authorization`), the chart does not generate a token, because mcp-grafana reserves the `Authorization` header for the
+caller token and refuses to start when both are set. An explicitly configured `serverAuth.token` or
+`serverAuth.tokenSecret.name` is still used. See
+[Configure caller authentication](https://github.com/grafana/mcp-grafana/blob/main/docs/sources/configure/command-line-flags.md#configure-caller-authentication).
+
+> [!NOTE]
+> With Helm 4, a `null` in an umbrella chart's own `values.yaml` does not override this chart's default, so a token
+> is still generated. Set `grafana-mcp.serverAuth.token: null` in a values file passed with `-f` or via
+> `--set grafana-mcp.serverAuth.token=null` instead.
 
 ### From Chart versions < 0.1.3
 If you are upgrading from a chart version older than 0.1.3, we have changed the image to be pulled from

@@ -127,7 +127,7 @@ spec:
                   key: {{ .Values.grafana.apiKeySecret.key }}
                   {{- end }}
             {{- end }}
-            {{- if or .Values.serverAuth.tokenSecret.name (hasKey .Values.serverAuth "token") }}
+            {{- if include "grafana-mcp.serverAuthEnabled" . }}
             - name: MCP_GRAFANA_SERVER_TOKEN
               valueFrom:
                 secretKeyRef:

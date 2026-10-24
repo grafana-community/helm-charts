@@ -4,7 +4,7 @@
   {{- $secretName = .Values.serverAuth.tokenSecret.name -}}
   {{- $secretKey = .Values.serverAuth.tokenSecret.key -}}
 {{- end }}
-{{- if or .Values.serverAuth.tokenSecret.name (hasKey .Values.serverAuth "token") }}
+{{- if include "grafana-mcp.serverAuthEnabled" . }}
 The MCP HTTP endpoint is protected by a bearer token. Clients must send "Authorization: Bearer <token>".
 
 To read the token:
@@ -15,5 +15,9 @@ To read the token:
 To disable authentication, set `serverAuth.token: null`.
 {{- end }}
 {{- else }}
+{{- if hasKey .Values.serverAuth "token" }}
+WARNING: The MCP HTTP endpoint is not protected by a bearer token, because the Authorization header is forwarded to Grafana (GRAFANA_FORWARD_HEADERS).
+{{- else }}
 WARNING: The MCP HTTP endpoint is not protected by authentication (serverAuth.token is null).
+{{- end }}
 {{- end }}

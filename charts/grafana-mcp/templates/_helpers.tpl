@@ -113,3 +113,23 @@ Return the appropriate apiVersion for Gateway API routes.
 {{- print "gateway.networking.k8s.io/v1" }}
 {{- end }}
 {{- end }}
+
+{{/*
+Returns "true" if caller authentication (MCP_GRAFANA_SERVER_TOKEN) is enabled.
+An explicit token or tokenSecret always enables it. Otherwise a token is generated,
+unless serverAuth.token is null or the Authorization header is forwarded to Grafana
+via GRAFANA_FORWARD_HEADERS, which mcp-grafana does not allow together with a server token.
+*/}}
+{{- define "grafana-mcp.serverAuthEnabled" -}}
+{{- $forwardsAuthorization := false -}}
+{{- range (splitList "," (.Values.env.GRAFANA_FORWARD_HEADERS | default "" | toString)) -}}
+{{- if eq (. | trim | lower) "authorization" -}}
+{{- $forwardsAuthorization = true -}}
+{{- end -}}
+{{- end -}}
+{{- if or .Values.serverAuth.tokenSecret.name .Values.serverAuth.token -}}
+true
+{{- else if and (hasKey .Values.serverAuth "token") (not $forwardsAuthorization) -}}
+true
+{{- end -}}
+{{- end }}

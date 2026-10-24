@@ -50,6 +50,52 @@ tests:
             name: MCP_GRAFANA_SERVER_TOKEN
           any: true
 
+  - it: should not render MCP_GRAFANA_SERVER_TOKEN by default when the Authorization header is forwarded
+    set:
+      env.GRAFANA_FORWARD_HEADERS: X-Foo, authorization
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MCP_GRAFANA_SERVER_TOKEN
+          any: true
+
+  - it: should render MCP_GRAFANA_SERVER_TOKEN when other headers are forwarded
+    set:
+      env.GRAFANA_FORWARD_HEADERS: X-Authorization-Id
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MCP_GRAFANA_SERVER_TOKEN
+          any: true
+
+  - it: should render MCP_GRAFANA_SERVER_TOKEN for an explicit token even when the Authorization header is forwarded
+    set:
+      env.GRAFANA_FORWARD_HEADERS: Authorization
+      serverAuth.token: caller-token
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MCP_GRAFANA_SERVER_TOKEN
+          any: true
+
+  - it: should render MCP_GRAFANA_SERVER_TOKEN for an existing secret even when the Authorization header is forwarded
+    set:
+      env.GRAFANA_FORWARD_HEADERS: Authorization
+      serverAuth.tokenSecret.name: my-secret
+      serverAuth.tokenSecret.key: token
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MCP_GRAFANA_SERVER_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: my-secret
+                key: token
+
   - it: should read MCP_GRAFANA_SERVER_TOKEN from chart-managed secret
     set:
       serverAuth.token: caller-token
