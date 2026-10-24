@@ -45,8 +45,10 @@ grafana:
 # Clients must send `Authorization: Bearer <token>`.
 # If neither `token` nor `tokenSecret.name` is set, a random token is generated and reused on upgrade.
 # Set `token: null` to disable authentication. `tokenSecret.name` takes precedence over `token`.
+# No token is generated if `env.GRAFANA_FORWARD_HEADERS` contains `Authorization`, because mcp-grafana
+# refuses to start when the Authorization header is both forwarded and used for caller authentication.
 serverAuth:
-  # -- Bearer token (if not using a secret). Leave empty to generate one, set to `null` to disable.
+  # -- Bearer token (if not using a secret). Leave empty to generate one (unless the Authorization header is forwarded), set to `null` to disable.
   token: ""
   # -- Secret containing the bearer token
   tokenSecret:
