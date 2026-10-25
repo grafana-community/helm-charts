@@ -14,7 +14,6 @@ The Following are installed via subchart
 
 | Repository | Name |
 |------------|------|
-| https://charts.min.io/ | minio(minio) |
 | https://grafana.github.io/helm-charts | rollout_operator(rollout-operator) |
 
 Find more information in the Loki Helm Chart [documentation](https://grafana.com/docs/loki/latest/setup/install/helm/).
@@ -94,6 +93,16 @@ This chart emits `apiVersion: v1` and `kind: PersistentVolumeClaim` on each VCT.
 ---
 
 ## Upgrading
+
+### From 19.x to 20.0.0
+
+**Breaking** The MinIO subchart, deprecated since 17.0.0, has been removed together with the `minio` and `ignoreMinioDeprecation` values and the `loki.minio` template helper. Setting `minio.enabled` no longer deploys MinIO or configures Loki storage.
+
+If you still run the built-in MinIO, finish the migration to an external object storage backend on 19.x first, following the 17.0.0 notes below, and upgrade to 20.0.0 only after the old data has aged out. Alternatively, deploy MinIO separately and point `loki.storage.s3` at it.
+
+`loki.testSchemaConfig` now always uses the `filesystem` object store.
+
+The example `monolithic-values.yaml`, `simple-scalable-values.yaml` and `distributed-values.yaml` files now expect an external S3-compatible object store; replace the `FIXME` placeholders under `loki.storage`.
 
 ### From 19.2.x to 19.3.0 ([#809](https://github.com/grafana-community/helm-charts/pull/809))
 

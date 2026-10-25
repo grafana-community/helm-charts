@@ -783,7 +783,7 @@ loki:
     configs:
       - from: 2024-04-01
         store: tsdb
-        object_store: '{{ include "loki.testSchemaObjectStore" . }}'
+        object_store: filesystem
         schema: v13
         index:
           prefix: index_
@@ -6978,48 +6978,6 @@ rollout_operator:
     timeoutSeconds: 10
     # -- Validating and mutating webhook failure policy. `Ignore` or `Fail`.
     failurePolicy: "Ignore"
-# -- Ignore MinIO deprecation validation when `minio.enabled=true`. This is a temporary compatibility escape hatch.
-ignoreMinioDeprecation: false
-
-# @schema skipProperties:true;additionalProperties:true
-# -- Configuration for the minio subchart (deprecated)
-minio:
-  enabled: false
-  replicas: 1
-  # Minio requires 2 to 16 drives for erasure code (drivesPerNode * replicas)
-  # https://docs.min.io/docs/minio-erasure-code-quickstart-guide
-  # Since we only have 1 replica, that means 2 drives must be used.
-  drivesPerNode: 2
-  # root user
-  rootUser: root-user
-  rootPassword: supersecretpassword
-  # The first user in the list below is used for Loki authentication.
-  # You can add additional users if desired; they will not impact Loki.
-  # `accessKey` = username, `secretKey` = password
-  users:
-    - accessKey: logs-user
-      secretKey: supersecretpassword
-      policy: readwrite
-  buckets:
-    - name: chunks
-      policy: none
-      purge: false
-    - name: ruler
-      policy: none
-      purge: false
-  persistence:
-    size: 5Gi
-    # @schema additionalProperties:{"type":"string"}
-    annotations: {}
-  # @schema additionalProperties:true
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-  # @schema type:[string, null]
-  # Allow the address used by Loki to refer to Minio to be overridden
-  address: null
-
 # @schema type:[array, object, string, null]
 # Create extra manifests via values
 # Can be a list or dictionary, both are passed through `tpl`.  If dict, keys are ignored and only values are used.

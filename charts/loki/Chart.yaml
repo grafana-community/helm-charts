@@ -4,7 +4,7 @@ description: Helm chart for Grafana Loki supporting monolithic, simple scalable,
 type: application
 # renovate: docker=docker.io/grafana/loki
 appVersion: 3.7.9
-version: 19.3.0
+version: 20.0.0
 kubeVersion: ">=1.25.0-0"
 home: https://grafana-community.github.io/helm-charts
 sources:
@@ -13,11 +13,6 @@ sources:
   - https://grafana.com/docs/loki/latest/
 icon: https://grafana.com/docs/loki/latest/logo_and_name.png
 dependencies:
-  - name: minio
-    alias: minio
-    version: 5.4.0
-    repository: https://charts.min.io/
-    condition: minio.enabled
   - name: rollout-operator
     alias: rollout_operator
     repository: oci://ghcr.io/grafana/helm-charts

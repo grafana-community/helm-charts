@@ -5,7 +5,6 @@ templates:
 
 set:
   gateway.enabled: false
-  minio.enabled: false
   deploymentMode: Monolithic
   loki.storage.type: s3
   loki.auth_enabled: false

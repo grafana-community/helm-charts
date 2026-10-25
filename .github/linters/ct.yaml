@@ -5,7 +5,6 @@ additional-commands:
 chart-dirs:
   - charts
 chart-repos:
-  - minio=https://charts.min.io/
   - grafana=https://grafana.github.io/helm-charts
   - prometheus-community=https://prometheus-community.github.io/helm-charts
 github-groups: true
