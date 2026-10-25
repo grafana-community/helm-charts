@@ -8,6 +8,13 @@
 # actionlint learns the key.
 # See also rhysd/actionlint#654.
 # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#concurrency
+#
+# `ubuntu-26.04` is a GitHub-hosted runner label, but actionlint 1.7.12 predates
+# it and reports it as unknown [runner-label]. Declare it as a known label until
+# actionlint ships it in its built-in list, then drop this entry.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
 paths:
   .github/workflows/release.yaml:
     ignore:
