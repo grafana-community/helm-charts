@@ -1,4 +1,5 @@
 # $schema: ./values.schema.json
+# helm-schema-args: --schema-root.additional-properties=false
 
 # -- Overrides the version used to determine compatibility of resources with the target Kubernetes cluster.
 # This is useful when using `helm template`, because then helm will use the client version of kubectl as the Kubernetes version,

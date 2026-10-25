@@ -162,9 +162,6 @@ bloomBuilder:
   autoscaling:
     enabled: true
     minReplicas: 2
-bloomCompactor:
-  enabled: true
-  replicas: 1
 bloomGateway:
   enabled: true
   replicas: 2

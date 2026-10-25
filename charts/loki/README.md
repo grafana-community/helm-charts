@@ -104,6 +104,8 @@ If you still run the built-in MinIO, finish the migration to an external object 
 
 The example `monolithic-values.yaml`, `simple-scalable-values.yaml` and `distributed-values.yaml` files now expect an external S3-compatible object store; replace the `FIXME` placeholders under `loki.storage`.
 
+**Breaking** The values schema no longer allows unknown top-level keys. `helm install`, `helm upgrade` and `helm template` now fail with `additional properties '<key>' not allowed` when your values contain a top-level key the chart does not define, for example a typo or a leftover such as `minio`, `ignoreMinioDeprecation` or `bloomCompactor`. Remove those keys before upgrading. Keys under `global` are still accepted as-is.
+
 ### From 19.2.x to 19.3.0 ([#809](https://github.com/grafana-community/helm-charts/pull/809))
 
 Pod templates no longer carry `helm.sh/chart` or `app.kubernetes.io/version`. `helm.sh/chart` changed on every chart version bump, and because it sat inside the pod template it rolled every workload on upgrade even when neither the configuration nor the image had changed. They remain on the objects themselves, so `kubectl get deploy -L helm.sh/chart` is unaffected.

@@ -1,0 +1,20 @@
+suite: values schema
+templates:
+  - templates/validate.yaml
+
+tests:
+  - it: should reject unknown top-level values
+    set:
+      bloomCompactor:
+        replicas: 0
+    asserts:
+      - failedTemplate:
+          errorPattern: "additional properties 'bloomCompactor' not allowed"
+
+  - it: should accept arbitrary keys under global
+    set:
+      loki.useTestSchema: true
+      global.parentChartSetting: true
+    asserts:
+      - hasDocuments:
+          count: 0

@@ -12211,7 +12211,7 @@
             }
         }
     },
-    "additionalProperties": true,
+    "additionalProperties": false,
     "$defs": {
         "_definitions.json": {
             "definitions": {
