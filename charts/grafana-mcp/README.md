@@ -46,6 +46,12 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### From Chart versions < 0.33.0
+
+The chart now ships a `values.schema.json`, so Helm validates values before rendering. Values with
+the wrong type, for example `replicas: "2"`, `service.port: "8000"` or a numeric annotation value,
+are now rejected with an error instead of being rendered. Quote annotation and label values.
+
 ### From Chart versions < 0.30.0
 
 `automountServiceAccountToken` now defaults to `false` on the pod template, so the Kubernetes

@@ -1,0 +1,152 @@
+suite: values schema
+templates:
+  - deployment.yaml
+  - hpa.yaml
+  - poddisruptionbudget.yaml
+  - secret.yaml
+  - service.yaml
+tests:
+  - it: should accept null replicas
+    template: deployment.yaml
+    set:
+      replicas: null
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: null
+
+  - it: should accept integer rolling update values
+    template: deployment.yaml
+    set:
+      deploymentStrategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 1
+          maxUnavailable: 0
+    asserts:
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 1
+
+  - it: should accept percentage PodDisruptionBudget values
+    template: poddisruptionbudget.yaml
+    set:
+      podDisruptionBudget:
+        maxUnavailable: 25%
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 25%
+
+  - it: should accept numeric probe ports
+    template: deployment.yaml
+    set:
+      readinessProbe:
+        httpGet:
+          path: /healthz
+          port: 8000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 8000
+
+  - it: should accept non-string env values
+    template: deployment.yaml
+    set:
+      env:
+        GRAFANA_DEBUG: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GRAFANA_DEBUG
+            value: "true"
+
+  - it: should accept a numeric metrics port
+    template: deployment.yaml
+    set:
+      metrics:
+        enabled: true
+        port: 9090
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: metrics
+            containerPort: 9090
+            protocol: TCP
+
+  - it: should accept a numeric termination grace period
+    template: deployment.yaml
+    set:
+      terminationGracePeriodSeconds: 60
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
+
+  - it: should accept a numeric node port
+    template: service.yaml
+    set:
+      service:
+        type: NodePort
+        nodePort: 30080
+    asserts:
+      - equal:
+          path: spec.ports[0].nodePort
+          value: 30080
+
+  - it: should accept a null memory utilization target
+    template: hpa.yaml
+    set:
+      hpa:
+        enabled: true
+        targetMemoryUtilizationPercentage: null
+    asserts:
+      - lengthEqual:
+          path: spec.metrics
+          count: 1
+
+  - it: should accept a null server token
+    template: secret.yaml
+    set:
+      serverAuth:
+        token: null
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should reject non-integer replicas
+    template: deployment.yaml
+    set:
+      replicas: two
+    asserts:
+      - failedTemplate:
+          errorPattern: replicas
+
+  - it: should reject a string service port
+    template: service.yaml
+    set:
+      service:
+        port: "8000"
+    asserts:
+      - failedTemplate:
+          errorPattern: port
+
+  - it: should reject an unknown service type
+    template: service.yaml
+    set:
+      service:
+        type: Internal
+    asserts:
+      - failedTemplate:
+          errorPattern: type
+
+  - it: should reject non-string annotation values
+    template: deployment.yaml
+    set:
+      podAnnotations:
+        example.com/port: 8000
+    asserts:
+      - failedTemplate:
+          errorPattern: podAnnotations

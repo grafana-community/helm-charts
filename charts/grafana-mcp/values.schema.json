@@ -1,0 +1,684 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://github.com/grafana-community/helm-charts",
+    "type": "object",
+    "properties": {
+        "affinity": {
+            "description": "Affinity",
+            "type": "object"
+        },
+        "annotations": {
+            "description": "Deployment annotations",
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "automountServiceAccountToken": {
+            "description": "Automount the service account token into the pod. This takes precedence over `serviceAccount.automountServiceAccountToken`, so it must also be false for the token to stay unmounted. grafana-mcp only talks to the Grafana HTTP API and never calls the Kubernetes API, so it does not need a token.",
+            "type": "boolean"
+        },
+        "command": {
+            "description": "Override the container entrypoint command",
+            "type": "array"
+        },
+        "containerSecurityContext": {
+            "description": "Container security context",
+            "type": "object",
+            "additionalProperties": true
+        },
+        "debug": {
+            "description": "Enable debug mode",
+            "type": "boolean"
+        },
+        "deploymentStrategy": {
+            "description": "Deployment strategy",
+            "type": "object",
+            "additionalProperties": true
+        },
+        "disableWrite": {
+            "description": "Disable write operations to Grafana",
+            "type": "boolean"
+        },
+        "disabledCategories": {
+            "description": "Categories to disable (e.g., oncall, incident, sift)",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "dnsConfig": {
+            "description": "DNS config",
+            "type": "object"
+        },
+        "dnsPolicy": {
+            "description": "DNS policy",
+            "type": "string"
+        },
+        "env": {
+            "description": "Environment variables",
+            "type": "object"
+        },
+        "envFrom": {
+            "description": "Environment variables from ConfigMaps or Secrets",
+            "type": "array"
+        },
+        "envValueFrom": {
+            "description": "Environment variables from other sources",
+            "type": "object"
+        },
+        "extraArgs": {
+            "description": "Additional command line arguments",
+            "type": "array"
+        },
+        "extraContainers": {
+            "description": "Extra containers",
+            "type": "array"
+        },
+        "extraInitContainers": {
+            "description": "Extra init containers",
+            "type": "array"
+        },
+        "extraLabels": {
+            "description": "Extra labels added to all resources",
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "fullnameOverride": {
+            "description": "Override the full name of the resources",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "grafana": {
+            "description": "Grafana connection configuration",
+            "type": "object",
+            "properties": {
+                "apiKey": {
+                    "description": "Grafana ApiKey (if not using a secret)",
+                    "type": "string"
+                },
+                "apiKeySecret": {
+                    "description": "Secret containing the Grafana API key",
+                    "type": "object",
+                    "properties": {
+                        "key": {
+                            "description": "Key within the secret that contains the API key",
+                            "type": "string"
+                        },
+                        "name": {
+                            "description": "Name of the secret containing the API key",
+                            "type": "string"
+                        }
+                    }
+                },
+                "url": {
+                    "description": "Grafana URL (should point to the main Grafana service)",
+                    "type": "string"
+                }
+            }
+        },
+        "hostAliases": {
+            "description": "Host aliases",
+            "type": "array"
+        },
+        "hpa": {
+            "description": "Horizontal Pod Autoscaler configuration",
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "description": "Annotations",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "behavior": {
+                    "description": "Behavior configuration",
+                    "type": "object"
+                },
+                "enabled": {
+                    "description": "Enable HPA",
+                    "type": "boolean"
+                },
+                "labels": {
+                    "description": "Labels",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "maxReplicas": {
+                    "description": "Maximum number of replicas",
+                    "type": "integer"
+                },
+                "metrics": {
+                    "description": "Additional metrics",
+                    "type": "array"
+                },
+                "minReplicas": {
+                    "description": "Minimum number of replicas",
+                    "type": "integer"
+                },
+                "targetCPUUtilizationPercentage": {
+                    "description": "Target CPU utilization percentage",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "targetMemoryUtilizationPercentage": {
+                    "description": "Target memory utilization percentage",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                }
+            }
+        },
+        "image": {
+            "description": "Image configuration",
+            "type": "object",
+            "properties": {
+                "pullPolicy": {
+                    "description": "Image pull policy",
+                    "type": "string"
+                },
+                "registry": {
+                    "description": "The Docker registry",
+                    "type": "string"
+                },
+                "repository": {
+                    "description": "The Docker repository",
+                    "type": "string"
+                },
+                "tag": {
+                    "description": "Image tag",
+                    "type": "string"
+                }
+            }
+        },
+        "imagePullSecrets": {
+            "description": "Image pull secrets",
+            "type": "array"
+        },
+        "ingress": {
+            "description": "Ingress configuration",
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "description": "Ingress annotations",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "className": {
+                    "description": "Ingress class name",
+                    "type": "string"
+                },
+                "enabled": {
+                    "description": "Enable ingress",
+                    "type": "boolean"
+                },
+                "hosts": {
+                    "description": "Ingress hosts",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "host": {
+                                "type": "string"
+                            },
+                            "paths": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "path": {
+                                            "type": "string"
+                                        },
+                                        "pathType": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "labels": {
+                    "description": "Ingress labels",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "description": "Ingress TLS configuration",
+                    "type": "array"
+                }
+            }
+        },
+        "initContainers": {
+            "description": "Init containers",
+            "type": "array"
+        },
+        "labels": {
+            "description": "Deployment labels",
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "lifecycle": {
+            "description": "Lifecycle hooks",
+            "type": "object"
+        },
+        "livenessProbe": {
+            "description": "MCP server Liveness probe configuration",
+            "type": "object"
+        },
+        "metrics": {
+            "description": "Metrics configuration",
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "description": "Enable Prometheus metrics endpoint (adds --metrics flag)",
+                    "type": "boolean"
+                },
+                "port": {
+                    "description": "Serve metrics on a separate port (adds `--metrics-address=:\u003cport\u003e`). The port is exposed on the container and the Service as `metrics` and scraped by the ServiceMonitor. Unlike the MCP port, the separate listener does not enforce Host/Origin validation. Leave empty to serve metrics on the MCP port.",
+                    "type": [
+                        "integer",
+                        "string",
+                        "null"
+                    ]
+                }
+            }
+        },
+        "nameOverride": {
+            "description": "Override the chart name",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "namespaceOverride": {
+            "description": "Override the namespace of the resources (defaults to the release namespace)",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "nodeSelector": {
+            "description": "Node selector",
+            "type": "object"
+        },
+        "podAnnotations": {
+            "description": "Pod annotations",
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "podDisruptionBudget": {
+            "description": "PodDisruptionBudget for the MCP server. Set `minAvailable` or `maxUnavailable` to enable it.",
+            "type": "object"
+        },
+        "podLabels": {
+            "description": "Pod labels",
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "priorityClassName": {
+            "description": "Priority class name",
+            "type": "string"
+        },
+        "readinessProbe": {
+            "description": "MCP server Readiness probe configuration",
+            "type": "object"
+        },
+        "replicas": {
+            "description": "Number of replicas for the MCP server. Ignored when `hpa.enabled` is true.",
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "resources": {
+            "description": "Resource requests and limits",
+            "type": "object"
+        },
+        "revisionHistoryLimit": {
+            "description": "Number of old ReplicaSets to retain for rollbacks",
+            "type": [
+                "integer",
+                "null"
+            ]
+        },
+        "route": {
+            "description": "Configure the gateway routes for the chart here. More routes can be added by adding a dictionary key like the 'main' route. [[ref]](https://gateway-api.sigs.k8s.io/references/spec/#gateway.networking.k8s.io%2fv1)",
+            "type": "object",
+            "properties": {
+                "main": {
+                    "type": "object",
+                    "properties": {
+                        "additionalRules": {
+                            "description": "Additional custom rules that can be added to the route",
+                            "type": "array"
+                        },
+                        "annotations": {
+                            "description": "Route annotations",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "apiVersion": {
+                            "description": "Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1beta1 If not set, the latest available version will be auto-detected",
+                            "type": "string"
+                        },
+                        "enabled": {
+                            "description": "Enables or disables the route",
+                            "type": "boolean"
+                        },
+                        "filters": {
+                            "description": "Filters define the filters that are applied to requests that match this rule.",
+                            "type": "array"
+                        },
+                        "hostnames": {
+                            "description": "Hostnames for the route",
+                            "type": "array"
+                        },
+                        "httpsRedirect": {
+                            "description": "httpsRedirect adds a filter for redirecting to https (HTTP 301 Moved Permanently). To redirect HTTP traffic to HTTPS, you need to have a Gateway with both HTTP and HTTPS listeners. Matches and filters do not take effect if enabled. Ref. https://gateway-api.sigs.k8s.io/guides/http-redirect-rewrite/",
+                            "type": "boolean"
+                        },
+                        "kind": {
+                            "description": "Set the route kind Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute",
+                            "type": "string",
+                            "enum": [
+                                "GRPCRoute",
+                                "HTTPRoute",
+                                "TCPRoute",
+                                "TLSRoute",
+                                "UDPRoute"
+                            ]
+                        },
+                        "labels": {
+                            "description": "Route labels",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "matches": {
+                            "description": "Matches define conditions for matching incoming requests",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "path": {
+                                        "type": "object",
+                                        "properties": {
+                                            "type": {
+                                                "type": "string"
+                                            },
+                                            "value": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "parentRefs": {
+                            "description": "Parent references (gateway to attach to)",
+                            "type": "array"
+                        },
+                        "timeouts": {
+                            "description": "Timeouts define the timeouts that can be configured for an HTTP request. Ref. https://gateway-api.sigs.k8s.io/api-types/httproute/#timeouts-optional",
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "runtimeClassName": {
+            "description": "Runtime class name",
+            "type": "string"
+        },
+        "schedulerName": {
+            "description": "Scheduler name",
+            "type": "string"
+        },
+        "securityContext": {
+            "description": "Pod security context",
+            "type": "object",
+            "additionalProperties": true
+        },
+        "serverAuth": {
+            "description": "Caller authentication for the MCP HTTP endpoint (sets `MCP_GRAFANA_SERVER_TOKEN`). Clients must send `Authorization: Bearer \u003ctoken\u003e`. If neither `token` nor `tokenSecret.name` is set, a random token is generated and reused on upgrade. Set `token: null` to disable authentication. `tokenSecret.name` takes precedence over `token`. No token is generated if `env.GRAFANA_FORWARD_HEADERS` contains `Authorization`, because mcp-grafana refuses to start when the Authorization header is both forwarded and used for caller authentication.",
+            "type": "object",
+            "properties": {
+                "token": {
+                    "description": "Bearer token (if not using a secret). Leave empty to generate one (unless the Authorization header is forwarded), set to `null` to disable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "tokenSecret": {
+                    "description": "Secret containing the bearer token",
+                    "type": "object",
+                    "properties": {
+                        "key": {
+                            "description": "Key within the secret that contains the bearer token",
+                            "type": "string"
+                        },
+                        "name": {
+                            "description": "Name of the secret containing the bearer token",
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "service": {
+            "description": "Service configuration",
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "description": "Service annotations",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "clusterIP": {
+                    "description": "Cluster IP (if type is ClusterIP)",
+                    "type": "string"
+                },
+                "enabled": {
+                    "description": "Enable service",
+                    "type": "boolean"
+                },
+                "externalIPs": {
+                    "description": "External IPs",
+                    "type": "array"
+                },
+                "externalName": {
+                    "description": "External name (if type is ExternalName)",
+                    "type": "string"
+                },
+                "extraPorts": {
+                    "description": "Extra ports",
+                    "type": "array"
+                },
+                "labels": {
+                    "description": "Service labels",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "loadBalancerIP": {
+                    "description": "Load balancer IP",
+                    "type": "string"
+                },
+                "loadBalancerSourceRanges": {
+                    "description": "Load balancer source ranges",
+                    "type": "array"
+                },
+                "nodePort": {
+                    "description": "Node port (if type is NodePort or LoadBalancer)",
+                    "type": [
+                        "integer",
+                        "string"
+                    ]
+                },
+                "port": {
+                    "description": "Service port",
+                    "type": "integer"
+                },
+                "sessionAffinity": {
+                    "description": "Session affinity",
+                    "type": "string"
+                },
+                "sessionAffinityConfig": {
+                    "description": "Session affinity config",
+                    "type": "object"
+                },
+                "type": {
+                    "description": "Service type",
+                    "type": "string",
+                    "enum": [
+                        "ClusterIP",
+                        "NodePort",
+                        "LoadBalancer",
+                        "ExternalName"
+                    ]
+                }
+            }
+        },
+        "serviceAccount": {
+            "description": "Service account Configuration",
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "description": "Annotations for the service account",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "automountServiceAccountToken": {
+                    "description": "Automount service account token",
+                    "type": "boolean"
+                },
+                "create": {
+                    "description": "Enable service account",
+                    "type": "boolean"
+                },
+                "labels": {
+                    "description": "Labels for the service account",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "description": "Name of the service account",
+                    "type": "string"
+                }
+            }
+        },
+        "serviceMonitor": {
+            "description": "ServiceMonitor configuration for Prometheus Operator",
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "description": "ServiceMonitor annotations",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "enabled": {
+                    "description": "Enable ServiceMonitor",
+                    "type": "boolean"
+                },
+                "interval": {
+                    "description": "Scrape interval",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "ServiceMonitor labels",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "metricRelabelings": {
+                    "description": "Additional metric relabelings",
+                    "type": "array"
+                },
+                "namespaceSelector": {
+                    "description": "Namespace selector",
+                    "type": "object"
+                },
+                "path": {
+                    "description": "Metrics path",
+                    "type": "string"
+                },
+                "port": {
+                    "description": "Service port name to scrape. Defaults to `metrics` when `metrics.port` is set, otherwise `mcp-http`",
+                    "type": "string"
+                },
+                "relabelings": {
+                    "description": "Additional relabelings",
+                    "type": "array"
+                },
+                "scrapeTimeout": {
+                    "description": "Scrape timeout",
+                    "type": "string"
+                }
+            }
+        },
+        "startupProbe": {
+            "description": "MCP server Startup probe configuration",
+            "type": "object"
+        },
+        "terminationGracePeriodSeconds": {
+            "description": "Termination grace period in seconds (defaults to Kubernetes' default of 30s when unset)",
+            "type": [
+                "integer",
+                "string",
+                "null"
+            ]
+        },
+        "tolerations": {
+            "description": "Tolerations",
+            "type": "array"
+        },
+        "topologySpreadConstraints": {
+            "description": "Topology spread constraints",
+            "type": "array"
+        },
+        "volumeMounts": {
+            "description": "Volume mounts",
+            "type": "array"
+        },
+        "volumes": {
+            "description": "Volumes",
+            "type": "array"
+        }
+    },
+    "additionalProperties": true
+}
