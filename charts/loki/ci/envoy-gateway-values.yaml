@@ -93,9 +93,6 @@ bloomBuilder:
   enabled: true
   replicas: 1
   affinity: null
-bloomCompactor:
-  enabled: true
-  replicas: 1
 bloomGateway:
   enabled: true
   replicas: 1
