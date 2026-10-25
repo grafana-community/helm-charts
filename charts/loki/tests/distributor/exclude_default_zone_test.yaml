@@ -1,0 +1,75 @@
+suite: zone aware migration excludeDefaultZone
+templates:
+  - distributor/workload.yaml
+  - ruler/workload.yaml
+  - config.yaml
+set:
+  deploymentMode: Distributed
+  loki.commonConfig.replication_factor: 1
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  loki.storage.bucketNames.admin: admin
+  ruler.enabled: true
+  ingester.zoneAwareReplication.enabled: true
+tests:
+  - it: does not exclude zone-default on the distributor by default
+    template: distributor/workload.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.excluded-zones=zone-default
+
+  - it: does not exclude zone-default on the ruler by default
+    template: ruler/workload.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.excluded-zones=zone-default
+
+  - it: does not exclude zone-default on the distributor when migration is disabled
+    template: distributor/workload.yaml
+    set:
+      ingester.zoneAwareReplication.migration.excludeDefaultZone: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.excluded-zones=zone-default
+
+  - it: does not exclude zone-default on the ruler when migration is disabled
+    template: ruler/workload.yaml
+    set:
+      ingester.zoneAwareReplication.migration.excludeDefaultZone: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.excluded-zones=zone-default
+
+  - it: excludes zone-default on the distributor during migration
+    template: distributor/workload.yaml
+    set:
+      ingester.zoneAwareReplication.migration.enabled: true
+      ingester.zoneAwareReplication.migration.writePath: true
+      ingester.zoneAwareReplication.migration.excludeDefaultZone: true
+      distributor.extraArgs:
+        - -log.level=debug
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.zone-awareness-enabled=true
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.excluded-zones=zone-default
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -log.level=debug
+
+  - it: excludes zone-default on the ruler during migration
+    template: ruler/workload.yaml
+    set:
+      ingester.zoneAwareReplication.migration.enabled: true
+      ingester.zoneAwareReplication.migration.excludeDefaultZone: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.excluded-zones=zone-default
