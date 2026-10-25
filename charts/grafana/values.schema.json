@@ -1408,6 +1408,72 @@
                 "readinessProbe": {
                     "type": "object"
                 },
+                "repositories": {
+                    "type": "object",
+                    "properties": {
+                        "apiNamespace": {
+                            "type": "string"
+                        },
+                        "apiSkipTlsVerify": {
+                            "type": "boolean"
+                        },
+                        "apiTimeout": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "apiURL": {
+                            "type": "string"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "env": {
+                            "type": "object"
+                        },
+                        "envValueFrom": {
+                            "type": "object"
+                        },
+                        "extraMounts": {
+                            "type": "array"
+                        },
+                        "healthPort": {
+                            "type": "integer"
+                        },
+                        "label": {
+                            "type": "string"
+                        },
+                        "labelValue": {
+                            "type": "string"
+                        },
+                        "resource": {
+                            "type": "string",
+                            "enum": [
+                                "configmap",
+                                "secret",
+                                "both"
+                            ]
+                        },
+                        "resourceName": {
+                            "type": "string"
+                        },
+                        "searchNamespace": {
+                            "type": [
+                                "string",
+                                "array",
+                                "null"
+                            ]
+                        },
+                        "sizeLimit": {
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
+                        },
+                        "watchMethod": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "resources": {
                     "type": "object"
                 },

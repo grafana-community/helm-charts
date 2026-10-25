@@ -1,0 +1,308 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana sidecar repositories
+templates:
+  - deployment.yaml
+  - configmap-repository-sync.yaml
+  - clusterrole.yaml
+  - role.yaml
+chart:
+  version: 0.0.0
+  appVersion: 0.0.0
+release:
+  name: test
+tests:
+  - it: should not render the sidecar or its configmap by default
+    asserts:
+      - template: deployment.yaml
+        notContains:
+          path: spec.template.spec.containers
+          content:
+            name: grafana-sc-repositories
+          any: true
+      - template: deployment.yaml
+        notExists:
+          path: spec.template.metadata.annotations["checksum/repository-sync"]
+      - template: configmap-repository-sync.yaml
+        hasDocuments:
+          count: 0
+
+  - it: should render the sidecar container when enabled
+    set:
+      sidecar.repositories.enabled: true
+    template: deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: grafana-sc-repositories
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: quay.io/kiwigrid/k8s-sidecar:2.14.1
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LABEL
+            value: grafana_repository
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: RESOURCE
+            value: secret
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: METHOD
+            value: WATCH
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FOLDER
+            value: /tmp/repositories
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SCRIPT
+            value: /opt/repository-sync/repository-sync.py
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HEALTH_PORT
+            value: "8085"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REPOSITORY_SYNC_API_URL
+            value: http://localhost:3000
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REPOSITORY_SYNC_NAMESPACE
+            value: default
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REPOSITORY_SYNC_TIMEOUT
+            value: "300"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REPOSITORY_SYNC_SKIP_TLS_VERIFY
+            value: "false"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REQ_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: test-grafana
+                key: admin-user
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: test-grafana
+                key: admin-password
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REQ_URL
+          any: true
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - name: sc-repositories-volume
+              mountPath: /tmp/repositories
+            - name: sc-repositories-script
+              mountPath: /opt/repository-sync
+              readOnly: true
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: sc-repositories-volume
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: sc-repositories-script
+            configMap:
+              name: test-grafana-repository-sync
+              defaultMode: 0555
+      - exists:
+          path: spec.template.metadata.annotations["checksum/repository-sync"]
+
+  - it: should not mount the repositories volume into the grafana container
+    set:
+      sidecar.repositories.enabled: true
+    template: deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: grafana
+      - notContains:
+          path: spec.template.spec.containers[1].volumeMounts
+          content:
+            name: sc-repositories-volume
+          any: true
+
+  - it: should render the sync script configmap when enabled
+    set:
+      sidecar.repositories.enabled: true
+    template: configmap-repository-sync.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: test-grafana-repository-sync
+      - matchRegex:
+          path: data["repository-sync.py"]
+          pattern: "^#!/usr/bin/env python\n"
+      - matchRegex:
+          path: data["repository-sync.py"]
+          pattern: provisioning\.grafana\.app/v0alpha1
+
+  - it: should pass custom settings to the sidecar
+    set:
+      sidecar.repositories.enabled: true
+      sidecar.repositories.label: my_repo
+      sidecar.repositories.labelValue: "{{ .Release.Name }}"
+      sidecar.repositories.resource: both
+      sidecar.repositories.searchNamespace:
+        - one
+        - two
+      sidecar.repositories.apiURL: https://localhost:3000/grafana
+      sidecar.repositories.apiSkipTlsVerify: true
+      sidecar.repositories.apiNamespace: org-2
+      sidecar.repositories.apiTimeout: 60
+      sidecar.repositories.healthPort: 9000
+      sidecar.repositories.sizeLimit: 10Mi
+      sidecar.repositories.env:
+        FOO: bar
+      sidecar.repositories.envValueFrom:
+        TOKEN:
+          secretKeyRef:
+            name: my-secret
+            key: token
+    template: deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LABEL
+            value: my_repo
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LABEL_VALUE
+            value: test
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: RESOURCE
+            value: both
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NAMESPACE
+            value: one,two
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REPOSITORY_SYNC_API_URL
+            value: https://localhost:3000/grafana
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REPOSITORY_SYNC_SKIP_TLS_VERIFY
+            value: "true"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REPOSITORY_SYNC_NAMESPACE
+            value: org-2
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REPOSITORY_SYNC_TIMEOUT
+            value: "60"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HEALTH_PORT
+            value: "9000"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FOO
+            value: bar
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: my-secret
+                key: token
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: sc-repositories-volume
+            emptyDir:
+              sizeLimit: 10Mi
+
+  - it: should not pass admin credentials when the admin user is set via env
+    set:
+      sidecar.repositories.enabled: true
+      env:
+        GF_SECURITY_ADMIN_USER: admin
+        GF_SECURITY_ADMIN_PASSWORD: secret
+    template: deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REQ_USERNAME
+          any: true
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REQ_PASSWORD
+          any: true
+
+  - it: should fail with watchServerTimeout and a non-WATCH method
+    set:
+      sidecar.repositories.enabled: true
+      sidecar.repositories.watchMethod: SLEEP
+      sidecar.repositories.watchServerTimeout: 3600
+    template: deployment.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: Cannot use .Values.sidecar.repositories.watchServerTimeout with .Values.sidecar.repositories.watchMethod SLEEP
+
+  - it: should grant read access to secrets and configmaps in the clusterrole
+    set:
+      sidecar.repositories.enabled: true
+    template: clusterrole.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups: [""]
+            resources: ["configmaps", "secrets"]
+            verbs: ["get", "watch", "list"]
+
+  - it: should grant read access to secrets and configmaps in the namespaced role
+    set:
+      sidecar.repositories.enabled: true
+      rbac.namespaced: true
+    template: role.yaml
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups: [""]
+            resources: ["configmaps", "secrets"]
+            verbs: ["get", "watch", "list"]

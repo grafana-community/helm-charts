@@ -1616,6 +1616,90 @@ sidecar:
     # Sets the size limit of the notifier sidecar emptyDir volume
     # @schema type:[string, integer]
     sizeLimit: ""
+  # Provisions Git Sync repositories (provisioning.grafana.app/v0alpha1 Repository objects) from labelled
+  # secrets or configmaps. Git Sync repositories can't be provisioned from files, so the sidecar applies them
+  # through the Grafana API using the admin credentials. Repositories it created are deleted again
+  # when their manifest disappears; repositories created in the UI are left alone.
+  # ref: https://grafana.com/docs/grafana/latest/as-code/observability-as-code/git-sync/git-sync-setup/set-up-code/
+  repositories:
+    enabled: false
+    # Additional environment variables for the repositories sidecar
+    env: {}
+    ## "valueFrom" environment variable references that will be added to deployment pods. Name is templated.
+    ## ref: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#envvarsource-v1-core
+    ## Renders in container spec as:
+    ##   env:
+    ##     ...
+    ##     - name: <key>
+    ##       valueFrom:
+    ##         <value rendered as YAML>
+    envValueFrom: {}
+    #  ENV_NAME:
+    #    configMapKeyRef:
+    #      name: configmap-name
+    #      key: value_key
+    # Do not reprocess already processed unchanged resources on k8s API reconnect.
+    # ignoreAlreadyProcessed: true
+    # Set to true to skip tls verification for kube api calls. Overrides sidecar.skipTlsVerify
+    # skipTlsVerify: true
+    # label that the secrets with repositories are marked with (can be templated)
+    label: grafana_repository
+    # value of label that the secrets with repositories are set to (can be templated)
+    labelValue: ""
+    # Log level. Can be one of: DEBUG, INFO, WARN, ERROR, CRITICAL.
+    # logLevel: INFO
+    # If specified, the sidecar will search for repository secrets inside this namespace.
+    # Otherwise the namespace in which the sidecar is running will be used.
+    # It's also possible to specify ALL to search in all namespaces
+    # @schema type:[string, array, null]
+    searchNamespace: null
+    # Method to use to detect secret changes. With WATCH the sidecar will do a WATCH requests, with SLEEP it will list all secrets, then sleep for 60 seconds.
+    watchMethod: WATCH
+    # search in configmap, secret or both. Defaults to secret, as repository manifests usually contain tokens.
+    # @schema enum:[configmap, secret, both]
+    resource: secret
+    #
+    # resourceName: comma separated list of resource names to be fetched/checked by this sidecar.
+    # per default all resources of the type defined in {{ .Values.sidecar.repositories.resource }} will be checked.
+    # This e.g. allows stricter RBAC rules which are limited to the resources meant for the sidecars.
+    # resourceName: "secret/repositories-0,secret/repositories-1"
+    resourceName: ""
+    #
+    # watchServerTimeout: request to the server, asking it to cleanly close the connection after that.
+    # defaults to 60sec; much higher values like 3600 seconds (1h) are feasible for non-Azure K8S
+    # watchServerTimeout: 3600
+    #
+    # watchClientTimeout: is a client-side timeout, configuring your local socket.
+    # If you have a network outage dropping all packets with no RST/FIN,
+    # this is how long your client waits before realizing & dropping the connection.
+    # defaults to 66sec (sic!)
+    # watchClientTimeout: 60
+    #
+    # maxTotalRetries: Total number of retries to allow for any k8s api request.
+    # maxTotalRetries: 5
+    # maxConnectRetries: How many connection-related errors to retry on for any k8s api request.
+    # maxConnectRetries: 10
+    # maxReadRetries: How many times to retry on read errors for any k8s api request.
+    # maxReadRetries: 5
+    #
+    # Base URL of the Grafana API the repositories are applied to
+    apiURL: "http://localhost:3000"
+    # Set to true to skip tls verification for calls to apiURL
+    apiSkipTlsVerify: false
+    # Kubernetes-style namespace of the Grafana organization the repositories belong to. "default" is org 1, other orgs use "org-<id>".
+    apiNamespace: default
+    # Seconds to wait for the Grafana API to answer before a sync attempt fails.
+    # The first sync after the pod starts always waits until Grafana is up.
+    # @schema type:integer;minimum:1
+    apiTimeout: 300
+    # Port of the health endpoint of the sidecar. The sync script uses it to wait for the initial sync.
+    # @schema type:integer
+    healthPort: 8085
+    # Additional repositories sidecar volume mounts
+    extraMounts: []
+    # Sets the size limit of the repositories sidecar emptyDir volume
+    # @schema type:[string, integer]
+    sizeLimit: ""
 
 ## Override the deployment namespace
 ##

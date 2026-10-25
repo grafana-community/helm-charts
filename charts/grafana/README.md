@@ -447,6 +447,71 @@ data:
         uid: 16624780-6564-45dc-825c-8bded4ad92d3
 ```
 
+## Sidecar for Git Sync repositories
+
+[Git Sync](https://grafana.com/docs/grafana/latest/as-code/observability-as-code/git-sync/) repositories can't be
+provisioned from files. They only exist as `provisioning.grafana.app/v0alpha1` `Repository` objects in the Grafana API.
+
+If the parameter `sidecar.repositories.enabled` is set, a sidecar container is deployed in the grafana pod. It watches
+secrets (or configmaps, see `sidecar.repositories.resource`) with the label defined in `sidecar.repositories.label`
+(default is `grafana_repository`) and applies every `Repository` manifest in them through the Grafana API, using the
+admin credentials. Each key may contain one or more YAML or JSON documents.
+
+- Repositories are created when they don't exist and updated when their manifest changes.
+- Values under `secure` (e.g. `secure.token.create`) are only sent when they change, so Grafana keeps the stored token otherwise.
+- Repositories created by the sidecar get the label `app.kubernetes.io/managed-by: grafana-repository-sidecar` and are
+  deleted when their manifest disappears. Grafana then removes the resources synced from that repository.
+  Repositories without that label, e.g. created in the UI, are never changed or deleted.
+- Without persistence, the repositories are re-created whenever the pod starts.
+
+The admin credentials are taken from `admin.existingSecret` or the chart generated secret. If the admin user is set via
+`env`, pass `REQ_USERNAME` and `REQ_PASSWORD` with `sidecar.repositories.envValueFrom`.
+Repositories of other organizations can be provisioned by setting `sidecar.repositories.apiNamespace` to `org-<id>`.
+
+Example values:
+
+```yaml
+sidecar:
+  repositories:
+    enabled: true
+```
+
+Example secret:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-repository-dashboards
+  labels:
+    grafana_repository: "1"
+stringData:
+  dashboards.yaml: |
+    apiVersion: provisioning.grafana.app/v0alpha1
+    kind: Repository
+    metadata:
+      name: dashboards
+    spec:
+      title: Dashboards
+      type: github
+      github:
+        url: https://github.com/example/grafana-dashboards
+        branch: main
+        path: grafana/
+      sync:
+        enabled: true
+        target: folder
+        intervalSeconds: 60
+      workflows:
+        - write
+    secure:
+      token:
+        create: github_pat_xxx
+```
+
+The sidecar logs every change. The applied repositories and their sync status can be checked at
+`/apis/provisioning.grafana.app/v0alpha1/namespaces/default/repositories`.
+
 ## Statically provision alerting resources
 
 If you don't need to change alerting resources (alert rules, contact points, notification policies and notification templates) regularly you could use the `alerting` config option instead of the sidecar option above.
