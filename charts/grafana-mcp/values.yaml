@@ -1,6 +1,31 @@
-# -- Number of replicas for the MCP server
+# $schema: ./values.schema.json
+# helm-schema-args: --schema-root.additional-properties=false
+
+# @schema type:[string, null]
+# -- Override the chart name
+nameOverride: ""
+
+# @schema type:[string, null]
+# -- Override the full name of the resources
+fullnameOverride: ""
+
+# @schema type:[string, null]
+# -- Override the namespace of the resources (defaults to the release namespace)
+namespaceOverride: ""
+
+# @schema additionalProperties:{"type":"string"}
+# -- Extra labels added to all resources
+extraLabels: {}
+
+# @schema type:[integer, null]
+# -- Number of replicas for the MCP server. Ignored when `hpa.enabled` is true.
 replicas: 1
 
+# @schema type:[integer, null]
+# -- Number of old ReplicaSets to retain for rollbacks
+revisionHistoryLimit: 10
+
+# @schema skipProperties:true;additionalProperties:true
 # -- Deployment strategy
 deploymentStrategy:
   type: RollingUpdate
@@ -48,6 +73,7 @@ grafana:
 # No token is generated if `env.GRAFANA_FORWARD_HEADERS` contains `Authorization`, because mcp-grafana
 # refuses to start when the Authorization header is both forwarded and used for caller authentication.
 serverAuth:
+  # @schema type:[string, null]
   # -- Bearer token (if not using a secret). Leave empty to generate one (unless the Authorization header is forwarded), set to `null` to disable.
   token: ""
   # -- Secret containing the bearer token
@@ -60,6 +86,7 @@ serverAuth:
 # -- Enable debug mode
 debug: false
 
+# @schema item:string
 # -- Categories to disable (e.g., oncall, incident, sift)
 disabledCategories: []
 
@@ -97,8 +124,10 @@ serviceAccount:
   create: true
   # -- Name of the service account
   name: ""
+  # @schema additionalProperties:{"type":"string"}
   # -- Annotations for the service account
   annotations: {}
+  # @schema additionalProperties:{"type":"string"}
   # -- Labels for the service account
   labels: {}
   # -- Automount service account token
@@ -108,12 +137,15 @@ serviceAccount:
 service:
   # -- Enable service
   enabled: true
+  # @schema enum:[ClusterIP, NodePort, LoadBalancer, ExternalName]
   # -- Service type
   type: ClusterIP
   # -- Service port
   port: 8000
+  # @schema additionalProperties:{"type":"string"}
   # -- Service annotations
   annotations: {}
+  # @schema additionalProperties:{"type":"string"}
   # -- Service labels
   labels: {}
   # -- Cluster IP (if type is ClusterIP)
@@ -126,6 +158,7 @@ service:
   loadBalancerSourceRanges: []
   # -- External name (if type is ExternalName)
   externalName: ""
+  # @schema type:[integer, string]
   # -- Node port (if type is NodePort or LoadBalancer)
   nodePort: ""
   # -- Extra ports
@@ -141,6 +174,7 @@ ingress:
   enabled: false
   # -- Ingress class name
   className: ""
+  # @schema additionalProperties:{"type":"string"}
   # -- Ingress annotations
   annotations: {}
     # kubernetes.io/ingress.class: nginx
@@ -156,6 +190,7 @@ ingress:
   #  - secretName: mcp-grafana-tls
   #    hosts:
   #      - mcp-grafana.local
+  # @schema additionalProperties:{"type":"string"}
   # -- Ingress labels
   labels: {}
 
@@ -170,12 +205,15 @@ route:
     # -- Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1beta1
     # If not set, the latest available version will be auto-detected
     apiVersion: ""
+    # @schema enum:[GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute]
     # -- Set the route kind
     # Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
     kind: HTTPRoute
 
+    # @schema additionalProperties:{"type":"string"}
     # -- Route annotations
     annotations: {}
+    # @schema additionalProperties:{"type":"string"}
     # -- Route labels
     labels: {}
 
@@ -221,6 +259,7 @@ resources: {}
   #   cpu: 250m
   #   memory: 256Mi
 
+# @schema skipProperties:true;additionalProperties:true
 # -- Container security context
 containerSecurityContext:
   allowPrivilegeEscalation: false
@@ -234,6 +273,7 @@ containerSecurityContext:
   seccompProfile:
     type: RuntimeDefault
 
+# @schema skipProperties:true;additionalProperties:true
 # -- Pod security context
 securityContext:
   fsGroup: 1000
@@ -270,6 +310,7 @@ runtimeClassName: ""
 # -- Scheduler name
 schedulerName: ""
 
+# @schema type:[integer, string, null]
 # -- Termination grace period in seconds (defaults to Kubernetes' default of 30s when unset)
 terminationGracePeriodSeconds: ""
 
@@ -282,15 +323,19 @@ dnsPolicy: ""
 # -- DNS config
 dnsConfig: {}
 
+# @schema additionalProperties:{"type":"string"}
 # -- Pod annotations
 podAnnotations: {}
 
+# @schema additionalProperties:{"type":"string"}
 # -- Pod labels
 podLabels: {}
 
+# @schema additionalProperties:{"type":"string"}
 # -- Deployment annotations
 annotations: {}
 
+# @schema additionalProperties:{"type":"string"}
 # -- Deployment labels
 labels: {}
 
@@ -316,6 +361,7 @@ extraContainers: []
 metrics:
   # -- Enable Prometheus metrics endpoint (adds --metrics flag)
   enabled: false
+  # @schema type:[integer, string, null]
   # -- Serve metrics on a separate port (adds `--metrics-address=:<port>`). The port is exposed on the
   # container and the Service as `metrics` and scraped by the ServiceMonitor. Unlike the MCP port, the
   # separate listener does not enforce Host/Origin validation. Leave empty to serve metrics on the MCP port.
@@ -325,8 +371,10 @@ metrics:
 serviceMonitor:
   # -- Enable ServiceMonitor
   enabled: false
+  # @schema additionalProperties:{"type":"string"}
   # -- ServiceMonitor labels
   labels: {}
+  # @schema additionalProperties:{"type":"string"}
   # -- ServiceMonitor annotations
   annotations: {}
   # -- Scrape interval
@@ -352,15 +400,19 @@ hpa:
   minReplicas: 1
   # -- Maximum number of replicas
   maxReplicas: 10
+  # @schema type:[integer, null]
   # -- Target CPU utilization percentage
   targetCPUUtilizationPercentage: 80
+  # @schema type:[integer, null]
   # -- Target memory utilization percentage
   targetMemoryUtilizationPercentage: null
   # -- Additional metrics
   metrics: []
   # -- Behavior configuration
   behavior: {}
+  # @schema additionalProperties:{"type":"string"}
   # -- Annotations
   annotations: {}
+  # @schema additionalProperties:{"type":"string"}
   # -- Labels
   labels: {}
