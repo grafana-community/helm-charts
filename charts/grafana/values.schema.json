@@ -1470,7 +1470,11 @@
                             ]
                         },
                         "watchMethod": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "WATCH",
+                                "SLEEP"
+                            ]
                         }
                     }
                 },
