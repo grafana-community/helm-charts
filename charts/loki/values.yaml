@@ -7,6 +7,10 @@
 # devises.
 kubeVersionOverride: ""
 
+# -- Not used by this chart. Lets a parent chart use `<alias>.enabled` as the condition of its Loki dependency
+# without failing schema validation.
+enabled: true
+
 global:
   # @schema type:[string, null]
   # -- Overrides the Docker registry globally for all images (standard format).

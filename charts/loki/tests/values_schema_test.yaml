@@ -18,3 +18,11 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: should accept the enabled key set by a parent chart condition
+    set:
+      loki.useTestSchema: true
+      enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0

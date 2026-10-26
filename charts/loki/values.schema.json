@@ -3802,6 +3802,10 @@
                 }
             }
         },
+        "enabled": {
+            "description": "Not used by this chart. Lets a parent chart use `\u003calias\u003e.enabled` as the condition of its Loki dependency without failing schema validation.",
+            "type": "boolean"
+        },
         "extraObjects": {
             "type": [
                 "array",
