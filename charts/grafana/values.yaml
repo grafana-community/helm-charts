@@ -1654,6 +1654,7 @@ sidecar:
     # @schema type:[string, array, null]
     searchNamespace: null
     # Method to use to detect secret changes. With WATCH the sidecar will do a WATCH requests, with SLEEP it will list all secrets, then sleep for 60 seconds.
+    # @schema enum:[WATCH, SLEEP]
     watchMethod: WATCH
     # search in configmap, secret or both. Defaults to secret, as repository manifests usually contain tokens.
     # @schema enum:[configmap, secret, both]
