@@ -271,10 +271,6 @@ def main():
         # Syncing now could delete repositories whose manifests just are not written yet, so sync
         # once in the background when the initial list is done. This also keeps the sidecar from
         # blocking while Grafana is still starting.
-        try:
-            os.close(os.open(DEFERRED_MARKER, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
-        except FileExistsError:
-            return 0
         log("INFO", "initial sidecar sync in progress, syncing repositories once it is done")
         subprocess.Popen([sys.executable, os.path.abspath(__file__), "--deferred"],
                          stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
