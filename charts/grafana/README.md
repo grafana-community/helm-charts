@@ -461,7 +461,7 @@ admin credentials. Each key may contain one or more YAML or JSON documents.
 - Values under `secure` (e.g. `secure.token.create`) are only sent when they change, so Grafana keeps the stored token otherwise.
 - Repositories created by the sidecar get the label `app.kubernetes.io/managed-by: grafana-repository-sidecar` and are
   deleted when their manifest disappears. Grafana then removes the resources synced from that repository.
-  Repositories without that label, e.g. created in the UI, are never changed or deleted.
+  Repositories without that label, e.g. created in the UI, are never deleted, but a manifest with the same name takes them over.
 - Without persistence, the repositories are re-created whenever the pod starts.
 
 The admin credentials are taken from `admin.existingSecret` or the chart generated secret. If the admin user is set via
