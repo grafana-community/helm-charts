@@ -1,0 +1,70 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: memberlist seed nodes
+templates:
+  - bloom-builder/workload.yaml
+  - bloom-gateway/workload.yaml
+  - bloom-planner/workload.yaml
+  - compactor/workload.yaml
+  - distributor/workload.yaml
+  - index-gateway/workload.yaml
+  - ingester/workload.yaml
+  - overrides-exporter/workload.yaml
+  - pattern-ingester/workload.yaml
+  - querier/workload.yaml
+  - query-frontend/workload.yaml
+  - query-scheduler/workload.yaml
+  - ruler/workload.yaml
+  - config.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  bloomBuilder.enabled: true
+  bloomGateway.enabled: true
+  bloomGateway.replicas: 1
+  bloomPlanner.enabled: true
+  bloomPlanner.replicas: 1
+  indexGateway.enabled: true
+  indexGateway.replicas: 1
+  overridesExporter.enabled: true
+  patternIngester.enabled: true
+  ruler.enabled: true
+
+tests:
+  - it: should label components that always run a memberlist listener as seed nodes
+    templates:
+      - compactor/workload.yaml
+      - distributor/workload.yaml
+      - ingester/workload.yaml
+      - pattern-ingester/workload.yaml
+      - querier/workload.yaml
+      - ruler/workload.yaml
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
+          value: memberlist
+
+  - it: should not label components that only use memberlist with some ring configurations
+    templates:
+      - bloom-builder/workload.yaml
+      - bloom-gateway/workload.yaml
+      - bloom-planner/workload.yaml
+      - index-gateway/workload.yaml
+      - overrides-exporter/workload.yaml
+      - query-frontend/workload.yaml
+      - query-scheduler/workload.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - notExists:
+          path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
+
+  - it: should label index-gateway as seed node when joinMemberlist is enabled
+    template: index-gateway/workload.yaml
+    set:
+      indexGateway.joinMemberlist: true
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
+          value: memberlist

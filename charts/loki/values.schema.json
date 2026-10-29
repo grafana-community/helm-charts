@@ -4967,7 +4967,7 @@
                     ]
                 },
                 "joinMemberlist": {
-                    "description": "Whether the index gateway should join the memberlist hashring",
+                    "description": "Whether index-gateway pods are added to the memberlist Service as seed nodes for `memberlist.join_members`. Index gateways still join the memberlist cluster through the seed nodes when `loki.index_gateway.mode` is `ring`.",
                     "type": "boolean"
                 },
                 "kind": {
