@@ -4567,9 +4567,6 @@ indexGateway:
   # -- Number of replicas for the index-gateway. Set to null to omit spec.replicas from the workload,
   # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
   replicas: 0
-  # -- Whether index-gateway pods are added to the memberlist Service as seed nodes for `memberlist.join_members`.
-  # Index gateways still join the memberlist cluster through the seed nodes when `loki.index_gateway.mode` is `ring`.
-  joinMemberlist: false
   # @schema additionalProperties:true
   # -- DNSConfig for index-gateway pods
   dnsConfig: {}
