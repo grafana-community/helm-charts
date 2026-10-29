@@ -366,7 +366,6 @@ Expects the component name in .component on the passed context
 POD labels
 */}}
 {{- define "tempo.podLabels" -}}
-helm.sh/chart: {{ include "tempo.chart" .ctx }}
 app.kubernetes.io/name: {{ include "tempo.name" .ctx }}
 app.kubernetes.io/instance: {{ .ctx.Release.Name }}
 app.kubernetes.io/version: {{ .ctx.Chart.AppVersion | quote }}
