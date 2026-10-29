@@ -173,3 +173,36 @@ tests:
       - hasDocuments:
           count: 2
         template: gateway/route-gateway.yaml
+
+  - it: should render a ListenerSet and attach the gateway route without hostnames
+    set:
+      gateway.route.main.hostnames: []
+      gateway.route.main.parentRefs: []
+      gateway.route.main.listenerSet.enabled: true
+      gateway.route.main.listenerSet.parentRef:
+        name: my-gateway
+      gateway.route.main.listenerSet.listeners:
+        - name: http
+          hostname: loki.example.com
+          port: 80
+          protocol: HTTP
+    asserts:
+      - hasDocuments:
+          count: 2
+        template: gateway/route-gateway.yaml
+      - notExists:
+          path: spec.hostnames
+        documentIndex: 0
+        template: gateway/route-gateway.yaml
+      - equal:
+          path: spec.parentRefs
+          value:
+            - group: gateway.networking.k8s.io
+              kind: ListenerSet
+              name: RELEASE-NAME-loki-gateway
+        documentIndex: 0
+        template: gateway/route-gateway.yaml
+      - isKind:
+          of: ListenerSet
+        documentIndex: 1
+        template: gateway/route-gateway.yaml

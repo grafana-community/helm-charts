@@ -22,7 +22,9 @@ Params:
 */}}
 {{- define "loki.route" -}}
 {{- $route := .route -}}
-{{- $ctx := .ctx }}
+{{- $ctx := .ctx -}}
+{{- $listenerSet := $route.listenerSet | default dict -}}
+{{- $listenerSetName := $listenerSet.name | default .name }}
 ---
 apiVersion: {{ $route.apiVersion | default (include "loki.gatewayApi.apiVersion" $ctx) }}
 kind: {{ $route.kind | default "HTTPRoute" }}
@@ -39,10 +41,21 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- with $route.parentRefs }}
+  {{- if or $route.parentRefs $listenerSet.enabled }}
   parentRefs:
+    {{- with $route.parentRefs }}
     {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if $listenerSet.enabled }}
+    - group: gateway.networking.k8s.io
+      kind: ListenerSet
+      name: {{ $listenerSetName }}
+      {{- with $listenerSet.sectionName }}
+      sectionName: {{ . }}
+      {{- end }}
+    {{- end }}
   {{- end }}
+  {{- /* hostnames are optional: when omitted the route inherits the hostnames of the attached listeners */ -}}
   {{- with $route.hostnames }}
   hostnames:
     {{- tpl (toYaml .) $ctx | nindent 4 }}
@@ -56,6 +69,42 @@ spec:
     {{- .rules | nindent 4 }}
     {{- end }}
   {{- end }}
+{{- end -}}
+
+{{/*
+Gateway API ListenerSet manifest. Rendered next to a route when route.listenerSet.enabled is true;
+the route is automatically attached to it through a ListenerSet parentRef.
+Params:
+  ctx            - chart root context ($)
+  route          - route values object
+  name           - resource name of the route (default name of the ListenerSet)
+  labelsTemplate - optional: name of the labels helper to use (default "loki.labels")
+*/}}
+{{- define "loki.listenerSet" -}}
+{{- $ctx := .ctx -}}
+{{- $listenerSet := .route.listenerSet }}
+---
+apiVersion: {{ $listenerSet.apiVersion | default (include "loki.gatewayApi.apiVersion" $ctx) }}
+kind: ListenerSet
+metadata:
+  name: {{ $listenerSet.name | default .name }}
+  namespace: {{ include "loki.namespace" $ctx }}
+  labels:
+    {{- include (.labelsTemplate | default "loki.labels") $ctx | nindent 4 }}
+    {{- with $listenerSet.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $listenerSet.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    {{- toYaml $listenerSet.parentRef | nindent 4 }}
+  listeners:
+    {{- tpl (toYaml $listenerSet.listeners) $ctx | nindent 4 }}
 {{- end -}}
 
 {{/*

@@ -4593,7 +4593,7 @@
                                     "type": "array"
                                 },
                                 "hostnames": {
-                                    "description": "Hostnames for the route",
+                                    "description": "Hostnames for the route. Optional: when empty, the route inherits the hostnames of the listeners it is attached to, which is the typical setup when `listenerSet` defines them.",
                                     "type": "array"
                                 },
                                 "kind": {
@@ -4605,6 +4605,50 @@
                                     "type": "object",
                                     "additionalProperties": {
                                         "type": "string"
+                                    }
+                                },
+                                "listenerSet": {
+                                    "description": "Gateway API ListenerSet created for this route (requires Gateway API with ListenerSet support). The route is attached to it automatically; the parent Gateway must allow it via `spec.allowedListeners`.",
+                                    "type": "object",
+                                    "properties": {
+                                        "annotations": {
+                                            "description": "Annotations for the ListenerSet",
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "apiVersion": {
+                                            "description": "ListenerSet apiVersion. Auto-detected from cluster capabilities if empty.",
+                                            "type": "string"
+                                        },
+                                        "enabled": {
+                                            "description": "Specifies whether a ListenerSet should be created and the route attached to it",
+                                            "type": "boolean"
+                                        },
+                                        "labels": {
+                                            "description": "Labels for the ListenerSet",
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "listeners": {
+                                            "description": "Listeners of the ListenerSet (templating is supported)",
+                                            "type": "array"
+                                        },
+                                        "name": {
+                                            "description": "ListenerSet name. Defaults to the name of the route.",
+                                            "type": "string"
+                                        },
+                                        "parentRef": {
+                                            "description": "Parent Gateway of the ListenerSet (name, and namespace if different). group and kind default to the Gateway API Gateway.",
+                                            "type": "object"
+                                        },
+                                        "sectionName": {
+                                            "description": "Optional listener name of the ListenerSet to attach the route to. Attaches to all listeners if empty.",
+                                            "type": "string"
+                                        }
                                     }
                                 },
                                 "matches": {
@@ -4628,7 +4672,7 @@
                                     }
                                 },
                                 "parentRefs": {
-                                    "description": "Parent gateway references to attach the route to",
+                                    "description": "Parent references for the route. Not required when `listenerSet.enabled` is true, the ListenerSet is added as a parentRef automatically.",
                                     "type": "array"
                                 },
                                 "timeouts": {
@@ -10478,7 +10522,7 @@
                             "type": "boolean"
                         },
                         "hostnames": {
-                            "description": "Hostnames for the route",
+                            "description": "Hostnames for the route. Optional: when empty, the route inherits the hostnames of the listeners it is attached to, which is the typical setup when `listenerSet` defines them.",
                             "type": "array"
                         },
                         "kind": {
@@ -10492,8 +10536,52 @@
                                 "type": "string"
                             }
                         },
+                        "listenerSet": {
+                            "description": "Gateway API ListenerSet created for this route (requires Gateway API with ListenerSet support). The route is attached to it automatically; the parent Gateway must allow it via `spec.allowedListeners`.",
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Annotations for the ListenerSet",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "apiVersion": {
+                                    "description": "ListenerSet apiVersion. Auto-detected from cluster capabilities if empty.",
+                                    "type": "string"
+                                },
+                                "enabled": {
+                                    "description": "Specifies whether a ListenerSet should be created and the route attached to it",
+                                    "type": "boolean"
+                                },
+                                "labels": {
+                                    "description": "Labels for the ListenerSet",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "listeners": {
+                                    "description": "Listeners of the ListenerSet (templating is supported)",
+                                    "type": "array"
+                                },
+                                "name": {
+                                    "description": "ListenerSet name. Defaults to the name of the route.",
+                                    "type": "string"
+                                },
+                                "parentRef": {
+                                    "description": "Parent Gateway of the ListenerSet (name, and namespace if different). group and kind default to the Gateway API Gateway.",
+                                    "type": "object"
+                                },
+                                "sectionName": {
+                                    "description": "Optional listener name of the ListenerSet to attach the route to. Attaches to all listeners if empty.",
+                                    "type": "string"
+                                }
+                            }
+                        },
                         "parentRefs": {
-                            "description": "Parent references for the route (required for Gateway API)",
+                            "description": "Parent references for the route. Not required when `listenerSet.enabled` is true, the ListenerSet is added as a parentRef automatically.",
                             "type": "array"
                         },
                         "paths": {
