@@ -1,0 +1,164 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ListenerSet
+templates:
+  - listenerset.yaml
+  - route.yaml
+  - config.yaml
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  deploymentMode: SingleBinary
+  singleBinary.replicas: 1
+
+tests:
+  - it: should not render a ListenerSet by default
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: listenerset.yaml
+
+  - it: should render a ListenerSet when enabled
+    set:
+      listenerSet.main.enabled: true
+      listenerSet.main.annotations:
+        test-annotation: test-value
+      listenerSet.main.labels:
+        test-label: test-value
+      listenerSet.main.parentRef:
+        name: my-gateway
+        namespace: gateway-namespace
+      listenerSet.main.listeners:
+        - name: https
+          port: 443
+          protocol: HTTPS
+          hostname: loki.example.com
+          tls:
+            mode: Terminate
+            certificateRefs:
+              - name: loki-tls
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: listenerset.yaml
+      - isKind:
+          of: ListenerSet
+        template: listenerset.yaml
+      - equal:
+          path: apiVersion
+          value: gateway.networking.k8s.io/v1
+        template: listenerset.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki
+        template: listenerset.yaml
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: test-value
+        template: listenerset.yaml
+      - equal:
+          path: metadata.labels.test-label
+          value: test-value
+        template: listenerset.yaml
+      - equal:
+          path: spec.parentRef
+          value:
+            name: my-gateway
+            namespace: gateway-namespace
+        template: listenerset.yaml
+      - equal:
+          path: spec.listeners[0]
+          value:
+            name: https
+            port: 443
+            protocol: HTTPS
+            hostname: loki.example.com
+            tls:
+              mode: Terminate
+              certificateRefs:
+                - name: loki-tls
+        template: listenerset.yaml
+
+  - it: should suffix the name for non-main ListenerSets
+    set:
+      listenerSet.extra.enabled: true
+      listenerSet.extra.parentRef:
+        name: my-gateway
+      listenerSet.extra.listeners:
+        - name: http
+          port: 80
+          protocol: HTTP
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: listenerset.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-extra
+        template: listenerset.yaml
+
+  - it: should render multiple enabled ListenerSets and skip disabled ones
+    set:
+      listenerSet.main.enabled: true
+      listenerSet.main.parentRef:
+        name: my-gateway
+      listenerSet.main.listeners:
+        - name: http
+          port: 80
+          protocol: HTTP
+      listenerSet.extra.enabled: true
+      listenerSet.extra.parentRef:
+        name: my-gateway
+      listenerSet.extra.listeners:
+        - name: other
+          port: 8080
+          protocol: HTTP
+      listenerSet.disabled.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 2
+        template: listenerset.yaml
+
+  - it: should support templating in listeners
+    set:
+      listenerSet.main.enabled: true
+      listenerSet.main.parentRef:
+        name: my-gateway
+      listenerSet.main.listeners:
+        - name: https
+          port: 443
+          protocol: HTTPS
+          hostname: '{{ .Release.Name }}.example.com'
+    asserts:
+      - equal:
+          path: spec.listeners[0].hostname
+          value: RELEASE-NAME.example.com
+        template: listenerset.yaml
+
+  - it: should attach a route to a ListenerSet without hostnames
+    set:
+      listenerSet.main.enabled: true
+      listenerSet.main.parentRef:
+        name: my-gateway
+      listenerSet.main.listeners:
+        - name: https
+          port: 443
+          protocol: HTTPS
+          hostname: loki.example.com
+      route.main.enabled: true
+      route.main.parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: ListenerSet
+          name: RELEASE-NAME-loki
+    asserts:
+      - equal:
+          path: spec.parentRefs
+          value:
+            - group: gateway.networking.k8s.io
+              kind: ListenerSet
+              name: RELEASE-NAME-loki
+        template: route.yaml
+      - notExists:
+          path: spec.hostnames
+        template: route.yaml

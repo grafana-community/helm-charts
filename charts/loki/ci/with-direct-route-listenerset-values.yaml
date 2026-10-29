@@ -32,21 +32,27 @@ backend:
 gateway:
   enabled: false
 
+# hostnames are inherited from the ListenerSet listener
 route:
   main:
     enabled: true
     kind: HTTPRoute
-    # hostnames are inherited from the ListenerSet listener
-    listenerSet:
-      enabled: true
-      parentRef:
-        name: my-gateway
-        namespace: gateway-namespace
-      listeners:
-        - name: http
-          hostname: loki.example.com
-          port: 80
-          protocol: HTTP
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: ListenerSet
+        name: loki
+
+listenerSet:
+  main:
+    enabled: true
+    parentRef:
+      name: my-gateway
+      namespace: gateway-namespace
+    listeners:
+      - name: http
+        hostname: loki.example.com
+        port: 80
+        protocol: HTTP
 
 extraObjects:
   - apiVersion: v1

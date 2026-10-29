@@ -1617,42 +1617,13 @@ gateway:
       # -- Additional labels for the route
       labels: {}
       # -- Hostnames for the route. Optional: when empty, the route inherits the hostnames of the
-      # listeners it is attached to, which is the typical setup when `listenerSet` defines them.
+      # listeners it is attached to, e.g. the ones of a ListenerSet referenced in `parentRefs`.
       hostnames: []
-      # -- Parent references for the route. Not required when `listenerSet.enabled` is true,
-      # the ListenerSet is added as a parentRef automatically.
+      # - gateway.loki.example.com
+      # -- Parent references to attach the route to. A Gateway or a ListenerSet (see `listenerSet`).
       parentRefs: []
-      # -- Gateway API ListenerSet created for this route (requires Gateway API with ListenerSet support).
-      # The route is attached to it automatically; the parent Gateway must allow it via `spec.allowedListeners`.
-      listenerSet:
-        # -- Specifies whether a ListenerSet should be created and the route attached to it
-        enabled: false
-        # -- ListenerSet apiVersion. Auto-detected from cluster capabilities if empty.
-        apiVersion: ""
-        # -- ListenerSet name. Defaults to the name of the route.
-        name: ""
-        # @schema additionalProperties:{"type":"string"}
-        # -- Annotations for the ListenerSet
-        annotations: {}
-        # @schema additionalProperties:{"type":"string"}
-        # -- Labels for the ListenerSet
-        labels: {}
-        # -- Parent Gateway of the ListenerSet (name, and namespace if different). group and kind default to the Gateway API Gateway.
-        parentRef: {}
-        # - name: my-gateway
-        #   namespace: gateway-namespace
-        # -- Optional listener name of the ListenerSet to attach the route to. Attaches to all listeners if empty.
-        sectionName: ""
-        # -- Listeners of the ListenerSet (templating is supported)
-        listeners: []
-        # - name: https
-        #   hostname: loki.example.com
-        #   port: 443
-        #   protocol: HTTPS
-        #   tls:
-        #     mode: Terminate
-        #     certificateRefs:
-        #       - name: loki-tls
+      # - name: my-gateway
+      #   namespace: gateway-namespace
       # -- Additional rules to prepend before the default catch-all rule.
       # Each entry is rendered into spec.rules as written (templating is supported),
       # so any HTTPRoute/GRPCRoute rule shape is accepted — including filter-only rules
@@ -1975,42 +1946,12 @@ route:
     # -- Labels for the route
     labels: {}
     # -- Hostnames for the route. Optional: when empty, the route inherits the hostnames of the
-    # listeners it is attached to, which is the typical setup when `listenerSet` defines them.
+    # listeners it is attached to, e.g. the ones of a ListenerSet referenced in `parentRefs`.
     hostnames: []
-    # -- Parent references for the route. Not required when `listenerSet.enabled` is true,
-    # the ListenerSet is added as a parentRef automatically.
+    # -- Parent references for the route (required for Gateway API). A Gateway or a ListenerSet (see `listenerSet`).
     parentRefs: []
-    # -- Gateway API ListenerSet created for this route (requires Gateway API with ListenerSet support).
-    # The route is attached to it automatically; the parent Gateway must allow it via `spec.allowedListeners`.
-    listenerSet:
-      # -- Specifies whether a ListenerSet should be created and the route attached to it
-      enabled: false
-      # -- ListenerSet apiVersion. Auto-detected from cluster capabilities if empty.
-      apiVersion: ""
-      # -- ListenerSet name. Defaults to the name of the route.
-      name: ""
-      # @schema additionalProperties:{"type":"string"}
-      # -- Annotations for the ListenerSet
-      annotations: {}
-      # @schema additionalProperties:{"type":"string"}
-      # -- Labels for the ListenerSet
-      labels: {}
-      # -- Parent Gateway of the ListenerSet (name, and namespace if different). group and kind default to the Gateway API Gateway.
-      parentRef: {}
-      # - name: my-gateway
-      #   namespace: gateway-namespace
-      # -- Optional listener name of the ListenerSet to attach the route to. Attaches to all listeners if empty.
-      sectionName: ""
-      # -- Listeners of the ListenerSet (templating is supported)
-      listeners: []
-      # - name: https
-      #   hostname: loki.example.com
-      #   port: 443
-      #   protocol: HTTPS
-      #   tls:
-      #     mode: Terminate
-      #     certificateRefs:
-      #       - name: loki-tls
+    # - name: my-gateway
+    #   namespace: gateway-namespace
     # -- Additional rules to prepend before the generated path-routing rules.
     # Each entry is rendered into spec.rules as written (templating is supported),
     # so any HTTPRoute/GRPCRoute rule shape is accepted — including filter-only rules
@@ -2078,6 +2019,50 @@ route:
       # If deployment mode is SingleBinary, the requests are forwarded to the central/single k8s service.
       compactor:
         - /loki/api/v1/delete
+
+# -- BETA: Configure Gateway API ListenerSet resources for the chart here.
+# ListenerSet allows attaching additional listeners to an existing Gateway.
+# More listener sets can be added by adding a dictionary key like the 'main' entry.
+# The key "main" produces a ListenerSet named after the loki fullname; any other key appends the key as a suffix.
+# Attach a route to it with a parentRef of `kind: ListenerSet` in `route.*.parentRefs` or `gateway.route.*.parentRefs`.
+# The parent Gateway must allow ListenerSets via `spec.allowedListeners`.
+# Being BETA this can/will change in the future without notice, do not use unless you want to take that risk
+# [[ref]](https://gateway-api.sigs.k8s.io/reference/api-spec/main/spec/#listenerset)
+listenerSet:
+  main:
+    # -- Enables or disables the listener set
+    enabled: false
+
+    # -- Set the ListenerSet apiVersion, e.g. gateway.networking.k8s.io/v1
+    apiVersion: gateway.networking.k8s.io/v1
+
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for the ListenerSet
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for the ListenerSet
+    labels: {}
+
+    # -- Reference to the parent Gateway this ListenerSet attaches to
+    parentRef: {}
+    # name: my-gateway
+    # namespace: default
+    # group: gateway.networking.k8s.io
+    # kind: Gateway
+
+    # -- List of listeners to attach to the parent Gateway (templating is supported)
+    listeners: []
+    # - name: https
+    #   port: 443
+    #   protocol: HTTPS
+    #   hostname: loki.example.com
+    #   tls:
+    #     mode: Terminate
+    #     certificateRefs:
+    #       - name: loki-tls
+    #   allowedRoutes:
+    #     namespaces:
+    #       from: Same
 
 ######################################################################################################################
 #

@@ -5,8 +5,5 @@
 {{- $port := $route.backendPort | default (ternary $.Values.loki.server.grpc_listen_port $.Values.loki.server.http_listen_port (eq $kind "GRPCRoute")) -}}
 {{- $rules := include "loki.route.rules" (dict "ctx" $ "paths" $route.paths "port" $port) -}}
 {{- include "loki.route" (dict "ctx" $ "route" $route "name" $routeName "rules" $rules) }}
-{{- if and $route.listenerSet $route.listenerSet.enabled }}
-{{- include "loki.listenerSet" (dict "ctx" $ "route" $route "name" $routeName) }}
-{{- end }}
 {{- end -}}
 {{- end -}}
