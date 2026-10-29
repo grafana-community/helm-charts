@@ -59,12 +59,3 @@ tests:
           count: 1
       - notExists:
           path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
-
-  - it: should label index-gateway as seed node in ring mode
-    template: index-gateway/workload.yaml
-    set:
-      loki.index_gateway.mode: ring
-    asserts:
-      - equal:
-          path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
-          value: memberlist

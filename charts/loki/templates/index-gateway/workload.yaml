@@ -1,4 +1,4 @@
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
 {{- if $isDistributed }}
-{{- include "loki.component" (dict "ctx" . "component" .Values.indexGateway "target" "index-gateway" "memberlist" (eq (dig "mode" "simple" (.Values.loki.index_gateway | default dict)) "ring")) }}
+{{- include "loki.component" (dict "ctx" . "component" .Values.indexGateway "target" "index-gateway" "memberlist" false) }}
 {{- end }}
