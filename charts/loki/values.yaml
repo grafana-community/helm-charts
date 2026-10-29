@@ -1232,8 +1232,8 @@ networkPolicy:
 # Configuration for the memberlist service
 # The service selects pods labeled `app.kubernetes.io/part-of: memberlist` and is used as the seed list for
 # `memberlist.join_members`. Only components that always run a memberlist listener get this label. Components that
-# only use memberlist with some ring configurations (query-frontend, query-scheduler, index-gateway, bloom components)
-# still join the cluster through these seed nodes.
+# only use memberlist with some configurations (query-frontend, query-scheduler, index-gateway, bloom components,
+# overrides-exporter; all of them when `loki.ui.enabled` is true) still join the cluster through these seed nodes.
 memberlist:
   service:
     publishNotReadyAddresses: false
