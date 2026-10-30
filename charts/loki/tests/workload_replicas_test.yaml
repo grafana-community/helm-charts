@@ -15,6 +15,9 @@ templates:
   - query-scheduler/workload.yaml
   - read/workload.yaml
   - ruler/workload.yaml
+  - ruler-querier/workload.yaml
+  - ruler-query-frontend/workload.yaml
+  - ruler-query-scheduler/workload.yaml
   - write/workload.yaml
   - config.yaml
   - validate.yaml
@@ -68,6 +71,10 @@ tests:
       queryFrontend.replicas: null
       queryScheduler.replicas: null
       ruler.replicas: null
+      ruler.remoteEvaluationDedicatedQueryPath: true
+      rulerQuerier.replicas: null
+      rulerQueryFrontend.replicas: null
+      rulerQueryScheduler.replicas: null
     asserts:
       - notExists:
           path: spec.replicas
@@ -102,3 +109,12 @@ tests:
       - notExists:
           path: spec.replicas
         template: ruler/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: ruler-querier/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: ruler-query-frontend/workload.yaml
+      - notExists:
+          path: spec.replicas
+        template: ruler-query-scheduler/workload.yaml
