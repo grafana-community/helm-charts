@@ -1783,7 +1783,7 @@ gateway:
       # -- NGINX access log exporter image repository. Not used by the Envoy gateway.
       repository: "jkroepke/access-log-exporter"
       # -- NGINX access log exporter image tag. Not used by the Envoy gateway.
-      tag: "0.5.2"
+      tag: "1.0.1"
       # -- NGINX access log exporter image pull policy. Not used by the Envoy gateway.
       pullPolicy: IfNotPresent
     # @schema additionalProperties:true
