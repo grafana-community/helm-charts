@@ -1,0 +1,371 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ruler dedicated query path
+templates:
+  - config.yaml
+  - validate.yaml
+  - ruler-querier/hpa.yaml
+  - ruler-querier/pdb.yaml
+  - ruler-querier/service.yaml
+  - ruler-querier/serviceaccount.yaml
+  - ruler-querier/so.yaml
+  - ruler-querier/workload.yaml
+  - ruler-query-frontend/hpa.yaml
+  - ruler-query-frontend/pdb.yaml
+  - ruler-query-frontend/service.yaml
+  - ruler-query-frontend/serviceaccount.yaml
+  - ruler-query-frontend/so.yaml
+  - ruler-query-frontend/workload.yaml
+  - ruler-query-scheduler/pdb.yaml
+  - ruler-query-scheduler/service.yaml
+  - ruler-query-scheduler/serviceaccount.yaml
+  - ruler-query-scheduler/workload.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: should not render dedicated query path resources or remote evaluation config by default
+    asserts:
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: '(?m)^\s+evaluation:$'
+        template: config.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-querier/workload.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-querier/service.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-querier/pdb.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-frontend/workload.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-frontend/service.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-frontend/pdb.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-scheduler/workload.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-scheduler/service.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-scheduler/pdb.yaml
+
+  - it: should not render dedicated query path in SimpleScalable mode even if enabled
+    set:
+      deploymentMode: SimpleScalable
+      ruler.remoteEvaluationDedicatedQueryPath: true
+    asserts:
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: '(?m)^\s+evaluation:$'
+        template: config.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-querier/workload.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-frontend/workload.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-scheduler/workload.yaml
+
+  - it: should not render dedicated query path when ruler.enabled is false
+    set:
+      ruler.enabled: false
+      ruler.remoteEvaluationDedicatedQueryPath: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: ruler-querier/workload.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-querier/service.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-frontend/workload.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-frontend/service.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-scheduler/workload.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-scheduler/service.yaml
+
+  - it: should configure remote evaluation in config.yaml and allow user overrides via loki.rulerConfig
+    set:
+      ruler.remoteEvaluationDedicatedQueryPath: true
+      loki.rulerConfig:
+        evaluation:
+          max_jitter: 10s
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: '(?ms)^ruler:\n.*?^  evaluation:\n.*?^    max_jitter: 10s\n    mode: remote\n    query_frontend:\n      address: dns:///RELEASE-NAME-loki-ruler-query-frontend-headless\.NAMESPACE\.svc\.cluster\.local:9095$'
+        template: config.yaml
+
+  - it: should render ruler-query-frontend, ruler-querier, and ruler-query-scheduler workloads with expected flags
+    set:
+      ruler.remoteEvaluationDedicatedQueryPath: true
+      loki.ui.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: ruler-query-frontend/workload.yaml
+      - isKind:
+          of: Deployment
+        template: ruler-query-frontend/workload.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-ruler-query-frontend
+        template: ruler-query-frontend/workload.yaml
+      - equal:
+          path: spec.replicas
+          value: 1
+        template: ruler-query-frontend/workload.yaml
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 390
+        template: ruler-query-frontend/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: ruler-query-frontend
+        template: ruler-query-frontend/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -target=query-frontend
+        template: ruler-query-frontend/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -querier.cache-results=false
+        template: ruler-query-frontend/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -frontend.scheduler-address=RELEASE-NAME-loki-ruler-query-scheduler-headless.NAMESPACE.svc.cluster.local:9095
+        template: ruler-query-frontend/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -frontend.tail-proxy-url=http://RELEASE-NAME-loki-ruler-querier.NAMESPACE.svc.cluster.local:3100
+        template: ruler-query-frontend/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -query-scheduler.ring.prefix=ruler-query-scheduler/
+        template: ruler-query-frontend/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -server.grpc.keepalive.max-connection-age=30s
+        template: ruler-query-frontend/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -shutdown-delay=90s
+        template: ruler-query-frontend/workload.yaml
+      - hasDocuments:
+          count: 1
+        template: ruler-querier/workload.yaml
+      - isKind:
+          of: Deployment
+        template: ruler-querier/workload.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-ruler-querier
+        template: ruler-querier/workload.yaml
+      - equal:
+          path: spec.replicas
+          value: 2
+        template: ruler-querier/workload.yaml
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 180
+        template: ruler-querier/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: ruler-querier
+        template: ruler-querier/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -target=querier
+        template: ruler-querier/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -querier.scheduler-address=RELEASE-NAME-loki-ruler-query-scheduler-headless.NAMESPACE.svc.cluster.local:9095
+        template: ruler-querier/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -query-scheduler.ring.prefix=ruler-query-scheduler/
+        template: ruler-querier/workload.yaml
+      - hasDocuments:
+          count: 1
+        template: ruler-query-scheduler/workload.yaml
+      - isKind:
+          of: Deployment
+        template: ruler-query-scheduler/workload.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-ruler-query-scheduler
+        template: ruler-query-scheduler/workload.yaml
+      - equal:
+          path: spec.replicas
+          value: 2
+        template: ruler-query-scheduler/workload.yaml
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 180
+        template: ruler-query-scheduler/workload.yaml
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: ruler-query-scheduler
+        template: ruler-query-scheduler/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -target=query-scheduler
+        template: ruler-query-scheduler/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -query-scheduler.ring.prefix=ruler-query-scheduler/
+        template: ruler-query-scheduler/workload.yaml
+
+  - it: should render services and PDBs with publishNotReadyAddresses disabled on ruler-query-frontend
+    set:
+      ruler.remoteEvaluationDedicatedQueryPath: true
+      rulerQueryFrontend.replicas: 2
+    asserts:
+      - hasDocuments:
+          count: 2
+        template: ruler-query-frontend/service.yaml
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        documentIndex: 0
+        template: ruler-query-frontend/service.yaml
+      - notExists:
+          path: spec.publishNotReadyAddresses
+        documentIndex: 1
+        template: ruler-query-frontend/service.yaml
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        documentIndex: 0
+        template: ruler-querier/service.yaml
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        documentIndex: 0
+        template: ruler-query-scheduler/service.yaml
+      - hasDocuments:
+          count: 1
+        template: ruler-querier/pdb.yaml
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
+        template: ruler-querier/pdb.yaml
+      - hasDocuments:
+          count: 1
+        template: ruler-query-frontend/pdb.yaml
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
+        template: ruler-query-frontend/pdb.yaml
+      - hasDocuments:
+          count: 1
+        template: ruler-query-scheduler/pdb.yaml
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
+        template: ruler-query-scheduler/pdb.yaml
+
+  - it: should wire zone-aware replication flags onto ruler-querier
+    set:
+      ruler.remoteEvaluationDedicatedQueryPath: true
+      ingester.zoneAwareReplication.enabled: true
+      ingester.zoneAwareReplication.migration.enabled: true
+      ingester.zoneAwareReplication.migration.readPath: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.zone-awareness-enabled=false
+        template: ruler-querier/workload.yaml
+
+  - it: should connect ruler-querier directly to ruler-query-frontend when rulerQueryScheduler is disabled
+    set:
+      ruler.remoteEvaluationDedicatedQueryPath: true
+      rulerQueryScheduler.enabled: false
+      rulerQueryScheduler.serviceAccount.create: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: ruler-query-scheduler/workload.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-scheduler/service.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-scheduler/pdb.yaml
+      - hasDocuments:
+          count: 0
+        template: ruler-query-scheduler/serviceaccount.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -frontend.scheduler-address=
+        template: ruler-query-frontend/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -querier.scheduler-address=
+        template: ruler-querier/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -querier.frontend-address=RELEASE-NAME-loki-ruler-query-frontend-headless.NAMESPACE.svc.cluster.local:9095
+        template: ruler-querier/workload.yaml
+
+  - it: should render HPA, KEDA ScaledObject, and ServiceAccounts when enabled
+    set:
+      ruler.remoteEvaluationDedicatedQueryPath: true
+      defaults.kedaAutoscaling.prometheusAddress: http://prometheus:9090
+      rulerQuerier.kedaAutoscaling.enabled: true
+      rulerQuerier.serviceAccount.create: true
+      rulerQueryFrontend.autoscaling.enabled: true
+      rulerQueryFrontend.serviceAccount.create: true
+      rulerQueryScheduler.serviceAccount.create: true
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: ruler-querier/so.yaml
+      - equal:
+          path: spec.triggers[0].metadata.query
+          value: sum(max_over_time(loki_query_scheduler_inflight_requests{container="ruler-query-scheduler",quantile="0.75"}[2m]))
+        template: ruler-querier/so.yaml
+      - hasDocuments:
+          count: 1
+        template: ruler-query-frontend/hpa.yaml
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-loki-ruler-query-frontend
+        template: ruler-query-frontend/hpa.yaml
+      - hasDocuments:
+          count: 1
+        template: ruler-querier/serviceaccount.yaml
+      - hasDocuments:
+          count: 1
+        template: ruler-query-frontend/serviceaccount.yaml
+      - hasDocuments:
+          count: 1
+        template: ruler-query-scheduler/serviceaccount.yaml
+
+  - it: should fail validation when both HPA and KEDA autoscaling are enabled on ruler-querier
+    set:
+      ruler.remoteEvaluationDedicatedQueryPath: true
+      rulerQuerier.autoscaling.enabled: true
+      rulerQuerier.kedaAutoscaling.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "ruler-querier"
+        template: validate.yaml
