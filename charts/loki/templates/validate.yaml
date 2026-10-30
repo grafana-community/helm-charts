@@ -35,6 +35,8 @@
 {{- include "loki.validateAutoscaling" (dict "component" .Values.distributor "name" "distributor") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.ingester "name" "ingester") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.queryFrontend "name" "query-frontend") }}
+{{- include "loki.validateAutoscaling" (dict "component" .Values.rulerQuerier "name" "ruler-querier") }}
+{{- include "loki.validateAutoscaling" (dict "component" .Values.rulerQueryFrontend "name" "ruler-query-frontend") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomBuilder "name" "bloom-builder") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomGateway "name" "bloom-gateway") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomPlanner "name" "bloom-planner") }}
