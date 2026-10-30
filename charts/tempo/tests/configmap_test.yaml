@@ -41,6 +41,22 @@ tests:
           path: data["tempo.yaml"]
           pattern: "(?s)live_store:\\s+max_block_duration: 45s"
 
+  - it: should omit the memory block when no settings are given
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?m)^memory:"
+
+  - it: should render the memory block when settings are given
+    set:
+      tempo.memory:
+        automemlimit_enabled: true
+        automemlimit_ratio: 0.9
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: '(?m)^memory:\n[ \t]+automemlimit_enabled: true\n[ \t]+automemlimit_ratio: 0.9$'
+
   - it: should merge the backend scheduler settings over the retention default
     set:
       tempo.retention: 72h
