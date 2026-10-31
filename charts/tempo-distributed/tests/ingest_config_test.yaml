@@ -101,20 +101,53 @@ tests:
           path: data["tempo.yaml"]
           pattern: "sasl_username|sasl_password"
 
-  - it: ignores literal username/password when existingSecret is also set
+  - it: allows setting literal username alongside existingSecret without requiring configStorageType=Secret
     set:
       ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
       ingest.kafka.sasl.mechanism: SCRAM-SHA-512
       ingest.kafka.sasl.existingSecret: kafka-scram-credentials
       ingest.kafka.sasl.username: myuser
-      ingest.kafka.sasl.password: mypassword
     asserts:
       - matchRegex:
           path: data["tempo.yaml"]
           pattern: "sasl_mechanism: SCRAM-SHA-512"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_username: myuser"
       - notMatchRegex:
           path: data["tempo.yaml"]
-          pattern: "myuser|mypassword"
+          pattern: "sasl_password"
+
+  - it: fails when literal password is set alongside existingSecret but configStorageType is not Secret
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.existingSecret: kafka-scram-credentials
+      ingest.kafka.sasl.password: mypassword
+    asserts:
+      - failedTemplate:
+          errorMessage: "ingest.kafka.sasl is configuring credentials directly (not via existingSecret), but configStorageType is not Secret. Either set ingest.kafka.sasl.existingSecret (recommended) or set configStorageType=Secret."
+
+  - it: allows setting literal password alongside existingSecret when configStorageType is Secret
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.existingSecret: kafka-scram-credentials
+      ingest.kafka.sasl.password: mypassword
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_mechanism: SCRAM-SHA-512"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_password: mypassword"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          decodeBase64: true
+          pattern: "sasl_username"
 
   - it: fails when the sasl mechanism is not one of the allowed values
     set:
