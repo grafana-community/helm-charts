@@ -270,6 +270,20 @@ tests:
           path: spec.crossZoneEvictionDelay
       - notExists:
           path: spec.podNameRegexGroup
+      - notExists:
+          path: metadata.annotations
+
+  - it: carries the annotations of the budget
+    template: live-store/zonepoddisruptionbudget-live-store.yaml
+    set:
+      rollout_operator.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.zoneAwareReplication.podDisruptionBudget.annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    asserts:
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-wave"]
+          value: "1"
 
   - it: hands the budget over from the native PodDisruptionBudget
     template: live-store/poddisruptionbudget-live-store.yaml

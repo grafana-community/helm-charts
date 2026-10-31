@@ -10,6 +10,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "tempo.labels" $dict | nindent 4 }}
+  {{- with $zpdb.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   maxUnavailable: {{ $zpdb.maxUnavailable | int }}
   selector:
