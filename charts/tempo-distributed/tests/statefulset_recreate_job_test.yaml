@@ -1,0 +1,275 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: StatefulSet recreateOnSizeChangeHook
+templates:
+  - backend-scheduler/statefulset-backend-scheduler-recreate-job.yaml
+  - backend-scheduler/statefulset-backend-scheduler.yaml
+  - live-store/statefulset-live-store-recreate-job.yaml
+  - live-store/statefulset-live-store.yaml
+  - metrics-generator/statefulset-metrics-generator-recreate-job.yaml
+  - metrics-generator/statefulset-metrics-generator.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: renders nothing when lookup finds no existing StatefulSet
+    template: backend-scheduler/statefulset-backend-scheduler-recreate-job.yaml
+    set:
+      backendScheduler.enabled: true
+      backendScheduler.persistence.enabled: true
+      backendScheduler.persistence.enableStatefulSetRecreationForSizeChange: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders recreate Job without PVC patch containers when volumeClaimTemplates are first added to a claim-less StatefulSet
+    template: backend-scheduler/statefulset-backend-scheduler-recreate-job.yaml
+    set:
+      backendScheduler.enabled: true
+      backendScheduler.persistence.enabled: true
+      backendScheduler.persistence.enableStatefulSetRecreationForSizeChange: true
+      backendScheduler.persistence.size: 10Gi
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-tempo-backend-scheduler
+            namespace: NAMESPACE
+          spec:
+            replicas: "1"
+            podManagementPolicy: Parallel
+    asserts:
+      - hasDocuments:
+          count: 4
+      - isKind:
+          of: Job
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-backend-scheduler-recreate
+        documentIndex: 0
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: recreate
+        documentIndex: 0
+      - isKind:
+          of: Role
+        documentIndex: 2
+      - lengthEqual:
+          path: rules
+          count: 1
+        documentIndex: 2
+
+  - it: renders recreate Job when volumeClaimTemplates are first added to a claim-less metrics-generator StatefulSet
+    template: metrics-generator/statefulset-metrics-generator-recreate-job.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      metricsGenerator.persistence.enabled: true
+      metricsGenerator.persistence.enableStatefulSetRecreationForSizeChange: true
+      metricsGenerator.persistence.size: 10Gi
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-tempo-metrics-generator
+            namespace: NAMESPACE
+          spec:
+            replicas: "1"
+            podManagementPolicy: Parallel
+    asserts:
+      - hasDocuments:
+          count: 4
+      - isKind:
+          of: Job
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-metrics-generator-recreate
+        documentIndex: 0
+
+  - it: renders recreate Jobs for zone-aware live-store StatefulSets when volumeClaimTemplates are first added
+    template: live-store/statefulset-live-store-recreate-job.yaml
+    set:
+      liveStore.enabled: true
+      liveStore.zoneAwareReplication.enabled: true
+      liveStore.persistence.enabled: true
+      liveStore.persistence.enableStatefulSetRecreationForSizeChange: true
+      liveStore.persistence.size: 10Gi
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-tempo-live-store-zone-a
+            namespace: NAMESPACE
+          spec:
+            replicas: "1"
+            podManagementPolicy: Parallel
+    asserts:
+      - hasDocuments:
+          count: 4
+      - isKind:
+          of: Job
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-live-store-zone-a-recreate
+        documentIndex: 0
+
+  - it: renders nothing when existing volumeClaimTemplate size matches
+    template: backend-scheduler/statefulset-backend-scheduler-recreate-job.yaml
+    set:
+      backendScheduler.enabled: true
+      backendScheduler.persistence.enabled: true
+      backendScheduler.persistence.enableStatefulSetRecreationForSizeChange: true
+      backendScheduler.persistence.size: 10Gi
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-tempo-backend-scheduler
+            namespace: NAMESPACE
+          spec:
+            replicas: "1"
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: 10Gi
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders recreate Job and patch-pvc containers when storage size changes
+    template: backend-scheduler/statefulset-backend-scheduler-recreate-job.yaml
+    set:
+      backendScheduler.enabled: true
+      backendScheduler.persistence.enabled: true
+      backendScheduler.persistence.enableStatefulSetRecreationForSizeChange: true
+      backendScheduler.persistence.size: 20Gi
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-tempo-backend-scheduler
+            namespace: NAMESPACE
+          spec:
+            replicas: "2"
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: 10Gi
+    asserts:
+      - hasDocuments:
+          count: 4
+      - isKind:
+          of: Job
+        documentIndex: 0
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 3
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: patch-pvc-data-0
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[2].name
+          value: patch-pvc-data-1
+        documentIndex: 0
+      - equal:
+          path: rules[1].resourceNames
+          value:
+            - data-RELEASE-NAME-tempo-backend-scheduler-0
+            - data-RELEASE-NAME-tempo-backend-scheduler-1
+        documentIndex: 2
+
+  - it: honors defaults.statefulSetRecreateJob.image overrides on recreate and patch-pvc containers
+    template: backend-scheduler/statefulset-backend-scheduler-recreate-job.yaml
+    set:
+      backendScheduler.enabled: true
+      backendScheduler.persistence.enabled: true
+      backendScheduler.persistence.enableStatefulSetRecreationForSizeChange: true
+      backendScheduler.persistence.size: 20Gi
+      defaults.statefulSetRecreateJob.image.registry: registry.k8s.io
+      defaults.statefulSetRecreateJob.image.repository: custom/kubectl
+      defaults.statefulSetRecreateJob.image.tag: v1.32.2
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-tempo-backend-scheduler
+            namespace: NAMESPACE
+          spec:
+            replicas: "1"
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: 10Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.k8s.io/custom/kubectl:v1.32.2
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: registry.k8s.io/custom/kubectl:v1.32.2
+        documentIndex: 0
