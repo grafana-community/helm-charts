@@ -404,8 +404,17 @@ chunk_delimiter: {{ . }}
 
 {{/* Loki ruler config */}}
 {{- define "loki.rulerConfig" }}
+{{- $rulerConfig := dict "storage" (include "loki.rulerStorageConfig" . | fromYaml) -}}
+{{- if and (eq (include "loki.deployment.isDistributed" .) "true") .Values.ruler.remoteEvaluationDedicatedQueryPath -}}
+{{- $_ := set $rulerConfig "evaluation" (dict
+  "mode" "remote"
+  "query_frontend" (dict
+    "address" (printf "dns:///%s" (include "loki.rulerQueryFrontendAddress" .))
+  )
+) -}}
+{{- end -}}
 ruler:
-{{- mergeOverwrite (dict "storage" (include "loki.rulerStorageConfig" . | fromYaml)) (.Values.loki.rulerConfig | default dict) | toYaml | nindent 2 }}
+{{- mergeOverwrite $rulerConfig (deepCopy (.Values.loki.rulerConfig | default dict)) | toYaml | nindent 2 }}
 {{- end }}
 
 {{/* Ruler Thanos Storage Config */}}
@@ -1020,6 +1029,37 @@ enableServiceLinks: {{ $ctx.Values.loki.enableServiceLinks }}
 {{- $querierAddress = $querierUrl }}
 {{- end -}}
 {{- printf "%s" $querierAddress }}
+{{- end }}
+
+{{/* Determine ruler-query-scheduler address */}}
+{{- define "loki.rulerQuerySchedulerAddress" -}}
+{{- $rulerQuerySchedulerAddress := "" }}
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath .Values.rulerQueryScheduler.enabled -}}
+{{- $rulerQuerySchedulerAddress = printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "ruler-query-scheduler")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
+{{- end -}}
+{{- printf "%s" $rulerQuerySchedulerAddress }}
+{{- end }}
+
+{{/* Determine ruler-query-frontend address */}}
+{{- define "loki.rulerQueryFrontendAddress" -}}
+{{- $rulerQueryFrontendAddress := "" }}
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath -}}
+{{- $rulerQueryFrontendAddress = printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "ruler-query-frontend")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
+{{- end -}}
+{{- printf "%s" $rulerQueryFrontendAddress }}
+{{- end }}
+
+{{/* Determine ruler-querier address */}}
+{{- define "loki.rulerQuerierAddress" -}}
+{{- $rulerQuerierAddress := "" }}
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath -}}
+{{- $rulerQuerierHost := include "loki.resourceName" (dict "ctx" . "component" "ruler-querier") }}
+{{- $rulerQuerierAddress = printf "http://%s.%s.svc.%s:%s" $rulerQuerierHost (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
+{{- end -}}
+{{- printf "%s" $rulerQuerierAddress }}
 {{- end }}
 
 {{/* Determine index-gateway address */}}
