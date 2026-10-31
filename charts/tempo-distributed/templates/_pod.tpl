@@ -51,9 +51,14 @@ Parameters:
 {{- end }}
 {{- if or (eq $kafkaMechanism "PLAIN") (eq $kafkaMechanism "SCRAM-SHA-256") (eq $kafkaMechanism "SCRAM-SHA-512") }}
 {{- with $kafkaSasl.existingSecret }}
+{{- if not $kafkaSasl.username }}
 {{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_USERNAME" "valueFrom" (dict "secretKeyRef" (dict "name" . "key" ($kafkaSasl.usernameKey | default "username")))) }}
+{{- $kafkaSaslExtraArgs = append $kafkaSaslExtraArgs "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)" }}
+{{- end }}
+{{- if not $kafkaSasl.password }}
 {{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_PASSWORD" "valueFrom" (dict "secretKeyRef" (dict "name" . "key" ($kafkaSasl.passwordKey | default "password")))) }}
-{{- $kafkaSaslExtraArgs = concat $kafkaSaslExtraArgs (list "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)" "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)") }}
+{{- $kafkaSaslExtraArgs = append $kafkaSaslExtraArgs "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)" }}
+{{- end }}
 {{- end }}
 {{- else if eq $kafkaMechanism "OAUTHBEARER" }}
 {{- $kafkaOauthbearer := $kafkaSasl.oauthbearer | default dict }}

@@ -701,6 +701,63 @@ tests:
                 name: kafka-credentials
                 key: kafka-pass
 
+  - it: injects only password from existingSecret when username is set in values
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.username: my-strimzi-user
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_USERNAME
+          any: true
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: password
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)"
+
+  - it: injects only username from existingSecret when password is set in values
+    template: distributor/deployment-distributor.yaml
+    set:
+      configStorageType: Secret
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.password: mypassword
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: username
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_PASSWORD
+          any: true
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)"
+
   - it: passes kafka SASL oauthbearer token from existingSecret as CLI arg
     template: distributor/deployment-distributor.yaml
     set:
