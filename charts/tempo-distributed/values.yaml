@@ -957,20 +957,19 @@ ingest:
       # -- SASL mechanism. Must be one of PLAIN, SCRAM-SHA-256, SCRAM-SHA-512,
       # OAUTHBEARER, AWS_MSK_IAM. Empty defaults to PLAIN.
       mechanism: ""
-      # -- Username for PLAIN and SCRAM-SHA-* mechanisms. Ignored if
-      # `existingSecret` is set. Prefer `existingSecret` in production so the
-      # value is never inlined into tempo.yaml.
+      # -- Username for PLAIN and SCRAM-SHA-* mechanisms. Can be combined with
+      # `existingSecret` when only the password is stored in the Secret (e.g.
+      # Strimzi KafkaUser Secrets).
       username: ""
-      # -- Password for PLAIN and SCRAM-SHA-* mechanisms. Ignored if
-      # `existingSecret` is set. Prefer `existingSecret` in production so the
-      # value is never inlined into tempo.yaml.
+      # -- Password for PLAIN and SCRAM-SHA-* mechanisms. Prefer `existingSecret`
+      # in production so the value is never inlined into tempo.yaml.
       password: ""
-      # -- Name of an existing Secret containing `usernameKey`/`passwordKey`.
-      # When set, `username`/`password` above are ignored and the credentials
-      # are injected as env vars and passed to tempo as
+      # -- Name of an existing Secret containing `usernameKey` and/or `passwordKey`.
+      # Any credential not set via `username`/`password` above is injected as an
+      # env var from this Secret and passed to tempo as
       # `-ingest.sasl-username`/`-ingest.sasl-password` CLI flags instead of
       # being inlined into tempo.yaml. Recommended over setting
-      # `username`/`password` directly.
+      # `password` directly.
       existingSecret: ""
       # -- Key in `existingSecret` containing the username.
       usernameKey: username
@@ -2357,7 +2356,7 @@ config: |
       */}}
       {{- $inlinesCredential := false }}
       {{- if or (eq $mechanism "PLAIN") (eq $mechanism "SCRAM-SHA-256") (eq $mechanism "SCRAM-SHA-512") }}
-      {{- if and (not $sasl.existingSecret) (or $sasl.username $sasl.password) }}
+      {{- if $sasl.password }}
       {{- $inlinesCredential = true }}
       {{- end }}
       {{- else if eq $mechanism "OAUTHBEARER" }}
@@ -2376,13 +2375,11 @@ config: |
       sasl_mechanism: {{ . }}
       {{- end }}
       {{- if or (eq $mechanism "PLAIN") (eq $mechanism "SCRAM-SHA-256") (eq $mechanism "SCRAM-SHA-512") }}
-      {{- if not $sasl.existingSecret }}
       {{- with $sasl.username }}
       sasl_username: {{ . | quote }}
       {{- end }}
       {{- with $sasl.password }}
       sasl_password: {{ . | quote }}
-      {{- end }}
       {{- end }}
       {{- else if eq $mechanism "OAUTHBEARER" }}
       {{- with $oauthbearer }}
