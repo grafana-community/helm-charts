@@ -34,6 +34,7 @@ priorityClassName: {{ . }}
         (and .Values.sidecar.alerts.enabled .Values.sidecar.alerts.initAlerts)
         (and .Values.sidecar.datasources.enabled .Values.sidecar.datasources.initDatasources)
         (and .Values.sidecar.notifiers.enabled .Values.sidecar.notifiers.initNotifiers)
+        (and .Values.sidecar.plugins.enabled .Values.sidecar.plugins.initPlugins)
         (and .Values.sidecar.dashboards.enabled .Values.sidecar.dashboards.initDashboards)) }}
 initContainers:
 {{- end }}
@@ -446,6 +447,76 @@ initContainers:
       {{- toYaml . | trim | nindent 6 }}
       {{- end }}
 {{- end}}
+{{- if and .Values.sidecar.plugins.enabled .Values.sidecar.plugins.initPlugins }}
+  - name: {{ include "grafana.name" . }}-init-sc-plugins
+    {{- $registry := .Values.global.imageRegistry | default .Values.sidecar.image.registry -}}
+    {{- if .Values.sidecar.image.sha }}
+    image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}@sha256:{{ .Values.sidecar.image.sha }}"
+    {{- else }}
+    image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
+    {{- end }}
+    imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    env:
+      {{- range $key, $value := .Values.sidecar.plugins.env }}
+      - name: "{{ $key }}"
+        value: "{{ $value }}"
+      {{- end }}
+      {{- if .Values.sidecar.plugins.ignoreAlreadyProcessed }}
+      - name: IGNORE_ALREADY_PROCESSED
+        value: "true"
+      {{- end }}
+      - name: METHOD
+        value: LIST
+      - name: LABEL
+        value: "{{ tpl .Values.sidecar.plugins.label $root }}"
+      {{- if .Values.sidecar.plugins.labelValue }}
+      - name: LABEL_VALUE
+        value: {{ quote (tpl .Values.sidecar.plugins.labelValue $) }}
+      {{- end }}
+      {{- if or .Values.sidecar.logLevel .Values.sidecar.plugins.logLevel }}
+      - name: LOG_LEVEL
+        value: {{ default .Values.sidecar.logLevel .Values.sidecar.plugins.logLevel }}
+      {{- end }}
+      - name: FOLDER
+        value: "/etc/grafana/provisioning/plugins"
+      - name: RESOURCE
+        value: {{ quote .Values.sidecar.plugins.resource }}
+      {{- if .Values.sidecar.plugins.resourceName }}
+      - name: RESOURCE_NAME
+        value: {{ quote .Values.sidecar.plugins.resourceName }}
+      {{- end }}
+      {{- with .Values.sidecar.enableUniqueFilenames }}
+      - name: UNIQUE_FILENAMES
+        value: "{{ . }}"
+      {{- end }}
+      {{- with .Values.sidecar.plugins.searchNamespace }}
+      - name: NAMESPACE
+        value: "{{ tpl (. | join ",") $root }}"
+      {{- end }}
+      {{- $skipTlsVerify := ternary .Values.sidecar.plugins.skipTlsVerify .Values.sidecar.skipTlsVerify (kindIs "bool" .Values.sidecar.plugins.skipTlsVerify) }}
+      {{- if $skipTlsVerify }}
+      - name: SKIP_TLS_VERIFY
+        value: "true"
+      {{- end }}
+      {{- with .Values.sidecar.plugins.script }}
+      - name: SCRIPT
+        value: {{ quote . }}
+      {{- end }}
+    {{- with .Values.sidecar.resources }}
+    resources:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.sidecar.securityContext }}
+    securityContext:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    volumeMounts:
+      - name: sc-plugins-volume
+        mountPath: "/etc/grafana/provisioning/plugins"
+      {{- with .Values.sidecar.plugins.extraMounts }}
+      {{- toYaml . | trim | nindent 6 }}
+      {{- end }}
+{{- end }}
 {{- if and .Values.sidecar.dashboards.enabled .Values.sidecar.dashboards.initDashboards }}
   - name: {{ include "grafana.name" . }}-init-sc-dashboard
     {{- $registry := .Values.global.imageRegistry | default .Values.sidecar.image.registry -}}
