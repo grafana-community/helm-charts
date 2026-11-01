@@ -1,0 +1,94 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: pod labels do not carry the chart version
+templates:
+  - distributor/deployment-distributor.yaml
+  - memcached/statefulset-memcached.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: keeps the chart version off the distributor pod template
+    template: distributor/deployment-distributor.yaml
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/version: "3.1.1"
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/component: distributor
+            app.kubernetes.io/part-of: memberlist
+
+  - it: keeps the chart version off the memcached pod template
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/version: "3.1.1"
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/component: memcached
+
+  - it: still labels the objects themselves with the chart version
+    asserts:
+      - matchRegex:
+          path: metadata.labels["helm.sh/chart"]
+          pattern: ^tempo-distributed-
+
+  - it: leaves the distributor pod template untouched by a chart version bump
+    template: distributor/deployment-distributor.yaml
+    chart:
+      version: 99.99.99
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/version: "3.1.1"
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/component: distributor
+            app.kubernetes.io/part-of: memberlist
+
+  - it: leaves the memcached pod template untouched by a chart version bump
+    template: memcached/statefulset-memcached.yaml
+    chart:
+      version: 99.99.99
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/version: "3.1.1"
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/component: memcached
+
+  - it: keeps every memcached selector key on its pod template
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/component: memcached
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/component: memcached
+
+  - it: still applies commonLabels to pod templates
+    template: distributor/deployment-distributor.yaml
+    set:
+      global.commonLabels:
+        team: obs
+    asserts:
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            team: obs

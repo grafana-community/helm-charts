@@ -1,5 +1,28 @@
 # Upgrade guide
 
+## v3.17 → v3.18
+
+### `helm.sh/chart` is no longer a pod label
+
+Pod templates no longer carry `helm.sh/chart`. The label changed on every chart
+version bump, and because it sat inside the pod template it rolled every workload
+on upgrade — all eight pod templates, including the ingesters — even when neither
+the configuration nor the image had changed.
+
+The label remains on the objects themselves, so `kubectl get statefulset -L helm.sh/chart`
+is unaffected. Only `spec.template.metadata.labels` changed.
+
+If you group metrics by pod label (`kube_pod_labels` joined on `label_helm_sh_chart`,
+for example), those series stop being populated for Tempo pods. Use the object-level
+label, or add the value you need through `global.commonLabels` or a component
+`podLabels` block.
+
+The memcached StatefulSet also moves from `tempo.labels` to `tempo.podLabels` for its
+pod template, which is what the other workloads already used. Its selector keys —
+`app.kubernetes.io/name`, `app.kubernetes.io/instance` and `app.kubernetes.io/component` —
+are unchanged, so the immutable selector still matches.
+
+
 ## v3.11 → v3.12
 
 ### Probes are deep-merged across `defaults`, `tempo` and the component
