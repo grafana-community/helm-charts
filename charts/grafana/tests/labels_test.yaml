@@ -4,6 +4,8 @@ templates:
   - configmap.yaml
   - deployment.yaml
   - image-renderer-deployment.yaml
+  - statefulset.yaml
+  - dashboards-json-configmap.yaml
 
 tests:
   - it: should strip the distroless image variant from version labels
@@ -37,3 +39,62 @@ tests:
         equal:
           path: metadata.labels["app.kubernetes.io/version"]
           value: 13.2.0-enterprise
+
+  - it: should keep the chart version off the pod template
+    asserts:
+      - template: deployment.yaml
+        equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/name: grafana
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/version: "13.3.0"
+      - template: deployment.yaml
+        matchRegex:
+          path: metadata.labels["helm.sh/chart"]
+          pattern: ^grafana-
+
+  - it: should keep the chart version off the statefulset pod template
+    set:
+      persistence.enabled: true
+      persistence.type: statefulset
+    templates:
+      - statefulset.yaml
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/name: grafana
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/version: "13.3.0"
+      - matchRegex:
+          path: metadata.labels["helm.sh/chart"]
+          pattern: ^grafana-
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            app.kubernetes.io/name: grafana
+            app.kubernetes.io/instance: RELEASE-NAME
+
+  - it: should leave the pod template untouched by a chart version bump
+    chart:
+      version: 99.99.99
+    asserts:
+      - template: deployment.yaml
+        equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/name: grafana
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/version: "13.3.0"
+
+  - it: should still apply extraLabels to the pod template
+    set:
+      extraLabels:
+        team: obs
+    asserts:
+      - template: deployment.yaml
+        isSubset:
+          path: spec.template.metadata.labels
+          content:
+            team: obs
