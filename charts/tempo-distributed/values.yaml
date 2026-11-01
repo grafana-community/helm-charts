@@ -1372,6 +1372,8 @@ liveStore:
       # `readiness-target-lag` of 0, because a live-store then reports ready
       # while it still replays its partition.
       crossZoneEvictionDelay: null
+      # -- Annotations for the ZoneAwarePodDisruptionBudget
+      annotations: {}
     # -- Zones to deploy. At least 2 zones are required. Every zone runs
     # `liveStore.replicas` live-stores. A zone name must be a DNS label: it
     # becomes a StatefulSet name suffix and the value of the zone label.
