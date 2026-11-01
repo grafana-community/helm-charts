@@ -14,6 +14,9 @@ templates:
   - query-frontend/workload.yaml
   - query-scheduler/workload.yaml
   - ruler/workload.yaml
+  - ruler-querier/workload.yaml
+  - ruler-query-frontend/workload.yaml
+  - ruler-query-scheduler/workload.yaml
   - config.yaml
 set:
   deploymentMode: Distributed
@@ -30,6 +33,7 @@ set:
   overridesExporter.enabled: true
   patternIngester.enabled: true
   ruler.enabled: true
+  ruler.remoteEvaluationDedicatedQueryPath: true
 
 tests:
   - it: should label components that always run a memberlist listener as seed nodes
@@ -40,6 +44,7 @@ tests:
       - pattern-ingester/workload.yaml
       - querier/workload.yaml
       - ruler/workload.yaml
+      - ruler-querier/workload.yaml
     asserts:
       - equal:
           path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
@@ -54,6 +59,8 @@ tests:
       - overrides-exporter/workload.yaml
       - query-frontend/workload.yaml
       - query-scheduler/workload.yaml
+      - ruler-query-frontend/workload.yaml
+      - ruler-query-scheduler/workload.yaml
     asserts:
       - hasDocuments:
           count: 1

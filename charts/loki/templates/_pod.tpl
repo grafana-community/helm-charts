@@ -223,7 +223,7 @@ spec:
         - -config.file=/etc/loki/config/config.yaml
         - -config.expand-env=true
         - -memberlist.advertise-addr=$(POD_IP)
-        - -target={{ replace "single-binary" "all" $target }}{{- if and .Values.loki.ui.enabled (has $target (list "single-binary" "read" "query-frontend" "querier")) }},ui{{- end }}
+        - -target={{ replace "single-binary" "all" (trimPrefix "ruler-" $target) }}{{- if and .Values.loki.ui.enabled (has $target (list "single-binary" "read" "query-frontend" "querier")) }},ui{{- end }}
         {{- end }}
         {{- with $args }}
         {{- toYaml . | nindent 8 }}

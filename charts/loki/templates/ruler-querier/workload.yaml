@@ -1,0 +1,19 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath .Values.rulerQuerier.enabled }}
+{{- $args := list
+  (printf "-querier.scheduler-address=%s" (include "loki.rulerQuerySchedulerAddress" .))
+}}
+{{- if not .Values.rulerQueryScheduler.enabled }}
+  {{- $args = append $args (printf "-querier.frontend-address=%s" (include "loki.rulerQueryFrontendAddress" .)) }}
+{{- end }}
+{{- $args = append $args "-query-scheduler.ring.prefix=ruler-query-scheduler/" }}
+{{- if .Values.ingester.zoneAwareReplication.enabled }}
+  {{- if and (.Values.ingester.zoneAwareReplication.migration.enabled) (not .Values.ingester.zoneAwareReplication.migration.readPath) }}
+    {{- $args = append $args "-distributor.zone-awareness-enabled=false" }}
+  {{- else }}
+    {{- $args = append $args "-distributor.zone-awareness-enabled=true" }}
+  {{- end }}
+{{- end }}
+---
+{{- include "loki.component" (dict "ctx" . "component" .Values.rulerQuerier "target" "ruler-querier" "args" $args) }}
+{{- end }}

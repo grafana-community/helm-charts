@@ -1,0 +1,4 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath .Values.rulerQueryFrontend.enabled }}
+{{- include "loki.keda" (dict "target" "ruler-query-frontend" "component" .Values.rulerQueryFrontend "ctx" . "kind" "Deployment") }}
+{{- end }}

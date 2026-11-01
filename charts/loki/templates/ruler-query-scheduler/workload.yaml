@@ -1,0 +1,7 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath .Values.rulerQueryScheduler.enabled }}
+{{- $args := list
+  "-query-scheduler.ring.prefix=ruler-query-scheduler/"
+}}
+{{- include "loki.component" (dict "ctx" . "component" .Values.rulerQueryScheduler "target" "ruler-query-scheduler" "args" $args "memberlist" false) }}
+{{- end }}
