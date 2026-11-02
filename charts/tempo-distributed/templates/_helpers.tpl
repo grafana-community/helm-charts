@@ -490,17 +490,19 @@ env:
   {{- if $renderedStatefulSets }}
     {{- range $newStatefulSet := $renderedStatefulSets -}}
       {{- $currentStatefulset := dict -}}
-      {{- if $newStatefulSet.spec.volumeClaimTemplates }}
+      {{- $newVolumeClaimTemplates := dig "spec" "volumeClaimTemplates" (list) $newStatefulSet -}}
+      {{- if $newVolumeClaimTemplates }}
         {{- $currentStatefulset = lookup $newStatefulSet.apiVersion $newStatefulSet.kind $newStatefulSet.metadata.namespace $newStatefulSet.metadata.name -}}
         {{- $needsRecreation := false -}}
         {{- $templates := dict -}}
         {{- if $currentStatefulset -}}
-          {{- if ne (len $newStatefulSet.spec.volumeClaimTemplates) (len $currentStatefulset.spec.volumeClaimTemplates) -}}
+          {{- $currentVolumeClaimTemplates := dig "spec" "volumeClaimTemplates" (list) $currentStatefulset -}}
+          {{- if ne (len $newVolumeClaimTemplates) (len $currentVolumeClaimTemplates) -}}
             {{- $needsRecreation = true -}}
           {{- end -}}
-          {{- range $index, $newVolumeClaimTemplate := $newStatefulSet.spec.volumeClaimTemplates -}}
+          {{- range $index, $newVolumeClaimTemplate := $newVolumeClaimTemplates -}}
             {{- $currentVolumeClaimTemplateSpec := dict -}}
-              {{- range $oldVolumeClaimTemplate := $currentStatefulset.spec.volumeClaimTemplates -}}
+              {{- range $oldVolumeClaimTemplate := $currentVolumeClaimTemplates -}}
                 {{- if eq $oldVolumeClaimTemplate.metadata.name $newVolumeClaimTemplate.metadata.name -}}
                   {{- $currentVolumeClaimTemplateSpec = $oldVolumeClaimTemplate.spec -}}
                 {{- end -}}
@@ -517,14 +519,22 @@ env:
           {{- end -}}
         {{- end -}}
         {{- if $needsRecreation }}
+        {{- $recreateLabels := include "tempo.labels" (dict "ctx" $.context "component" "statefulset-recreate-job") | fromYaml -}}
+        {{- $recreateJobImage := $.context.Values.defaults.statefulSetRecreateJob.image -}}
+        {{- $kubectlTag := $recreateJobImage.tag | toString -}}
+        {{- if not $recreateJobImage.tag -}}
+          {{- $kubeVersion := semver $.context.Capabilities.KubeVersion.Version -}}
+          {{- $kubectlTag = printf "v%d.%d.%d" $kubeVersion.Major $kubeVersion.Minor $kubeVersion.Patch -}}
+        {{- end -}}
+        {{- $kubectlImage := printf "%s/%s:%s" $recreateJobImage.registry $recreateJobImage.repository $kubectlTag -}}
+        {{- $currentReplicas := int (dig "spec" "replicas" 1 $currentStatefulset) -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ $newStatefulSet.metadata.name }}-recreate
   namespace: {{ $newStatefulSet.metadata.namespace }}
   labels:
-    {{- $newStatefulSet.metadata.labels | toYaml | nindent 4 }}
-    app.kubernetes.io/component: statefulset-recreate-job
+    {{- $recreateLabels | toYaml | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -535,23 +545,30 @@ spec:
     metadata:
       name: {{ $newStatefulSet.metadata.name }}-recreate
       labels:
-        {{- $newStatefulSet.metadata.labels | toYaml | nindent 8 }}
+        {{- $recreateLabels | toYaml | nindent 8 }}
     spec:
       serviceAccountName: {{ $newStatefulSet.metadata.name }}-recreate
       restartPolicy: OnFailure
+      {{- with $.context.Values.global.image.pullSecrets }}
+      imagePullSecrets:
+        {{- range . }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
       containers:
         - name: recreate
-          image: {{ printf "%s/kubectl:%s" (coalesce $.context.Values.global.image.registry "registry.k8s.io") $.context.Capabilities.KubeVersion.Version }}
+          image: {{ $kubectlImage }}
           command:
             - kubectl
             - delete
             - statefulset
             - {{ $newStatefulSet.metadata.name }}
             - --cascade=orphan
-        {{- range $index := until (int $currentStatefulset.spec.replicas) }}
+            - --ignore-not-found
+        {{- range $index := until $currentReplicas }}
           {{- range $template, $size := $templates }}
         - name: patch-pvc-{{ $template }}-{{ $index }}
-          image: {{ printf "%s/kubectl:%s" (coalesce $.context.Values.global.image.registry "registry.k8s.io") $.context.Capabilities.KubeVersion.Version }}
+          image: {{ $kubectlImage }}
           command:
             - kubectl
             - patch
@@ -569,8 +586,7 @@ metadata:
   name: {{ $newStatefulSet.metadata.name }}-recreate
   namespace: {{ $newStatefulSet.metadata.namespace }}
   labels:
-    {{- $newStatefulSet.metadata.labels | toYaml | nindent 4 }}
-    app.kubernetes.io/component: statefulset-recreate-job
+    {{- $recreateLabels | toYaml | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"
@@ -582,8 +598,7 @@ metadata:
   name: {{ $newStatefulSet.metadata.name }}-recreate
   namespace: {{ $newStatefulSet.metadata.namespace }}
   labels:
-    {{- $newStatefulSet.metadata.labels | toYaml | nindent 4 }}
-    app.kubernetes.io/component: statefulset-recreate-job
+    {{- $recreateLabels | toYaml | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"
@@ -603,7 +618,7 @@ rules:
     resources:
       - persistentvolumeclaims
     resourceNames:
-    {{- range $index := until (int $currentStatefulset.spec.replicas) }}
+    {{- range $index := until $currentReplicas }}
       {{- range $template := $templates | keys }}
       - {{ printf "%s-%s-%d" $template $newStatefulSet.metadata.name $index }}
       {{- end }}
@@ -619,8 +634,7 @@ metadata:
   name: {{ $newStatefulSet.metadata.name }}-recreate
   namespace: {{ $newStatefulSet.metadata.namespace }}
   labels:
-    {{- $newStatefulSet.metadata.labels | toYaml | nindent 4 }}
-    app.kubernetes.io/component: statefulset-recreate-job
+    {{- $recreateLabels | toYaml | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"

@@ -194,6 +194,14 @@ defaults:
     timeoutSeconds: 1
   # -- Default startup probe for all Tempo binary pods. Disabled by default. Merged like `defaults.livenessProbe`.
   startupProbe: {}
+  statefulSetRecreateJob:
+    image:
+      # -- Registry for the StatefulSet recreate hook Job image. `global.image.registry` does not apply to this image.
+      registry: registry.k8s.io
+      # -- Repository for the StatefulSet recreate hook Job image
+      repository: kubectl
+      # -- Image tag for the StatefulSet recreate hook Job. Defaults to the cluster version as `vMAJOR.MINOR.PATCH`, with vendor suffixes such as `-eks-...` removed
+      tag: null
 
 serviceAccount:
   # -- Specifies whether a ServiceAccount should be created

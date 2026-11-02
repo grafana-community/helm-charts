@@ -1,5 +1,11 @@
 # Upgrade guide
 
+## v3.19 → v3.20
+
+### StatefulSet recreate hook image configured via `defaults.statefulSetRecreateJob.image`
+
+The pre-upgrade Job created when `persistence.enableStatefulSetRecreationForSizeChange` is enabled now configures its image through `defaults.statefulSetRecreateJob.image` (`registry: registry.k8s.io`, `repository: kubectl`, `tag: null` defaulting to the cluster version as `vMAJOR.MINOR.PATCH`). `global.image.registry` no longer applies to this hook image; set `defaults.statefulSetRecreateJob.image.registry` if you mirror images through a private registry.
+
 ## v3.18 → v3.19
 
 ### `ingest.kafka.sasl.username` is honored when `ingest.kafka.sasl.existingSecret` is set
