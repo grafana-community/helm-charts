@@ -64,7 +64,7 @@ tests:
       - failedTemplate:
           errorMessage: "ingest.kafka.sasl.mechanism SCRAM-SHA-512 requires credentials: set ingest.kafka.sasl.existingSecret or username/password"
 
-  - it: fails when only one of username/password is set
+  - it: fails when username is set without password or existingSecret
     set:
       ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
       configStorageType: Secret
@@ -72,7 +72,17 @@ tests:
       ingest.kafka.sasl.username: myuser
     asserts:
       - failedTemplate:
-          errorMessage: "ingest.kafka.sasl: username and password must both be set"
+          errorMessage: "ingest.kafka.sasl: username needs password or existingSecret"
+
+  - it: fails when password is set without username
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      configStorageType: Secret
+      ingest.kafka.sasl.mechanism: PLAIN
+      ingest.kafka.sasl.password: mypassword
+    asserts:
+      - failedTemplate:
+          errorMessage: "ingest.kafka.sasl: password needs username"
 
   - it: succeeds when sasl credentials are set directly and configStorageType is Secret
     set:
@@ -101,20 +111,32 @@ tests:
           path: data["tempo.yaml"]
           pattern: "sasl_username|sasl_password"
 
-  - it: ignores literal username/password when existingSecret is also set
+  - it: allows setting literal username alongside existingSecret without requiring configStorageType=Secret
     set:
       ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
       ingest.kafka.sasl.mechanism: SCRAM-SHA-512
       ingest.kafka.sasl.existingSecret: kafka-scram-credentials
       ingest.kafka.sasl.username: myuser
-      ingest.kafka.sasl.password: mypassword
     asserts:
       - matchRegex:
           path: data["tempo.yaml"]
           pattern: "sasl_mechanism: SCRAM-SHA-512"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "sasl_username: myuser"
       - notMatchRegex:
           path: data["tempo.yaml"]
-          pattern: "myuser|mypassword"
+          pattern: "sasl_password"
+
+  - it: fails when both password and existingSecret are set
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.existingSecret: kafka-scram-credentials
+      ingest.kafka.sasl.password: mypassword
+    asserts:
+      - failedTemplate:
+          errorMessage: "ingest.kafka.sasl: set either password or existingSecret, not both"
 
   - it: fails when the sasl mechanism is not one of the allowed values
     set:
