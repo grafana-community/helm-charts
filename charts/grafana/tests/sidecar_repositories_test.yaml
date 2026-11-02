@@ -29,6 +29,7 @@ tests:
   - it: should render the sidecar container when enabled
     set:
       sidecar.repositories.enabled: true
+      sidecar.image.tag: 0.0.0
     template: deployment.yaml
     asserts:
       - equal:
@@ -36,7 +37,7 @@ tests:
           value: grafana-sc-repositories
       - equal:
           path: spec.template.spec.containers[0].image
-          value: quay.io/kiwigrid/k8s-sidecar:2.14.1
+          value: quay.io/kiwigrid/k8s-sidecar:0.0.0
       - contains:
           path: spec.template.spec.containers[0].env
           content:
