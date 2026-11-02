@@ -196,11 +196,11 @@ defaults:
   startupProbe: {}
   statefulSetRecreateJob:
     image:
-      # -- The Docker registry for the StatefulSet recreate hook Job image. Overrides `global.image.registry`, falling back to `registry.k8s.io`
-      registry: null
-      # -- Docker image repository for the StatefulSet recreate hook Job
+      # -- Registry for the StatefulSet recreate hook Job image. `global.image.registry` does not apply to this image.
+      registry: registry.k8s.io
+      # -- Repository for the StatefulSet recreate hook Job image
       repository: kubectl
-      # -- Overrides the image tag for the StatefulSet recreate hook Job. Defaults to `.Capabilities.KubeVersion.Version`
+      # -- Image tag for the StatefulSet recreate hook Job. Defaults to the cluster version as `vMAJOR.MINOR.PATCH`, with vendor suffixes such as `-eks-...` removed
       tag: null
 
 serviceAccount:

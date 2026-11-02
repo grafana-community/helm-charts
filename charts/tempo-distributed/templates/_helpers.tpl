@@ -519,9 +519,10 @@ env:
           {{- end -}}
         {{- end -}}
         {{- if $needsRecreation }}
-        {{- $recreateLabels := mergeOverwrite (deepCopy ($newStatefulSet.metadata.labels | default dict)) (dict "app.kubernetes.io/component" "statefulset-recreate-job") -}}
-        {{- $recreateJobImage := dig "statefulSetRecreateJob" "image" (dict) $.context.Values.defaults -}}
-        {{- $kubectlImage := printf "%s/%s:%s" (coalesce $recreateJobImage.registry $.context.Values.global.image.registry "registry.k8s.io") (coalesce $recreateJobImage.repository "kubectl") (coalesce $recreateJobImage.tag $.context.Capabilities.KubeVersion.Version | toString) -}}
+        {{- $recreateLabels := include "tempo.labels" (dict "ctx" $.context "component" "statefulset-recreate-job") | fromYaml -}}
+        {{- $recreateJobImage := $.context.Values.defaults.statefulSetRecreateJob.image -}}
+        {{- $kubeVersion := semver $.context.Capabilities.KubeVersion.Version -}}
+        {{- $kubectlImage := printf "%s/%s:%s" $recreateJobImage.registry $recreateJobImage.repository ($recreateJobImage.tag | default (printf "v%d.%d.%d" $kubeVersion.Major $kubeVersion.Minor $kubeVersion.Patch) | toString) -}}
         {{- $currentReplicas := int (dig "spec" "replicas" 1 $currentStatefulset) -}}
 apiVersion: batch/v1
 kind: Job
@@ -540,10 +541,16 @@ spec:
     metadata:
       name: {{ $newStatefulSet.metadata.name }}-recreate
       labels:
-        {{- $newStatefulSet.metadata.labels | toYaml | nindent 8 }}
+        {{- $recreateLabels | toYaml | nindent 8 }}
     spec:
       serviceAccountName: {{ $newStatefulSet.metadata.name }}-recreate
       restartPolicy: OnFailure
+      {{- with $.context.Values.global.image.pullSecrets }}
+      imagePullSecrets:
+        {{- range . }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
       containers:
         - name: recreate
           image: {{ $kubectlImage }}
@@ -553,7 +560,7 @@ spec:
             - statefulset
             - {{ $newStatefulSet.metadata.name }}
             - --cascade=orphan
-        {{- if $templates }}
+            - --ignore-not-found
         {{- range $index := until $currentReplicas }}
           {{- range $template, $size := $templates }}
         - name: patch-pvc-{{ $template }}-{{ $index }}
@@ -567,7 +574,6 @@ spec:
             - --type=json
             - '-p=[{"op": "replace", "path": "/spec/resources/requests/storage", "value": "{{ $size }}"}]'
           {{- end }}
-        {{- end }}
         {{- end }}
 ---
 apiVersion: v1

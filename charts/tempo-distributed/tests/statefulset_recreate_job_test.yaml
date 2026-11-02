@@ -273,3 +273,53 @@ tests:
           path: spec.template.spec.containers[1].image
           value: registry.k8s.io/custom/kubectl:v1.32.2
         documentIndex: 0
+
+  - it: defaults the hook image to registry.k8s.io and gives the hook pod its own component label
+    template: backend-scheduler/statefulset-backend-scheduler-recreate-job.yaml
+    set:
+      backendScheduler.enabled: true
+      backendScheduler.persistence.enabled: true
+      backendScheduler.persistence.enableStatefulSetRecreationForSizeChange: true
+      backendScheduler.persistence.size: 20Gi
+      global.image.pullSecrets:
+        - my-pull-secret
+    kubernetesProvider:
+      scheme:
+        apps/v1/StatefulSet:
+          gvr:
+            group: apps
+            version: v1
+            resource: statefulsets
+          namespaced: true
+      objects:
+        - apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: RELEASE-NAME-tempo-backend-scheduler
+            namespace: NAMESPACE
+          spec:
+            replicas: "1"
+            volumeClaimTemplates:
+              - metadata:
+                  name: data
+                spec:
+                  resources:
+                    requests:
+                      storage: 10Gi
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: ^registry\.k8s\.io/kubectl:v\d+\.\d+\.\d+$
+        documentIndex: 0
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/component"]
+          value: statefulset-recreate-job
+        documentIndex: 0
+      - notExists:
+          path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.imagePullSecrets
+          value:
+            - name: my-pull-secret
+        documentIndex: 0
