@@ -1,10 +1,18 @@
 # Upgrade guide
 
-## v3.18 → v3.19
+## v3.19 → v3.20
 
 ### StatefulSet recreate hook image configured via `defaults.statefulSetRecreateJob.image`
 
 The pre-upgrade Job created when `persistence.enableStatefulSetRecreationForSizeChange` is enabled now configures its image through `defaults.statefulSetRecreateJob.image` (`registry: registry.k8s.io`, `repository: kubectl`, `tag: null` defaulting to the cluster version as `vMAJOR.MINOR.PATCH`). `global.image.registry` no longer applies to this hook image; set `defaults.statefulSetRecreateJob.image.registry` if you mirror images through a private registry.
+
+## v3.18 → v3.19
+
+### `ingest.kafka.sasl.username` is honored when `ingest.kafka.sasl.existingSecret` is set
+
+For `PLAIN`, `SCRAM-SHA-256` and `SCRAM-SHA-512`, setting `ingest.kafka.sasl.username` alongside `ingest.kafka.sasl.existingSecret` now renders `sasl_username` in `tempo.yaml` and reads only the password from the Secret (for example with Strimzi `KafkaUser` Secrets). Previously `username` was ignored when `existingSecret` was set.
+
+If your values set both `ingest.kafka.sasl.username` and `ingest.kafka.sasl.existingSecret` and you want the username to keep coming from the Secret (`usernameKey`), clear `ingest.kafka.sasl.username`. Setting both `ingest.kafka.sasl.password` and `ingest.kafka.sasl.existingSecret` now fails at render time.
 
 ## v3.11 → v3.12
 
