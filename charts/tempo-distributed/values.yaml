@@ -961,15 +961,15 @@ ingest:
       # `existingSecret` when only the password is stored in the Secret (e.g.
       # Strimzi KafkaUser Secrets).
       username: ""
-      # -- Password for PLAIN and SCRAM-SHA-* mechanisms. Prefer `existingSecret`
-      # in production so the value is never inlined into tempo.yaml.
+      # -- Password for PLAIN and SCRAM-SHA-* mechanisms. Mutually exclusive
+      # with `existingSecret`. Prefer `existingSecret` in production so the
+      # value is never inlined into tempo.yaml.
       password: ""
-      # -- Name of an existing Secret containing `usernameKey` and/or `passwordKey`.
-      # Any credential not set via `username`/`password` above is injected as an
-      # env var from this Secret and passed to tempo as
-      # `-ingest.sasl-username`/`-ingest.sasl-password` CLI flags instead of
-      # being inlined into tempo.yaml. Recommended over setting
-      # `password` directly.
+      # -- Name of an existing Secret containing `passwordKey` (and `usernameKey`
+      # when `username` is not set above). The credentials are injected as env
+      # vars and passed to tempo as `-ingest.sasl-username`/`-ingest.sasl-password`
+      # CLI flags instead of being inlined into tempo.yaml. Recommended over
+      # setting `password` directly.
       existingSecret: ""
       # -- Key in `existingSecret` containing the username.
       usernameKey: username
@@ -2320,6 +2320,9 @@ config: |
         existingSecret counts as the static credential source.
       */}}
       {{- if or (eq $mechanism "PLAIN") (eq $mechanism "SCRAM-SHA-256") (eq $mechanism "SCRAM-SHA-512") }}
+      {{- if and $sasl.existingSecret $sasl.password }}
+        {{- fail "ingest.kafka.sasl: set either password or existingSecret, not both" }}
+      {{- end }}
       {{- if not $sasl.existingSecret }}
       {{- if or (and $sasl.username (not $sasl.password)) (and $sasl.password (not $sasl.username)) }}
         {{- fail "ingest.kafka.sasl: username and password must both be set" }}
@@ -2349,17 +2352,17 @@ config: |
       {{- end }}
       {{- end }}
       {{- /*
-        Credentials are inlined into tempo.yaml only when no existingSecret is
-        configured for the active mechanism; in that case the value ends up in
-        plaintext in the rendered ConfigMap/Secret, so require
-        configStorageType=Secret as a safety net. When existingSecret is set,
-        the credential is injected from the Secret via secretKeyRef on the pod
-        spec and passed to tempo as a CLI flag (see tempo.podTemplate), so
-        nothing is rendered here and configStorageType can remain ConfigMap.
+        Secret credentials (password, oauthbearer.token, mskIam.accessKey/secretKey)
+        are inlined into tempo.yaml only when no existingSecret is configured for
+        the active mechanism; in that case the value ends up in plaintext in the
+        rendered ConfigMap/Secret, so require configStorageType=Secret as a safety
+        net. When existingSecret is set, the secret is injected via secretKeyRef on
+        the pod spec and passed to tempo as a CLI flag (see tempo.podTemplate), so
+        configStorageType can remain ConfigMap (even when sasl.username is set inline).
       */}}
       {{- $inlinesCredential := false }}
       {{- if or (eq $mechanism "PLAIN") (eq $mechanism "SCRAM-SHA-256") (eq $mechanism "SCRAM-SHA-512") }}
-      {{- if $sasl.password }}
+      {{- if and (not $sasl.existingSecret) $sasl.password }}
       {{- $inlinesCredential = true }}
       {{- end }}
       {{- else if eq $mechanism "OAUTHBEARER" }}
@@ -2381,8 +2384,10 @@ config: |
       {{- with $sasl.username }}
       sasl_username: {{ . | quote }}
       {{- end }}
+      {{- if not $sasl.existingSecret }}
       {{- with $sasl.password }}
       sasl_password: {{ . | quote }}
+      {{- end }}
       {{- end }}
       {{- else if eq $mechanism "OAUTHBEARER" }}
       {{- with $oauthbearer }}

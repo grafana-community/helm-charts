@@ -55,10 +55,8 @@ Parameters:
 {{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_USERNAME" "valueFrom" (dict "secretKeyRef" (dict "name" . "key" ($kafkaSasl.usernameKey | default "username")))) }}
 {{- $kafkaSaslExtraArgs = append $kafkaSaslExtraArgs "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)" }}
 {{- end }}
-{{- if not $kafkaSasl.password }}
 {{- $componentExtraEnv = append $componentExtraEnv (dict "name" "TEMPO_KAFKA_SASL_PASSWORD" "valueFrom" (dict "secretKeyRef" (dict "name" . "key" ($kafkaSasl.passwordKey | default "password")))) }}
 {{- $kafkaSaslExtraArgs = append $kafkaSaslExtraArgs "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)" }}
-{{- end }}
 {{- end }}
 {{- else if eq $kafkaMechanism "OAUTHBEARER" }}
 {{- $kafkaOauthbearer := $kafkaSasl.oauthbearer | default dict }}

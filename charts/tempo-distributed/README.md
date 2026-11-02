@@ -722,6 +722,20 @@ ingest:
       enabled: true
 ```
 
+For Strimzi `KafkaUser` Secrets (which only contain a `password` key), set `username` alongside `existingSecret`:
+
+```yaml
+ingest:
+  kafka:
+    address: kafka.kafka.svc.cluster.local:9092
+    sasl:
+      mechanism: SCRAM-SHA-512
+      username: <KafkaUser name>
+      existingSecret: <KafkaUser name>
+    tls:
+      enabled: true
+```
+
 #### Example: OAUTHBEARER with a rotating token file
 
 The file must be JSON with a `token` key (optionally `zid` and `extensions`).
