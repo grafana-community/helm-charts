@@ -1845,7 +1845,7 @@ volumes:
       sizeLimit: {{ . }}
       {{- end }}
     {{- else }}
-    emptyDir: {}
+    emptyDir: {{- toYaml (.Values.persistence.emptyDir | default dict) | nindent 6 }}
     {{- end }}
   {{- end }}
   - name: search
