@@ -1,0 +1,59 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana sidecar initPlugins
+templates:
+  - deployment.yaml
+
+tests:
+  - it: should not render a plugins init container by default
+    set:
+      sidecar.plugins.enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: grafana-sc-plugins
+          any: true
+
+  - it: should render a plugins init container that lists resources once when initPlugins is true
+    set:
+      sidecar.plugins.enabled: true
+      sidecar.plugins.initPlugins: true
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: grafana-init-sc-plugins
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: METHOD
+            value: LIST
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: FOLDER
+            value: /etc/grafana/provisioning/plugins
+      - notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: REQ_URL
+          any: true
+      - contains:
+          path: spec.template.spec.initContainers[0].volumeMounts
+          content:
+            name: sc-plugins-volume
+            mountPath: /etc/grafana/provisioning/plugins
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: grafana-sc-plugins
+          any: true
+
+  - it: should not render a plugins init container when the plugins sidecar is disabled
+    set:
+      sidecar.plugins.enabled: false
+      sidecar.plugins.initPlugins: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers
