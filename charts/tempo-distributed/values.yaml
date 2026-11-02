@@ -959,7 +959,7 @@ ingest:
       mechanism: ""
       # -- Username for PLAIN and SCRAM-SHA-* mechanisms. Can be combined with
       # `existingSecret` when only the password is stored in the Secret (e.g.
-      # Strimzi KafkaUser Secrets).
+      # Strimzi KafkaUser Secrets); `usernameKey` is then ignored.
       username: ""
       # -- Password for PLAIN and SCRAM-SHA-* mechanisms. Mutually exclusive
       # with `existingSecret`. Prefer `existingSecret` in production so the
@@ -971,7 +971,8 @@ ingest:
       # CLI flags instead of being inlined into tempo.yaml. Recommended over
       # setting `password` directly.
       existingSecret: ""
-      # -- Key in `existingSecret` containing the username.
+      # -- Key in `existingSecret` containing the username. Ignored when
+      # `username` is set.
       usernameKey: username
       # -- Key in `existingSecret` containing the password.
       passwordKey: password
