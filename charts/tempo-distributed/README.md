@@ -689,7 +689,7 @@ Set `ingest.kafka.sasl.mechanism` to enable SASL for the Kafka client used by th
 
 | Mechanism | Credential sources | Rotation |
 |-----------|--------------------|----------|
-| `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512` | `existingSecret` (recommended), or `username`/`password` | Pod restart |
+| `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512` | `existingSecret` (recommended), `username` + `existingSecret` for the password only, or `username`/`password` | Pod restart |
 | `OAUTHBEARER` | `oauthbearer.filePath` / `httpSocketPath` (recommended), `oauthbearer.existingSecret`, or `oauthbearer.token` | No restart with file/socket; otherwise pod restart |
 | `AWS_MSK_IAM` | `mskIam.filePath` / `httpSocketPath` (recommended), `mskIam.existingSecret`, or `accessKey`/`secretKey` | No restart with file/socket; otherwise pod restart |
 

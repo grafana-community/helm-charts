@@ -2325,8 +2325,11 @@ config: |
         {{- fail "ingest.kafka.sasl: set either password or existingSecret, not both" }}
       {{- end }}
       {{- if not $sasl.existingSecret }}
-      {{- if or (and $sasl.username (not $sasl.password)) (and $sasl.password (not $sasl.username)) }}
-        {{- fail "ingest.kafka.sasl: username and password must both be set" }}
+      {{- if and $sasl.username (not $sasl.password) }}
+        {{- fail "ingest.kafka.sasl: username needs password or existingSecret" }}
+      {{- end }}
+      {{- if and $sasl.password (not $sasl.username) }}
+        {{- fail "ingest.kafka.sasl: password needs username" }}
       {{- end }}
       {{- if and (ne $mechanism "PLAIN") (not $sasl.username) }}
         {{- fail (printf "ingest.kafka.sasl.mechanism %s requires credentials: set ingest.kafka.sasl.existingSecret or username/password" $mechanism) }}
