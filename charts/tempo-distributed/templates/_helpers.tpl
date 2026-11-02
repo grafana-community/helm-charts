@@ -521,8 +521,12 @@ env:
         {{- if $needsRecreation }}
         {{- $recreateLabels := include "tempo.labels" (dict "ctx" $.context "component" "statefulset-recreate-job") | fromYaml -}}
         {{- $recreateJobImage := $.context.Values.defaults.statefulSetRecreateJob.image -}}
-        {{- $kubeVersion := semver $.context.Capabilities.KubeVersion.Version -}}
-        {{- $kubectlImage := printf "%s/%s:%s" $recreateJobImage.registry $recreateJobImage.repository ($recreateJobImage.tag | default (printf "v%d.%d.%d" $kubeVersion.Major $kubeVersion.Minor $kubeVersion.Patch) | toString) -}}
+        {{- $kubectlTag := $recreateJobImage.tag | toString -}}
+        {{- if not $recreateJobImage.tag -}}
+          {{- $kubeVersion := semver $.context.Capabilities.KubeVersion.Version -}}
+          {{- $kubectlTag = printf "v%d.%d.%d" $kubeVersion.Major $kubeVersion.Minor $kubeVersion.Patch -}}
+        {{- end -}}
+        {{- $kubectlImage := printf "%s/%s:%s" $recreateJobImage.registry $recreateJobImage.repository $kubectlTag -}}
         {{- $currentReplicas := int (dig "spec" "replicas" 1 $currentStatefulset) -}}
 apiVersion: batch/v1
 kind: Job
