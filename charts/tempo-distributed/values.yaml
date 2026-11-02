@@ -1372,8 +1372,6 @@ liveStore:
       # `readiness-target-lag` of 0, because a live-store then reports ready
       # while it still replays its partition.
       crossZoneEvictionDelay: null
-      # -- Annotations for the ZoneAwarePodDisruptionBudget
-      annotations: {}
     # -- Zones to deploy. At least 2 zones are required. Every zone runs
     # `liveStore.replicas` live-stores. A zone name must be a DNS label: it
     # becomes a StatefulSet name suffix and the value of the zone label.
@@ -1401,6 +1399,9 @@ liveStore:
     enabled: true
     # -- Set unhealthyPodEvictionPolicy for the live-store PodDisruptionBudget. Requires policy/v1.
     unhealthyPodEvictionPolicy: ""
+    # -- Annotations for the live-store PodDisruptionBudget, or for the
+    # ZoneAwarePodDisruptionBudget when it takes over
+    annotations: {}
   # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
   # budget covers the live-stores of every zone together, because the same pod
   # ordinal in two zones holds every owner of one partition.

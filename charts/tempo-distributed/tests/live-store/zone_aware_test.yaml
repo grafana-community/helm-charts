@@ -278,7 +278,7 @@ tests:
     set:
       rollout_operator.enabled: true
       liveStore.zoneAwareReplication.enabled: true
-      liveStore.zoneAwareReplication.podDisruptionBudget.annotations:
+      liveStore.podDisruptionBudget.annotations:
         argocd.argoproj.io/sync-wave: "1"
     asserts:
       - equal:

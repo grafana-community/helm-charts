@@ -595,7 +595,9 @@ liveStore:
 With `maxUnavailable: 1`, a drain can take one live-store per partition and many
 partitions at the same time, and it can never take the last owner of a
 partition. The rollout-operator rejects an eviction while it is unreachable, so
-this opens no window. It replaces the `liveStore.podDisruptionBudget` object.
+this opens no window. It replaces the `liveStore.podDisruptionBudget` object,
+except `liveStore.podDisruptionBudget.annotations`, which apply to whichever
+budget renders.
 
 Set `crossZoneEvictionDelay` when the live-stores run with the default
 `readiness-target-lag` of 0, because a live-store then reports ready while it
