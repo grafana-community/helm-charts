@@ -138,7 +138,7 @@ tests:
         template: ruler-query-frontend/workload.yaml
       - contains:
           path: spec.template.spec.containers[0].args
-          content: -querier.cache-results=false
+          content: -querier.cache-instant-metric-results=false
         template: ruler-query-frontend/workload.yaml
       - contains:
           path: spec.template.spec.containers[0].args
@@ -181,6 +181,10 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].args
           content: -target=querier
+        template: ruler-querier/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -querier.frontend-address=
         template: ruler-querier/workload.yaml
       - contains:
           path: spec.template.spec.containers[0].args

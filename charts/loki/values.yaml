@@ -3941,7 +3941,7 @@ querier:
         name: querier_autoscaling_metric
         metadata:
           serverAddress: "{{ .Values.defaults.kedaAutoscaling.prometheusAddress }}"
-          query: sum(max_over_time(loki_query_scheduler_inflight_requests{quantile="0.75"}[2m]))
+          query: sum(max_over_time(loki_query_scheduler_inflight_requests{container!="ruler-query-scheduler",quantile="0.75"}[2m]))
           threshold: "4"
           unsafeSsl: "{{ .Values.defaults.kedaAutoscaling.unsafeSsl }}"
           ignoreNullValues: "{{ .Values.defaults.kedaAutoscaling.ignoreNullValues }}"
