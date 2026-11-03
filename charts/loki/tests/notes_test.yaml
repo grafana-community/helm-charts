@@ -176,3 +176,20 @@ tests:
       - matchRegexRaw:
           pattern: "\\* ruler query scheduler"
         template: NOTES.txt
+
+  - it: lists the ruler in distributed mode when ruler is enabled
+    set:
+      deploymentMode: Distributed
+    asserts:
+      - matchRegexRaw:
+          pattern: "\\* ruler\\n"
+        template: NOTES.txt
+
+  - it: omits the ruler in distributed mode when ruler is disabled
+    set:
+      deploymentMode: Distributed
+      ruler.enabled: false
+    asserts:
+      - notMatchRegexRaw:
+          pattern: "\\* ruler"
+        template: NOTES.txt
