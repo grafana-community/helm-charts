@@ -6335,8 +6335,6 @@ ruler:
 
 # -- Configuration for the ruler-querier. Only deployed when `deploymentMode` is `Distributed`, `ruler.enabled` is `true`, and `ruler.remoteEvaluationDedicatedQueryPath` is `true`.
 rulerQuerier:
-  # -- Enable the ruler-querier component when `ruler.remoteEvaluationDedicatedQueryPath` is `true`.
-  enabled: true
   # -- Kind of ruler-querier workload. StatefulSet and Deployment are supported.
   kind: Deployment
   # @schema type:[integer, null]
@@ -6592,8 +6590,6 @@ rulerQuerier:
 
 # -- Configuration for the ruler-query-frontend. Only deployed when `deploymentMode` is `Distributed`, `ruler.enabled` is `true`, and `ruler.remoteEvaluationDedicatedQueryPath` is `true`.
 rulerQueryFrontend:
-  # -- Enable the ruler-query-frontend component when `ruler.remoteEvaluationDedicatedQueryPath` is `true`.
-  enabled: true
   # -- Kind of ruler-query-frontend workload. StatefulSet and Deployment are supported.
   kind: Deployment
   # @schema type:[integer, null]

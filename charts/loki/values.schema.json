@@ -11093,10 +11093,6 @@
                     "type": "object",
                     "additionalProperties": true
                 },
-                "enabled": {
-                    "description": "Enable the ruler-querier component when `ruler.remoteEvaluationDedicatedQueryPath` is `true`.",
-                    "type": "boolean"
-                },
                 "extraArgs": {
                     "description": "Additional CLI args for the ruler-querier",
                     "type": "array"
@@ -11632,10 +11628,6 @@
                     "description": "DNSConfig for ruler-query-frontend pods",
                     "type": "object",
                     "additionalProperties": true
-                },
-                "enabled": {
-                    "description": "Enable the ruler-query-frontend component when `ruler.remoteEvaluationDedicatedQueryPath` is `true`.",
-                    "type": "boolean"
                 },
                 "extraArgs": {
                     "description": "Additional CLI args for the ruler-query-frontend",

@@ -20,8 +20,9 @@ Workload helper
 {{- $rolloutZoneName := .rolloutZoneName | default "" -}}
 {{- $replicas := .replicas | default $component.replicas -}}
 {{- $memberlist := hasKey . "memberlist" | ternary .memberlist true -}}
+{{- $componentEnabled := kindIs "bool" $component.enabled | ternary $component.enabled true -}}
 {{- with $ctx }}
-{{- if $component.enabled }}
+{{- if $componentEnabled }}
 apiVersion: apps/v1
 kind: {{ $component.kind }}
 metadata:
@@ -168,7 +169,8 @@ spec:
 {{- $name := .name }}
 {{- $headlessName := .headlessName }}
 {{- $memberlist := hasKey . "memberlist" | ternary .memberlist true -}}
-{{- if and $component.enabled $component.statefulSetRecreateJob.enabled -}}
+{{- $componentEnabled := kindIs "bool" $component.enabled | ternary $component.enabled true -}}
+{{- if and $componentEnabled (dig "statefulSetRecreateJob" "enabled" false $component) -}}
 {{- $newStatefulSet := include "loki.component.workload" . | fromYaml -}}
 {{- with $ctx }}
   {{- $currentStatefulset := dict -}}
