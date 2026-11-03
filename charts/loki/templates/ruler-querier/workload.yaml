@@ -13,5 +13,5 @@
   {{- end }}
 {{- end }}
 ---
-{{- include "loki.component" (dict "ctx" . "component" .Values.rulerQuerier "target" "ruler-querier" "args" $args) }}
+{{- include "loki.component" (dict "ctx" . "component" .Values.rulerQuerier "target" "ruler-querier" "lokiTarget" "querier" "args" $args) }}
 {{- end }}

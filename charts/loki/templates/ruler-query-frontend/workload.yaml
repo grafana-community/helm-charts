@@ -7,5 +7,5 @@
   "-server.grpc.keepalive.max-connection-age=30s"
   "-shutdown-delay=90s"
 }}
-{{- include "loki.component" (dict "ctx" . "component" .Values.rulerQueryFrontend "target" "ruler-query-frontend" "args" $args "memberlist" false) }}
+{{- include "loki.component" (dict "ctx" . "component" .Values.rulerQueryFrontend "target" "ruler-query-frontend" "lokiTarget" "query-frontend" "args" $args "memberlist" false) }}
 {{- end }}

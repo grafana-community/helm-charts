@@ -12,6 +12,7 @@ Workload helper
 
 {{- define "loki.component.workload" }}
 {{- $target := .target }}
+{{- $lokiTarget := .lokiTarget }}
 {{- $ctx := .ctx }}
 {{- $component := .component }}
 {{- $name := .name }}
@@ -83,7 +84,7 @@ spec:
       rollout-group: {{ include "loki.prefixRolloutGroup" . }}ingester
       {{- end }}
   template:
-    {{- include "loki.podTemplate" (dict "target" $target "component" $component "ctx" $ctx "memberlist" $memberlist "args" $args "rolloutZoneName" $rolloutZoneName) | nindent 4 }}
+    {{- include "loki.podTemplate" (dict "target" $target "lokiTarget" $lokiTarget "component" $component "ctx" $ctx "memberlist" $memberlist "args" $args "rolloutZoneName" $rolloutZoneName) | nindent 4 }}
   {{- if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq (dig "persistence" "type" "pvc" $component) "pvc") }}
     {{- if and (eq $component.kind "Deployment") (gt (int $component.replicas) 1) }}
       {{- fail "Persistence with PVC is not supported for Deployment with more than 1 replica. Please use StatefulSet or set replicas to 1." }}
