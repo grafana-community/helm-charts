@@ -126,7 +126,7 @@ tests:
         template: ruler-query-frontend/workload.yaml
       - equal:
           path: spec.template.spec.terminationGracePeriodSeconds
-          value: 390
+          value: 120
         template: ruler-query-frontend/workload.yaml
       - equal:
           path: spec.template.spec.containers[0].name
@@ -172,7 +172,7 @@ tests:
         template: ruler-querier/workload.yaml
       - equal:
           path: spec.template.spec.terminationGracePeriodSeconds
-          value: 180
+          value: 30
         template: ruler-querier/workload.yaml
       - equal:
           path: spec.template.spec.containers[0].name
@@ -210,7 +210,7 @@ tests:
         template: ruler-query-scheduler/workload.yaml
       - equal:
           path: spec.template.spec.terminationGracePeriodSeconds
-          value: 180
+          value: 30
         template: ruler-query-scheduler/workload.yaml
       - equal:
           path: spec.template.spec.containers[0].name
@@ -224,6 +224,32 @@ tests:
           path: spec.template.spec.containers[0].args
           content: -query-scheduler.ring.prefix=ruler-query-scheduler/
         template: ruler-query-scheduler/workload.yaml
+
+  - it: should take the ruler-query-frontend shutdown delay from rulerQueryFrontend.shutdownDelay
+    set:
+      ruler.remoteEvaluationDedicatedQueryPath: true
+      rulerQueryFrontend.shutdownDelay: 45s
+    template: ruler-query-frontend/workload.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -shutdown-delay=45s
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -shutdown-delay=90s
+
+  - it: should omit -shutdown-delay on ruler-query-frontend when rulerQueryFrontend.shutdownDelay is 0s
+    set:
+      ruler.remoteEvaluationDedicatedQueryPath: true
+      rulerQueryFrontend.shutdownDelay: 0s
+    template: ruler-query-frontend/workload.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -shutdown-delay=90s
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -shutdown-delay=0s
 
   - it: should render services and PDBs with publishNotReadyAddresses disabled on ruler-query-frontend
     set:

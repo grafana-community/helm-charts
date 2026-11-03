@@ -64,12 +64,6 @@ indexGateway:
 # (ruler-query-frontend, ruler-query-scheduler, ruler-querier)
 #ruler:
 #  remoteEvaluationDedicatedQueryPath: true
-#rulerQuerier:
-#  replicas: 1
-#rulerQueryFrontend:
-#  replicas: 1
-#rulerQueryScheduler:
-#  replicas: 1
 
 # optional experimental components
 bloomPlanner:

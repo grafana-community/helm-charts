@@ -6556,7 +6556,7 @@ rulerQuerier:
   # -- Init containers to add to the ruler-querier pods
   initContainers: []
   # -- Grace period to allow the ruler-querier to shut down before it is killed
-  terminationGracePeriodSeconds: 180
+  terminationGracePeriodSeconds: 30
   podDisruptionBudget:
     # -- Enable Pod Disruption Budget
     enabled: true
@@ -6801,8 +6801,13 @@ rulerQueryFrontend:
   # @schema type:[string, array, null]
   # -- Containers to add to the ruler-query-frontend pods
   extraContainers: []
-  # -- Grace period to allow the ruler-query-frontend to shut down before it is killed (90s shutdown delay + 300s default graceful shutdown timeout)
-  terminationGracePeriodSeconds: 390
+  # @schema type:[string, null]
+  # -- On SIGTERM, report 503 on /ready and wait this long before shutdown so the ruler's gRPC client re-resolves DNS and stops sending to this pod.
+  # Pair with `-server.grpc.keepalive.max-connection-age=30s`, which forces that re-resolution. "0s" disables.
+  # Keep terminationGracePeriodSeconds above shutdownDelay + server.graceful_shutdown_timeout.
+  shutdownDelay: 90s
+  # -- Grace period to allow the ruler-query-frontend to shut down before it is killed
+  terminationGracePeriodSeconds: 120
   podDisruptionBudget:
     # -- Enable Pod Disruption Budget
     enabled: true
@@ -6996,7 +7001,7 @@ rulerQueryScheduler:
   # -- Containers to add to the ruler-query-scheduler pods
   extraContainers: []
   # -- Grace period to allow the ruler-query-scheduler to shut down before it is killed
-  terminationGracePeriodSeconds: 180
+  terminationGracePeriodSeconds: 30
   # @schema type:[object, null];skipProperties:true;additionalProperties:true
   # -- Affinity for ruler-query-scheduler pods.
   # @default -- Hard node anti-affinity

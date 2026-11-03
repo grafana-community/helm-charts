@@ -4,7 +4,11 @@
   (printf "-frontend.scheduler-address=%s" (include "loki.rulerQuerySchedulerAddress" .))
   "-query-scheduler.ring.prefix=ruler-query-scheduler/"
   "-server.grpc.keepalive.max-connection-age=30s"
-  "-shutdown-delay=90s"
 }}
+{{- with .Values.rulerQueryFrontend.shutdownDelay }}
+{{- if ne (. | toString) "0s" }}
+{{- $args = append $args (printf "-shutdown-delay=%s" .) }}
+{{- end }}
+{{- end }}
 {{- include "loki.component" (dict "ctx" . "component" .Values.rulerQueryFrontend "target" "ruler-query-frontend" "lokiTarget" "query-frontend" "args" $args "memberlist" false) }}
 {{- end }}

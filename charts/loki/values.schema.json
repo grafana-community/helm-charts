@@ -12075,6 +12075,13 @@
                         }
                     }
                 },
+                "shutdownDelay": {
+                    "description": "On SIGTERM, report 503 on /ready and wait this long before shutdown so the ruler's gRPC client re-resolves DNS and stops sending to this pod. Pair with `-server.grpc.keepalive.max-connection-age=30s`, which forces that re-resolution. \"0s\" disables. Keep terminationGracePeriodSeconds above shutdownDelay + server.graceful_shutdown_timeout.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "startupProbe": {
                     "description": "Startup probe settings for ruler-query-frontend pods. If empty, use `loki.startupProbe`",
                     "type": "object",
@@ -12086,7 +12093,7 @@
                     "additionalProperties": true
                 },
                 "terminationGracePeriodSeconds": {
-                    "description": "Grace period to allow the ruler-query-frontend to shut down before it is killed (90s shutdown delay + 300s default graceful shutdown timeout)",
+                    "description": "Grace period to allow the ruler-query-frontend to shut down before it is killed",
                     "type": "integer"
                 },
                 "tolerations": {
