@@ -56,3 +56,25 @@ tests:
           path: spec.serviceName
           value: RELEASE-NAME-loki-pattern-ingester-headless
 
+  - it: sets appProtocol from service.appProtocol.grpc
+    set:
+      patternIngester.enabled: true
+      patternIngester.replicas: 1
+      patternIngester.service.appProtocol.grpc: grpc
+    asserts:
+      - template: pattern-ingester/service.yaml
+        equal:
+          path: spec.ports[?(@.name == "grpc")].appProtocol
+          value: grpc
+
+  - it: prefers the deprecated appProtocol.grpc when both are set
+    set:
+      patternIngester.enabled: true
+      patternIngester.replicas: 1
+      patternIngester.appProtocol.grpc: h2c
+      patternIngester.service.appProtocol.grpc: grpc
+    asserts:
+      - template: pattern-ingester/service.yaml
+        equal:
+          path: spec.ports[?(@.name == "grpc")].appProtocol
+          value: h2c
