@@ -12058,10 +12058,6 @@
                     "type": "object",
                     "additionalProperties": true
                 },
-                "enabled": {
-                    "description": "Enable the ruler-query-scheduler component when `ruler.remoteEvaluationDedicatedQueryPath` is `true`. If disabled, `ruler-querier` connects directly to `ruler-query-frontend`.",
-                    "type": "boolean"
-                },
                 "extraArgs": {
                     "description": "Additional CLI args for the ruler-query-scheduler",
                     "type": "array"

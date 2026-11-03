@@ -299,47 +299,6 @@ tests:
           content: -distributor.zone-awareness-enabled=false
         template: ruler-querier/workload.yaml
 
-  - it: should connect ruler-querier directly to ruler-query-frontend when rulerQueryScheduler is disabled
-    set:
-      ruler.remoteEvaluationDedicatedQueryPath: true
-      rulerQueryScheduler.enabled: false
-      rulerQueryScheduler.serviceAccount.create: true
-    asserts:
-      - hasDocuments:
-          count: 0
-        template: ruler-query-scheduler/workload.yaml
-      - hasDocuments:
-          count: 0
-        template: ruler-query-scheduler/service.yaml
-      - hasDocuments:
-          count: 0
-        template: ruler-query-scheduler/pdb.yaml
-      - hasDocuments:
-          count: 0
-        template: ruler-query-scheduler/serviceaccount.yaml
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: -frontend.scheduler-address=
-        template: ruler-query-frontend/workload.yaml
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: -querier.scheduler-address=
-        template: ruler-querier/workload.yaml
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: -querier.frontend-address=RELEASE-NAME-loki-ruler-query-frontend-headless.NAMESPACE.svc.cluster.local:9095
-        template: ruler-querier/workload.yaml
-      - equal:
-          path: spec.publishNotReadyAddresses
-          value: true
-        documentIndex: 0
-        template: ruler-query-frontend/service.yaml
-      - equal:
-          path: spec.publishNotReadyAddresses
-          value: true
-        documentIndex: 1
-        template: ruler-query-frontend/service.yaml
-
   - it: should render HPA, KEDA ScaledObject, and ServiceAccounts when enabled
     set:
       ruler.remoteEvaluationDedicatedQueryPath: true

@@ -6827,9 +6827,6 @@ rulerQueryFrontend:
 
 # -- Configuration for the ruler-query-scheduler. Only deployed when `deploymentMode` is `Distributed`, `ruler.enabled` is `true`, and `ruler.remoteEvaluationDedicatedQueryPath` is `true`.
 rulerQueryScheduler:
-  # -- Enable the ruler-query-scheduler component when `ruler.remoteEvaluationDedicatedQueryPath` is `true`.
-  # If disabled, `ruler-querier` connects directly to `ruler-query-frontend`.
-  enabled: true
   # -- Kind of ruler-query-scheduler workload. StatefulSet and Deployment are supported.
   kind: Deployment
   # @schema type:[integer, null]

@@ -1035,7 +1035,7 @@ enableServiceLinks: {{ $ctx.Values.loki.enableServiceLinks }}
 {{- define "loki.rulerQuerySchedulerAddress" -}}
 {{- $rulerQuerySchedulerAddress := "" }}
 {{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
-{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath .Values.rulerQueryScheduler.enabled -}}
+{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath -}}
 {{- $rulerQuerySchedulerAddress = printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "ruler-query-scheduler")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
 {{- end -}}
 {{- printf "%s" $rulerQuerySchedulerAddress }}
