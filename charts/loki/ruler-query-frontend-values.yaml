@@ -65,13 +65,10 @@ ruler:
   replicas: 1
   remoteEvaluationDedicatedQueryPath: true
 rulerQuerier:
-  enabled: true
   replicas: 1
 rulerQueryFrontend:
-  enabled: true
   replicas: 1
 rulerQueryScheduler:
-  enabled: true
   replicas: 1
 
 # optional experimental components
