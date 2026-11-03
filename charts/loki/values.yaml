@@ -5977,7 +5977,42 @@ patternIngester:
   # The value will be passed through tpl.
   topologySpreadConstraints: []
   tolerations: []
+  service:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for pattern ingester Service
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Additional labels for pattern ingester Service
+    labels: {}
+    # -- Service Type for pattern ingester Service
+    type: "ClusterIP"
+    # -- trafficDistribution for pattern ingester Service
+    trafficDistribution: ""
+    # -- Session affinity for pattern ingester Service
+    sessionAffinity: ""
+    # @schema additionalProperties:true
+    # -- Session affinity config for pattern ingester Service
+    sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for pattern ingester Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for pattern ingester Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
+    # -- Adds the appProtocol field to the pattern ingester service. This allows pattern ingester to work with istio protocol selection.
+    appProtocol:
+    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
+    headlessService:
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional annotations for headless pattern ingester Service
+      annotations: {}
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional labels for headless pattern ingester Service
+      labels: {}
+  # @schema additionalProperties:true;deprecated:true
   # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+  # @deprecated -- This option is deprecated in favor of `patternIngester.service.appProtocol`
   appProtocol:
     grpc: ""
   persistence:
