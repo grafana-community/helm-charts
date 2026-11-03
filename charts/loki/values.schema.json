@@ -8583,7 +8583,7 @@
                             ]
                         },
                         "triggers": {
-                            "description": "KEDA triggers for the querier. Defaults to a Prometheus trigger using inflight requests.",
+                            "description": "KEDA triggers for the querier. Defaults to a Prometheus trigger using inflight requests. The default query tells the two schedulers apart by the `container` label, which Prometheus Operator ServiceMonitors and PodMonitors set. Without that label, the ruler-query-scheduler queue also drives querier scaling when `ruler.remoteEvaluationDedicatedQueryPath` is true.",
                             "type": "array",
                             "items": {
                                 "type": "object",
@@ -11295,7 +11295,7 @@
                             ]
                         },
                         "triggers": {
-                            "description": "KEDA triggers for the ruler-querier. Defaults to a Prometheus trigger using ruler-query-scheduler inflight requests.",
+                            "description": "KEDA triggers for the ruler-querier. Defaults to a Prometheus trigger using ruler-query-scheduler inflight requests. The default query selects on the `container` label, which Prometheus Operator ServiceMonitors and PodMonitors set. Without that label, the query returns no data and the ruler-querier stays at `minReplicas`.",
                             "type": "array",
                             "items": {
                                 "type": "object",

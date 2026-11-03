@@ -3936,6 +3936,8 @@ querier:
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
     # -- KEDA triggers for the querier. Defaults to a Prometheus trigger using inflight requests.
+    # The default query tells the two schedulers apart by the `container` label, which Prometheus Operator ServiceMonitors and PodMonitors set.
+    # Without that label, the ruler-query-scheduler queue also drives querier scaling when `ruler.remoteEvaluationDedicatedQueryPath` is true.
     triggers:
       - type: prometheus
         name: querier_autoscaling_metric
@@ -6438,6 +6440,8 @@ rulerQuerier:
     # Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced
     behavior: {}
     # -- KEDA triggers for the ruler-querier. Defaults to a Prometheus trigger using ruler-query-scheduler inflight requests.
+    # The default query selects on the `container` label, which Prometheus Operator ServiceMonitors and PodMonitors set.
+    # Without that label, the query returns no data and the ruler-querier stays at `minReplicas`.
     triggers:
       - type: prometheus
         name: ruler_querier_autoscaling_metric
@@ -6631,7 +6635,7 @@ rulerQueryFrontend:
   # @schema type:[integer, null]
   # -- Number of replicas for the ruler-query-frontend. Set to null to omit spec.replicas from the workload,
   # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
-  replicas: 1
+  replicas: 2
   # @schema skipProperties:true;additionalProperties:true
   # -- Strategy for the ruler-query-frontend.
   strategy:

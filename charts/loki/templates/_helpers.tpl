@@ -402,10 +402,15 @@ chunk_delimiter: {{ . }}
 {{- end -}}
 {{- end -}}
 
+{{/* Return "true" when the ruler evaluates rules through its own ruler-query-frontend, ruler-query-scheduler and ruler-querier */}}
+{{- define "loki.ruler.dedicatedQueryPathEnabled" -}}
+{{- and (eq (include "loki.deployment.isDistributed" .) "true") .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath -}}
+{{- end }}
+
 {{/* Loki ruler config */}}
 {{- define "loki.rulerConfig" }}
 {{- $rulerConfig := dict "storage" (include "loki.rulerStorageConfig" . | fromYaml) -}}
-{{- if and (eq (include "loki.deployment.isDistributed" .) "true") .Values.ruler.remoteEvaluationDedicatedQueryPath -}}
+{{- if eq (include "loki.ruler.dedicatedQueryPathEnabled" .) "true" -}}
 {{- $_ := set $rulerConfig "evaluation" (dict
   "mode" "remote"
   "query_frontend" (dict

@@ -32,7 +32,7 @@ Installed components:
 * index gateway
 * query scheduler
 * ruler
-{{- if and .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath }}
+{{- if eq (include "loki.ruler.dedicatedQueryPathEnabled" .) "true" }}
 * ruler querier
 * ruler query frontend
 * ruler query scheduler
