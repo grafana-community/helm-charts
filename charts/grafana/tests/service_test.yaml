@@ -1,0 +1,58 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: service target port
+templates:
+  - service.yaml
+  - deployment.yaml
+tests:
+  - it: should target the named container port by default
+    template: service.yaml
+    asserts:
+      - equal:
+          path: spec.ports[0].targetPort
+          value: grafana
+
+  - it: should target the default container port by number when useNumericTargetPort is enabled
+    template: service.yaml
+    set:
+      service.useNumericTargetPort: true
+    asserts:
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 3000
+
+  - it: should keep the numeric targetPort in sync with the grafana containerPort
+    set:
+      service.useNumericTargetPort: true
+      service.targetPort: 4181
+    asserts:
+      - template: service.yaml
+        equal:
+          path: spec.ports[0].targetPort
+          value: 4181
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.containers[?(@.name == "grafana")].ports
+          content:
+            name: grafana
+            containerPort: 4181
+            protocol: TCP
+
+  - it: should keep service port and name unchanged when useNumericTargetPort is enabled
+    template: service.yaml
+    set:
+      service.useNumericTargetPort: true
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+      - equal:
+          path: spec.ports[0].name
+          value: service
+
+  - it: should reject a non-boolean useNumericTargetPort
+    template: service.yaml
+    set:
+      service.useNumericTargetPort: 1
+    asserts:
+      - failedTemplate:
+          errorPattern: useNumericTargetPort
