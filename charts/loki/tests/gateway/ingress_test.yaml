@@ -1,0 +1,38 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: gateway Ingress
+templates:
+  - gateway/ingress.yaml
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  gateway.enabled: true
+  gateway.ingress.enabled: true
+
+tests:
+  - it: should default pathType to Prefix when a path does not set it
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: Prefix
+
+  - it: should use the pathType set on the path
+    set:
+      gateway.ingress.hosts:
+        - host: gateway.loki.example.com
+          paths:
+            - path: /loki
+              pathType: ImplementationSpecific
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /loki
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: ImplementationSpecific

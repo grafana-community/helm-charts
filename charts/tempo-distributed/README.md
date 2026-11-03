@@ -595,7 +595,9 @@ liveStore:
 With `maxUnavailable: 1`, a drain can take one live-store per partition and many
 partitions at the same time, and it can never take the last owner of a
 partition. The rollout-operator rejects an eviction while it is unreachable, so
-this opens no window. It replaces the `liveStore.podDisruptionBudget` object.
+this opens no window. It replaces the `liveStore.podDisruptionBudget` object,
+except `liveStore.podDisruptionBudget.annotations`, which apply to whichever
+budget renders.
 
 Set `crossZoneEvictionDelay` when the live-stores run with the default
 `readiness-target-lag` of 0, because a live-store then reports ready while it
@@ -687,7 +689,7 @@ Set `ingest.kafka.sasl.mechanism` to enable SASL for the Kafka client used by th
 
 | Mechanism | Credential sources | Rotation |
 |-----------|--------------------|----------|
-| `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512` | `existingSecret` (recommended), or `username`/`password` | Pod restart |
+| `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512` | `existingSecret` (recommended), `username` + `existingSecret` for the password only, or `username`/`password` | Pod restart |
 | `OAUTHBEARER` | `oauthbearer.filePath` / `httpSocketPath` (recommended), `oauthbearer.existingSecret`, or `oauthbearer.token` | No restart with file/socket; otherwise pod restart |
 | `AWS_MSK_IAM` | `mskIam.filePath` / `httpSocketPath` (recommended), `mskIam.existingSecret`, or `accessKey`/`secretKey` | No restart with file/socket; otherwise pod restart |
 
@@ -695,8 +697,8 @@ OAUTHBEARER and AWS_MSK_IAM need exactly one credential source. Tempo does not f
 
 **How credentials reach Tempo**
 
-- **`existingSecret`**: the chart injects each Secret key as a `TEMPO_KAFKA_SASL_*` env var through `secretKeyRef` and passes it to Tempo as a CLI flag (for example `-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)`), so no credential is rendered into `tempo.yaml`. For AWS_MSK_IAM, the session token flag is added only when `mskIam.sessionTokenKey` is set, and that key must exist in the Secret.
-- **Inline values** (`username`/`password`, `oauthbearer.token`) are rendered into `tempo.yaml`, so the chart requires `configStorageType: Secret` and fails to render otherwise.
+- **`existingSecret`**: the chart injects each Secret key as a `TEMPO_KAFKA_SASL_*` env var through `secretKeyRef` and passes it to Tempo as a CLI flag (for example `-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)`), so no secret credential is rendered into `tempo.yaml`. For `PLAIN` and `SCRAM-SHA-*`, you can also set `username` in `values.yaml` while sourcing only the password from `existingSecret` (for example with Strimzi `KafkaUser` Secrets that only contain a `password` key). For AWS_MSK_IAM, the session token flag is added only when `mskIam.sessionTokenKey` is set, and that key must exist in the Secret.
+- **Inline values** (`password`, `oauthbearer.token`, `mskIam.accessKey`/`secretKey`) are rendered into `tempo.yaml`, so the chart requires `configStorageType: Secret` and fails to render otherwise.
 - **File/socket sources** (OAUTHBEARER, AWS_MSK_IAM) are read by Tempo on every authentication, so you can rotate the Secret without restarting pods. Mount the file on all Tempo pods with `defaults.extraVolumes` / `defaults.extraVolumeMounts`.
 
 #### Example: SCRAM-SHA-512 with an existing Secret
@@ -716,6 +718,20 @@ ingest:
       existingSecret: kafka-scram-credentials
       # usernameKey: username   # defaults; override if your Secret uses other keys
       # passwordKey: password
+    tls:
+      enabled: true
+```
+
+For Strimzi `KafkaUser` Secrets (which only contain a `password` key), set `username` alongside `existingSecret`:
+
+```yaml
+ingest:
+  kafka:
+    address: kafka.kafka.svc.cluster.local:9092
+    sasl:
+      mechanism: SCRAM-SHA-512
+      username: <KafkaUser name>
+      existingSecret: <KafkaUser name>
     tls:
       enabled: true
 ```

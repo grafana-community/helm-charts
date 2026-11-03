@@ -93,6 +93,14 @@
                 "null"
             ]
         },
+        "global": {
+            "description": "Global values shared between all subcharts",
+            "$comment": "Added automatically by 'helm schema' to allow this chart to be used as a Helm dependency, as this schema would otherwise not allow Helm's special 'global' values key.",
+            "type": [
+                "object",
+                "null"
+            ]
+        },
         "grafana": {
             "description": "Grafana connection configuration",
             "type": "object",
@@ -680,5 +688,5 @@
             "type": "array"
         }
     },
-    "additionalProperties": true
+    "additionalProperties": false
 }
