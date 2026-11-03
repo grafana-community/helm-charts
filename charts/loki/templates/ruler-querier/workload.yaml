@@ -5,6 +5,8 @@
 }}
 {{- if not .Values.rulerQueryScheduler.enabled }}
   {{- $args = append $args (printf "-querier.frontend-address=%s" (include "loki.rulerQueryFrontendAddress" .)) }}
+{{- else }}
+  {{- $args = append $args "-querier.frontend-address=" }}
 {{- end }}
 {{- $args = append $args "-query-scheduler.ring.prefix=ruler-query-scheduler/" }}
 {{- if .Values.ingester.zoneAwareReplication.enabled }}
