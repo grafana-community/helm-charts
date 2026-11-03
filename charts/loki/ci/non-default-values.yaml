@@ -114,12 +114,22 @@ backend:
   replicas: 0
 ruler:
   replicas: 2
+  remoteEvaluationDedicatedQueryPath: true
   affinity: null
   sidecar: true
   directories:
     fake:
       alerts.yaml: |
         groups: {}
+rulerQuerier:
+  replicas: 1
+  affinity: null
+rulerQueryFrontend:
+  replicas: 1
+  affinity: null
+rulerQueryScheduler:
+  replicas: 1
+  affinity: null
 distributor:
   replicas: 2
   affinity: null
