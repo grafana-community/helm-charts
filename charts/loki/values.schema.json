@@ -7923,12 +7923,14 @@
                 },
                 "appProtocol": {
                     "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "deprecated": true,
                     "type": "object",
                     "properties": {
                         "grpc": {
                             "type": "string"
                         }
-                    }
+                    },
+                    "additionalProperties": true
                 },
                 "command": {
                     "description": "Command to execute instead of defined in Docker image",
@@ -8216,6 +8218,79 @@
                     "description": "Resource requests and limits for the pattern ingester",
                     "type": "object",
                     "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for pattern ingester Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the pattern ingester service. This allows pattern ingester to work with istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless pattern ingester Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless pattern ingester Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for pattern ingester Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for pattern ingester Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for pattern ingester Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for pattern ingester Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for pattern ingester Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for pattern ingester Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for pattern ingester Service",
+                            "type": "string"
+                        }
+                    }
                 },
                 "serviceAccount": {
                     "type": "object",
