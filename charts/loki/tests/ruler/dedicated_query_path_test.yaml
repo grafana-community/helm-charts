@@ -202,6 +202,10 @@ tests:
         template: ruler-querier/workload.yaml
       - contains:
           path: spec.template.spec.containers[0].args
+          content: -querier.frontend-address=
+        template: ruler-querier/workload.yaml
+      - contains:
+          path: spec.template.spec.containers[0].args
           content: -query-scheduler.ring.prefix=ruler-query-scheduler/
         template: ruler-querier/workload.yaml
       - hasDocuments:
@@ -325,6 +329,16 @@ tests:
           path: spec.template.spec.containers[0].args
           content: -querier.frontend-address=RELEASE-NAME-loki-ruler-query-frontend-headless.NAMESPACE.svc.cluster.local:9095
         template: ruler-querier/workload.yaml
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        documentIndex: 0
+        template: ruler-query-frontend/service.yaml
+      - equal:
+          path: spec.publishNotReadyAddresses
+          value: true
+        documentIndex: 1
+        template: ruler-query-frontend/service.yaml
 
   - it: should render HPA, KEDA ScaledObject, and ServiceAccounts when enabled
     set:
