@@ -156,10 +156,6 @@ tests:
         template: ruler-query-frontend/workload.yaml
       - contains:
           path: spec.template.spec.containers[0].args
-          content: -frontend.tail-proxy-url=http://RELEASE-NAME-loki-ruler-querier.NAMESPACE.svc.cluster.local:3100
-        template: ruler-query-frontend/workload.yaml
-      - contains:
-          path: spec.template.spec.containers[0].args
           content: -query-scheduler.ring.prefix=ruler-query-scheduler/
         template: ruler-query-frontend/workload.yaml
       - contains:

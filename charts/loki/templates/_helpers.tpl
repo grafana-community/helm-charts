@@ -1051,17 +1051,6 @@ enableServiceLinks: {{ $ctx.Values.loki.enableServiceLinks }}
 {{- printf "%s" $rulerQueryFrontendAddress }}
 {{- end }}
 
-{{/* Determine ruler-querier address */}}
-{{- define "loki.rulerQuerierAddress" -}}
-{{- $rulerQuerierAddress := "" }}
-{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
-{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath -}}
-{{- $rulerQuerierHost := include "loki.resourceName" (dict "ctx" . "component" "ruler-querier") }}
-{{- $rulerQuerierAddress = printf "http://%s.%s.svc.%s:%s" $rulerQuerierHost (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString) }}
-{{- end -}}
-{{- printf "%s" $rulerQuerierAddress }}
-{{- end }}
-
 {{/* Determine index-gateway address */}}
 {{- define "loki.indexGatewayAddress" -}}
 {{- $idxGatewayAddress := ""}}

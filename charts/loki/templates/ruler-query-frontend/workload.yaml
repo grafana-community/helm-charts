@@ -3,7 +3,6 @@
 {{- $args := list
   "-querier.cache-results=false"
   (printf "-frontend.scheduler-address=%s" (include "loki.rulerQuerySchedulerAddress" .))
-  (printf "-frontend.tail-proxy-url=%s" (include "loki.rulerQuerierAddress" .))
   "-query-scheduler.ring.prefix=ruler-query-scheduler/"
   "-server.grpc.keepalive.max-connection-age=30s"
   "-shutdown-delay=90s"
