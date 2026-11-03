@@ -1,0 +1,88 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: receiver ports
+templates:
+  - service.yaml
+  - statefulset.yaml
+  - configmap-tempo.yaml
+tests:
+  - it: should send a custom receiver port to the same port on the container
+    set:
+      tempo.receivers.otlp.protocols.grpc.endpoint: 0.0.0.0:14317
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: grpc-tempo-otlp
+            port: 14317
+            protocol: TCP
+            targetPort: 14317
+        template: service.yaml
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 14317
+            name: otlp-grpc
+        template: statefulset.yaml
+
+  - it: should render without the jaeger receiver
+    set:
+      tempo.receivers.jaeger: null
+    asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 3
+        template: service.yaml
+      - notContains:
+          path: spec.ports
+          content:
+            name: grpc-tempo-jaeger
+          any: true
+        template: service.yaml
+      - lengthEqual:
+          path: spec.template.spec.containers[0].ports
+          count: 3
+        template: statefulset.yaml
+
+  - it: should not expose ports that no receiver listens on
+    asserts:
+      - notContains:
+          path: spec.ports
+          content:
+            name: tempo-zipkin
+          any: true
+        template: service.yaml
+      - notContains:
+          path: spec.ports
+          content:
+            port: 55680
+          any: true
+        template: service.yaml
+      - notContains:
+          path: spec.ports
+          content:
+            port: 55681
+          any: true
+        template: service.yaml
+      - lengthEqual:
+          path: spec.template.spec.containers[0].ports
+          count: 7
+        template: statefulset.yaml
+
+  - it: should expose zipkin when the zipkin receiver is configured
+    set:
+      tempo.receivers.zipkin.endpoint: 0.0.0.0:9411
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: tempo-zipkin
+            port: 9411
+            protocol: TCP
+            targetPort: 9411
+        template: service.yaml
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            containerPort: 9411
+            name: zipkin
+        template: statefulset.yaml
