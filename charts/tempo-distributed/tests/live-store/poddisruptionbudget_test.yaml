@@ -74,3 +74,17 @@ tests:
       - equal:
           path: spec.unhealthyPodEvictionPolicy
           value: AlwaysAllow
+
+  - it: omits annotations by default
+    asserts:
+      - notExists:
+          path: metadata.annotations
+
+  - it: carries the annotations of the budget
+    set:
+      liveStore.podDisruptionBudget.annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    asserts:
+      - equal:
+          path: metadata.annotations["argocd.argoproj.io/sync-wave"]
+          value: "1"

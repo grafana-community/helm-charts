@@ -1,5 +1,56 @@
 # Upgrade guide
 
+## v3.20 → v3.21
+
+### Stateless components default to soft anti-affinity
+
+The default `affinity` for `distributor`, `querier`, `queryFrontend`, `gateway` and
+`enterpriseFederationFrontend` changes from hard node / soft zone anti-affinity to soft node /
+soft zone anti-affinity, matching `backendWorker` and `backendScheduler`. Replicas still spread
+across nodes and zones when capacity allows, but a scale-up no longer needs a free node for
+every replica.
+
+This only affects installs that use the default values. To keep the previous behaviour, copy
+the component's `affinity` block from the
+[3.20.0 `values.yaml`](https://github.com/grafana-community/helm-charts/blob/tempo-distributed-3.20.0/charts/tempo-distributed/values.yaml).
+For example, the previous querier default was:
+
+```yaml
+querier:
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "querier" "memberlist" true) | nindent 10 }}
+          topologyKey: kubernetes.io/hostname
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "querier" "memberlist" true) | nindent 12 }}
+            topologyKey: topology.kubernetes.io/zone
+```
+
+The selector labels differ per component (for example, only some components pass
+`"memberlist" true`), so copy each block from the 3.20.0 `values.yaml` rather than renaming
+the component in this example.
+
+## v3.19 → v3.20
+
+### StatefulSet recreate hook image configured via `defaults.statefulSetRecreateJob.image`
+
+The pre-upgrade Job created when `persistence.enableStatefulSetRecreationForSizeChange` is enabled now configures its image through `defaults.statefulSetRecreateJob.image` (`registry: registry.k8s.io`, `repository: kubectl`, `tag: null` defaulting to the cluster version as `vMAJOR.MINOR.PATCH`). `global.image.registry` no longer applies to this hook image; set `defaults.statefulSetRecreateJob.image.registry` if you mirror images through a private registry.
+
+## v3.18 → v3.19
+
+### `ingest.kafka.sasl.username` is honored when `ingest.kafka.sasl.existingSecret` is set
+
+For `PLAIN`, `SCRAM-SHA-256` and `SCRAM-SHA-512`, setting `ingest.kafka.sasl.username` alongside `ingest.kafka.sasl.existingSecret` now renders `sasl_username` in `tempo.yaml` and reads only the password from the Secret (for example with Strimzi `KafkaUser` Secrets). Previously `username` was ignored when `existingSecret` was set.
+
+If your values set both `ingest.kafka.sasl.username` and `ingest.kafka.sasl.existingSecret` and you want the username to keep coming from the Secret (`usernameKey`), clear `ingest.kafka.sasl.username`. Setting both `ingest.kafka.sasl.password` and `ingest.kafka.sasl.existingSecret` now fails at render time.
+
 ## v3.11 → v3.12
 
 ### Probes are deep-merged across `defaults`, `tempo` and the component

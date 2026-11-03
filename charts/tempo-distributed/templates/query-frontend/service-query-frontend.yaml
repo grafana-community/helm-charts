@@ -23,6 +23,9 @@ spec:
     - name: http-metrics
       port: {{ .Values.queryFrontend.service.httpMetricsPort }}
       targetPort: http-metrics
+      {{- if .Values.queryFrontend.appProtocol.http }}
+      appProtocol: {{ .Values.queryFrontend.appProtocol.http }}
+      {{- end }}
     - name: grpc
       port: {{ .Values.queryFrontend.service.grpcPort }}
       protocol: TCP

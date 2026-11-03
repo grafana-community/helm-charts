@@ -41,7 +41,7 @@ write:
 backend:
   replicas: 1
 lokiCanary:
-  enabled: false
+  enabled: true
 test:
   enabled: false
 

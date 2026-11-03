@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: test servicemonitor
+templates:
+  - servicemonitor.yaml
+tests:
+  - it: renders relabelings
+    set:
+      serviceMonitor:
+        enabled: true
+        relabelings:
+          - sourceLabels: [__meta_kubernetes_pod_node_name]
+            targetLabel: node
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: spec.endpoints[0].relabelings
+          value:
+            - sourceLabels: [__meta_kubernetes_pod_node_name]
+              targetLabel: node
+
+  - it: omits relabelings when unset
+    set:
+      serviceMonitor:
+        enabled: true
+    asserts:
+      - notExists:
+          path: spec.endpoints[0].relabelings
