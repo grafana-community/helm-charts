@@ -1806,7 +1806,7 @@ queryFrontend:
   appProtocol:
     # -- Set the optional gRPC service protocol. Ex: "grpc", "http2" or "https"
     grpc: null
-    # -- Set the optional HTTP service protocol. Ex: "http2" to let Grafana stream over the HTTP port (stream_over_http_enabled) through a service mesh
+    # -- Set the optional HTTP service protocol. Ex: "http2" to let Grafana stream over the HTTP port through a service mesh. Requires streamOverHTTPEnabled: true, Tempo only serves HTTP/2 (h2c) on this port then
     http: null
   mcp_server:
     # -- Enables Tempo MCP Server
