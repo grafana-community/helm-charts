@@ -10914,7 +10914,7 @@
                     ]
                 },
                 "remoteEvaluationDedicatedQueryPath": {
-                    "description": "If set to true in Distributed mode, a dedicated query path (`ruler-querier`, `ruler-query-frontend`, and `ruler-query-scheduler`) is deployed for the ruler and `ruler.evaluation.mode` is configured to `remote`. This isolates ruler queries from other query workloads (API/Grafana).",
+                    "description": "If set to true, a dedicated query path (`ruler-querier`, `ruler-query-frontend`, and `ruler-query-scheduler`) is deployed for the ruler and `ruler.evaluation.mode` is configured to `remote`. This isolates ruler queries from other query workloads (API/Grafana). Requires a Distributed deployment mode with object storage; rendering fails otherwise.",
                     "type": "boolean"
                 },
                 "replicas": {

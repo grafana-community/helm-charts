@@ -1033,22 +1033,12 @@ enableServiceLinks: {{ $ctx.Values.loki.enableServiceLinks }}
 
 {{/* Determine ruler-query-scheduler address */}}
 {{- define "loki.rulerQuerySchedulerAddress" -}}
-{{- $rulerQuerySchedulerAddress := "" }}
-{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
-{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath -}}
-{{- $rulerQuerySchedulerAddress = printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "ruler-query-scheduler")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
-{{- end -}}
-{{- printf "%s" $rulerQuerySchedulerAddress }}
+{{- printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "ruler-query-scheduler")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
 {{- end }}
 
 {{/* Determine ruler-query-frontend address */}}
 {{- define "loki.rulerQueryFrontendAddress" -}}
-{{- $rulerQueryFrontendAddress := "" }}
-{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
-{{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath -}}
-{{- $rulerQueryFrontendAddress = printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "ruler-query-frontend")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
-{{- end -}}
-{{- printf "%s" $rulerQueryFrontendAddress }}
+{{- printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "ruler-query-frontend")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
 {{- end }}
 
 {{/* Determine index-gateway address */}}

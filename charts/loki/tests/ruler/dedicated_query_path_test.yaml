@@ -60,24 +60,14 @@ tests:
           count: 0
         template: ruler-query-scheduler/pdb.yaml
 
-  - it: should not render dedicated query path in SimpleScalable mode even if enabled
+  - it: should fail validation when the dedicated query path is enabled outside Distributed mode
     set:
       deploymentMode: SimpleScalable
       ruler.remoteEvaluationDedicatedQueryPath: true
     asserts:
-      - notMatchRegex:
-          path: data["config.yaml"]
-          pattern: '(?m)^\s+evaluation:$'
-        template: config.yaml
-      - hasDocuments:
-          count: 0
-        template: ruler-querier/workload.yaml
-      - hasDocuments:
-          count: 0
-        template: ruler-query-frontend/workload.yaml
-      - hasDocuments:
-          count: 0
-        template: ruler-query-scheduler/workload.yaml
+      - failedTemplate:
+          errorPattern: "ruler.remoteEvaluationDedicatedQueryPath requires deploymentMode Distributed"
+        template: validate.yaml
 
   - it: should not render dedicated query path when ruler.enabled is false
     set:
@@ -195,10 +185,6 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].args
           content: -querier.scheduler-address=RELEASE-NAME-loki-ruler-query-scheduler-headless.NAMESPACE.svc.cluster.local:9095
-        template: ruler-querier/workload.yaml
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: -querier.frontend-address=
         template: ruler-querier/workload.yaml
       - contains:
           path: spec.template.spec.containers[0].args

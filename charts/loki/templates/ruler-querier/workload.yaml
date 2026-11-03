@@ -2,7 +2,6 @@
 {{- if and $isDistributed .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath }}
 {{- $args := list
   (printf "-querier.scheduler-address=%s" (include "loki.rulerQuerySchedulerAddress" .))
-  "-querier.frontend-address="
   "-query-scheduler.ring.prefix=ruler-query-scheduler/"
 }}
 {{- if .Values.ingester.zoneAwareReplication.enabled }}
