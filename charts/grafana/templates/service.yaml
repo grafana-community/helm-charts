@@ -58,7 +58,7 @@ spec:
     - name: {{ .Values.service.portName }}
       port: {{ .Values.service.port }}
       protocol: TCP
-      targetPort: {{ .Values.podPortName }}
+      targetPort: {{ ternary .Values.service.targetPort .Values.podPortName .Values.service.useNumericTargetPort }}
       {{- with .Values.service.appProtocol }}
       appProtocol: {{ . }}
       {{- end }}
