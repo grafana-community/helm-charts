@@ -35,13 +35,16 @@ metadata:
     {{- if $rolloutZoneName }}
     name: {{ include "loki.prefixIngesterName" . }}ingester-{{ $rolloutZoneName }}
     rollout-group: {{ include "loki.prefixRolloutGroup" . }}ingester
+    {{- with (include "loki.ingester.zoneDownscaleLabels" (dict "ctx" . "rolloutZoneName" $rolloutZoneName)) }}
+    {{- . | nindent 4 }}
+    {{- end }}
     {{- end }}
     {{- with (mergeOverwrite (dict) .Values.defaults.labels $component.labels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   {{- $annotations := (mergeOverwrite (dict) .Values.defaults.annotations .Values.loki.annotations $component.annotations) }}
   {{- if $rolloutZoneName }}
-  {{- $annotations = mergeOverwrite (dict) ($annotations) (dig "zoneAwareReplication" (printf "zone%s" (upper (splitList "-" $rolloutZoneName | last))) "annotations" (dict) $component)}}
+  {{- $annotations = mergeOverwrite (include "loki.ingester.zoneDownscaleAnnotations" (dict "ctx" . "rolloutZoneName" $rolloutZoneName) | fromYaml) ($annotations) (dig "zoneAwareReplication" (printf "zone%s" (upper (splitList "-" $rolloutZoneName | last))) "annotations" (dict) $component)}}
   {{- if (not (hasKey $annotations "rollout-max-unavailable")) }}
   {{- $_ := set $annotations "rollout-max-unavailable" (include "loki.ingester.maxUnavailable" (dict "ctx" . "replicas" $replicas)) }}
   {{- end }}

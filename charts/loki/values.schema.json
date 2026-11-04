@@ -5959,6 +5959,10 @@
                                 }
                             }
                         },
+                        "minTimeBetweenZonesDownscale": {
+                            "description": "Minimum time the rollout-operator waits between downscales of different ingester zones. Rendered as the `grafana.com/min-time-between-zones-downscale` annotation on zones with `prepareDownscale` enabled.",
+                            "type": "string"
+                        },
                         "zoneA": {
                             "description": "zoneA configuration",
                             "type": "object",
@@ -5970,9 +5974,20 @@
                                         "type": "string"
                                     }
                                 },
+                                "downscaleLeader": {
+                                    "description": "StatefulSet name rendered as the `grafana.com/rollout-downscale-leader` annotation of zone A. The value will be passed through tpl. If null, this zone never follows another zone.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
                                 "extraAffinity": {
                                     "description": "optionally define extra affinity rules, by default different zones are not allowed to schedule on the same host The value will be passed through tpl.",
                                     "type": "object"
+                                },
+                                "noDownscale": {
+                                    "description": "Adds the `grafana.com/no-downscale` label so that the rollout-operator rejects any downscale of zone A. Takes precedence over `prepareDownscale`. See https://github.com/grafana/rollout-operator#webhooks",
+                                    "type": "boolean"
                                 },
                                 "nodeSelector": {
                                     "description": "optionally define a node selector for this zone",
@@ -6001,6 +6016,10 @@
                                     "additionalProperties": {
                                         "type": "string"
                                     }
+                                },
+                                "prepareDownscale": {
+                                    "description": "Adds the `grafana.com/prepare-downscale` label and annotations so that the rollout-operator calls `/ingester/prepare_shutdown` on the zone A ingesters before they are scaled down, letting them flush and leave the ring. The rollout-operator then also waits `minTimeBetweenZonesDownscale` between zone downscales, so a single Helm upgrade that downscales several zones at once is rejected for the later zones. See https://github.com/grafana/rollout-operator#how-scaling-up-and-down-works",
+                                    "type": "boolean"
                                 }
                             }
                         },
@@ -6014,9 +6033,20 @@
                                         "type": "string"
                                     }
                                 },
+                                "downscaleLeader": {
+                                    "description": "StatefulSet name rendered as the `grafana.com/rollout-downscale-leader` annotation of zone B. The value will be passed through tpl. If null, the zone-a StatefulSet leads this zone when both zones set `prepareDownscale` and the rollout-operator webhooks are enabled.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
                                 "extraAffinity": {
                                     "description": "optionally define extra affinity rules, by default different zones are not allowed to schedule on the same host The value will be passed through tpl.",
                                     "type": "object"
+                                },
+                                "noDownscale": {
+                                    "description": "Adds the `grafana.com/no-downscale` label so that the rollout-operator rejects any downscale of zone B. Takes precedence over `prepareDownscale`. See https://github.com/grafana/rollout-operator#webhooks",
+                                    "type": "boolean"
                                 },
                                 "nodeSelector": {
                                     "description": "optionally define a node selector for this zone",
@@ -6045,6 +6075,10 @@
                                     "additionalProperties": {
                                         "type": "string"
                                     }
+                                },
+                                "prepareDownscale": {
+                                    "description": "Adds the `grafana.com/prepare-downscale` label and annotations so that the rollout-operator calls `/ingester/prepare_shutdown` on the zone B ingesters before they are scaled down, letting them flush and leave the ring. The rollout-operator then also waits `minTimeBetweenZonesDownscale` between zone downscales, so a single Helm upgrade that downscales several zones at once is rejected for the later zones. See https://github.com/grafana/rollout-operator#how-scaling-up-and-down-works",
+                                    "type": "boolean"
                                 }
                             }
                         },
@@ -6058,9 +6092,20 @@
                                         "type": "string"
                                     }
                                 },
+                                "downscaleLeader": {
+                                    "description": "StatefulSet name rendered as the `grafana.com/rollout-downscale-leader` annotation of zone C. The value will be passed through tpl. If null, the zone-b StatefulSet leads this zone when both zones set `prepareDownscale` and the rollout-operator webhooks are enabled.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
                                 "extraAffinity": {
                                     "description": "optionally define extra affinity rules, by default different zones are not allowed to schedule on the same host The value will be passed through tpl.",
                                     "type": "object"
+                                },
+                                "noDownscale": {
+                                    "description": "Adds the `grafana.com/no-downscale` label so that the rollout-operator rejects any downscale of zone C. Takes precedence over `prepareDownscale`. See https://github.com/grafana/rollout-operator#webhooks",
+                                    "type": "boolean"
                                 },
                                 "nodeSelector": {
                                     "description": "optionally define a node selector for this zone",
@@ -6089,6 +6134,10 @@
                                     "additionalProperties": {
                                         "type": "string"
                                     }
+                                },
+                                "prepareDownscale": {
+                                    "description": "Adds the `grafana.com/prepare-downscale` label and annotations so that the rollout-operator calls `/ingester/prepare_shutdown` on the zone C ingesters before they are scaled down, letting them flush and leave the ring. The rollout-operator then also waits `minTimeBetweenZonesDownscale` between zone downscales, so a single Helm upgrade that downscales several zones at once is rejected for the later zones. See https://github.com/grafana/rollout-operator#how-scaling-up-and-down-works",
+                                    "type": "boolean"
                                 }
                             }
                         }
