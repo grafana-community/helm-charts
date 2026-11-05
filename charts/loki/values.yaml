@@ -3506,6 +3506,9 @@ ingester:
     enabled: true
     # -- The percent of replicas in each zone that will be restarted at once. In a value of 0-100
     maxUnavailablePct: 33
+    # -- Minimum time the rollout-operator waits between downscales of different ingester zones. Rendered as the
+    # `grafana.com/min-time-between-zones-downscale` annotation on zones with `prepareDownscale` enabled.
+    minTimeBetweenZonesDownscale: 30m
     # -- zoneA configuration
     zoneA:
       # @schema type:[object, null]
@@ -3521,6 +3524,19 @@ ingester:
       # @schema additionalProperties:{"type":"string"}
       # -- Specific annotations to add to zone A pods
       podAnnotations: {}
+      # -- Adds the `grafana.com/no-downscale` label so that the rollout-operator rejects any downscale of zone A.
+      # Takes precedence over `prepareDownscale`. See https://github.com/grafana/rollout-operator#webhooks
+      noDownscale: false
+      # -- Adds the `grafana.com/prepare-downscale` label and annotations so that the rollout-operator calls
+      # `/ingester/prepare_shutdown` on the zone A ingesters before they are scaled down, letting them flush and leave the ring.
+      # The rollout-operator then also waits `minTimeBetweenZonesDownscale` between zone downscales, so a single
+      # Helm upgrade that downscales several zones at once is rejected for the later zones.
+      # See https://github.com/grafana/rollout-operator#how-scaling-up-and-down-works
+      prepareDownscale: false
+      # @schema type:[string, null]
+      # -- StatefulSet name rendered as the `grafana.com/rollout-downscale-leader` annotation of zone A. The value will be passed through tpl.
+      # If null, this zone never follows another zone.
+      downscaleLeader: null
       # -- Persistence overrides applied only to the zone A StatefulSet.
       persistence:
         # @schema type:[string, null]
@@ -3544,6 +3560,19 @@ ingester:
       # @schema additionalProperties:{"type":"string"}
       # -- Specific annotations to add to zone B pods
       podAnnotations: {}
+      # -- Adds the `grafana.com/no-downscale` label so that the rollout-operator rejects any downscale of zone B.
+      # Takes precedence over `prepareDownscale`. See https://github.com/grafana/rollout-operator#webhooks
+      noDownscale: false
+      # -- Adds the `grafana.com/prepare-downscale` label and annotations so that the rollout-operator calls
+      # `/ingester/prepare_shutdown` on the zone B ingesters before they are scaled down, letting them flush and leave the ring.
+      # The rollout-operator then also waits `minTimeBetweenZonesDownscale` between zone downscales, so a single
+      # Helm upgrade that downscales several zones at once is rejected for the later zones.
+      # See https://github.com/grafana/rollout-operator#how-scaling-up-and-down-works
+      prepareDownscale: false
+      # @schema type:[string, null]
+      # -- StatefulSet name rendered as the `grafana.com/rollout-downscale-leader` annotation of zone B. The value will be passed through tpl.
+      # If null, the zone-a StatefulSet leads this zone when both zones set `prepareDownscale` and the rollout-operator webhooks are enabled.
+      downscaleLeader: null
       # -- Persistence overrides applied only to the zone B StatefulSet.
       persistence:
         # @schema type:[string, null]
@@ -3565,6 +3594,19 @@ ingester:
       # @schema additionalProperties:{"type":"string"}
       # -- Specific annotations to add to zone C pods
       podAnnotations: {}
+      # -- Adds the `grafana.com/no-downscale` label so that the rollout-operator rejects any downscale of zone C.
+      # Takes precedence over `prepareDownscale`. See https://github.com/grafana/rollout-operator#webhooks
+      noDownscale: false
+      # -- Adds the `grafana.com/prepare-downscale` label and annotations so that the rollout-operator calls
+      # `/ingester/prepare_shutdown` on the zone C ingesters before they are scaled down, letting them flush and leave the ring.
+      # The rollout-operator then also waits `minTimeBetweenZonesDownscale` between zone downscales, so a single
+      # Helm upgrade that downscales several zones at once is rejected for the later zones.
+      # See https://github.com/grafana/rollout-operator#how-scaling-up-and-down-works
+      prepareDownscale: false
+      # @schema type:[string, null]
+      # -- StatefulSet name rendered as the `grafana.com/rollout-downscale-leader` annotation of zone C. The value will be passed through tpl.
+      # If null, the zone-b StatefulSet leads this zone when both zones set `prepareDownscale` and the rollout-operator webhooks are enabled.
+      downscaleLeader: null
       # -- Persistence overrides applied only to the zone C StatefulSet.
       persistence:
         # @schema type:[string, null]
@@ -7916,7 +7958,11 @@ rollout_operator:
     # -- Timeout in seconds for the prepare-downscale mutating webhook. Must be between 1 and 30.
     timeoutSeconds: 10
     # -- Validating and mutating webhook failure policy. `Ignore` or `Fail`.
-    failurePolicy: "Ignore"
+    # Only applies when the API server cannot reach the rollout-operator or the webhook call times out.
+    # With `Ignore`, StatefulSet updates and pod evictions then skip the webhooks, so ingesters can be scaled down
+    # without preparing for shutdown and remain in the ring. With `Fail`, StatefulSet updates and pod evictions
+    # in the release namespace are rejected until the rollout-operator is reachable again.
+    failurePolicy: "Fail"
 # @schema type:[array, object, string, null]
 # Create extra manifests via values
 # Can be a list or dictionary, both are passed through `tpl`.  If dict, keys are ignored and only values are used.
