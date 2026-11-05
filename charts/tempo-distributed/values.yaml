@@ -37,7 +37,7 @@ global:
   # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached, metrics-generator, querier, query-frontend, tokengen
   extraEnvFrom: []
   # -- Common args to add to all pods directly managed by this chart.
-  # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached, metrics-generator, querier, query-frontend, tokengen
+  # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, metrics-generator, querier, query-frontend, tokengen
   extraArgs: []
   # -- Global storage class to be used for persisted components
   storageClass: null
@@ -2858,6 +2858,8 @@ memcachedBloom:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for memcached-bloom
     enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the memcached-bloom PodDisruptionBudget. Requires Kubernetes 1.27+.
+    unhealthyPodEvictionPolicy: ""
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached-bloom pod
@@ -2955,6 +2957,8 @@ memcachedParquetFooter:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for memcached-parquet-footer
     enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the memcached-parquet-footer PodDisruptionBudget. Requires Kubernetes 1.27+.
+    unhealthyPodEvictionPolicy: ""
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached-parquet-footer pod
@@ -3052,6 +3056,8 @@ memcachedFrontendSearch:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for memcached-frontend-search
     enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the memcached-frontend-search PodDisruptionBudget. Requires Kubernetes 1.27+.
+    unhealthyPodEvictionPolicy: ""
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached-frontend-search pod

@@ -1,5 +1,14 @@
 # Upgrade guide
 
+## v3.25 → v3.26
+
+### memcached no longer receives `global.extraArgs`
+
+The per-role memcached clusters (`memcachedBloom`, `memcachedParquetFooter`,
+`memcachedFrontendSearch`) no longer append `global.extraArgs`, matching the shared `memcached`.
+If you relied on `global.extraArgs` to pass a flag to every memcached cluster, set it in each
+section's `extraArgs` instead.
+
 ## v3.23 → v3.24
 
 ### memcached starts with explicit sizing flags
