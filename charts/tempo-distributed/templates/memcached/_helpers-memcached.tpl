@@ -39,7 +39,7 @@ spec:
         {{- end }}
       {{- end }}
       labels:
-        {{- include "tempo.labels" $dict | nindent 8 }}
+        {{- include "tempo.podLabels" $dict | nindent 8 }}
         {{- with $.ctx.Values.tempo.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
