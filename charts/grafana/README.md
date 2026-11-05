@@ -720,6 +720,30 @@ grafana.ini:
     enabled: false
 ```
 
+### High Availability with the embedded NATS bus
+
+Grafana 13.4 and later can run an embedded NATS server in each pod so that several replicas sharing one external MySQL or PostgreSQL database notify each other of changes.
+The pods find each other through the database and connect to each other's pod IP on the NATS cluster port (`[nats] cluster_port`, `6222` by default), so no extra Service is needed.
+
+When `networkPolicy.enabled` is true, the NetworkPolicy only admits traffic to the Grafana HTTP port, so also set `networkPolicy.natsCluster.enabled` to let the Grafana pods of the release reach each other on the cluster port.
+If you change `[nats] cluster_port`, set `networkPolicy.natsCluster.port` to the same value.
+
+```yaml
+replicas: 3
+
+grafana.ini:
+  database:
+    type: postgres
+    # ...
+  nats:
+    enabled: true
+
+networkPolicy:
+  enabled: true
+  natsCluster:
+    enabled: true
+```
+
 ### Installing plugins
 
 If you want to install a Grafana plugin using the helm chart, you can do so by using the identifier of the plugin, for example `digirich-bubblechart-panel` will install [Bubble Chart](https://grafana.com/grafana/plugins/digrich-bubblechart-panel/).
