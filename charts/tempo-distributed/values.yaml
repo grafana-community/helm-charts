@@ -2680,8 +2680,12 @@ memcached:
   timeout: 500ms
   # -- Enable consistent hashing for cache
   consistentHash: true
-  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). Also sizes `resources` with `deriveResources`. False omits the flag
   allocatedMemory: 1024
+  # -- Derive `resources` from `allocatedMemory` and `allocatedCPU` when `resources` is empty, as the loki chart does by default
+  deriveResources: false
+  # -- CPU request, in cores or millicores, for derived `resources`. False omits it
+  allocatedCPU: 500m
   # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
   maxItemMemory: 5
   # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
@@ -2698,7 +2702,7 @@ memcached:
   podLabels: {}
   # -- Annotations for memcached pods
   podAnnotations: {}
-  # -- Resource requests and limits for memcached
+  # -- Resource requests and limits for memcached. When empty and `deriveResources` is true, derived as in the loki chart: memory request and limit of round(1.2 * allocatedMemory)Mi and a CPU request of `allocatedCPU`
   resources: {}
   # -- topologySpread for memcached pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ
@@ -2801,8 +2805,12 @@ memcachedBloom:
   timeout: 500ms
   # -- Enable consistent hashing for bloom cache
   consistentHash: true
-  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). Also sizes `resources` with `deriveResources`. False omits the flag
   allocatedMemory: 1024
+  # -- Derive `resources` from `allocatedMemory` and `allocatedCPU` when `resources` is empty, as the loki chart does by default
+  deriveResources: false
+  # -- CPU request, in cores or millicores, for derived `resources`. False omits it
+  allocatedCPU: 500m
   # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
   maxItemMemory: 5
   # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
@@ -2819,7 +2827,7 @@ memcachedBloom:
   podLabels: {}
   # -- Annotations for memcached-bloom pods
   podAnnotations: {}
-  # -- Resource requests and limits for memcached-bloom
+  # -- Resource requests and limits for memcached-bloom. When empty and `deriveResources` is true, derived as in the loki chart: memory request and limit of round(1.2 * allocatedMemory)Mi and a CPU request of `allocatedCPU`
   resources: {}
   # -- topologySpread for memcached-bloom pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ
@@ -2894,8 +2902,12 @@ memcachedParquetFooter:
   timeout: 500ms
   # -- Enable consistent hashing for parquet-footer cache
   consistentHash: true
-  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). Also sizes `resources` with `deriveResources`. False omits the flag
   allocatedMemory: 1024
+  # -- Derive `resources` from `allocatedMemory` and `allocatedCPU` when `resources` is empty, as the loki chart does by default
+  deriveResources: false
+  # -- CPU request, in cores or millicores, for derived `resources`. False omits it
+  allocatedCPU: 500m
   # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
   maxItemMemory: 5
   # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
@@ -2912,7 +2924,7 @@ memcachedParquetFooter:
   podLabels: {}
   # -- Annotations for memcached-parquet-footer pods
   podAnnotations: {}
-  # -- Resource requests and limits for memcached-parquet-footer
+  # -- Resource requests and limits for memcached-parquet-footer. When empty and `deriveResources` is true, derived as in the loki chart: memory request and limit of round(1.2 * allocatedMemory)Mi and a CPU request of `allocatedCPU`
   resources: {}
   # -- topologySpread for memcached-parquet-footer pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ
@@ -2987,8 +2999,12 @@ memcachedFrontendSearch:
   timeout: 500ms
   # -- Enable consistent hashing for frontend-search cache
   consistentHash: true
-  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). Also sizes `resources` with `deriveResources`. False omits the flag
   allocatedMemory: 1024
+  # -- Derive `resources` from `allocatedMemory` and `allocatedCPU` when `resources` is empty, as the loki chart does by default
+  deriveResources: false
+  # -- CPU request, in cores or millicores, for derived `resources`. False omits it
+  allocatedCPU: 500m
   # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
   maxItemMemory: 5
   # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
@@ -3005,7 +3021,7 @@ memcachedFrontendSearch:
   podLabels: {}
   # -- Annotations for memcached-frontend-search pods
   podAnnotations: {}
-  # -- Resource requests and limits for memcached-frontend-search
+  # -- Resource requests and limits for memcached-frontend-search. When empty and `deriveResources` is true, derived as in the loki chart: memory request and limit of round(1.2 * allocatedMemory)Mi and a CPU request of `allocatedCPU`
   resources: {}
   # -- topologySpread for memcached-frontend-search pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ

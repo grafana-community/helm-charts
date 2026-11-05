@@ -12,6 +12,28 @@ validate.yaml rejects these flags in extraArgs. Empty when all are unset.
 {{- end -}}
 
 {{/*
+memcached container resources for a memcached values section. A non-empty `resources` is used as is.
+With deriveResources they are otherwise derived as in the loki chart: memory request and limit of
+round(1.2 * allocatedMemory)Mi, CPU request of allocatedCPU.
+*/}}
+{{- define "tempo.memcached.resources" -}}
+{{- if .resources -}}
+{{ toYaml .resources }}
+{{- else if and .deriveResources .allocatedMemory -}}
+{{- $memory := div (add (mul (int .allocatedMemory) 12) 5) 10 -}}
+limits:
+  memory: {{ $memory }}Mi
+requests:
+  {{- with .allocatedCPU }}
+  cpu: {{ . }}
+  {{- end }}
+  memory: {{ $memory }}Mi
+{{- else -}}
+{}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Render a StatefulSet for a per-role memcached cluster.
 Params:
   ctx            = root context ($)
@@ -128,7 +150,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
-            {{- toYaml $.memcachedConfig.resources | nindent 12 }}
+            {{- include "tempo.memcached.resources" $.memcachedConfig | nindent 12 }}
           {{- with $.ctx.Values.tempo.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}

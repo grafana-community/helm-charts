@@ -102,7 +102,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
-            {{- toYaml .Values.memcached.resources | nindent 12 }}
+            {{- include "tempo.memcached.resources" .Values.memcached | nindent 12 }}
           {{- with .Values.tempo.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
