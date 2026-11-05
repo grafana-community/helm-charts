@@ -82,3 +82,64 @@ tests:
       - notMatchRegex:
           path: data["tempo.yaml"]
           pattern: "max_item_size"
+
+  - it: resources stay empty by default
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value: {}
+
+  - it: deriveResources derives empty resources from allocatedMemory and allocatedCPU
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcached.deriveResources: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 1229Mi
+            requests:
+              cpu: 500m
+              memory: 1229Mi
+
+  - it: explicit resources are used as is with deriveResources
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcached.deriveResources: true
+      memcached.resources:
+        requests:
+          memory: 2Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            requests:
+              memory: 2Gi
+
+  - it: false allocatedMemory derives no resources
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcached.deriveResources: true
+      memcached.allocatedMemory: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value: {}
+
+  - it: per-role resources are derived from its own values, and false allocatedCPU omits the CPU request
+    template: memcached/statefulset-memcached-bloom.yaml
+    set:
+      memcachedBloom.enabled: true
+      memcachedBloom.deriveResources: true
+      memcachedBloom.allocatedMemory: 2048
+      memcachedBloom.allocatedCPU: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 2458Mi
+            requests:
+              memory: 2458Mi
