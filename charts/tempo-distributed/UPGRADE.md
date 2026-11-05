@@ -1,5 +1,37 @@
 # Upgrade guide
 
+## v3.22 → v3.23
+
+### `helm.sh/chart` and `app.kubernetes.io/version` are no longer pod labels
+
+Pod templates no longer carry `helm.sh/chart` or `app.kubernetes.io/version`. Both
+came from the chart rather than from the running image: `helm.sh/chart` changed on
+every chart version bump, and `app.kubernetes.io/version` tracked `.Chart.AppVersion`
+even for installs that pin `tempo.image.tag`. Because they sat inside the pod
+template, each one rolled every workload on upgrade with neither the configuration
+nor the image having changed. Both remain on the objects themselves, so
+`kubectl get statefulset -L helm.sh/chart` is unaffected. This matches what the loki
+chart did in #809.
+
+**Upgrading to 3.23 rolls every pod once**, as the pod templates change for the last
+time. After that, a chart release on its own no longer restarts anything.
+
+If you group metrics by pod label (`kube_pod_labels` joined on `label_helm_sh_chart`
+or `label_app_kubernetes_io_version`, for example), those series stop being populated
+for Tempo pods. Use the object-level labels, or add the values you need through
+`global.podLabels`, `tempo.podLabels` or a component `podLabels` block.
+
+### memcached pod labels
+
+The memcached StatefulSets, including the per-role `bloom`, `frontend-search` and
+`parquet-footer` clusters, move from `tempo.labels` to `tempo.podLabels` for their pod
+templates, which is what the other workloads already used. In practice their pod
+templates lose `global.labels` — which `values.yaml` documents as not applying to pods
+— and gain `global.podLabels`. Their selector keys, `app.kubernetes.io/name`,
+`app.kubernetes.io/instance` and `app.kubernetes.io/component`, are unchanged, so the
+immutable selectors still match.
+
+
 ## v3.20 → v3.21
 
 ### Stateless components default to soft anti-affinity

@@ -368,7 +368,6 @@ POD labels
 {{- define "tempo.podLabels" -}}
 app.kubernetes.io/name: {{ include "tempo.name" .ctx }}
 app.kubernetes.io/instance: {{ .ctx.Release.Name }}
-app.kubernetes.io/version: {{ .ctx.Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .ctx.Release.Service }}
 {{- if .component }}
 app.kubernetes.io/component: {{ .component }}
