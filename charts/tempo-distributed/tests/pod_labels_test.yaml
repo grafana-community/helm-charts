@@ -57,9 +57,6 @@ tests:
 
   - it: pins the whole distributor pod label set
     template: distributor/deployment-distributor.yaml
-    chart:
-      version: 99.99.99
-      appVersion: 0.0.0-test
     asserts:
       - equal:
           path: spec.template.metadata.labels
@@ -72,9 +69,6 @@ tests:
 
   - it: pins the whole memcached pod label set
     template: memcached/statefulset-memcached.yaml
-    chart:
-      version: 99.99.99
-      appVersion: 0.0.0-test
     asserts:
       - equal:
           path: spec.template.metadata.labels
