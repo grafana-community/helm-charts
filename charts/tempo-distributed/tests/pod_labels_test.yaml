@@ -6,6 +6,7 @@ templates:
   - memcached/statefulset-memcached-bloom.yaml
   - memcached/statefulset-memcached-frontend-search.yaml
   - memcached/statefulset-memcached-parquet-footer.yaml
+  - memcached/statefulset-memcached-parquet-page.yaml
   - configmap-tempo.yaml
 
 tests:
@@ -49,6 +50,16 @@ tests:
     template: memcached/statefulset-memcached-parquet-footer.yaml
     set:
       memcachedParquetFooter.enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+
+  - it: keeps the chart version off the parquet-page memcached pod template
+    template: memcached/statefulset-memcached-parquet-page.yaml
+    set:
+      memcachedParquetPage.enabled: true
     asserts:
       - notExists:
           path: spec.template.metadata.labels["helm.sh/chart"]
