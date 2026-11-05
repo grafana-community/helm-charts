@@ -854,6 +854,8 @@ the loki chart does: a memory request and limit of `round(1.2 * allocatedMemory)
 request of `allocatedCPU` (default `500m`). Setting `resources` replaces the derived values but
 does not change `-m`, so keep a memory limit well above `allocatedMemory`, or the pod is
 OOM-killed once the cache fills.
+The derived 20% headroom also has to hold memcached's per-connection buffers, tens of KB each,
+so a small `allocatedMemory` serving many connections needs explicit `resources`.
 
 ```yaml
 memcachedParquetFooter:
