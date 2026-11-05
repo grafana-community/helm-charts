@@ -40,7 +40,7 @@ spec:
       {{- end }}
     {{- if .Values.networkPolicy.natsCluster.enabled }}
     - ports:
-        - port: {{ .Values.networkPolicy.natsCluster.port }}
+        - port: {{ include "grafana.natsClusterPort" . }}
       to:
         - podSelector:
             matchLabels:
@@ -71,7 +71,7 @@ spec:
       {{- end }}
     {{- if .Values.networkPolicy.natsCluster.enabled }}
     - ports:
-        - port: {{ .Values.networkPolicy.natsCluster.port }}
+        - port: {{ include "grafana.natsClusterPort" . }}
       from:
         - podSelector:
             matchLabels:

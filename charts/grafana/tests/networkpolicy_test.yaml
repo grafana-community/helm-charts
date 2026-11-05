@@ -5,15 +5,38 @@ templates:
 set:
   networkPolicy.enabled: true
 tests:
-  - it: should only allow ingress to the service target port by default
+  - it: should allow the service target port and the NATS cluster port by default
     asserts:
       - isKind:
           of: NetworkPolicy
+      - equal:
+          path: spec.ingress[0]
+          value:
+            ports:
+              - port: 3000
+      - equal:
+          path: spec.ingress[1].ports
+          value:
+            - port: 6222
+
+  - it: should only allow ingress to the service target port when natsCluster is disabled
+    set:
+      networkPolicy.natsCluster.enabled: false
+    asserts:
       - equal:
           path: spec.ingress
           value:
             - ports:
                 - port: 3000
+
+  - it: should take the NATS cluster port from grafana.ini
+    values:
+      - ../ci/with-nats-cluster-port-values.yaml
+    asserts:
+      - equal:
+          path: spec.ingress[1].ports
+          value:
+            - port: 7322
 
   - it: should allow the NATS cluster port between Grafana pods when natsCluster is enabled
     set:
@@ -89,6 +112,7 @@ tests:
 
   - it: should not add a NATS egress rule when natsCluster is disabled
     set:
+      networkPolicy.natsCluster.enabled: false
       networkPolicy.egress.enabled: true
       networkPolicy.egress.ports:
         - port: 5432

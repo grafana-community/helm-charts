@@ -725,8 +725,8 @@ grafana.ini:
 Grafana 13.4 and later can run an embedded NATS server in each pod so that several replicas sharing one external MySQL or PostgreSQL database notify each other of changes.
 The pods find each other through the database and connect to each other's pod IP on the NATS cluster port (`[nats] cluster_port`, `6222` by default), so no extra Service is needed.
 
-When `networkPolicy.enabled` is true, the NetworkPolicy only admits traffic to the Grafana HTTP port, so also set `networkPolicy.natsCluster.enabled` to let the Grafana pods of the release reach each other on the cluster port.
-If you change `[nats] cluster_port`, set `networkPolicy.natsCluster.port` to the same value.
+When `networkPolicy.enabled` is true, the NetworkPolicy also lets the Grafana pods of the release reach each other on the cluster port (`networkPolicy.natsCluster.enabled`, on by default), so that only they can connect to it.
+The port follows `[nats] cluster_port` from `grafana.ini`; set `networkPolicy.natsCluster.port` only to override it.
 
 ```yaml
 replicas: 3
@@ -740,8 +740,6 @@ grafana.ini:
 
 networkPolicy:
   enabled: true
-  natsCluster:
-    enabled: true
 ```
 
 ### Installing plugins
