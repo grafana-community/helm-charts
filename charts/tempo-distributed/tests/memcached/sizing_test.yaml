@@ -16,11 +16,10 @@ tests:
             - -I 5m
             - -c 4096
 
-  - it: extraArgs render after the sizing flags so they take precedence
+  - it: other extraArgs render after the sizing flags
     template: memcached/statefulset-memcached.yaml
     set:
       memcached.extraArgs:
-        - -m 2048
         - -v
     asserts:
       - equal:
@@ -29,15 +28,14 @@ tests:
             - -m 1024
             - -I 5m
             - -c 4096
-            - -m 2048
             - -v
 
-  - it: null sizing values omit the flags and the args key
+  - it: false sizing values omit the flags and the args key
     template: memcached/statefulset-memcached.yaml
     set:
-      memcached.allocatedMemory: null
-      memcached.maxItemMemory: null
-      memcached.connectionLimit: null
+      memcached.allocatedMemory: false
+      memcached.maxItemMemory: false
+      memcached.connectionLimit: false
     asserts:
       - notExists:
           path: spec.template.spec.containers[0].args
@@ -55,69 +53,6 @@ tests:
             - -m 2048
             - -I 8m
             - -c 4096
-
-  - it: empty resources are derived from allocatedMemory
-    template: memcached/statefulset-memcached.yaml
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].resources
-          value:
-            limits:
-              memory: 1536Mi
-            requests:
-              cpu: 500m
-              memory: 1329Mi
-
-  - it: derived memory limit is floored at the request for a small allocatedMemory
-    template: memcached/statefulset-memcached.yaml
-    set:
-      memcached.allocatedMemory: 64
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].resources
-          value:
-            limits:
-              memory: 177Mi
-            requests:
-              cpu: 500m
-              memory: 177Mi
-
-  - it: explicit resources are used as is
-    template: memcached/statefulset-memcached.yaml
-    set:
-      memcached.resources:
-        requests:
-          memory: 2Gi
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].resources
-          value:
-            requests:
-              memory: 2Gi
-
-  - it: no resources are derived when allocatedMemory is null
-    template: memcached/statefulset-memcached.yaml
-    set:
-      memcached.allocatedMemory: null
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].resources
-          value: {}
-
-  - it: per-role resources are derived from its own allocatedMemory
-    template: memcached/statefulset-memcached-bloom.yaml
-    set:
-      memcachedBloom.enabled: true
-      memcachedBloom.allocatedMemory: 2048
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].resources
-          value:
-            limits:
-              memory: 3072Mi
-            requests:
-              cpu: 500m
-              memory: 2558Mi
 
   - it: shared cache entry gets max_item_size from maxItemMemory
     template: configmap-tempo.yaml
@@ -139,10 +74,10 @@ tests:
           path: data["tempo.yaml"]
           pattern: "max_item_size: 5242880"
 
-  - it: null maxItemMemory omits max_item_size
+  - it: false maxItemMemory omits max_item_size
     template: configmap-tempo.yaml
     set:
-      memcached.maxItemMemory: null
+      memcached.maxItemMemory: false
     asserts:
       - notMatchRegex:
           path: data["tempo.yaml"]

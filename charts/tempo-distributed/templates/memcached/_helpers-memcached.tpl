@@ -1,7 +1,7 @@
 {{/* vim: set filetype=mustache: */}}
 {{/*
 memcached sizing flags (-m, -I, -c) for a memcached values section, as a YAML list.
-Rendered before extraArgs, so a flag repeated there takes precedence. Empty when all are null.
+validate.yaml rejects these flags in extraArgs. Empty when all are unset.
 */}}
 {{- define "tempo.memcached.sizingArgs" -}}
 {{- $args := list -}}
@@ -9,28 +9,6 @@ Rendered before extraArgs, so a flag repeated there takes precedence. Empty when
 {{- with .maxItemMemory }}{{ $args = append $args (printf "-I %dm" (int .)) }}{{ end -}}
 {{- with .connectionLimit }}{{ $args = append $args (printf "-c %d" (int .)) }}{{ end -}}
 {{- with $args }}{{ toYaml . }}{{ end -}}
-{{- end -}}
-
-{{/*
-memcached container resources for a memcached values section. A non-empty `resources` is used as is.
-Otherwise they are derived from allocatedMemory as mimir-distributed and the memcached jsonnet library do:
-request round(1.2 * allocatedMemory) + 100Mi, limit round(1.5 * allocatedMemory) floored at the request.
-*/}}
-{{- define "tempo.memcached.resources" -}}
-{{- if .resources -}}
-{{ toYaml .resources }}
-{{- else if .allocatedMemory -}}
-{{- $allocated := int .allocatedMemory -}}
-{{- $requestMemory := add (div (add (mul $allocated 12) 5) 10) 100 -}}
-{{- $limitMemory := max (div (add (mul $allocated 15) 5) 10) $requestMemory -}}
-limits:
-  memory: {{ $limitMemory }}Mi
-requests:
-  cpu: 500m
-  memory: {{ $requestMemory }}Mi
-{{- else -}}
-{}
-{{- end -}}
 {{- end -}}
 
 {{/*
@@ -150,7 +128,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
-            {{- include "tempo.memcached.resources" $.memcachedConfig | nindent 12 }}
+            {{- toYaml $.memcachedConfig.resources | nindent 12 }}
           {{- with $.ctx.Values.tempo.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}

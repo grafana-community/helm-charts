@@ -43,3 +43,18 @@
 {{- end }}
 {{- end }}
 {{- end }}
+{{- range $section := list "memcached" "memcachedBloom" "memcachedParquetFooter" "memcachedFrontendSearch" }}
+{{- $memcached := index $.Values $section | default dict }}
+{{- if $memcached.enabled }}
+{{- range ($memcached.extraArgs | default list) }}
+{{- if regexMatch "^\\s*(-[mIc]|--memory-limit|--max-item-size|--conn-limit)([\\s=0-9]|$)" (toString .) }}
+{{- fail (printf "%s.extraArgs contains %q, a memcached sizing flag the chart already renders. Use %s.allocatedMemory (-m), %s.maxItemMemory (-I) or %s.connectionLimit (-c) instead: memcached keeps the last occurrence of a flag, so the one in extraArgs would silently override the chart's value. See UPGRADE.md." $section (toString .) $section $section $section) }}
+{{- end }}
+{{- end }}
+{{- with $memcached.maxItemMemory }}
+{{- if or (lt (float64 .) 1.0) (ne (float64 .) (float64 (int .))) }}
+{{- fail (printf "%s.maxItemMemory must be a whole number of MB of at least 1, got %v. memcached's -I and Tempo's max_item_size are rendered in whole MB." $section .) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
