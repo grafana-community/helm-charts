@@ -1,0 +1,54 @@
+distributor:
+  revisionHistoryLimit: 3
+
+overrides_exporter:
+  revisionHistoryLimit: 3
+
+querier:
+  revisionHistoryLimit: 3
+
+query_frontend:
+  revisionHistoryLimit: 3
+
+query_scheduler:
+  revisionHistoryLimit: 3
+
+ruler_querier:
+  revisionHistoryLimit: 3
+
+ruler_query_frontend:
+  revisionHistoryLimit: 3
+
+ruler_query_scheduler:
+  revisionHistoryLimit: 3
+
+ruler:
+  revisionHistoryLimit: 3
+
+alertmanager:
+  revisionHistoryLimit: 3
+
+ingester:
+  revisionHistoryLimit: 3
+
+store_gateway:
+  revisionHistoryLimit: 3
+
+compactor:
+  revisionHistoryLimit: 3
+
+chunks-cache:
+  enabled: true
+  revisionHistoryLimit: 3
+
+index-cache:
+  enabled: true
+  revisionHistoryLimit: 3
+
+metadata-cache:
+  enabled: true
+  revisionHistoryLimit: 3
+
+results-cache:
+  enabled: true
+  revisionHistoryLimit: 3

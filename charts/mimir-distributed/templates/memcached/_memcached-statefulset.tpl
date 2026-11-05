@@ -1,0 +1,183 @@
+{{/*
+memcached StatefulSet
+*/}}
+{{- define "mimir.memcached.statefulSet" -}}
+{{ with (index $.ctx.Values $.component) }}
+{{- if .enabled -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "mimir.resourceName" (dict "ctx" $.ctx "component" $.component) }}
+  labels:
+    {{- include "mimir.labels" (dict "ctx" $.ctx "component" "memcached") | nindent 4 }}
+  annotations:
+    {{- toYaml .annotations | nindent 4 }}
+  namespace: {{ $.ctx.Release.Namespace | quote }}
+spec:
+  podManagementPolicy: {{ .podManagementPolicy }}
+  minReadySeconds: {{ .minReadySeconds }}
+  replicas: {{ .replicas }}
+  {{- with .revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "mimir.selectorLabels" (dict "ctx" $.ctx "component" $.component) | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .statefulStrategy | nindent 4 }}
+  serviceName: {{ template "mimir.fullname" $.ctx }}-{{ $.component }}
+  {{- if .volumeClaimTemplates }}
+  volumeClaimTemplates:
+  {{- with .volumeClaimTemplates }}
+      {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+
+  template:
+    metadata:
+      labels:
+        {{- include "mimir.podLabels" $ | nindent 8 }}
+      annotations:
+        {{- with $.ctx.Values.global.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+
+    spec:
+      serviceAccountName: {{ template "mimir.serviceAccountName" $.ctx }}
+      {{- if .priorityClassName }}
+      priorityClassName: {{ .priorityClassName }}
+      {{- end }}
+      securityContext:
+        {{- include "mimir.lib.podSecurityContext" (dict "ctx" $.ctx "component" "memcached") | nindent 8 }}
+      {{- with .initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- include "mimir.lib.topologySpreadConstraints" $ | nindent 6 }}
+      {{- with .tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .terminationGracePeriodSeconds }}
+      {{- if $.ctx.Values.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range $.ctx.Values.image.pullSecrets }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- with .dnsConfig }}
+      dnsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if or .extraVolumes $.ctx.Values.global.extraVolumes }}
+      volumes:
+        {{- with .extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with $.ctx.Values.global.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        {{- if .extraContainers }}
+        {{ toYaml .extraContainers | nindent 8 }}
+        {{- end }}
+        - name: memcached
+          {{- with $.ctx.Values.memcached.image }}
+          image: {{ .repository }}:{{ .tag }}
+          imagePullPolicy: {{ .pullPolicy }}
+          {{- end }}
+          resources:
+          {{- if .resources }}
+            {{- toYaml .resources | nindent 12 }}
+          {{- else }}
+          {{- /* Calculate requested memory as round(allocatedMemory * 1.2) + 100Mi and the memory limit as
+                 round(allocatedMemory * 1.5), matching the buffers used by the memcached jsonnet library.
+                 The flat overhead covers memcached's memory usage that doesn't scale with allocatedMemory, such as
+                 connection buffers, the hash table and thread stacks, which a purely multiplicative buffer
+                 under-provisions for small caches. The limit is floored at the request so that a small
+                 allocatedMemory can't yield a request larger than the limit. But with integer built-in operators. */}}
+          {{- $requestMemory := add (div (add (mul .allocatedMemory 12) 5) 10) 100 }}
+          {{- $limitMemory := max (div (add (mul .allocatedMemory 15) 5) 10) $requestMemory }}
+            limits:
+              memory: {{ $limitMemory }}Mi
+            requests:
+              cpu: 500m
+              memory: {{ $requestMemory }}Mi
+          {{- end }}
+          ports:
+            - containerPort: {{ .port }}
+              name: client
+          args:
+            - -m {{ .allocatedMemory }}
+            - --extended=modern{{ with .extraExtendedOptions }},{{ . }}{{ end }}
+            - -I {{ .maxItemMemory }}m
+            - -c {{ .connectionLimit }}
+            - -v
+            - -u {{ .port }}
+            {{- range $key, $value := .extraArgs }}
+            - "-{{ $key }}{{ if $value }} {{ $value }}{{ end }}"
+            {{- end }}
+          {{- with $.ctx.Values.global.extraEnv }}
+          env:
+              {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $.ctx.Values.global.extraEnvFrom }}
+          envFrom:
+              {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml $.ctx.Values.memcached.containerSecurityContext | nindent 12 }}
+          {{- if or .extraVolumeMounts $.ctx.Values.global.extraVolumeMounts }}
+          volumeMounts:
+            {{- with .extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $.ctx.Values.global.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+
+      {{- if $.ctx.Values.memcachedExporter.enabled }}
+        - name: exporter
+          {{- with $.ctx.Values.memcachedExporter.image }}
+          image: {{ .repository}}:{{ .tag }}
+          imagePullPolicy: {{ .pullPolicy }}
+          {{- end }}
+          ports:
+            - containerPort: 9150
+              name: http-metrics
+          args:
+            - "--memcached.address=localhost:{{ .port }}"
+            - "--web.listen-address=0.0.0.0:9150"
+            {{- range $key, $value := $.ctx.Values.memcachedExporter.extraArgs }}
+            - "--{{ $key }}{{ if $value }}={{ $value }}{{ end }}"
+            {{- end }}
+          resources:
+            {{- toYaml $.ctx.Values.memcachedExporter.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml $.ctx.Values.memcachedExporter.containerSecurityContext | nindent 12 }}
+          {{- if or .extraVolumeMounts $.ctx.Values.global.extraVolumeMounts }}
+          volumeMounts:
+            {{- with .extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $.ctx.Values.global.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+      {{- end }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
