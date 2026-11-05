@@ -2680,7 +2680,13 @@ memcached:
   timeout: 500ms
   # -- Enable consistent hashing for cache
   consistentHash: true
-  # -- Additional CLI args for memcached
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
+  allocatedMemory: 1024
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
+  maxItemMemory: 5
+  # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
+  connectionLimit: 4096
+  # -- Additional CLI args for memcached. The sizing flags -m, -I and -c are rejected here, use the keys above
   extraArgs: []
   # -- Toleration for memcached pods
   tolerations: []
@@ -2795,7 +2801,13 @@ memcachedBloom:
   timeout: 500ms
   # -- Enable consistent hashing for bloom cache
   consistentHash: true
-  # -- Additional CLI args for memcached
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
+  allocatedMemory: 1024
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
+  maxItemMemory: 5
+  # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
+  connectionLimit: 4096
+  # -- Additional CLI args for memcached. The sizing flags -m, -I and -c are rejected here, use the keys above
   extraArgs: []
   # -- Tolerations for memcached-bloom pods
   tolerations: []
@@ -2882,7 +2894,13 @@ memcachedParquetFooter:
   timeout: 500ms
   # -- Enable consistent hashing for parquet-footer cache
   consistentHash: true
-  # -- Additional CLI args for memcached
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
+  allocatedMemory: 1024
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
+  maxItemMemory: 5
+  # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
+  connectionLimit: 4096
+  # -- Additional CLI args for memcached. The sizing flags -m, -I and -c are rejected here, use the keys above
   extraArgs: []
   # -- Tolerations for memcached-parquet-footer pods
   tolerations: []
@@ -2969,7 +2987,13 @@ memcachedFrontendSearch:
   timeout: 500ms
   # -- Enable consistent hashing for frontend-search cache
   consistentHash: true
-  # -- Additional CLI args for memcached
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
+  allocatedMemory: 1024
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
+  maxItemMemory: 5
+  # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
+  connectionLimit: 4096
+  # -- Additional CLI args for memcached. The sizing flags -m, -I and -c are rejected here, use the keys above
   extraArgs: []
   # -- Tolerations for memcached-frontend-search pods
   tolerations: []

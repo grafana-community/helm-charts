@@ -1,5 +1,17 @@
 {{/* vim: set filetype=mustache: */}}
 {{/*
+memcached sizing flags (-m, -I, -c) for a memcached values section, as a YAML list.
+validate.yaml rejects these flags in extraArgs. Empty when all are unset.
+*/}}
+{{- define "tempo.memcached.sizingArgs" -}}
+{{- $args := list -}}
+{{- with .allocatedMemory }}{{ $args = append $args (printf "-m %d" (int .)) }}{{ end -}}
+{{- with .maxItemMemory }}{{ $args = append $args (printf "-I %dm" (int .)) }}{{ end -}}
+{{- with .connectionLimit }}{{ $args = append $args (printf "-c %d" (int .)) }}{{ end -}}
+{{- with $args }}{{ toYaml . }}{{ end -}}
+{{- end -}}
+
+{{/*
 Render a StatefulSet for a per-role memcached cluster.
 Params:
   ctx            = root context ($)
@@ -69,8 +81,12 @@ spec:
         - image: {{ include "tempo.imageReference" (dict "ctx" $.ctx "component" "memcached") }}
           imagePullPolicy: {{ $.ctx.Values.memcached.image.pullPolicy }}
           name: memcached
-          {{- if or $.ctx.Values.global.extraArgs $.memcachedConfig.extraArgs }}
+          {{- $sizingArgs := include "tempo.memcached.sizingArgs" $.memcachedConfig }}
+          {{- if or $sizingArgs $.ctx.Values.global.extraArgs $.memcachedConfig.extraArgs }}
           args:
+            {{- with $sizingArgs }}
+            {{- . | nindent 12 }}
+            {{- end }}
             {{- with $.memcachedConfig.extraArgs }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
