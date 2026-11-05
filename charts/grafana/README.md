@@ -47,7 +47,7 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 A major chart version change (like v1.2.3 -> v2.0.0) indicates that there is an
 incompatible breaking change needing manual actions.
 
-### To 14.3.0
+### To 14.4.0
 
 Pod templates no longer carry `helm.sh/chart`. The label changed on every chart version
 bump, and because it sat inside the pod template it rolled the Grafana pods on upgrade

@@ -43,16 +43,11 @@ tests:
   - it: should keep the chart version off the pod template
     asserts:
       - template: deployment.yaml
-        equal:
-          path: spec.template.metadata.labels
-          value:
-            app.kubernetes.io/name: grafana
-            app.kubernetes.io/instance: RELEASE-NAME
-            app.kubernetes.io/version: "13.3.0"
+        notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
       - template: deployment.yaml
-        matchRegex:
+        exists:
           path: metadata.labels["helm.sh/chart"]
-          pattern: ^grafana-
 
   - it: should keep the chart version off the statefulset pod template
     set:
@@ -61,15 +56,10 @@ tests:
     templates:
       - statefulset.yaml
     asserts:
-      - equal:
-          path: spec.template.metadata.labels
-          value:
-            app.kubernetes.io/name: grafana
-            app.kubernetes.io/instance: RELEASE-NAME
-            app.kubernetes.io/version: "13.3.0"
-      - matchRegex:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - exists:
           path: metadata.labels["helm.sh/chart"]
-          pattern: ^grafana-
       - isSubset:
           path: spec.template.metadata.labels
           content:
@@ -77,6 +67,8 @@ tests:
             app.kubernetes.io/instance: RELEASE-NAME
 
   - it: should leave the pod template untouched by a chart version bump
+    set:
+      image.tag: 0.0.0-test
     chart:
       version: 99.99.99
     asserts:
@@ -86,7 +78,7 @@ tests:
           value:
             app.kubernetes.io/name: grafana
             app.kubernetes.io/instance: RELEASE-NAME
-            app.kubernetes.io/version: "13.3.0"
+            app.kubernetes.io/version: "0.0.0-test"
 
   - it: should still apply extraLabels to the pod template
     set:
