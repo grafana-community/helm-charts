@@ -273,4 +273,47 @@ tests:
       memcached.maxItemMemory: 0.5
     asserts:
       - failedTemplate:
-          errorMessage: "memcached.maxItemMemory must be a whole number of MB of at least 1, got 0.5. memcached's -I and Tempo's max_item_size are rendered in whole MB."
+          errorMessage: "memcached.maxItemMemory must be a whole number of at least 1, got 0.5."
+
+  - it: fails when allocatedMemory is not a whole number
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.allocatedMemory: 1.5
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcached.allocatedMemory must be a whole number of at least 1, got 1.5."
+
+  - it: fails when connectionLimit is not a number
+    set:
+      ingest.kafka.address: kafka:9092
+      memcachedBloom.enabled: true
+      memcachedBloom.connectionLimit: 4k
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcachedBloom.connectionLimit must be a whole number of at least 1, got 4k."
+
+  - it: fails when maxItemMemory is more than half of allocatedMemory
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.allocatedMemory: 8
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcached.maxItemMemory (5 MB) is more than half of the memcached memory (8 MB, memcached.allocatedMemory or memcached's default of 64): memcached refuses to start when -I exceeds half of -m."
+
+  - it: fails when maxItemMemory is more than half of memcached's default memory
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.allocatedMemory: false
+      memcached.maxItemMemory: 33
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcached.maxItemMemory (33 MB) is more than half of the memcached memory (64 MB, memcached.allocatedMemory or memcached's default of 64): memcached refuses to start when -I exceeds half of -m."
+
+  - it: passes when maxItemMemory is exactly half of allocatedMemory
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.allocatedMemory: 10
+      memcached.maxItemMemory: 5
+    asserts:
+      - hasDocuments:
+          count: 0

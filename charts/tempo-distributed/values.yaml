@@ -2682,7 +2682,7 @@ memcached:
   consistentHash: true
   # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
   allocatedMemory: 1024
-  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number. False omits both
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
   maxItemMemory: 5
   # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
   connectionLimit: 4096
@@ -2803,7 +2803,7 @@ memcachedBloom:
   consistentHash: true
   # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
   allocatedMemory: 1024
-  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number. False omits both
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
   maxItemMemory: 5
   # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
   connectionLimit: 4096
@@ -2896,7 +2896,7 @@ memcachedParquetFooter:
   consistentHash: true
   # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
   allocatedMemory: 1024
-  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number. False omits both
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
   maxItemMemory: 5
   # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
   connectionLimit: 4096
@@ -2989,7 +2989,7 @@ memcachedFrontendSearch:
   consistentHash: true
   # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). False omits the flag
   allocatedMemory: 1024
-  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number. False omits both
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
   maxItemMemory: 5
   # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
   connectionLimit: 4096

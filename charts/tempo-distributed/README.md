@@ -845,7 +845,9 @@ Every memcached section takes `allocatedMemory` (MB, `-m`), `maxItemMemory` (who
 and `connectionLimit` (`-c`). The defaults of 1024, 5 and 4096 match Tempo's own
 [jsonnet](https://github.com/grafana/tempo/tree/main/operations/jsonnet/microservices).
 `maxItemMemory` is also set as the cache's `max_item_size`, so Tempo skips values memcached
-would reject. Set a value to `false` to omit its flag. The render fails if a section's
+would reject. All three must be whole numbers, and `maxItemMemory` can be at most half of
+`allocatedMemory` (or of memcached's default of 64 when `allocatedMemory` is `false`), since
+memcached refuses to start otherwise. Set a value to `false` to omit its flag. The render fails if a section's
 `extraArgs` sets one of these flags itself. The chart does not set `resources`, so give a
 section a memory limit well above `allocatedMemory`, or the pod is OOM-killed once the cache
 fills.

@@ -20,7 +20,9 @@ through a section's `extraArgs` to work around the old defaults, the render now 
 those values to `allocatedMemory`, `maxItemMemory` and `connectionLimit`. To keep the previous
 behaviour, set the three values to `false`.
 
-The memcached pods restart on upgrade because their arguments change.
+The memcached pods restart on upgrade because their arguments change. Every Tempo component
+also rolls, because the generated `tempo.yaml` gains `max_item_size` and its config checksum
+changes.
 
 ## v3.22 → v3.23
 
