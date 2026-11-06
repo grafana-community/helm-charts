@@ -38,6 +38,15 @@ tests:
           value:
             - port: 7322
 
+  - it: should resolve a templated NATS cluster port from grafana.ini
+    values:
+      - ../ci/with-nats-cluster-port-tpl-values.yaml
+    asserts:
+      - equal:
+          path: spec.ingress[1].ports
+          value:
+            - port: 7422
+
   - it: should allow the NATS cluster port between Grafana pods when natsCluster is enabled
     set:
       networkPolicy.natsCluster.enabled: true

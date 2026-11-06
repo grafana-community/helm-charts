@@ -362,9 +362,10 @@ This function needs to be called with a context object containing the following 
 {{/*
 NATS cluster port the network policy allows: networkPolicy.natsCluster.port,
 else [nats] cluster_port from grafana.ini, else the NATS default 6222.
+A templated value is resolved, as grafana.ini values are for the config.
 */}}
 {{- define "grafana.natsClusterPort" -}}
 {{- $grafanaIni := index .Values "grafana.ini" | default dict -}}
 {{- $nats := index $grafanaIni "nats" | default dict -}}
-{{- .Values.networkPolicy.natsCluster.port | default (index $nats "cluster_port") | default 6222 -}}
+{{- tpl (toString (.Values.networkPolicy.natsCluster.port | default (index $nats "cluster_port") | default 6222)) . -}}
 {{- end }}

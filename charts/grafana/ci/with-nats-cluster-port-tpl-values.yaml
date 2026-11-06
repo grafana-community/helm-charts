@@ -1,0 +1,9 @@
+networkPolicy:
+  enabled: true
+
+# grafana.ini values can be templated; the NetworkPolicy must use the resolved port.
+natsClusterPort: 7422
+
+grafana.ini:
+  nats:
+    cluster_port: "{{ .Values.natsClusterPort }}"
