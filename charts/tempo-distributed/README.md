@@ -855,6 +855,33 @@ memcachedFrontendSearch:
 
 Each role gets its own StatefulSet and Service, and Tempo is configured to use the matching host for every cache type.
 
+#### Sizing
+
+Every memcached section takes `allocatedMemory` (MB, `-m`), `maxItemMemory` (whole MB, `-I`)
+and `connectionLimit` (`-c`). The defaults of 1024, 5 and 4096 match Tempo's own
+[jsonnet](https://github.com/grafana/tempo/tree/main/operations/jsonnet/microservices).
+`maxItemMemory` is also set as the cache's `max_item_size`, so Tempo skips values memcached
+would reject. All three must be whole numbers, and `maxItemMemory` can be at most half of
+`allocatedMemory` (or of memcached's default of 64 when `allocatedMemory` is `false`), since
+memcached refuses to start otherwise. Set a value to `false` to omit its flag. The render
+fails if a section's `extraArgs` sets one of these flags itself. The chart leaves `resources`
+unset unless a section sets `deriveResources: true`. Then an empty `resources` is derived as
+the loki chart does: a memory request and limit of `round(1.2 * allocatedMemory)` Mi and a CPU
+request of `allocatedCPU` (default `500m`). Setting `resources` replaces the derived values but
+does not change `-m`, so keep a memory limit well above `allocatedMemory`, or the pod is
+OOM-killed once the cache fills.
+The derived 20% headroom also has to hold memcached's per-connection buffers, tens of KB each,
+so a small `allocatedMemory` serving many connections needs explicit `resources`.
+
+```yaml
+memcachedParquetFooter:
+  enabled: true
+  # -m 4096, memory request and limit 4915Mi, CPU request 1
+  allocatedMemory: 4096
+  deriveResources: true
+  allocatedCPU: 1
+```
+
 ### Enabling gRPC Open Telemetry
 
 gRPC for Open Telemetry is disabled by default, simply flip the bool in the `traces` block to turn it on.

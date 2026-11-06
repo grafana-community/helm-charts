@@ -274,6 +274,9 @@ caches:
       service: memcached-client
       consistent_hash: {{ .Values.memcached.consistentHash }}
       timeout: {{ .Values.memcached.timeout }}
+      {{- with .Values.memcached.maxItemMemory }}
+      max_item_size: {{ mul (int .) 1024 1024 }}
+      {{- end }}
     roles:
     {{- range $sharedRoles }}
       - {{ . }}
@@ -290,6 +293,9 @@ caches:
       service: memcached-client
       consistent_hash: {{ index $vals "consistentHash" }}
       timeout: {{ index $vals "timeout" }}
+      {{- with index $vals "maxItemMemory" }}
+      max_item_size: {{ mul (int .) 1024 1024 }}
+      {{- end }}
     roles:
       - {{ $role }}
   {{- end -}}
