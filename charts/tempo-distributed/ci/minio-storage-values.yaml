@@ -26,6 +26,10 @@ traces:
     http:
       enabled: true
 
+# Exercise the dedicated parquet-page cache in a real install.
+memcachedParquetPage:
+  enabled: true
+
 tests:
   integration:
     enabled: true

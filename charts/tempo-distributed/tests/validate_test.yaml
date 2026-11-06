@@ -238,6 +238,16 @@ tests:
       - failedTemplate:
           errorMessage: "memcachedBloom.extraArgs contains \"--max-item-size=16m\", a memcached sizing flag the chart already renders. Use memcachedBloom.allocatedMemory (-m), memcachedBloom.maxItemMemory (-I) or memcachedBloom.connectionLimit (-c) instead: memcached keeps the last occurrence of a flag, so the one in extraArgs would silently override the chart's value. See UPGRADE.md."
 
+  - it: fails when parquet-page memcached extraArgs set a sizing flag
+    set:
+      ingest.kafka.address: kafka:9092
+      memcachedParquetPage.enabled: true
+      memcachedParquetPage.extraArgs:
+        - -I 2m
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcachedParquetPage.extraArgs contains \"-I 2m\", a memcached sizing flag the chart already renders. Use memcachedParquetPage.allocatedMemory (-m), memcachedParquetPage.maxItemMemory (-I) or memcachedParquetPage.connectionLimit (-c) instead: memcached keeps the last occurrence of a flag, so the one in extraArgs would silently override the chart's value. See UPGRADE.md."
+
   - it: fails when memcached extraArgs set -c without a space
     set:
       ingest.kafka.address: kafka:9092

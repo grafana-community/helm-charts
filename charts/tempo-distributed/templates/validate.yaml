@@ -43,7 +43,7 @@
 {{- end }}
 {{- end }}
 {{- end }}
-{{- range $section := list "memcached" "memcachedBloom" "memcachedParquetFooter" "memcachedFrontendSearch" }}
+{{- range $section := list "memcached" "memcachedBloom" "memcachedParquetFooter" "memcachedFrontendSearch" "memcachedParquetPage" }}
 {{- $memcached := index $.Values $section | default dict }}
 {{- if $memcached.enabled }}
 {{- range ($memcached.extraArgs | default list) }}
