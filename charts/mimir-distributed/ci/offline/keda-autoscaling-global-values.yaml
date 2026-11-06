@@ -1,0 +1,57 @@
+# Pin kube version so results are the same for running in CI and locally where the installed kube version may be different.
+kubeVersionOverride: "1.32"
+
+kedaAutoscaling:
+  prometheusAddress: "https://mimir.example.com/prometheus"
+  pollingInterval: 20
+  customHeaders:
+    X-Scope-OrgID: tenant
+  ignoreNullValues: true
+  unsafeSsl: false
+  toPromQLLabelSelector:
+    - cluster="my-cluster-name"
+  authentication:
+    enabled: true
+    authModes: "basic"
+    secretTargetRef:
+    - key: username
+      name: my-secret-name
+      parameter: username
+    - key: password
+      name: my-secret-name
+      parameter: password
+
+distributor:
+  replicas: 5
+  kedaAutoscaling:
+    enabled: true
+    minReplicaCount: 1
+    maxReplicaCount: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+ruler:
+  replicas: 5
+  kedaAutoscaling:
+    enabled: true
+    minReplicaCount: 1
+    maxReplicaCount: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+querier:
+  replicas: 5
+  kedaAutoscaling:
+    enabled: true
+    minReplicaCount: 2
+    maxReplicaCount: 10
+    querySchedulerInflightRequestsThreshold: 6
+
+query_frontend:
+  replicas: 5
+  kedaAutoscaling:
+    enabled: true
+    minReplicaCount: 1
+    maxReplicaCount: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80

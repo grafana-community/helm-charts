@@ -43,6 +43,7 @@ body:
         - grafana
         - grafana-mcp
         - loki
+        - mimir-distributed
         - synthetic-monitoring-agent
         - tempo
         - tempo-distributed
