@@ -1,5 +1,38 @@
 # Upgrade guide
 
+## v3.25 → v3.26
+
+### memcached no longer receives `global.extraArgs`
+
+The per-role memcached clusters (`memcachedBloom`, `memcachedParquetFooter`,
+`memcachedFrontendSearch`) no longer append `global.extraArgs`, matching the shared `memcached`.
+If you relied on `global.extraArgs` to pass a flag to every memcached cluster, set it in each
+section's `extraArgs` instead.
+
+## v3.23 → v3.24
+
+### memcached starts with explicit sizing flags
+
+The memcached StatefulSets used to start with no arguments, so memcached ran on its built-in
+64 MB of memory, 1 MB maximum item size and 1024 connections, and rejected larger parquet
+footers with `SERVER_ERROR object too large for cache`. Each memcached section (`memcached`,
+`memcachedBloom`, `memcachedParquetFooter`, `memcachedFrontendSearch`) now has
+`allocatedMemory`, `maxItemMemory` and `connectionLimit`, rendered as `-m 1024 -I 5m -c 4096`
+by default. The generated cache config sets Tempo's `max_item_size` to match `maxItemMemory`.
+
+Each memcached pod can now use about 1 GB instead of 64 MB. The chart still leaves `resources`
+unset, so if a section sets a memory limit, keep it well above `allocatedMemory`, or the pod is
+OOM-killed once the cache fills.
+
+If you passed `-m`, `-I` or `-c` (or `--memory-limit`, `--max-item-size`, `--conn-limit`)
+through a section's `extraArgs` to work around the old defaults, the render now fails. Move
+those values to `allocatedMemory`, `maxItemMemory` and `connectionLimit`. To keep the previous
+behaviour, set the three values to `false`.
+
+The memcached pods restart on upgrade because their arguments change. Every Tempo component
+also rolls, because the generated `tempo.yaml` gains `max_item_size` and its config checksum
+changes.
+
 ## v3.22 → v3.23
 
 ### `helm.sh/chart` and `app.kubernetes.io/version` are no longer pod labels

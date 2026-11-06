@@ -224,27 +224,32 @@ auto-generates cache.caches. Each enabled per-role section gets its own entry;
 roles without a dedicated instance fall back to the shared cluster. When the
 shared cluster is disabled, they fall back to the entries in .Values.cache
 instead, skipping any entry that points at the undeployed shared host.
+parquet-page is opt-in: it is cached only by its own section and never falls
+back to the shared cluster.
 When nothing is enabled, outputs the user-defined cache block from values.yaml
 verbatim, which is how an externally managed cache is configured.
 */}}
 {{- define "tempo.cacheConfig" -}}
 {{- $fullname := include "tempo.fullname" . -}}
 {{- $roles := list "parquet-footer" "bloom" "frontend-search" -}}
+{{- $perRoleRoles := append $roles "parquet-page" -}}
 {{- $perRoleMap := dict
     "parquet-footer"  (dict "section" "memcachedParquetFooter"  "component" "memcached-parquet-footer")
     "bloom"           (dict "section" "memcachedBloom"          "component" "memcached-bloom")
-    "frontend-search" (dict "section" "memcachedFrontendSearch" "component" "memcached-frontend-search") -}}
+    "frontend-search" (dict "section" "memcachedFrontendSearch" "component" "memcached-frontend-search")
+    "parquet-page"    (dict "section" "memcachedParquetPage"    "component" "memcached-parquet-page") -}}
 {{- $sharedRoles := list -}}
-{{- $anyPerRole := false -}}
-{{- range $role := $roles -}}
+{{- $dedicatedRoles := list -}}
+{{- range $role := $perRoleRoles -}}
   {{- $mapping := get $perRoleMap $role -}}
   {{- $vals := index $.Values (get $mapping "section") -}}
   {{- if and $vals (index $vals "enabled") -}}
-    {{- $anyPerRole = true -}}
-  {{- else -}}
+    {{- $dedicatedRoles = append $dedicatedRoles $role -}}
+  {{- else if has $role $roles -}}
     {{- $sharedRoles = append $sharedRoles $role -}}
   {{- end -}}
 {{- end -}}
+{{- $anyPerRole := gt (len $dedicatedRoles) 0 -}}
 {{- if or .Values.memcached.enabled $anyPerRole -}}
 caches:
 {{- if not .Values.memcached.enabled -}}
@@ -253,7 +258,7 @@ caches:
   {{- if ne (tpl (toString (dig "memcached" "host" "" $entry)) $) $sharedHost -}}
     {{- $keep := list -}}
     {{- range $r := (get $entry "roles" | default list) -}}
-      {{- if or (has $r $sharedRoles) (not (has $r $roles)) -}}
+      {{- if not (has $r $dedicatedRoles) -}}
         {{- $keep = append $keep $r -}}
       {{- end -}}
     {{- end -}}
@@ -269,12 +274,15 @@ caches:
       service: memcached-client
       consistent_hash: {{ .Values.memcached.consistentHash }}
       timeout: {{ .Values.memcached.timeout }}
+      {{- with .Values.memcached.maxItemMemory }}
+      max_item_size: {{ mul (int .) 1024 1024 }}
+      {{- end }}
     roles:
     {{- range $sharedRoles }}
       - {{ . }}
     {{- end }}
 {{- end }}
-{{- range $role := $roles -}}
+{{- range $role := $dedicatedRoles -}}
   {{- $mapping := get $perRoleMap $role -}}
   {{- $sectionName := get $mapping "section" -}}
   {{- $component   := get $mapping "component" -}}
@@ -285,6 +293,9 @@ caches:
       service: memcached-client
       consistent_hash: {{ index $vals "consistentHash" }}
       timeout: {{ index $vals "timeout" }}
+      {{- with index $vals "maxItemMemory" }}
+      max_item_size: {{ mul (int .) 1024 1024 }}
+      {{- end }}
     roles:
       - {{ $role }}
   {{- end -}}
