@@ -295,6 +295,9 @@ service:
   port: 80
   targetPort: 3000
     # targetPort: 4181 To be used with a proxy extraContainer
+  # Target the container port by number (targetPort) instead of by name (podPortName). Required by consumers that do
+  # not resolve named ports, e.g. AWS Load Balancer Controller TargetGroupConfiguration (Gateway API).
+  useNumericTargetPort: false
   ## Service annotations. Can be templated.
   # @schema additionalProperties:{"type":"string"}
   annotations: {}
