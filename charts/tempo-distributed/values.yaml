@@ -3107,10 +3107,18 @@ memcachedParquetPage:
   timeout: 500ms
   # -- Enable consistent hashing for parquet-page cache
   consistentHash: true
-  # -- Additional CLI args for memcached. A page is a full read buffer plus the key, so it is
-  # larger than memcached's default 1 MiB item size limit (-I 1m) and every write would fail.
-  extraArgs:
-    - -I 2m
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). Also sizes `resources` with `deriveResources`. False omits the flag
+  allocatedMemory: 1024
+  # -- Derive `resources` from `allocatedMemory` and `allocatedCPU` when `resources` is empty, as the loki chart does by default
+  deriveResources: false
+  # -- CPU request, in cores or millicores, for derived `resources`. False omits it
+  allocatedCPU: 500m
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
+  maxItemMemory: 5
+  # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
+  connectionLimit: 4096
+  # -- Additional CLI args for memcached. The sizing flags -m, -I and -c are rejected here, use the keys above
+  extraArgs: []
   # -- Tolerations for memcached-parquet-page pods
   tolerations: []
   # -- Environment variables to add to memcached-parquet-page pods
@@ -3121,7 +3129,7 @@ memcachedParquetPage:
   podLabels: {}
   # -- Annotations for memcached-parquet-page pods
   podAnnotations: {}
-  # -- Resource requests and limits for memcached-parquet-page
+  # -- Resource requests and limits for memcached-parquet-page. When empty and `deriveResources` is true, derived as in the loki chart: memory request and limit of round(1.2 * allocatedMemory)Mi and a CPU request of `allocatedCPU`
   resources: {}
   # -- topologySpread for memcached-parquet-page pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ
@@ -3152,6 +3160,8 @@ memcachedParquetPage:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for memcached-parquet-page
     enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the memcached-parquet-page PodDisruptionBudget. Requires Kubernetes 1.27+.
+    unhealthyPodEvictionPolicy: ""
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached-parquet-page pod

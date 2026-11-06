@@ -821,15 +821,13 @@ Available per-role sections:
 
 The chart doesn't cache parquet pages by default. `memcachedParquetPage` adds a dedicated memcached cluster for the `parquet-page` role, and pages are only cached while it is enabled: they never go to the shared cluster.
 
-Tempo caches every backend read up to `storage.trace.search.read_buffer_size_bytes` (1 MiB by default) under this role, so the page cache sees far more data than the other roles, in items of up to 1 MiB. Keeping them on their own cluster stops them from evicting footers and blooms. The section defaults to `-I 2m`, because a full page plus its key is larger than memcached's default 1 MiB item size limit. Size `-m` and `replicas` for your query load:
+Tempo caches every backend read up to `storage.trace.search.read_buffer_size_bytes` (1 MiB by default) under this role, so the page cache sees far more data than the other roles, in items of up to 1 MiB. Keeping them on their own cluster stops them from evicting footers and blooms. The default `maxItemMemory` of 5 MB fits a full page plus its key. Size `allocatedMemory` and `replicas` for your query load:
 
 ```yaml
 memcachedParquetPage:
   enabled: true
   replicas: 2
-  extraArgs:
-    - -I 2m
-    - -m 2048
+  allocatedMemory: 2048
 ```
 
 #### Fully isolated caches per role

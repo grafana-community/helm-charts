@@ -3,6 +3,7 @@ suite: memcached sizing flags
 templates:
   - memcached/statefulset-memcached.yaml
   - memcached/statefulset-memcached-bloom.yaml
+  - memcached/statefulset-memcached-parquet-page.yaml
   - configmap-tempo.yaml
 
 tests:
@@ -53,6 +54,28 @@ tests:
             - -m 2048
             - -I 8m
             - -c 4096
+
+  - it: parquet-page memcached gets the default sizing flags, which fit a full page
+    template: memcached/statefulset-memcached-parquet-page.yaml
+    set:
+      memcachedParquetPage.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - -m 1024
+            - -I 5m
+            - -c 4096
+
+  - it: parquet-page cache entry gets max_item_size from its own maxItemMemory
+    template: configmap-tempo.yaml
+    set:
+      memcachedParquetPage.enabled: true
+      memcachedParquetPage.maxItemMemory: 8
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached-parquet-page\n\\s+max_item_size: 8388608\n"
 
   - it: shared cache entry gets max_item_size from maxItemMemory
     template: configmap-tempo.yaml

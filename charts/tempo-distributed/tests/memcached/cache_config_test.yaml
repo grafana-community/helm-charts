@@ -211,10 +211,10 @@ tests:
     asserts:
       - matchRegex:
           path: data["tempo.yaml"]
-          pattern: "host: .*-memcached\n\\s+service: memcached-client\n\\s+timeout: 500ms\n\\s+roles:\n\\s+- parquet-footer\n\\s+- bloom\n\\s+- frontend-search\n"
+          pattern: "host: .*-memcached\n\\s+max_item_size: 5242880\n\\s+service: memcached-client\n\\s+timeout: 500ms\n\\s+roles:\n\\s+- parquet-footer\n\\s+- bloom\n\\s+- frontend-search\n"
       - matchRegex:
           path: data["tempo.yaml"]
-          pattern: "host: .*-memcached-parquet-page\n\\s+service: memcached-client\n\\s+timeout: 500ms\n\\s+roles:\n\\s+- parquet-page\n"
+          pattern: "host: .*-memcached-parquet-page\n\\s+max_item_size: 5242880\n\\s+service: memcached-client\n\\s+timeout: 500ms\n\\s+roles:\n\\s+- parquet-page\n"
 
   - it: custom timeout respected for parquet-page
     set:

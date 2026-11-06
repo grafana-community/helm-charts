@@ -425,16 +425,6 @@ tests:
           value: RELEASE-NAME-tempo-memcached-parquet-page
         template: memcached/statefulset-memcached-parquet-page.yaml
 
-  - it: parquet-page StatefulSet raises the item size limit for full pages by default
-    set:
-      memcachedParquetPage.enabled: true
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[0].args
-          value:
-            - -I 2m
-        template: memcached/statefulset-memcached-parquet-page.yaml
-
   - it: parquet-page Service rendered as headless when enabled
     set:
       memcachedParquetPage.enabled: true
