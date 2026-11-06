@@ -1,0 +1,139 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: networkpolicy
+templates:
+  - networkpolicy.yaml
+set:
+  networkPolicy.enabled: true
+tests:
+  - it: should allow the service target port and the NATS cluster port by default
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.ingress[0]
+          value:
+            ports:
+              - port: 3000
+      - equal:
+          path: spec.ingress[1].ports
+          value:
+            - port: 6222
+
+  - it: should only allow ingress to the service target port when natsCluster is disabled
+    set:
+      networkPolicy.natsCluster.enabled: false
+    asserts:
+      - equal:
+          path: spec.ingress
+          value:
+            - ports:
+                - port: 3000
+
+  - it: should take the NATS cluster port from grafana.ini
+    values:
+      - ../ci/with-nats-cluster-port-values.yaml
+    asserts:
+      - equal:
+          path: spec.ingress[1].ports
+          value:
+            - port: 7322
+
+  - it: should resolve a templated NATS cluster port from grafana.ini
+    values:
+      - ../ci/with-nats-cluster-port-tpl-values.yaml
+    asserts:
+      - equal:
+          path: spec.ingress[1].ports
+          value:
+            - port: 7422
+
+  - it: should allow the NATS cluster port between Grafana pods when natsCluster is enabled
+    set:
+      networkPolicy.natsCluster.enabled: true
+    asserts:
+      - lengthEqual:
+          path: spec.ingress
+          count: 2
+      - equal:
+          path: spec.ingress[1]
+          value:
+            ports:
+              - port: 6222
+            from:
+              - podSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: grafana
+                    app.kubernetes.io/instance: RELEASE-NAME
+      - notExists:
+          path: spec.egress
+
+  - it: should use the configured NATS cluster port
+    set:
+      networkPolicy.natsCluster.enabled: true
+      networkPolicy.natsCluster.port: 7222
+    asserts:
+      - equal:
+          path: spec.ingress[1].ports
+          value:
+            - port: 7222
+
+  - it: should keep the client label restriction on the HTTP port when allowExternal is false
+    set:
+      networkPolicy.natsCluster.enabled: true
+      networkPolicy.allowExternal: false
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0]
+          value:
+            podSelector:
+              matchLabels:
+                RELEASE-NAME-grafana-client: "true"
+      - equal:
+          path: spec.ingress[1].from
+          value:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: grafana
+                  app.kubernetes.io/instance: RELEASE-NAME
+
+  - it: should allow egress to the NATS cluster port between Grafana pods when egress is enabled
+    set:
+      networkPolicy.natsCluster.enabled: true
+      networkPolicy.egress.enabled: true
+      networkPolicy.egress.ports:
+        - port: 5432
+    asserts:
+      - contains:
+          path: spec.egress
+          content:
+            ports:
+              - port: 6222
+            to:
+              - podSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: grafana
+                    app.kubernetes.io/instance: RELEASE-NAME
+      - contains:
+          path: spec.egress
+          content:
+            ports:
+              - port: 5432
+
+  - it: should not add a NATS egress rule when natsCluster is disabled
+    set:
+      networkPolicy.natsCluster.enabled: false
+      networkPolicy.egress.enabled: true
+      networkPolicy.egress.ports:
+        - port: 5432
+    asserts:
+      - lengthEqual:
+          path: spec.egress
+          count: 2
+
+  - it: should not render a NetworkPolicy when networkPolicy is disabled
+    set:
+      networkPolicy.enabled: false
+      networkPolicy.natsCluster.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
