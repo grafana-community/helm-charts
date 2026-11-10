@@ -1,0 +1,3 @@
+{{- if and .Values.memcachedParquetPage.enabled .Values.memcachedExporter.enabled }}
+{{- include "tempo.lib.serviceMonitor" (dict "ctx" $ "component" "memcached-parquet-page") }}
+{{- end }}

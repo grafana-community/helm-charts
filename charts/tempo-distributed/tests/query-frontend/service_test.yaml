@@ -1,0 +1,30 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: query-frontend Services
+templates:
+  - query-frontend/service-query-frontend.yaml
+  - query-frontend/service-query-frontend-discovery.yaml
+
+tests:
+  - it: does not set appProtocol on the HTTP ports by default
+    asserts:
+      - notExists:
+          path: spec.ports[?(@.targetPort == "http-metrics")].appProtocol
+
+  - it: sets appProtocol on the HTTP port of both Services
+    set:
+      queryFrontend:
+        appProtocol:
+          http: http2
+    asserts:
+      - equal:
+          path: spec.ports[?(@.targetPort == "http-metrics")].appProtocol
+          value: http2
+
+  - it: keeps the gRPC appProtocol independent of the HTTP one
+    set:
+      queryFrontend:
+        appProtocol:
+          http: http2
+    asserts:
+      - notExists:
+          path: spec.ports[?(@.name == "grpc")].appProtocol

@@ -595,7 +595,9 @@ liveStore:
 With `maxUnavailable: 1`, a drain can take one live-store per partition and many
 partitions at the same time, and it can never take the last owner of a
 partition. The rollout-operator rejects an eviction while it is unreachable, so
-this opens no window. It replaces the `liveStore.podDisruptionBudget` object.
+this opens no window. It replaces the `liveStore.podDisruptionBudget` object,
+except `liveStore.podDisruptionBudget.annotations`, which apply to whichever
+budget renders.
 
 Set `crossZoneEvictionDelay` when the live-stores run with the default
 `readiness-target-lag` of 0, because a live-store then reports ready while it
@@ -687,7 +689,7 @@ Set `ingest.kafka.sasl.mechanism` to enable SASL for the Kafka client used by th
 
 | Mechanism | Credential sources | Rotation |
 |-----------|--------------------|----------|
-| `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512` | `existingSecret` (recommended), or `username`/`password` | Pod restart |
+| `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512` | `existingSecret` (recommended), `username` + `existingSecret` for the password only, or `username`/`password` | Pod restart |
 | `OAUTHBEARER` | `oauthbearer.filePath` / `httpSocketPath` (recommended), `oauthbearer.existingSecret`, or `oauthbearer.token` | No restart with file/socket; otherwise pod restart |
 | `AWS_MSK_IAM` | `mskIam.filePath` / `httpSocketPath` (recommended), `mskIam.existingSecret`, or `accessKey`/`secretKey` | No restart with file/socket; otherwise pod restart |
 
@@ -695,8 +697,8 @@ OAUTHBEARER and AWS_MSK_IAM need exactly one credential source. Tempo does not f
 
 **How credentials reach Tempo**
 
-- **`existingSecret`**: the chart injects each Secret key as a `TEMPO_KAFKA_SASL_*` env var through `secretKeyRef` and passes it to Tempo as a CLI flag (for example `-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)`), so no credential is rendered into `tempo.yaml`. For AWS_MSK_IAM, the session token flag is added only when `mskIam.sessionTokenKey` is set, and that key must exist in the Secret.
-- **Inline values** (`username`/`password`, `oauthbearer.token`) are rendered into `tempo.yaml`, so the chart requires `configStorageType: Secret` and fails to render otherwise.
+- **`existingSecret`**: the chart injects each Secret key as a `TEMPO_KAFKA_SASL_*` env var through `secretKeyRef` and passes it to Tempo as a CLI flag (for example `-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)`), so no secret credential is rendered into `tempo.yaml`. For `PLAIN` and `SCRAM-SHA-*`, you can also set `username` in `values.yaml` while sourcing only the password from `existingSecret` (for example with Strimzi `KafkaUser` Secrets that only contain a `password` key). For AWS_MSK_IAM, the session token flag is added only when `mskIam.sessionTokenKey` is set, and that key must exist in the Secret.
+- **Inline values** (`password`, `oauthbearer.token`, `mskIam.accessKey`/`secretKey`) are rendered into `tempo.yaml`, so the chart requires `configStorageType: Secret` and fails to render otherwise.
 - **File/socket sources** (OAUTHBEARER, AWS_MSK_IAM) are read by Tempo on every authentication, so you can rotate the Secret without restarting pods. Mount the file on all Tempo pods with `defaults.extraVolumes` / `defaults.extraVolumeMounts`.
 
 #### Example: SCRAM-SHA-512 with an existing Secret
@@ -716,6 +718,20 @@ ingest:
       existingSecret: kafka-scram-credentials
       # usernameKey: username   # defaults; override if your Secret uses other keys
       # passwordKey: password
+    tls:
+      enabled: true
+```
+
+For Strimzi `KafkaUser` Secrets (which only contain a `password` key), set `username` alongside `existingSecret`:
+
+```yaml
+ingest:
+  kafka:
+    address: kafka.kafka.svc.cluster.local:9092
+    sasl:
+      mechanism: SCRAM-SHA-512
+      username: <KafkaUser name>
+      existingSecret: <KafkaUser name>
     tls:
       enabled: true
 ```
@@ -799,6 +815,20 @@ Available per-role sections:
 | `memcachedBloom` | Bloom filter cache |
 | `memcachedParquetFooter` | Parquet footer cache |
 | `memcachedFrontendSearch` | Frontend search cache |
+| `memcachedParquetPage` | Parquet page cache (opt-in) |
+
+#### Parquet page cache
+
+The chart doesn't cache parquet pages by default. `memcachedParquetPage` adds a dedicated memcached cluster for the `parquet-page` role, and pages are only cached while it is enabled: they never go to the shared cluster.
+
+Tempo caches every backend read up to `storage.trace.search.read_buffer_size_bytes` (1 MiB by default) under this role, so the page cache sees far more data than the other roles, in items of up to 1 MiB. Keeping them on their own cluster stops them from evicting footers and blooms. The default `maxItemMemory` of 5 MB fits a full page plus its key. Size `allocatedMemory` and `replicas` for your query load:
+
+```yaml
+memcachedParquetPage:
+  enabled: true
+  replicas: 2
+  allocatedMemory: 2048
+```
 
 #### Fully isolated caches per role
 
@@ -822,6 +852,33 @@ memcachedFrontendSearch:
 ```
 
 Each role gets its own StatefulSet and Service, and Tempo is configured to use the matching host for every cache type.
+
+#### Sizing
+
+Every memcached section takes `allocatedMemory` (MB, `-m`), `maxItemMemory` (whole MB, `-I`)
+and `connectionLimit` (`-c`). The defaults of 1024, 5 and 4096 match Tempo's own
+[jsonnet](https://github.com/grafana/tempo/tree/main/operations/jsonnet/microservices).
+`maxItemMemory` is also set as the cache's `max_item_size`, so Tempo skips values memcached
+would reject. All three must be whole numbers, and `maxItemMemory` can be at most half of
+`allocatedMemory` (or of memcached's default of 64 when `allocatedMemory` is `false`), since
+memcached refuses to start otherwise. Set a value to `false` to omit its flag. The render
+fails if a section's `extraArgs` sets one of these flags itself. The chart leaves `resources`
+unset unless a section sets `deriveResources: true`. Then an empty `resources` is derived as
+the loki chart does: a memory request and limit of `round(1.2 * allocatedMemory)` Mi and a CPU
+request of `allocatedCPU` (default `500m`). Setting `resources` replaces the derived values but
+does not change `-m`, so keep a memory limit well above `allocatedMemory`, or the pod is
+OOM-killed once the cache fills.
+The derived 20% headroom also has to hold memcached's per-connection buffers, tens of KB each,
+so a small `allocatedMemory` serving many connections needs explicit `resources`.
+
+```yaml
+memcachedParquetFooter:
+  enabled: true
+  # -m 4096, memory request and limit 4915Mi, CPU request 1
+  allocatedMemory: 4096
+  deriveResources: true
+  allocatedCPU: 1
+```
 
 ### Enabling gRPC Open Telemetry
 

@@ -156,6 +156,24 @@ This chart emits `apiVersion: v1` and `kind: PersistentVolumeClaim` on each VCT.
 
 ## Upgrading
 
+### From 20.x to 21.0.0
+
+**Breaking** `rollout_operator.webhooks.failurePolicy` now defaults to `Fail` instead of `Ignore`, matching the rollout-operator chart. Previously, when the rollout-operator was unreachable or a webhook call timed out, the API server skipped its webhooks, so ingesters could be scaled down without preparing for shutdown and remain in the ring.
+
+Who is affected: installations with `rollout_operator.enabled: true` that do not set `rollout_operator.webhooks.failurePolicy` explicitly. While the rollout-operator is unreachable, StatefulSet updates in the release namespace (including `helm upgrade` and HPA/KEDA scaling) and pod evictions (for example `kubectl drain`) are now rejected instead of allowed.
+
+How to proceed: no action is needed if the rollout-operator runs reliably. To keep the previous behavior, set `rollout_operator.webhooks.failurePolicy: Ignore`.
+
+The new `ingester.zoneAwareReplication.zone[A-C].prepareDownscale`, `noDownscale` and `downscaleLeader` values are opt-in and do not change the rendered manifests by default.
+
+### From 20.0.2 to 20.0.3 ([#941](https://github.com/grafana-community/helm-charts/pull/941))
+
+The memberlist Service, used as the seed list for `memberlist.join_members`, now only selects components that always run a memberlist listener. query-frontend, query-scheduler, index-gateway, the bloom components and overrides-exporter no longer carry the `app.kubernetes.io/part-of: memberlist` pod label. They still join the memberlist cluster through the seed nodes when their configuration needs it.
+
+The unused `indexGateway.joinMemberlist` value has been removed.
+
+If you run custom NetworkPolicies that allow port 7946 only between pods labeled `app.kubernetes.io/part-of: memberlist`, also allow the components that listen in some setups: query-frontend and query-scheduler with `loki.query_scheduler.use_scheduler_ring`, index-gateway and the bloom components with `loki.index_gateway.mode: ring`, and every component with `loki.ui.enabled`.
+
 ### From 19.x to 20.0.0
 
 **Breaking** The MinIO subchart, deprecated since 17.0.0, has been removed together with the `minio` and `ignoreMinioDeprecation` values and the `loki.minio` template helper. Setting `minio.enabled` no longer deploys MinIO or configures Loki storage.

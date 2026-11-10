@@ -1,10 +1,44 @@
 {{/* vim: set filetype=mustache: */}}
 {{/*
-Render a StatefulSet for a per-role memcached cluster.
+memcached sizing flags (-m, -I, -c) for a memcached values section, as a YAML list.
+validate.yaml rejects these flags in extraArgs. Empty when all are unset.
+*/}}
+{{- define "tempo.memcached.sizingArgs" -}}
+{{- $args := list -}}
+{{- with .allocatedMemory }}{{ $args = append $args (printf "-m %d" (int .)) }}{{ end -}}
+{{- with .maxItemMemory }}{{ $args = append $args (printf "-I %dm" (int .)) }}{{ end -}}
+{{- with .connectionLimit }}{{ $args = append $args (printf "-c %d" (int .)) }}{{ end -}}
+{{- with $args }}{{ toYaml . }}{{ end -}}
+{{- end -}}
+
+{{/*
+memcached container resources for a memcached values section. A non-empty `resources` is used as is.
+With deriveResources they are otherwise derived as in the loki chart: memory request and limit of
+round(1.2 * allocatedMemory)Mi, CPU request of allocatedCPU.
+*/}}
+{{- define "tempo.memcached.resources" -}}
+{{- if .resources -}}
+{{ toYaml .resources }}
+{{- else if and .deriveResources .allocatedMemory -}}
+{{- $memory := div (add (mul (int .allocatedMemory) 12) 5) 10 -}}
+limits:
+  memory: {{ $memory }}Mi
+requests:
+  {{- with .allocatedCPU }}
+  cpu: {{ . }}
+  {{- end }}
+  memory: {{ $memory }}Mi
+{{- else -}}
+{}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Render a memcached StatefulSet, for the shared cluster or a per-role one.
 Params:
   ctx            = root context ($)
-  memcachedConfig = per-role values section (e.g. .Values.memcachedBloom)
-  component      = K8s component name (e.g. "memcached-bloom")
+  memcachedConfig = values section (e.g. .Values.memcached, .Values.memcachedBloom)
+  component      = K8s component name (e.g. "memcached", "memcached-bloom")
 */}}
 {{- define "tempo.memcached.statefulSet" -}}
 {{- if $.memcachedConfig.enabled }}
@@ -39,7 +73,7 @@ spec:
         {{- end }}
       {{- end }}
       labels:
-        {{- include "tempo.labels" $dict | nindent 8 }}
+        {{- include "tempo.podLabels" $dict | nindent 8 }}
         {{- with $.ctx.Values.tempo.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -69,12 +103,13 @@ spec:
         - image: {{ include "tempo.imageReference" (dict "ctx" $.ctx "component" "memcached") }}
           imagePullPolicy: {{ $.ctx.Values.memcached.image.pullPolicy }}
           name: memcached
-          {{- if or $.ctx.Values.global.extraArgs $.memcachedConfig.extraArgs }}
+          {{- $sizingArgs := include "tempo.memcached.sizingArgs" $.memcachedConfig }}
+          {{- if or $sizingArgs $.memcachedConfig.extraArgs }}
           args:
-            {{- with $.memcachedConfig.extraArgs }}
-            {{- toYaml . | nindent 12 }}
+            {{- with $sizingArgs }}
+            {{- . | nindent 12 }}
             {{- end }}
-            {{- with $.ctx.Values.global.extraArgs }}
+            {{- with $.memcachedConfig.extraArgs }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
@@ -112,7 +147,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
-            {{- toYaml $.memcachedConfig.resources | nindent 12 }}
+            {{- include "tempo.memcached.resources" $.memcachedConfig | nindent 12 }}
           {{- with $.ctx.Values.tempo.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
@@ -174,11 +209,11 @@ spec:
 {{- end -}}
 
 {{/*
-Render a Service for a per-role memcached cluster.
+Render a memcached Service, for the shared cluster or a per-role one.
 Params:
   ctx            = root context ($)
-  memcachedConfig = per-role values section (e.g. .Values.memcachedBloom)
-  component      = K8s component name (e.g. "memcached-bloom")
+  memcachedConfig = values section (e.g. .Values.memcached, .Values.memcachedBloom)
+  component      = K8s component name (e.g. "memcached", "memcached-bloom")
 */}}
 {{- define "tempo.memcached.service" -}}
 {{- if $.memcachedConfig.enabled }}
@@ -212,11 +247,11 @@ spec:
 {{- end -}}
 
 {{/*
-Render a PodDisruptionBudget for a per-role memcached cluster.
+Render a memcached PodDisruptionBudget, for the shared cluster or a per-role one.
 Params:
   ctx            = root context ($)
-  memcachedConfig = per-role values section (e.g. .Values.memcachedBloom)
-  component      = K8s component name (e.g. "memcached-bloom")
+  memcachedConfig = values section (e.g. .Values.memcached, .Values.memcachedBloom)
+  component      = K8s component name (e.g. "memcached", "memcached-bloom")
 */}}
 {{- define "tempo.memcached.pdb" -}}
 {{- if and $.memcachedConfig.enabled (gt (int $.memcachedConfig.replicas) 1) $.memcachedConfig.podDisruptionBudget.enabled }}
@@ -233,5 +268,8 @@ spec:
     matchLabels:
       {{- include "tempo.selectorLabels" $dict | nindent 6 }}
   maxUnavailable: {{ $.memcachedConfig.maxUnavailable }}
+  {{- with $.memcachedConfig.podDisruptionBudget.unhealthyPodEvictionPolicy }}
+  unhealthyPodEvictionPolicy: {{ . }}
+  {{- end }}
 {{- end }}
 {{- end -}}
