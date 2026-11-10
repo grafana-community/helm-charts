@@ -12,6 +12,7 @@ Workload helper
 
 {{- define "loki.component.workload" }}
 {{- $target := .target }}
+{{- $lokiTarget := .lokiTarget }}
 {{- $ctx := .ctx }}
 {{- $component := .component }}
 {{- $name := .name }}
@@ -20,8 +21,9 @@ Workload helper
 {{- $rolloutZoneName := .rolloutZoneName | default "" -}}
 {{- $replicas := .replicas | default $component.replicas -}}
 {{- $memberlist := hasKey . "memberlist" | ternary .memberlist true -}}
+{{- $componentEnabled := kindIs "bool" $component.enabled | ternary $component.enabled true -}}
 {{- with $ctx }}
-{{- if $component.enabled }}
+{{- if $componentEnabled }}
 apiVersion: apps/v1
 kind: {{ $component.kind }}
 metadata:
@@ -33,13 +35,16 @@ metadata:
     {{- if $rolloutZoneName }}
     name: {{ include "loki.prefixIngesterName" . }}ingester-{{ $rolloutZoneName }}
     rollout-group: {{ include "loki.prefixRolloutGroup" . }}ingester
+    {{- with (include "loki.ingester.zoneDownscaleLabels" (dict "ctx" . "rolloutZoneName" $rolloutZoneName)) }}
+    {{- . | nindent 4 }}
+    {{- end }}
     {{- end }}
     {{- with (mergeOverwrite (dict) .Values.defaults.labels $component.labels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   {{- $annotations := (mergeOverwrite (dict) .Values.defaults.annotations .Values.loki.annotations $component.annotations) }}
   {{- if $rolloutZoneName }}
-  {{- $annotations = mergeOverwrite (dict) ($annotations) (dig "zoneAwareReplication" (printf "zone%s" (upper (splitList "-" $rolloutZoneName | last))) "annotations" (dict) $component)}}
+  {{- $annotations = mergeOverwrite (include "loki.ingester.zoneDownscaleAnnotations" (dict "ctx" . "rolloutZoneName" $rolloutZoneName) | fromYaml) ($annotations) (dig "zoneAwareReplication" (printf "zone%s" (upper (splitList "-" $rolloutZoneName | last))) "annotations" (dict) $component)}}
   {{- if (not (hasKey $annotations "rollout-max-unavailable")) }}
   {{- $_ := set $annotations "rollout-max-unavailable" (include "loki.ingester.maxUnavailable" (dict "ctx" . "replicas" $replicas)) }}
   {{- end }}
@@ -82,7 +87,7 @@ spec:
       rollout-group: {{ include "loki.prefixRolloutGroup" . }}ingester
       {{- end }}
   template:
-    {{- include "loki.podTemplate" (dict "target" $target "component" $component "ctx" $ctx "memberlist" $memberlist "args" $args "rolloutZoneName" $rolloutZoneName) | nindent 4 }}
+    {{- include "loki.podTemplate" (dict "target" $target "lokiTarget" $lokiTarget "component" $component "ctx" $ctx "memberlist" $memberlist "args" $args "rolloutZoneName" $rolloutZoneName) | nindent 4 }}
   {{- if and (or (dig "persistence" "volumeClaimsEnabled" false $component) (dig "persistence" "enabled" false $component)) (eq (dig "persistence" "type" "pvc" $component) "pvc") }}
     {{- if and (eq $component.kind "Deployment") (gt (int $component.replicas) 1) }}
       {{- fail "Persistence with PVC is not supported for Deployment with more than 1 replica. Please use StatefulSet or set replicas to 1." }}
@@ -168,7 +173,8 @@ spec:
 {{- $name := .name }}
 {{- $headlessName := .headlessName }}
 {{- $memberlist := hasKey . "memberlist" | ternary .memberlist true -}}
-{{- if and $component.enabled $component.statefulSetRecreateJob.enabled -}}
+{{- $componentEnabled := kindIs "bool" $component.enabled | ternary $component.enabled true -}}
+{{- if and $componentEnabled (dig "statefulSetRecreateJob" "enabled" false $component) -}}
 {{- $newStatefulSet := include "loki.component.workload" . | fromYaml -}}
 {{- with $ctx }}
   {{- $currentStatefulset := dict -}}

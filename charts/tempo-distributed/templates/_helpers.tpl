@@ -224,27 +224,32 @@ auto-generates cache.caches. Each enabled per-role section gets its own entry;
 roles without a dedicated instance fall back to the shared cluster. When the
 shared cluster is disabled, they fall back to the entries in .Values.cache
 instead, skipping any entry that points at the undeployed shared host.
+parquet-page is opt-in: it is cached only by its own section and never falls
+back to the shared cluster.
 When nothing is enabled, outputs the user-defined cache block from values.yaml
 verbatim, which is how an externally managed cache is configured.
 */}}
 {{- define "tempo.cacheConfig" -}}
 {{- $fullname := include "tempo.fullname" . -}}
 {{- $roles := list "parquet-footer" "bloom" "frontend-search" -}}
+{{- $perRoleRoles := append $roles "parquet-page" -}}
 {{- $perRoleMap := dict
     "parquet-footer"  (dict "section" "memcachedParquetFooter"  "component" "memcached-parquet-footer")
     "bloom"           (dict "section" "memcachedBloom"          "component" "memcached-bloom")
-    "frontend-search" (dict "section" "memcachedFrontendSearch" "component" "memcached-frontend-search") -}}
+    "frontend-search" (dict "section" "memcachedFrontendSearch" "component" "memcached-frontend-search")
+    "parquet-page"    (dict "section" "memcachedParquetPage"    "component" "memcached-parquet-page") -}}
 {{- $sharedRoles := list -}}
-{{- $anyPerRole := false -}}
-{{- range $role := $roles -}}
+{{- $dedicatedRoles := list -}}
+{{- range $role := $perRoleRoles -}}
   {{- $mapping := get $perRoleMap $role -}}
   {{- $vals := index $.Values (get $mapping "section") -}}
   {{- if and $vals (index $vals "enabled") -}}
-    {{- $anyPerRole = true -}}
-  {{- else -}}
+    {{- $dedicatedRoles = append $dedicatedRoles $role -}}
+  {{- else if has $role $roles -}}
     {{- $sharedRoles = append $sharedRoles $role -}}
   {{- end -}}
 {{- end -}}
+{{- $anyPerRole := gt (len $dedicatedRoles) 0 -}}
 {{- if or .Values.memcached.enabled $anyPerRole -}}
 caches:
 {{- if not .Values.memcached.enabled -}}
@@ -253,7 +258,7 @@ caches:
   {{- if ne (tpl (toString (dig "memcached" "host" "" $entry)) $) $sharedHost -}}
     {{- $keep := list -}}
     {{- range $r := (get $entry "roles" | default list) -}}
-      {{- if or (has $r $sharedRoles) (not (has $r $roles)) -}}
+      {{- if not (has $r $dedicatedRoles) -}}
         {{- $keep = append $keep $r -}}
       {{- end -}}
     {{- end -}}
@@ -269,12 +274,15 @@ caches:
       service: memcached-client
       consistent_hash: {{ .Values.memcached.consistentHash }}
       timeout: {{ .Values.memcached.timeout }}
+      {{- with .Values.memcached.maxItemMemory }}
+      max_item_size: {{ mul (int .) 1024 1024 }}
+      {{- end }}
     roles:
     {{- range $sharedRoles }}
       - {{ . }}
     {{- end }}
 {{- end }}
-{{- range $role := $roles -}}
+{{- range $role := $dedicatedRoles -}}
   {{- $mapping := get $perRoleMap $role -}}
   {{- $sectionName := get $mapping "section" -}}
   {{- $component   := get $mapping "component" -}}
@@ -285,6 +293,9 @@ caches:
       service: memcached-client
       consistent_hash: {{ index $vals "consistentHash" }}
       timeout: {{ index $vals "timeout" }}
+      {{- with index $vals "maxItemMemory" }}
+      max_item_size: {{ mul (int .) 1024 1024 }}
+      {{- end }}
     roles:
       - {{ $role }}
   {{- end -}}
@@ -366,10 +377,8 @@ Expects the component name in .component on the passed context
 POD labels
 */}}
 {{- define "tempo.podLabels" -}}
-helm.sh/chart: {{ include "tempo.chart" .ctx }}
 app.kubernetes.io/name: {{ include "tempo.name" .ctx }}
 app.kubernetes.io/instance: {{ .ctx.Release.Name }}
-app.kubernetes.io/version: {{ .ctx.Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .ctx.Release.Service }}
 {{- if .component }}
 app.kubernetes.io/component: {{ .component }}
@@ -490,17 +499,19 @@ env:
   {{- if $renderedStatefulSets }}
     {{- range $newStatefulSet := $renderedStatefulSets -}}
       {{- $currentStatefulset := dict -}}
-      {{- if $newStatefulSet.spec.volumeClaimTemplates }}
+      {{- $newVolumeClaimTemplates := dig "spec" "volumeClaimTemplates" (list) $newStatefulSet -}}
+      {{- if $newVolumeClaimTemplates }}
         {{- $currentStatefulset = lookup $newStatefulSet.apiVersion $newStatefulSet.kind $newStatefulSet.metadata.namespace $newStatefulSet.metadata.name -}}
         {{- $needsRecreation := false -}}
         {{- $templates := dict -}}
         {{- if $currentStatefulset -}}
-          {{- if ne (len $newStatefulSet.spec.volumeClaimTemplates) (len $currentStatefulset.spec.volumeClaimTemplates) -}}
+          {{- $currentVolumeClaimTemplates := dig "spec" "volumeClaimTemplates" (list) $currentStatefulset -}}
+          {{- if ne (len $newVolumeClaimTemplates) (len $currentVolumeClaimTemplates) -}}
             {{- $needsRecreation = true -}}
           {{- end -}}
-          {{- range $index, $newVolumeClaimTemplate := $newStatefulSet.spec.volumeClaimTemplates -}}
+          {{- range $index, $newVolumeClaimTemplate := $newVolumeClaimTemplates -}}
             {{- $currentVolumeClaimTemplateSpec := dict -}}
-              {{- range $oldVolumeClaimTemplate := $currentStatefulset.spec.volumeClaimTemplates -}}
+              {{- range $oldVolumeClaimTemplate := $currentVolumeClaimTemplates -}}
                 {{- if eq $oldVolumeClaimTemplate.metadata.name $newVolumeClaimTemplate.metadata.name -}}
                   {{- $currentVolumeClaimTemplateSpec = $oldVolumeClaimTemplate.spec -}}
                 {{- end -}}
@@ -517,14 +528,22 @@ env:
           {{- end -}}
         {{- end -}}
         {{- if $needsRecreation }}
+        {{- $recreateLabels := include "tempo.labels" (dict "ctx" $.context "component" "statefulset-recreate-job") | fromYaml -}}
+        {{- $recreateJobImage := $.context.Values.defaults.statefulSetRecreateJob.image -}}
+        {{- $kubectlTag := $recreateJobImage.tag | toString -}}
+        {{- if not $recreateJobImage.tag -}}
+          {{- $kubeVersion := semver $.context.Capabilities.KubeVersion.Version -}}
+          {{- $kubectlTag = printf "v%d.%d.%d" $kubeVersion.Major $kubeVersion.Minor $kubeVersion.Patch -}}
+        {{- end -}}
+        {{- $kubectlImage := printf "%s/%s:%s" $recreateJobImage.registry $recreateJobImage.repository $kubectlTag -}}
+        {{- $currentReplicas := int (dig "spec" "replicas" 1 $currentStatefulset) -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ $newStatefulSet.metadata.name }}-recreate
   namespace: {{ $newStatefulSet.metadata.namespace }}
   labels:
-    {{- $newStatefulSet.metadata.labels | toYaml | nindent 4 }}
-    app.kubernetes.io/component: statefulset-recreate-job
+    {{- $recreateLabels | toYaml | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -535,23 +554,30 @@ spec:
     metadata:
       name: {{ $newStatefulSet.metadata.name }}-recreate
       labels:
-        {{- $newStatefulSet.metadata.labels | toYaml | nindent 8 }}
+        {{- $recreateLabels | toYaml | nindent 8 }}
     spec:
       serviceAccountName: {{ $newStatefulSet.metadata.name }}-recreate
       restartPolicy: OnFailure
+      {{- with $.context.Values.global.image.pullSecrets }}
+      imagePullSecrets:
+        {{- range . }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
       containers:
         - name: recreate
-          image: {{ printf "%s/kubectl:%s" (coalesce $.context.Values.global.image.registry "registry.k8s.io") $.context.Capabilities.KubeVersion.Version }}
+          image: {{ $kubectlImage }}
           command:
             - kubectl
             - delete
             - statefulset
             - {{ $newStatefulSet.metadata.name }}
             - --cascade=orphan
-        {{- range $index := until (int $currentStatefulset.spec.replicas) }}
+            - --ignore-not-found
+        {{- range $index := until $currentReplicas }}
           {{- range $template, $size := $templates }}
         - name: patch-pvc-{{ $template }}-{{ $index }}
-          image: {{ printf "%s/kubectl:%s" (coalesce $.context.Values.global.image.registry "registry.k8s.io") $.context.Capabilities.KubeVersion.Version }}
+          image: {{ $kubectlImage }}
           command:
             - kubectl
             - patch
@@ -569,8 +595,7 @@ metadata:
   name: {{ $newStatefulSet.metadata.name }}-recreate
   namespace: {{ $newStatefulSet.metadata.namespace }}
   labels:
-    {{- $newStatefulSet.metadata.labels | toYaml | nindent 4 }}
-    app.kubernetes.io/component: statefulset-recreate-job
+    {{- $recreateLabels | toYaml | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"
@@ -582,8 +607,7 @@ metadata:
   name: {{ $newStatefulSet.metadata.name }}-recreate
   namespace: {{ $newStatefulSet.metadata.namespace }}
   labels:
-    {{- $newStatefulSet.metadata.labels | toYaml | nindent 4 }}
-    app.kubernetes.io/component: statefulset-recreate-job
+    {{- $recreateLabels | toYaml | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"
@@ -603,7 +627,7 @@ rules:
     resources:
       - persistentvolumeclaims
     resourceNames:
-    {{- range $index := until (int $currentStatefulset.spec.replicas) }}
+    {{- range $index := until $currentReplicas }}
       {{- range $template := $templates | keys }}
       - {{ printf "%s-%s-%d" $template $newStatefulSet.metadata.name $index }}
       {{- end }}
@@ -619,8 +643,7 @@ metadata:
   name: {{ $newStatefulSet.metadata.name }}-recreate
   namespace: {{ $newStatefulSet.metadata.namespace }}
   labels:
-    {{- $newStatefulSet.metadata.labels | toYaml | nindent 4 }}
-    app.kubernetes.io/component: statefulset-recreate-job
+    {{- $recreateLabels | toYaml | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-10"

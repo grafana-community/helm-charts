@@ -701,6 +701,34 @@ tests:
                 name: kafka-credentials
                 key: kafka-pass
 
+  - it: injects only password from existingSecret when username is set in values
+    template: distributor/deployment-distributor.yaml
+    set:
+      ingest.kafka.address: kafka.kafka-ci.svc.cluster.local:9092
+      ingest.kafka.sasl.mechanism: SCRAM-SHA-512
+      ingest.kafka.sasl.username: my-strimzi-user
+      ingest.kafka.sasl.existingSecret: kafka-credentials
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_USERNAME
+          any: true
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPO_KAFKA_SASL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: kafka-credentials
+                key: password
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-username=$(TEMPO_KAFKA_SASL_USERNAME)"
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)"
+
   - it: passes kafka SASL oauthbearer token from existingSecret as CLI arg
     template: distributor/deployment-distributor.yaml
     set:
@@ -879,3 +907,24 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].args
           content: "-ingest.sasl-password=$(TEMPO_KAFKA_SASL_PASSWORD)"
+
+  - it: defaults to soft node and soft zone anti-affinity
+    template: distributor/deployment-distributor.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].weight
+          value: 100
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].podAffinityTerm.topologyKey
+          value: kubernetes.io/hostname
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].podAffinityTerm.labelSelector.matchLabels["app.kubernetes.io/component"]
+          value: distributor
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[1].weight
+          value: 75
+      - equal:
+          path: spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[1].podAffinityTerm.topologyKey
+          value: topology.kubernetes.io/zone

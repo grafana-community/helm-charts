@@ -28,6 +28,9 @@ write:
 backend:
   replicas: 1
 
+# fixed name so that the ListenerSet below can be referenced from the route
+fullnameOverride: loki
+
 gateway:
   enabled: true
   route:
@@ -44,10 +47,25 @@ gateway:
       parentRefs:
         - name: my-gateway
           namespace: gateway-namespace
+        - group: gateway.networking.k8s.io
+          kind: ListenerSet
+          name: loki
       matches:
         - path:
             type: PathPrefix
             value: /
+
+listenerSet:
+  main:
+    enabled: true
+    parentRef:
+      name: my-gateway
+      namespace: gateway-namespace
+    listeners:
+      - name: http
+        hostname: listenerset.loki.example.com
+        port: 80
+        protocol: HTTP
 
 extraObjects:
   - apiVersion: v1

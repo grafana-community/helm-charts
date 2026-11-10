@@ -37,7 +37,7 @@ global:
   # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached, metrics-generator, querier, query-frontend, tokengen
   extraEnvFrom: []
   # -- Common args to add to all pods directly managed by this chart.
-  # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, memcached, metrics-generator, querier, query-frontend, tokengen
+  # scope: admin-api, compactor, distributor, enterprise-federation-frontend, gateway, ingester, metrics-generator, querier, query-frontend, tokengen
   extraArgs: []
   # -- Global storage class to be used for persisted components
   storageClass: null
@@ -194,6 +194,14 @@ defaults:
     timeoutSeconds: 1
   # -- Default startup probe for all Tempo binary pods. Disabled by default. Merged like `defaults.livenessProbe`.
   startupProbe: {}
+  statefulSetRecreateJob:
+    image:
+      # -- Registry for the StatefulSet recreate hook Job image. `global.image.registry` does not apply to this image.
+      registry: registry.k8s.io
+      # -- Repository for the StatefulSet recreate hook Job image
+      repository: kubectl
+      # -- Image tag for the StatefulSet recreate hook Job. Defaults to the cluster version as `vMAJOR.MINOR.PATCH`, with vendor suffixes such as `-eks-...` removed
+      tag: null
 
 serviceAccount:
   # -- Specifies whether a ServiceAccount should be created
@@ -495,16 +503,17 @@ distributor:
         matchLabels:
           {{- include "tempo.selectorLabels" (dict "ctx" . "component" "distributor") | nindent 6 }}
   # -- Affinity for distributor pods. Passed through `tpl` and, thus, to be configured as string
-  # @default -- Hard node and soft zone anti-affinity
+  # @default -- Soft node and soft zone anti-affinity
   affinity: |
     podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "distributor") | nindent 10 }}
-          topologyKey: kubernetes.io/hostname
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "distributor") | nindent 12 }}
+            topologyKey: kubernetes.io/hostname
+        - weight: 75
           podAffinityTerm:
             labelSelector:
               matchLabels:
@@ -957,22 +966,22 @@ ingest:
       # -- SASL mechanism. Must be one of PLAIN, SCRAM-SHA-256, SCRAM-SHA-512,
       # OAUTHBEARER, AWS_MSK_IAM. Empty defaults to PLAIN.
       mechanism: ""
-      # -- Username for PLAIN and SCRAM-SHA-* mechanisms. Ignored if
-      # `existingSecret` is set. Prefer `existingSecret` in production so the
-      # value is never inlined into tempo.yaml.
+      # -- Username for PLAIN and SCRAM-SHA-* mechanisms. Can be combined with
+      # `existingSecret` when only the password is stored in the Secret (e.g.
+      # Strimzi KafkaUser Secrets); `usernameKey` is then ignored.
       username: ""
-      # -- Password for PLAIN and SCRAM-SHA-* mechanisms. Ignored if
-      # `existingSecret` is set. Prefer `existingSecret` in production so the
+      # -- Password for PLAIN and SCRAM-SHA-* mechanisms. Mutually exclusive
+      # with `existingSecret`. Prefer `existingSecret` in production so the
       # value is never inlined into tempo.yaml.
       password: ""
-      # -- Name of an existing Secret containing `usernameKey`/`passwordKey`.
-      # When set, `username`/`password` above are ignored and the credentials
-      # are injected as env vars and passed to tempo as
-      # `-ingest.sasl-username`/`-ingest.sasl-password` CLI flags instead of
-      # being inlined into tempo.yaml. Recommended over setting
-      # `username`/`password` directly.
+      # -- Name of an existing Secret containing `passwordKey` (and `usernameKey`
+      # when `username` is not set above). The credentials are injected as env
+      # vars and passed to tempo as `-ingest.sasl-username`/`-ingest.sasl-password`
+      # CLI flags instead of being inlined into tempo.yaml. Recommended over
+      # setting `password` directly.
       existingSecret: ""
-      # -- Key in `existingSecret` containing the username.
+      # -- Key in `existingSecret` containing the username. Ignored when
+      # `username` is set.
       usernameKey: username
       # -- Key in `existingSecret` containing the password.
       passwordKey: password
@@ -1399,6 +1408,9 @@ liveStore:
     enabled: true
     # -- Set unhealthyPodEvictionPolicy for the live-store PodDisruptionBudget. Requires policy/v1.
     unhealthyPodEvictionPolicy: ""
+    # -- Annotations for the live-store PodDisruptionBudget, or for the
+    # ZoneAwarePodDisruptionBudget when it takes over
+    annotations: {}
   # -- Pod Disruption Budget maxUnavailable. With zone-aware replication the
   # budget covers the live-stores of every zone together, because the same pod
   # ordinal in two zones holds every owner of one partition.
@@ -1480,16 +1492,17 @@ querier:
         matchLabels:
           {{- include "tempo.selectorLabels" (dict "ctx" . "component" "querier") | nindent 6 }}
   # -- Affinity for querier pods. Passed through `tpl` and, thus, to be configured as string
-  # @default -- Hard node and soft zone anti-affinity
+  # @default -- Soft node and soft zone anti-affinity
   affinity: |
     podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "querier" "memberlist" true) | nindent 10 }}
-          topologyKey: kubernetes.io/hostname
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "querier" "memberlist" true) | nindent 12 }}
+            topologyKey: kubernetes.io/hostname
+        - weight: 75
           podAffinityTerm:
             labelSelector:
               matchLabels:
@@ -1758,16 +1771,17 @@ queryFrontend:
         matchLabels:
           {{- include "tempo.selectorLabels" (dict "ctx" . "component" "query-frontend") | nindent 6 }}
   # -- Affinity for query-frontend pods. Passed through `tpl` and, thus, to be configured as string
-  # @default -- Hard node and soft zone anti-affinity
+  # @default -- Soft node and soft zone anti-affinity
   affinity: |
     podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "query-frontend") | nindent 10 }}
-          topologyKey: kubernetes.io/hostname
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "query-frontend") | nindent 12 }}
+            topologyKey: kubernetes.io/hostname
+        - weight: 75
           podAffinityTerm:
             labelSelector:
               matchLabels:
@@ -1806,6 +1820,8 @@ queryFrontend:
   appProtocol:
     # -- Set the optional gRPC service protocol. Ex: "grpc", "http2" or "https"
     grpc: null
+    # -- Set the optional HTTP service protocol. Ex: "http2" to let Grafana stream over the HTTP port through a service mesh. Requires streamOverHTTPEnabled: true, Tempo only serves HTTP/2 (h2c) on this port then
+    http: null
   mcp_server:
     # -- Enables Tempo MCP Server
     enabled: false
@@ -1889,16 +1905,17 @@ enterpriseFederationFrontend:
         matchLabels:
           {{- include "tempo.selectorLabels" (dict "ctx" . "component" "federation-frontend") | nindent 6 }}
   # -- Affinity for federation-frontend pods. Passed through `tpl` and, thus, to be configured as string
-  # @default -- Hard node and soft zone anti-affinity
+  # @default -- Soft node and soft zone anti-affinity
   affinity: |
     podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "federation-frontend") | nindent 10 }}
-          topologyKey: kubernetes.io/hostname
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "federation-frontend") | nindent 12 }}
+            topologyKey: kubernetes.io/hostname
+        - weight: 75
           podAffinityTerm:
             labelSelector:
               matchLabels:
@@ -2318,9 +2335,15 @@ config: |
         existingSecret counts as the static credential source.
       */}}
       {{- if or (eq $mechanism "PLAIN") (eq $mechanism "SCRAM-SHA-256") (eq $mechanism "SCRAM-SHA-512") }}
+      {{- if and $sasl.existingSecret $sasl.password }}
+        {{- fail "ingest.kafka.sasl: set either password or existingSecret, not both" }}
+      {{- end }}
       {{- if not $sasl.existingSecret }}
-      {{- if or (and $sasl.username (not $sasl.password)) (and $sasl.password (not $sasl.username)) }}
-        {{- fail "ingest.kafka.sasl: username and password must both be set" }}
+      {{- if and $sasl.username (not $sasl.password) }}
+        {{- fail "ingest.kafka.sasl: username needs password or existingSecret" }}
+      {{- end }}
+      {{- if and $sasl.password (not $sasl.username) }}
+        {{- fail "ingest.kafka.sasl: password needs username" }}
       {{- end }}
       {{- if and (ne $mechanism "PLAIN") (not $sasl.username) }}
         {{- fail (printf "ingest.kafka.sasl.mechanism %s requires credentials: set ingest.kafka.sasl.existingSecret or username/password" $mechanism) }}
@@ -2347,17 +2370,17 @@ config: |
       {{- end }}
       {{- end }}
       {{- /*
-        Credentials are inlined into tempo.yaml only when no existingSecret is
-        configured for the active mechanism; in that case the value ends up in
-        plaintext in the rendered ConfigMap/Secret, so require
-        configStorageType=Secret as a safety net. When existingSecret is set,
-        the credential is injected from the Secret via secretKeyRef on the pod
-        spec and passed to tempo as a CLI flag (see tempo.podTemplate), so
-        nothing is rendered here and configStorageType can remain ConfigMap.
+        Secret credentials (password, oauthbearer.token, mskIam.accessKey/secretKey)
+        are inlined into tempo.yaml only when no existingSecret is configured for
+        the active mechanism; in that case the value ends up in plaintext in the
+        rendered ConfigMap/Secret, so require configStorageType=Secret as a safety
+        net. When existingSecret is set, the secret is injected via secretKeyRef on
+        the pod spec and passed to tempo as a CLI flag (see tempo.podTemplate), so
+        configStorageType can remain ConfigMap (even when sasl.username is set inline).
       */}}
       {{- $inlinesCredential := false }}
       {{- if or (eq $mechanism "PLAIN") (eq $mechanism "SCRAM-SHA-256") (eq $mechanism "SCRAM-SHA-512") }}
-      {{- if and (not $sasl.existingSecret) (or $sasl.username $sasl.password) }}
+      {{- if and (not $sasl.existingSecret) $sasl.password }}
       {{- $inlinesCredential = true }}
       {{- end }}
       {{- else if eq $mechanism "OAUTHBEARER" }}
@@ -2376,10 +2399,10 @@ config: |
       sasl_mechanism: {{ . }}
       {{- end }}
       {{- if or (eq $mechanism "PLAIN") (eq $mechanism "SCRAM-SHA-256") (eq $mechanism "SCRAM-SHA-512") }}
-      {{- if not $sasl.existingSecret }}
       {{- with $sasl.username }}
       sasl_username: {{ . | quote }}
       {{- end }}
+      {{- if not $sasl.existingSecret }}
       {{- with $sasl.password }}
       sasl_password: {{ . | quote }}
       {{- end }}
@@ -2556,7 +2579,8 @@ server:
 # Multiple caches can be created and assigned roles which determine how they are used by Tempo.
 # https://grafana.com/docs/tempo/latest/configuration/#cache
 # When memcached.enabled is true (the default), the cache.caches list is auto-generated from the
-# memcached and per-role memcached sections (memcachedBloom, memcachedParquetFooter, memcachedFrontendSearch).
+# memcached and per-role memcached sections (memcachedBloom, memcachedParquetFooter, memcachedFrontendSearch,
+# memcachedParquetPage).
 # When memcached.enabled is false, this block is passed through verbatim to allow configuring external caches.
 cache:
   caches:
@@ -2657,7 +2681,17 @@ memcached:
   timeout: 500ms
   # -- Enable consistent hashing for cache
   consistentHash: true
-  # -- Additional CLI args for memcached
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). Also sizes `resources` with `deriveResources`. False omits the flag
+  allocatedMemory: 1024
+  # -- Derive `resources` from `allocatedMemory` and `allocatedCPU` when `resources` is empty, as the loki chart does by default
+  deriveResources: false
+  # -- CPU request, in cores or millicores, for derived `resources`. False omits it
+  allocatedCPU: 500m
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
+  maxItemMemory: 5
+  # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
+  connectionLimit: 4096
+  # -- Additional CLI args for memcached. The sizing flags -m, -I and -c are rejected here, use the keys above
   extraArgs: []
   # -- Toleration for memcached pods
   tolerations: []
@@ -2669,7 +2703,7 @@ memcached:
   podLabels: {}
   # -- Annotations for memcached pods
   podAnnotations: {}
-  # -- Resource requests and limits for memcached
+  # -- Resource requests and limits for memcached. When empty and `deriveResources` is true, derived as in the loki chart: memory request and limit of round(1.2 * allocatedMemory)Mi and a CPU request of `allocatedCPU`
   resources: {}
   # -- topologySpread for memcached pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ
@@ -2772,7 +2806,17 @@ memcachedBloom:
   timeout: 500ms
   # -- Enable consistent hashing for bloom cache
   consistentHash: true
-  # -- Additional CLI args for memcached
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). Also sizes `resources` with `deriveResources`. False omits the flag
+  allocatedMemory: 1024
+  # -- Derive `resources` from `allocatedMemory` and `allocatedCPU` when `resources` is empty, as the loki chart does by default
+  deriveResources: false
+  # -- CPU request, in cores or millicores, for derived `resources`. False omits it
+  allocatedCPU: 500m
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
+  maxItemMemory: 5
+  # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
+  connectionLimit: 4096
+  # -- Additional CLI args for memcached. The sizing flags -m, -I and -c are rejected here, use the keys above
   extraArgs: []
   # -- Tolerations for memcached-bloom pods
   tolerations: []
@@ -2784,7 +2828,7 @@ memcachedBloom:
   podLabels: {}
   # -- Annotations for memcached-bloom pods
   podAnnotations: {}
-  # -- Resource requests and limits for memcached-bloom
+  # -- Resource requests and limits for memcached-bloom. When empty and `deriveResources` is true, derived as in the loki chart: memory request and limit of round(1.2 * allocatedMemory)Mi and a CPU request of `allocatedCPU`
   resources: {}
   # -- topologySpread for memcached-bloom pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ
@@ -2815,6 +2859,8 @@ memcachedBloom:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for memcached-bloom
     enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the memcached-bloom PodDisruptionBudget. Requires Kubernetes 1.27+.
+    unhealthyPodEvictionPolicy: ""
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached-bloom pod
@@ -2859,7 +2905,17 @@ memcachedParquetFooter:
   timeout: 500ms
   # -- Enable consistent hashing for parquet-footer cache
   consistentHash: true
-  # -- Additional CLI args for memcached
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). Also sizes `resources` with `deriveResources`. False omits the flag
+  allocatedMemory: 1024
+  # -- Derive `resources` from `allocatedMemory` and `allocatedCPU` when `resources` is empty, as the loki chart does by default
+  deriveResources: false
+  # -- CPU request, in cores or millicores, for derived `resources`. False omits it
+  allocatedCPU: 500m
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
+  maxItemMemory: 5
+  # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
+  connectionLimit: 4096
+  # -- Additional CLI args for memcached. The sizing flags -m, -I and -c are rejected here, use the keys above
   extraArgs: []
   # -- Tolerations for memcached-parquet-footer pods
   tolerations: []
@@ -2871,7 +2927,7 @@ memcachedParquetFooter:
   podLabels: {}
   # -- Annotations for memcached-parquet-footer pods
   podAnnotations: {}
-  # -- Resource requests and limits for memcached-parquet-footer
+  # -- Resource requests and limits for memcached-parquet-footer. When empty and `deriveResources` is true, derived as in the loki chart: memory request and limit of round(1.2 * allocatedMemory)Mi and a CPU request of `allocatedCPU`
   resources: {}
   # -- topologySpread for memcached-parquet-footer pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ
@@ -2902,6 +2958,8 @@ memcachedParquetFooter:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for memcached-parquet-footer
     enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the memcached-parquet-footer PodDisruptionBudget. Requires Kubernetes 1.27+.
+    unhealthyPodEvictionPolicy: ""
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached-parquet-footer pod
@@ -2946,7 +3004,17 @@ memcachedFrontendSearch:
   timeout: 500ms
   # -- Enable consistent hashing for frontend-search cache
   consistentHash: true
-  # -- Additional CLI args for memcached
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). Also sizes `resources` with `deriveResources`. False omits the flag
+  allocatedMemory: 1024
+  # -- Derive `resources` from `allocatedMemory` and `allocatedCPU` when `resources` is empty, as the loki chart does by default
+  deriveResources: false
+  # -- CPU request, in cores or millicores, for derived `resources`. False omits it
+  allocatedCPU: 500m
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
+  maxItemMemory: 5
+  # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
+  connectionLimit: 4096
+  # -- Additional CLI args for memcached. The sizing flags -m, -I and -c are rejected here, use the keys above
   extraArgs: []
   # -- Tolerations for memcached-frontend-search pods
   tolerations: []
@@ -2958,7 +3026,7 @@ memcachedFrontendSearch:
   podLabels: {}
   # -- Annotations for memcached-frontend-search pods
   podAnnotations: {}
-  # -- Resource requests and limits for memcached-frontend-search
+  # -- Resource requests and limits for memcached-frontend-search. When empty and `deriveResources` is true, derived as in the loki chart: memory request and limit of round(1.2 * allocatedMemory)Mi and a CPU request of `allocatedCPU`
   resources: {}
   # -- topologySpread for memcached-frontend-search pods. Passed through `tpl` and, thus, to be configured as string
   # @default -- Defaults to allow skew no more than 1 node per AZ
@@ -2989,6 +3057,8 @@ memcachedFrontendSearch:
   podDisruptionBudget:
     # -- Enable PodDisruptionBudget for memcached-frontend-search
     enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the memcached-frontend-search PodDisruptionBudget. Requires Kubernetes 1.27+.
+    unhealthyPodEvictionPolicy: ""
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
   # -- Init containers for the memcached-frontend-search pod
@@ -3012,6 +3082,109 @@ memcachedFrontendSearch:
     failureThreshold: 6
     successThreshold: 1
   # -- configuration for liveness probe for memcached-frontend-search statefulset
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
+# -- Configuration for a dedicated memcached cluster for the parquet-page cache role.
+# When enabled, parquet-page cache is served by its own memcached StatefulSet.
+# Image is shared with the main `memcached` section.
+# Unlike the other roles, parquet-page never falls back to the shared cluster: pages are only
+# cached when this section is enabled. Tempo caches every backend read up to
+# `storage.trace.search.read_buffer_size_bytes` (1 MiB by default) under this role, so pages
+# are much larger and far more numerous than footers or blooms.
+memcachedParquetPage:
+  # -- Enable a dedicated memcached cluster for the parquet-page cache role
+  enabled: false
+  # -- Annotations for the memcached-parquet-page StatefulSet
+  annotations: {}
+  # -- Number of replicas for the parquet-page memcached StatefulSet
+  replicas: 1
+  # -- Timeout for parquet-page cache operations
+  timeout: 500ms
+  # -- Enable consistent hashing for parquet-page cache
+  consistentHash: true
+  # -- Memory for cached items in MB, passed as `-m` (memcached's own default is 64). Also sizes `resources` with `deriveResources`. False omits the flag
+  allocatedMemory: 1024
+  # -- Derive `resources` from `allocatedMemory` and `allocatedCPU` when `resources` is empty, as the loki chart does by default
+  deriveResources: false
+  # -- CPU request, in cores or millicores, for derived `resources`. False omits it
+  allocatedCPU: 500m
+  # -- Maximum item size in MB, passed as `-I` and as Tempo's `max_item_size` (memcached's own default is 1). A whole number, at most half of allocatedMemory. False omits both
+  maxItemMemory: 5
+  # -- Maximum simultaneous connections, passed as `-c` (memcached's own default is 1024). False omits the flag
+  connectionLimit: 4096
+  # -- Additional CLI args for memcached. The sizing flags -m, -I and -c are rejected here, use the keys above
+  extraArgs: []
+  # -- Tolerations for memcached-parquet-page pods
+  tolerations: []
+  # -- Environment variables to add to memcached-parquet-page pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to memcached-parquet-page pods
+  extraEnvFrom: []
+  # -- Labels for memcached-parquet-page pods
+  podLabels: {}
+  # -- Annotations for memcached-parquet-page pods
+  podAnnotations: {}
+  # -- Resource requests and limits for memcached-parquet-page. When empty and `deriveResources` is true, derived as in the loki chart: memory request and limit of round(1.2 * allocatedMemory)Mi and a CPU request of `allocatedCPU`
+  resources: {}
+  # -- topologySpread for memcached-parquet-page pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more than 1 node per AZ
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-parquet-page") | nindent 6 }}
+  # -- Affinity for memcached-parquet-page pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Hard node and soft zone anti-affinity
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-parquet-page") | nindent 10 }}
+          topologyKey: kubernetes.io/hostname
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "memcached-parquet-page") | nindent 12 }}
+            topologyKey: topology.kubernetes.io/zone
+  # -- Pod Disruption Budget configuration
+  podDisruptionBudget:
+    # -- Enable PodDisruptionBudget for memcached-parquet-page
+    enabled: true
+    # -- Set unhealthyPodEvictionPolicy for the memcached-parquet-page PodDisruptionBudget. Requires Kubernetes 1.27+.
+    unhealthyPodEvictionPolicy: ""
+  # -- Pod Disruption Budget maxUnavailable
+  maxUnavailable: 1
+  # -- Init containers for the memcached-parquet-page pod
+  initContainers: []
+  # -- Containers to add to the memcached-parquet-page pods
+  extraContainers: []
+  # -- Extra volume mounts for memcached-parquet-page pods
+  extraVolumeMounts: []
+  # -- Extra volumes for memcached-parquet-page StatefulSet
+  extraVolumes: []
+  service:
+    # -- Annotations for memcached-parquet-page service
+    annotations: {}
+  # -- configuration for readiness probe for memcached-parquet-page statefulset
+  readinessProbe:
+    tcpSocket:
+      port: client
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 6
+    successThreshold: 1
+  # -- configuration for liveness probe for memcached-parquet-page statefulset
   livenessProbe:
     initialDelaySeconds: 30
     periodSeconds: 10
@@ -3222,16 +3395,17 @@ gateway:
         matchLabels:
           {{- include "tempo.selectorLabels" (dict "ctx" . "component" "gateway") | nindent 6 }}
   # -- Affinity for gateway pods. Passed through `tpl` and, thus, to be configured as string
-  # @default -- Hard node and soft zone anti-affinity
+  # @default -- Soft node and soft zone anti-affinity
   affinity: |
     podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              {{- include "tempo.selectorLabels" (dict "ctx" . "component" "gateway") | nindent 10 }}
-          topologyKey: kubernetes.io/hostname
       preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                {{- include "tempo.selectorLabels" (dict "ctx" . "component" "gateway") | nindent 12 }}
+            topologyKey: kubernetes.io/hostname
+        - weight: 75
           podAffinityTerm:
             labelSelector:
               matchLabels:
