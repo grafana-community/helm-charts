@@ -591,6 +591,16 @@ persistence:
     ##
     # sizeLimit: 300Mi
 
+  ## If persistence is disabled, the storage volume is an emptyDir.
+  ## All keys set here are passed to the emptyDir volume, for example
+  ## sizeLimit or medium. Ignored when inMemory.enabled is true.
+  ## ref: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
+  ##
+  emptyDir: {}
+  # emptyDir:
+  #   sizeLimit: 1Gi
+  #   medium: Memory
+
   ## If 'lookupVolumeName' is set to true, Helm will attempt to retrieve
   ## the current value of 'spec.volumeName' and incorporate it into the template.
   lookupVolumeName: true
