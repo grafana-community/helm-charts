@@ -32,15 +32,15 @@ global:
   dnsNamespace: "kube-system"
   # -- Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order)
   # (deprecated, use defaults.extraArgs)
-  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
+  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraArgs: []
   # -- Common environment variables to add to all pods directly managed by this chart.
   # (deprecated, use defaults.extraEnv)
-  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
+  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraEnv: []
   # -- Common source of environment injections to add to all pods directly managed by this chart.
   # (deprecated, use defaults.extraEnvFrom)
-  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
+  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   # For example to inject values from a Secret, use:
   # extraEnvFrom:
   #   - secretRef:
@@ -48,11 +48,11 @@ global:
   extraEnvFrom: []
   # -- Common volumes to add to all pods directly managed by this chart.
   # (deprecated, use defaults.extraVolumes)
-  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
+  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraVolumes: []
   # -- Common mount points to add to all pods directly managed by this chart.
   # (deprecated, use defaults.extraVolumeMounts)
-  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
+  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraVolumeMounts: []
 # -- Overrides the chart's name
 nameOverride: ""
@@ -6096,6 +6096,245 @@ patternIngester:
         annotations: {}
         # @schema additionalProperties:{"type":"string"}
         # -- Labels for pattern ingester PVCs
+        labels: {}
+        # - name: wal
+        #   size: 150Gi
+    # -- Enable StatefulSetAutoDeletePVC feature
+    enableStatefulSetAutoDeletePVC: false
+    whenDeleted: Retain
+    whenScaled: Retain
+  serviceAccount:
+    # -- Specifies whether a ServiceAccount should be created
+    create: false
+    # @schema type:[string, null]
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: null
+    # @schema item:object;itemProperties:{"name": {"type": "string"}}
+    # -- Image pull secrets for the service account
+    imagePullSecrets: []
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for the service account
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for the service account
+    labels: {}
+    # -- Set this toggle to false to opt out of automounting API credentials for the service account
+    automountServiceAccountToken: true
+
+# -- Configuration for the dataobj builder. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`) and Kafka-based ingestion.
+# The dataobj builder consumes log records from Kafka and builds, uploads and indexes data objects (columnar storage).
+# Configure it through `loki.structuredConfig` (`kafka_config`, `dataobj`).
+dataobjBuilder:
+  # -- Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image:
+  # the chart fails to render if `dataobjBuilder.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.
+  enabled: false
+  # -- Kind of dataobj builder workload. Use a StatefulSet: by default each builder derives the Kafka partition it consumes
+  # from the ordinal suffix of its hostname (`dataobj.builder.partition_id`).
+  kind: StatefulSet
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the dataobj builder StatefulSet when its configuration is changed.
+  ## Only applicable if `dataobjBuilder.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
+  # @schema type:[integer, null]
+  # -- Number of replicas for the dataobj builder. Each replica consumes one Kafka partition, so this must equal the
+  # partition count of the topic the builders consume (see the `loki_dataobj_builder_required_replicas` metric). Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
+  replicas: 0
+  # -- Pod management policy for the dataobj builder StatefulSet. Builders are independent of each other, so they can start in parallel.
+  podManagementPolicy: Parallel
+  # @schema skipProperties:true;additionalProperties:true
+  # -- UpdateStrategy or Strategy for the dataobj builder.
+  strategy:
+    rollingUpdate:
+      partition: 0
+  # @schema additionalProperties:true
+  # -- DNSConfig for dataobj builder pods
+  dnsConfig: {}
+  # -- hostAliases to add
+  hostAliases: []
+  # @schema type:[boolean, null]
+  #  - ip: 1.2.3.4
+  #    hostnames:
+  #      - domain.tld
+  # -- Use the host's user namespace in the dataobj builder
+  hostUsers: null
+  image:
+    # @schema type:[string, null]
+    # -- The Docker registry for the dataobj builder image. Overrides `loki.image.registry`
+    registry: null
+    # @schema type:[string, null]
+    # -- Docker image repository for the dataobj builder image. Overrides `loki.image.repository`
+    repository: null
+    # @schema type:[string, null]
+    # -- Docker image tag for the dataobj builder image. Overrides `loki.image.tag`
+    tag: null
+  # @schema type:[string, null]
+  # -- Command to execute instead of defined in Docker image
+  command: null
+  # @schema type:[string, null]
+  # -- The name of the PriorityClass for dataobj builder pods
+  priorityClassName: null
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for dataobj builder
+  labels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for dataobj builder
+  annotations: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for dataobj builder pods
+  podLabels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for dataobj builder pods
+  podAnnotations: {}
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
+  # -- Affinity for dataobj builder pods.
+  # @default -- Hard node anti-affinity
+  # The value will be passed through tpl.
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: dataobj-builder
+              app.kubernetes.io/name: '{{ include "loki.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+          topologyKey: kubernetes.io/hostname
+  # -- Additional CLI args for the dataobj builder
+  extraArgs: []
+  # -- Environment variables to add to the dataobj builder pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to the dataobj builder pods
+  extraEnvFrom: []
+  # -- Volume mounts to add to the dataobj builder pods
+  extraVolumeMounts: []
+  # -- Volumes to add to the dataobj builder pods
+  extraVolumes: []
+  # @schema skipProperties:true;additionalProperties:true
+  # -- readiness probe settings for dataobj builder pods. If empty, use `loki.readinessProbe`
+  readinessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- liveness probe settings for dataobj builder pods. If empty use `loki.livenessProbe`
+  livenessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- startup probe settings for dataobj builder pods. If empty use `loki.startupProbe`
+  startupProbe: {}
+  # @schema additionalProperties:true
+  # -- Resource requests and limits for the dataobj builder
+  resources: {}
+  # -- Container resize policy for the dataobj builder
+  # Example:
+  # resizePolicy:
+  #   - resourceName: cpu
+  #     restartPolicy: NotRequired
+  #   - resourceName: memory
+  #     restartPolicy: RestartContainer
+  resizePolicy: []
+  # @schema type:[string, array, null]
+  # -- Containers to add to the dataobj builder pods
+  extraContainers: []
+  # @schema type:[string, array, null]
+  # -- Init containers to add to the dataobj builder pods
+  initContainers: []
+  # -- Grace period to allow the dataobj builder to shutdown before it is killed. The builder flushes the object it is building on shutdown.
+  terminationGracePeriodSeconds: 300
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget minAvailable
+    minAvailable: null
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget maxUnavailable
+    maxUnavailable: null
+    # @schema type:[string, null]
+    # -- Pod Disruption Budget unhealthyPodEvictionPolicy
+    unhealthyPodEvictionPolicy: null
+  # @schema additionalProperties:true
+  # -- Node selector for dataobj builder pods
+  nodeSelector: {}
+  # @schema item:object
+  # -- Topology Spread Constraints for dataobj builder pods
+  # The value will be passed through tpl.
+  topologySpreadConstraints: []
+  tolerations: []
+  service:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for dataobj builder Service
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Additional labels for dataobj builder Service
+    labels: {}
+    # -- Service Type for dataobj builder Service
+    type: "ClusterIP"
+    # -- trafficDistribution for dataobj builder Service
+    trafficDistribution: ""
+    # -- Session affinity for dataobj builder Service
+    sessionAffinity: ""
+    # @schema additionalProperties:true
+    # -- Session affinity config for dataobj builder Service
+    sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for dataobj builder Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for dataobj builder Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
+    # -- Adds the appProtocol field to the dataobj builder service. This allows dataobj builder to work with istio protocol selection.
+    appProtocol:
+    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
+    headlessService:
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional annotations for headless dataobj builder Service
+      annotations: {}
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional labels for headless dataobj builder Service
+      labels: {}
+  persistence:
+    # -- Enable creating PVCs for the dataobj builder. Builders keep no state besides scratch data, an emptyDir is used when disabled.
+    enabled: false
+    # -- Size of persistent disk
+    size: 10Gi
+    # @schema type:[string, null]
+    # -- Storage class to be used.
+    # If defined, storageClassName: <storageClass>.
+    # If set to "-", storageClassName: "", which disables dynamic provisioning.
+    # If empty or set to null, no storageClassName spec is
+    # set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).
+    storageClass: null
+    # -- List of the dataobj builder PVCs
+    # @notationType -- list
+    claims:
+      - name: data
+        # -- Set access modes on the PersistentVolumeClaim
+        accessModes:
+          - ReadWriteOnce
+        size: 10Gi
+        # @schema type:[string, null]
+        #   -- Storage class to be used.
+        #   If defined, storageClassName: <storageClass>.
+        #   If set to "-", storageClassName: "", which disables dynamic provisioning.
+        #   If empty or set to null, no storageClassName spec is
+        #   set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).
+        storageClass: null
+        # @schema type:[string, null]
+        # -- Volume attributes class name to be used.
+        # If empty or set to null, no volumeAttributesClassName spec is set.
+        # Requires Kubernetes 1.31
+        volumeAttributesClassName: null
+        # @schema additionalProperties:{"type":"string"}
+        # -- Annotations for dataobj builder PVCs
+        annotations: {}
+        # @schema additionalProperties:{"type":"string"}
+        # -- Labels for dataobj builder PVCs
         labels: {}
         # - name: wal
         #   size: 150Gi
