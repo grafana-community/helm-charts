@@ -964,6 +964,9 @@
                 },
                 "type": {
                     "type": "string"
+                },
+                "useNumericTargetPort": {
+                    "type": "boolean"
                 }
             }
         },
