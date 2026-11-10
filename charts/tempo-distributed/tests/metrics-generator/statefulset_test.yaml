@@ -24,6 +24,27 @@ tests:
           path: kind
           value: StatefulSet
 
+  - it: revisionHistoryLimit defaults to tempo.revisionHistoryLimit
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 10
+
+  - it: revisionHistoryLimit follows tempo.revisionHistoryLimit
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+      tempo.revisionHistoryLimit: 3
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 3
+
   - it: selector labels are stable (immutable field)
     template: metrics-generator/statefulset-metrics-generator.yaml
     set:
