@@ -112,40 +112,6 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ---
 
-## Data objects (experimental, Loki 4.0+)
-
-Loki 4.0 adds the `dataobj-builder` target. It consumes log records from Kafka and builds, uploads and indexes data objects, the columnar storage format the querier can read instead of chunks.
-The chart can deploy it in `Distributed` mode with `dataobjBuilder.enabled=true`. It is disabled by default and needs:
-
-- A Loki 4.0 or later image (`loki.image.tag` or `dataobjBuilder.image.tag`). The target does not exist in Loki 3.x, so the chart refuses to render the component when the image tag is a semantic version below 4.0.0. Tags that are not semantic versions are not checked.
-- [Kafka-based ingestion](https://grafana.com/docs/loki/latest/operations/kafka/): the distributor must write to Kafka (`distributor.kafka_writes_enabled`).
-- `dataobjBuilder.replicas` equal to the partition count of the topic the builders consume. Each builder consumes the partition matching the ordinal of its pod name, which is why the component is a StatefulSet.
-
-```yaml
-loki:
-  image:
-    tag: 4.0.0
-  structuredConfig:
-    kafka_config:
-      topic: loki-logs
-      reader_config:
-        address: kafka:9092
-      writer_config:
-        address: kafka:9092
-    distributor:
-      kafka_writes_enabled: true
-    dataobj:
-      enabled: true
-      builder:
-        topic: loki-logs
-
-dataobjBuilder:
-  enabled: true
-  replicas: 2 # = partitions of loki-logs
-```
-
-Kafka itself, and the ingesters that consume from it, are not managed by this component.
-
 ## StatefulSet immutability
 
 Most StatefulSet spec fields are immutable. Storage class, PVC size, access modes, `podManagementPolicy`, selector, and `serviceName` are install-time unless the recreate job below covers the change.
@@ -156,7 +122,7 @@ Most StatefulSet spec fields are immutable. Storage class, PVC size, access mode
 | --- | --- |
 | Monolithic (`singleBinary`) | `singleBinary` when `singleBinary.kind=StatefulSet` (the default) |
 | Simple Scalable | `write`, `backend` (and `read` only if `read.kind=StatefulSet`) |
-| Distributed | `ingester`, `indexGateway`, `compactor`, `ruler`, plus `patternIngester` / `dataobjBuilder` / bloom components when enabled and `kind=StatefulSet` |
+| Distributed | `ingester`, `indexGateway`, `compactor`, `ruler`, plus `patternIngester` / bloom components when enabled and `kind=StatefulSet` |
 | Caches | `resultsCache` / `chunksCache` memcached StatefulSets when those caches are enabled |
 
 ### Values that map to immutable StatefulSet fields
