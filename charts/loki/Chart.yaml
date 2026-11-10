@@ -16,7 +16,7 @@ dependencies:
   - name: rollout-operator
     alias: rollout_operator
     repository: oci://ghcr.io/grafana/helm-charts
-    version: 0.53.1
+    version: 0.54.0
     condition: rollout_operator.enabled
 maintainers:
   - name: Michael Timmerman
