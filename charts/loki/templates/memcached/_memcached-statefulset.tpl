@@ -24,6 +24,7 @@ metadata:
 spec:
   podManagementPolicy: {{ .podManagementPolicy }}
   replicas: {{ .replicas }}
+  revisionHistoryLimit: {{ $.ctx.Values.loki.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "loki.selectorLabels" $.ctx | nindent 6 }}
