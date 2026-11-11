@@ -47,6 +47,15 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 A major chart version change (like v1.2.3 -> v2.0.0) indicates that there is an
 incompatible breaking change needing manual actions.
 
+### To 14.4.1
+
+Bumps the default Grafana image (`appVersion`) to `13.3.1`, which fixes the following
+security vulnerabilities: CVE-2026-13721, CVE-2026-14242, CVE-2026-102589,
+CVE-2026-107509, CVE-2026-110992 and CVE-2026-111024. No manual action is required;
+the pods roll to the new image on upgrade. See the
+[Grafana security advisories](https://grafana.com/security/security-advisories/)
+for details.
+
 ### To 14.4.0
 
 Pod templates no longer carry `helm.sh/chart`. The label changed on every chart version
