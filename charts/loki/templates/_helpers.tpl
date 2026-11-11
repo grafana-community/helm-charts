@@ -1156,17 +1156,23 @@ Build the env block for a Loki component, auto-injecting GOMEMLIMIT and GOGC.
 Arguments (passed as a dict):
   extraEnv  - already-concatenated extraEnv list for this component
   resources - the component's resources block (.Values.<component>.resources)
-  factor    - fraction of memory limit for GOMEMLIMIT (default 0.85)
-  gogc      - value for GOGC env var (default 80)
+  factor    - fraction of memory limit for GOMEMLIMIT (default 0.85, 0 disables)
+  gogc      - value for GOGC env var (default 80, 0 disables)
 
-When the memory limit is not set, or GOMEMLIMIT is already defined in extraEnv,
-the list is returned unchanged so users retain full control.
+GOMEMLIMIT is not injected when the memory limit is not set, the factor is 0,
+or GOMEMLIMIT is already defined in extraEnv. GOGC is not injected when gogc is
+0 or GOGC is already defined in extraEnv. This lets users retain full control.
+
+The defaults only apply when a value is unset: Sprig's `default` treats 0 as
+empty, so it can't be used here without making 0 impossible to set.
 */}}
 {{- define "loki.componentEnv" -}}
 {{- $envList := .extraEnv | default list -}}
 {{- $resources := .resources | default dict -}}
-{{- $factor := .factor | default 0.85 | float64 -}}
-{{- $gogc := .gogc | default 80 | int -}}
+{{- $factor := 0.85 -}}
+{{- if not (kindIs "invalid" .factor) -}}{{- $factor = .factor | float64 -}}{{- end -}}
+{{- $gogc := 80 -}}
+{{- if not (kindIs "invalid" .gogc) -}}{{- $gogc = .gogc | int -}}{{- end -}}
 {{- $hasGomemlimit := false -}}
 {{- $hasGogc := false -}}
 {{- range $envList -}}
@@ -1174,12 +1180,12 @@ the list is returned unchanged so users retain full control.
   {{- if eq .name "GOGC" -}}{{- $hasGogc = true -}}{{- end -}}
 {{- end -}}
 {{- $memLimit := dig "limits" "memory" "" $resources -}}
-{{- if and (not $hasGomemlimit) $memLimit -}}
+{{- if and (not $hasGomemlimit) $memLimit (gt $factor 0.0) -}}
   {{- $mib := include "loki.memoryToMiB" $memLimit | int -}}
   {{- $goMemMib := mulf ($mib | float64) $factor | int -}}
   {{- $envList = append $envList (dict "name" "GOMEMLIMIT" "value" (printf "%dMiB" $goMemMib)) -}}
 {{- end -}}
-{{- if not $hasGogc -}}
+{{- if and (not $hasGogc) (gt $gogc 0) -}}
   {{- $envList = append $envList (dict "name" "GOGC" "value" ($gogc | toString)) -}}
 {{- end -}}
 env:
