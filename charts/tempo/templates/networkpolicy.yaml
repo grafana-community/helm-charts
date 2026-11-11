@@ -42,7 +42,14 @@ spec:
   {{- if .Values.networkPolicy.ingress }}
   ingress:
     - ports:
+      {{- if .Values.service.targetPort }}
       - port: {{ .Values.service.targetPort }}
+      {{- else }}
+      {{- range concat (include "tempo.udp" . | fromYamlArray) (include "tempo.tcp" . | fromYamlArray) }}
+      - port: {{ .targetPort }}
+        protocol: {{ .protocol | default "TCP" }}
+      {{- end }}
+      {{- end }}
       {{- if not .Values.networkPolicy.allowExternal }}
       from:
         - podSelector:
@@ -51,8 +58,10 @@ spec:
         {{- with .Values.networkPolicy.explicitNamespacesSelector }}
         - namespaceSelector:
             {{- toYaml . | nindent 12 }}
-        {{- end }}
           podSelector:
+        {{- else }}
+        - podSelector:
+        {{- end }}
             matchLabels:
               {{- include "tempo.labels" . | nindent 14 }}
               role: read
