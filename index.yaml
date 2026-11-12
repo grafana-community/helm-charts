@@ -49246,6 +49246,42 @@ entries:
   tempo-distributed:
   - apiVersion: v2
     appVersion: 3.1.1
+    created: "2026-11-12T23:17:09.92431267Z"
+    dependencies:
+    - alias: grafana-agent-operator
+      condition: metaMonitoring.grafanaAgent.installOperator
+      name: grafana-agent-operator
+      repository: https://grafana.github.io/helm-charts
+      version: 0.5.2
+    - alias: rollout_operator
+      condition: rollout_operator.enabled
+      name: rollout-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: 0.54.0
+    description: Grafana Tempo in MicroService mode
+    digest: aba49a03fcd477f302875b08e71bd118b8a5ab7505181d3327e7f9a8c58ab23e
+    home: https://grafana.com/docs/tempo/latest/
+    icon: https://raw.githubusercontent.com/grafana/tempo/main/cmd/tempo/app/static/tempo-icon.png
+    kubeVersion: ^1.25.0-0
+    maintainers:
+    - email: Ilia.lazebnik@gmail.com
+      name: Ilia Lazebnik
+      url: https://github.com/DrFaust92
+    - email: sheikhabubaker761@gmail.com
+      name: Mohammad Abubaker
+      url: https://github.com/Sheikh-Abubaker
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    name: tempo-distributed
+    sources:
+    - https://github.com/grafana/tempo
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/tempo-distributed-3.29.0/tempo-distributed-3.29.0.tgz
+    version: 3.29.0
+  - apiVersion: v2
+    appVersion: 3.1.1
     created: "2026-11-10T21:06:25.246677104Z"
     dependencies:
     - alias: grafana-agent-operator
@@ -66779,4 +66815,4 @@ entries:
     urls:
     - https://github.com/grafana-community/helm-charts/releases/download/tempo-vulture-0.1.0/tempo-vulture-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-11T07:25:23.394934585Z"
+generated: "2026-11-12T23:17:09.927057283Z"
