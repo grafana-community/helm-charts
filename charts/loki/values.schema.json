@@ -3037,6 +3037,461 @@
                 }
             }
         },
+        "dataobjBuilder": {
+            "description": "Configuration for the dataobj builder. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`) and Kafka-based ingestion. The dataobj builder consumes log records from Kafka and builds, uploads and indexes data objects (columnar storage). Configure it through `loki.structuredConfig` (`kafka_config`, `dataobj`).",
+            "type": "object",
+            "properties": {
+                "affinity": {
+                    "description": "Affinity for dataobj builder pods. The value will be passed through tpl.",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for dataobj builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "command": {
+                    "description": "Command to execute instead of defined in Docker image",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dnsConfig": {
+                    "description": "DNSConfig for dataobj builder pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "enabled": {
+                    "description": "Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image: the chart fails to render if `dataobjBuilder.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.",
+                    "type": "boolean"
+                },
+                "extraArgs": {
+                    "description": "Additional CLI args for the dataobj builder",
+                    "type": "array"
+                },
+                "extraContainers": {
+                    "description": "Containers to add to the dataobj builder pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "extraEnv": {
+                    "description": "Environment variables to add to the dataobj builder pods",
+                    "type": "array"
+                },
+                "extraEnvFrom": {
+                    "description": "Environment variables from secrets or configmaps to add to the dataobj builder pods",
+                    "type": "array"
+                },
+                "extraVolumeMounts": {
+                    "description": "Volume mounts to add to the dataobj builder pods",
+                    "type": "array"
+                },
+                "extraVolumes": {
+                    "description": "Volumes to add to the dataobj builder pods",
+                    "type": "array"
+                },
+                "hostAliases": {
+                    "description": "hostAliases to add",
+                    "type": "array"
+                },
+                "hostUsers": {
+                    "description": "Use the host's user namespace in the dataobj builder",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "registry": {
+                            "description": "The Docker registry for the dataobj builder image. Overrides `loki.image.registry`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "repository": {
+                            "description": "Docker image repository for the dataobj builder image. Overrides `loki.image.repository`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "tag": {
+                            "description": "Docker image tag for the dataobj builder image. Overrides `loki.image.tag`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "initContainers": {
+                    "description": "Init containers to add to the dataobj builder pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "description": "Kind of dataobj builder workload. Use a StatefulSet: by default each builder derives the Kafka partition it consumes from the ordinal suffix of its hostname (`dataobj.builder.partition_id`).",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for dataobj builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "livenessProbe": {
+                    "description": "liveness probe settings for dataobj builder pods. If empty use `loki.livenessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "nodeSelector": {
+                    "description": "Node selector for dataobj builder pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "persistence": {
+                    "type": "object",
+                    "properties": {
+                        "claims": {
+                            "description": "List of the dataobj builder PVCs",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "accessModes": {
+                                        "description": "Set access modes on the PersistentVolumeClaim",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "annotations": {
+                                        "description": "Annotations for dataobj builder PVCs",
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "labels": {
+                                        "description": "Labels for dataobj builder PVCs",
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "size": {
+                                        "type": "string"
+                                    },
+                                    "storageClass": {
+                                        "description": "Storage class to be used. If defined, storageClassName: \u003cstorageClass\u003e. If set to \"-\", storageClassName: \"\", which disables dynamic provisioning. If empty or set to null, no storageClassName spec is set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).",
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "volumeAttributesClassName": {
+                                        "description": "Volume attributes class name to be used. If empty or set to null, no volumeAttributesClassName spec is set. Requires Kubernetes 1.31",
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "enableStatefulSetAutoDeletePVC": {
+                            "description": "Enable StatefulSetAutoDeletePVC feature",
+                            "type": "boolean"
+                        },
+                        "enabled": {
+                            "description": "Enable creating PVCs for the dataobj builder. Builders keep no state besides scratch data, an emptyDir is used when disabled.",
+                            "type": "boolean"
+                        },
+                        "size": {
+                            "description": "Size of persistent disk",
+                            "type": "string"
+                        },
+                        "storageClass": {
+                            "description": "Storage class to be used. If defined, storageClassName: \u003cstorageClass\u003e. If set to \"-\", storageClassName: \"\", which disables dynamic provisioning. If empty or set to null, no storageClassName spec is set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "whenDeleted": {
+                            "type": "string"
+                        },
+                        "whenScaled": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "podAnnotations": {
+                    "description": "Annotations for dataobj builder pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podDisruptionBudget": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "enabled": {
+                            "description": "Enable Pod Disruption Budget",
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "description": "Labels for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "maxUnavailable": {
+                            "description": "Pod Disruption Budget maxUnavailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "minAvailable": {
+                            "description": "Pod Disruption Budget minAvailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "description": "Pod Disruption Budget unhealthyPodEvictionPolicy",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "podLabels": {
+                    "description": "Labels for dataobj builder pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podManagementPolicy": {
+                    "description": "Pod management policy for the dataobj builder StatefulSet. Builders are independent of each other, so they can start in parallel.",
+                    "type": "string"
+                },
+                "priorityClassName": {
+                    "description": "The name of the PriorityClass for dataobj builder pods",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "readinessProbe": {
+                    "description": "readiness probe settings for dataobj builder pods. If empty, use `loki.readinessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "replicas": {
+                    "description": "Number of replicas for the dataobj builder. Each replica consumes one Kafka partition, so this must equal the partition count of the topic the builders consume (see the `loki_dataobj_builder_required_replicas` metric). Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "resizePolicy": {
+                    "description": "Container resize policy for the dataobj builder Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
+                    "type": "array"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the dataobj builder",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for dataobj builder Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the dataobj builder service. This allows dataobj builder to work with istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless dataobj builder Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless dataobj builder Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for dataobj builder Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for dataobj builder Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for dataobj builder Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for dataobj builder Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for dataobj builder Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for dataobj builder Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for dataobj builder Service",
+                            "type": "string"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "automountServiceAccountToken": {
+                            "description": "Set this toggle to false to opt out of automounting API credentials for the service account",
+                            "type": "boolean"
+                        },
+                        "create": {
+                            "description": "Specifies whether a ServiceAccount should be created",
+                            "type": "boolean"
+                        },
+                        "imagePullSecrets": {
+                            "description": "Image pull secrets for the service account",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "labels": {
+                            "description": "Labels for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "name": {
+                            "description": "The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "startupProbe": {
+                    "description": "startup probe settings for dataobj builder pods. If empty use `loki.startupProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "statefulSetRecreateJob": {
+                    "description": "EXPERIMENTAL: Enable creating a Job to recreate the dataobj builder StatefulSet when its configuration is changed. # Only applicable if `dataobjBuilder.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "strategy": {
+                    "description": "UpdateStrategy or Strategy for the dataobj builder.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "terminationGracePeriodSeconds": {
+                    "description": "Grace period to allow the dataobj builder to shutdown before it is killed. The builder flushes the object it is building on shutdown.",
+                    "type": "integer"
+                },
+                "tolerations": {
+                    "type": "array"
+                },
+                "topologySpreadConstraints": {
+                    "description": "Topology Spread Constraints for dataobj builder pods The value will be passed through tpl.",
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
         "defaults": {
             "type": "object",
             "properties": {
@@ -4803,23 +5258,23 @@
                     "type": "string"
                 },
                 "extraArgs": {
-                    "description": "Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order) (deprecated, use defaults.extraArgs) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order) (deprecated, use defaults.extraArgs) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraEnv": {
-                    "description": "Common environment variables to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnv) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common environment variables to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnv) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraEnvFrom": {
-                    "description": "Common source of environment injections to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnvFrom) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write. For example to inject values from a Secret, use: extraEnvFrom: - secretRef: name: mysecret",
+                    "description": "Common source of environment injections to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnvFrom) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write. For example to inject values from a Secret, use: extraEnvFrom: - secretRef: name: mysecret",
                     "type": "array"
                 },
                 "extraVolumeMounts": {
-                    "description": "Common mount points to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumeMounts) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common mount points to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumeMounts) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraVolumes": {
-                    "description": "Common volumes to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumes) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common volumes to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumes) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "image": {
