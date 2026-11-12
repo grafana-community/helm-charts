@@ -6,6 +6,7 @@ chart-dirs:
   - charts
 chart-repos:
   - grafana=https://grafana.github.io/helm-charts
+  - minio=https://charts.min.io/
   - prometheus-community=https://prometheus-community.github.io/helm-charts
 github-groups: true
 helm-extra-args: --timeout 600s
