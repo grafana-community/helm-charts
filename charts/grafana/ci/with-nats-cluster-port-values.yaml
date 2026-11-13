@@ -1,0 +1,9 @@
+networkPolicy:
+  enabled: true
+  natsCluster:
+    enabled: true
+    port: 7322
+
+grafana.ini:
+  nats:
+    cluster_port: 7322

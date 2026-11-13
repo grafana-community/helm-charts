@@ -358,3 +358,15 @@ This function needs to be called with a context object containing the following 
 {{- end -}}
 {{ $data | toYaml | sha256sum }}
 {{- end }}
+
+{{/*
+NATS cluster port the network policy allows. It is set explicitly rather than read from
+grafana.ini, where Grafana can expand it at runtime, which Helm cannot resolve.
+*/}}
+{{- define "grafana.natsClusterPort" -}}
+{{- $port := int .Values.networkPolicy.natsCluster.port -}}
+{{- if or (lt $port 1) (gt $port 65535) -}}
+{{- fail "networkPolicy.natsCluster.port must be a port number between 1 and 65535." -}}
+{{- end -}}
+{{- $port -}}
+{{- end }}
