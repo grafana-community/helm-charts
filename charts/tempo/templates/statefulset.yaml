@@ -70,28 +70,7 @@ spec:
         imagePullPolicy: {{ .Values.tempo.pullPolicy }}
         name: tempo
         ports:
-        - containerPort: 3200
-          name: prom-metrics
-        - containerPort: 6831
-          name: jaeger-thrift-c
-          protocol: UDP
-        - containerPort: 6832
-          name: jaeger-thrift-b
-          protocol: UDP
-        - containerPort: 14268
-          name: jaeger-thrift-h
-        - containerPort: 14250
-          name: jaeger-grpc
-        - containerPort: 9411
-          name: zipkin
-        - containerPort: 55680
-          name: otlp-legacy
-        - containerPort: 4317
-          name: otlp-grpc
-        - containerPort: 55681
-          name: otlp-httplegacy
-        - containerPort: 4318
-          name: otlp-http
+          {{- include "tempo.containerPorts" . | nindent 8 }}
         livenessProbe:
           {{- toYaml .Values.tempo.livenessProbe | nindent 12 }}
         readinessProbe:
