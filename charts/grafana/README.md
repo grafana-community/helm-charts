@@ -723,6 +723,7 @@ grafana.ini:
 ### High Availability with the embedded NATS bus
 
 Grafana 13.4 and later can run an embedded NATS server in each pod so that several replicas sharing one external MySQL or PostgreSQL database notify each other of changes.
+The chart's default image is older than 13.4, so set `image.tag` to 13.4.0 or later: older versions bind the cluster port to loopback only, so the pods can't connect to each other.
 The pods find each other through the database and connect to each other's pod IP on the NATS cluster port (`[nats] cluster_port`, `6222` by default), so no extra Service is needed.
 
 When `networkPolicy.enabled` is true, the NetworkPolicy also lets the Grafana pods of the release reach each other on the cluster port (`networkPolicy.natsCluster.enabled`, on by default), so that only they can connect to it.
@@ -730,6 +731,9 @@ The port follows `[nats] cluster_port` from `grafana.ini`; set `networkPolicy.na
 
 ```yaml
 replicas: 3
+
+image:
+  tag: "13.4.0"
 
 grafana.ini:
   database:
