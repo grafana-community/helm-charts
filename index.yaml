@@ -26298,6 +26298,40 @@ entries:
   loki:
   - apiVersion: v2
     appVersion: 3.7.9
+    created: "2026-11-13T07:16:29.241856745Z"
+    dependencies:
+    - alias: rollout_operator
+      condition: rollout_operator.enabled
+      name: rollout-operator
+      repository: oci://ghcr.io/grafana/helm-charts
+      version: 0.54.0
+    description: Helm chart for Grafana Loki supporting monolithic, simple scalable,
+      and microservices modes.
+    digest: a3ab49e319a4a81377db1b31a128eae9c1cfbea33fb8b4aafa6f4dcff750b1b5
+    home: https://grafana-community.github.io/helm-charts
+    icon: https://grafana.com/docs/loki/latest/logo_and_name.png
+    kubeVersion: '>=1.25.0-0'
+    maintainers:
+    - email: mike1118@live.com
+      name: Michael Timmerman
+      url: https://github.com/TheRealNoob
+    - email: github@jkroepke.de
+      name: Jan-Otto Kröpke
+      url: https://github.com/jkroepke
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    name: loki
+    sources:
+    - https://github.com/grafana/loki
+    - https://grafana.com/oss/loki/
+    - https://grafana.com/docs/loki/latest/
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/loki-21.2.2/loki-21.2.2.tgz
+    version: 21.2.2
+  - apiVersion: v2
+    appVersion: 3.7.9
     created: "2026-11-11T07:25:23.390329411Z"
     dependencies:
     - alias: rollout_operator
@@ -66815,4 +66849,4 @@ entries:
     urls:
     - https://github.com/grafana-community/helm-charts/releases/download/tempo-vulture-0.1.0/tempo-vulture-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-12T23:17:09.927057283Z"
+generated: "2026-11-13T07:16:29.244688288Z"
