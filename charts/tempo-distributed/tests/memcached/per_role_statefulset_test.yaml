@@ -14,6 +14,10 @@ templates:
   - memcached/poddisruptionbudget-memcached-bloom.yaml
   - memcached/poddisruptionbudget-memcached-parquet-footer.yaml
   - memcached/poddisruptionbudget-memcached-frontend-search.yaml
+  - memcached/statefulset-memcached-parquet-page.yaml
+  - memcached/service-memcached-parquet-page.yaml
+  - memcached/servicemonitor-memcached-parquet-page.yaml
+  - memcached/poddisruptionbudget-memcached-parquet-page.yaml
 
 tests:
   - it: no per-role resources rendered when all disabled (default)
@@ -407,3 +411,59 @@ tests:
           path: spec.template.spec.containers[0].resources.limits.memory
           value: 1Gi
         template: memcached/statefulset-memcached-bloom.yaml
+
+  - it: parquet-page StatefulSet rendered with correct name and serviceName when enabled
+    set:
+      memcachedParquetPage.enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-memcached-parquet-page
+        template: memcached/statefulset-memcached-parquet-page.yaml
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-tempo-memcached-parquet-page
+        template: memcached/statefulset-memcached-parquet-page.yaml
+
+  - it: parquet-page Service rendered as headless when enabled
+    set:
+      memcachedParquetPage.enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-memcached-parquet-page
+        template: memcached/service-memcached-parquet-page.yaml
+      - equal:
+          path: spec.clusterIP
+          value: None
+        template: memcached/service-memcached-parquet-page.yaml
+
+  - it: parquet-page ServiceMonitor not rendered when memcached exporter not enabled
+    set:
+      memcachedParquetPage.enabled: true
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: memcached/servicemonitor-memcached-parquet-page.yaml
+
+  - it: parquet-page ServiceMonitor rendered with correct name when enabled
+    set:
+      memcachedParquetPage.enabled: true
+      memcachedExporter.enabled: true
+      metaMonitoring.serviceMonitor.enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tempo-memcached-parquet-page
+        template: memcached/servicemonitor-memcached-parquet-page.yaml
+
+  - it: parquet-page PDB rendered when replicas > 1
+    set:
+      memcachedParquetPage.enabled: true
+      memcachedParquetPage.replicas: 2
+    asserts:
+      - equal:
+          path: kind
+          value: PodDisruptionBudget
+        template: memcached/poddisruptionbudget-memcached-parquet-page.yaml

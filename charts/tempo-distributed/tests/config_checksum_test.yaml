@@ -10,7 +10,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.metadata.annotations["checksum/config"]
-          value: 66dce55aab85e8ffddda2d97b7c60a2d9839f6415febbaf53e0d1115887d5202
+          value: 7d51e3d966d6cb80ab671118a15cd97324ad8b2757fa62f40ced94b4aeb198ab
 
   - it: keeps the same hash when only the chart version changes
     template: distributor/deployment-distributor.yaml
@@ -19,7 +19,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.metadata.annotations["checksum/config"]
-          value: 66dce55aab85e8ffddda2d97b7c60a2d9839f6415febbaf53e0d1115887d5202
+          value: 7d51e3d966d6cb80ab671118a15cd97324ad8b2757fa62f40ced94b4aeb198ab
 
   - it: changes the hash when the config changes
     template: distributor/deployment-distributor.yaml
@@ -28,4 +28,4 @@ tests:
     asserts:
       - notEqual:
           path: spec.template.metadata.annotations["checksum/config"]
-          value: 66dce55aab85e8ffddda2d97b7c60a2d9839f6415febbaf53e0d1115887d5202
+          value: 7d51e3d966d6cb80ab671118a15cd97324ad8b2757fa62f40ced94b4aeb198ab

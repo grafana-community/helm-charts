@@ -27,6 +27,9 @@ tests:
       - notMatchRegex:
           path: data["tempo.yaml"]
           pattern: "memcached-frontend-search"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "parquet-page"
 
   - it: bloom enabled - bloom gets its own cluster, shared handles remaining roles
     set:
@@ -201,3 +204,65 @@ tests:
       - matchRegex:
           path: data["tempo.yaml"]
           pattern: "host: external-memcached.example.svc\n\\s+max_idle_conns: 64\n\\s+service: memcached-client\n\\s+roles:\n\\s+- parquet-footer\n\\s+- frontend-search\n"
+
+  - it: parquet-page enabled - pages get their own cluster, the shared one keeps the other roles
+    set:
+      memcachedParquetPage.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached\n\\s+max_item_size: 5242880\n\\s+service: memcached-client\n\\s+timeout: 500ms\n\\s+roles:\n\\s+- parquet-footer\n\\s+- bloom\n\\s+- frontend-search\n"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached-parquet-page\n\\s+max_item_size: 5242880\n\\s+service: memcached-client\n\\s+timeout: 500ms\n\\s+roles:\n\\s+- parquet-page\n"
+
+  - it: custom timeout respected for parquet-page
+    set:
+      memcachedParquetPage.enabled: true
+      memcachedParquetPage.timeout: 3s
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "timeout: 3s"
+
+  - it: shared disabled, parquet-page enabled - user cache entries drop parquet-page
+    set:
+      memcached.enabled: false
+      memcachedParquetPage.enabled: true
+      cache:
+        caches:
+          - memcached:
+              host: external-memcached.example.svc
+              service: memcached-client
+            roles:
+              - parquet-footer
+              - parquet-page
+              - bloom
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: external-memcached.example.svc\n\\s+service: memcached-client\n\\s+roles:\n\\s+- parquet-footer\n\\s+- bloom\n"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached-parquet-page\n"
+
+  - it: shared disabled, bloom enabled - user cache entries keep parquet-page without its own cluster
+    set:
+      memcached.enabled: false
+      memcachedBloom.enabled: true
+      cache:
+        caches:
+          - memcached:
+              host: external-memcached.example.svc
+              service: memcached-client
+            roles:
+              - parquet-footer
+              - parquet-page
+              - bloom
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: external-memcached.example.svc\n\\s+service: memcached-client\n\\s+roles:\n\\s+- parquet-footer\n\\s+- parquet-page\n"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "memcached-parquet-page"

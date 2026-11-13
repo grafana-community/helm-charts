@@ -402,10 +402,24 @@ chunk_delimiter: {{ . }}
 {{- end -}}
 {{- end -}}
 
+{{/* Return "true" when the ruler evaluates rules through its own ruler-query-frontend, ruler-query-scheduler and ruler-querier */}}
+{{- define "loki.ruler.dedicatedQueryPathEnabled" -}}
+{{- and (eq (include "loki.deployment.isDistributed" .) "true") .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath -}}
+{{- end }}
+
 {{/* Loki ruler config */}}
 {{- define "loki.rulerConfig" }}
+{{- $rulerConfig := dict "storage" (include "loki.rulerStorageConfig" . | fromYaml) -}}
+{{- if eq (include "loki.ruler.dedicatedQueryPathEnabled" .) "true" -}}
+{{- $_ := set $rulerConfig "evaluation" (dict
+  "mode" "remote"
+  "query_frontend" (dict
+    "address" (printf "dns:///%s" (include "loki.rulerQueryFrontendAddress" .))
+  )
+) -}}
+{{- end -}}
 ruler:
-{{- mergeOverwrite (dict "storage" (include "loki.rulerStorageConfig" . | fromYaml)) (.Values.loki.rulerConfig | default dict) | toYaml | nindent 2 }}
+{{- mergeOverwrite $rulerConfig (deepCopy (.Values.loki.rulerConfig | default dict)) | toYaml | nindent 2 }}
 {{- end }}
 
 {{/* Ruler Thanos Storage Config */}}
@@ -1022,6 +1036,16 @@ enableServiceLinks: {{ $ctx.Values.loki.enableServiceLinks }}
 {{- printf "%s" $querierAddress }}
 {{- end }}
 
+{{/* Determine ruler-query-scheduler address */}}
+{{- define "loki.rulerQuerySchedulerAddress" -}}
+{{- printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "ruler-query-scheduler")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
+{{- end }}
+
+{{/* Determine ruler-query-frontend address */}}
+{{- define "loki.rulerQueryFrontendAddress" -}}
+{{- printf "%s-headless.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "ruler-query-frontend")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.grpc_listen_port | toString) -}}
+{{- end }}
+
 {{/* Determine index-gateway address */}}
 {{- define "loki.indexGatewayAddress" -}}
 {{- $idxGatewayAddress := ""}}
@@ -1132,17 +1156,23 @@ Build the env block for a Loki component, auto-injecting GOMEMLIMIT and GOGC.
 Arguments (passed as a dict):
   extraEnv  - already-concatenated extraEnv list for this component
   resources - the component's resources block (.Values.<component>.resources)
-  factor    - fraction of memory limit for GOMEMLIMIT (default 0.85)
-  gogc      - value for GOGC env var (default 80)
+  factor    - fraction of memory limit for GOMEMLIMIT (default 0.85, 0 disables)
+  gogc      - value for GOGC env var (default 80, 0 disables)
 
-When the memory limit is not set, or GOMEMLIMIT is already defined in extraEnv,
-the list is returned unchanged so users retain full control.
+GOMEMLIMIT is not injected when the memory limit is not set, the factor is 0,
+or GOMEMLIMIT is already defined in extraEnv. GOGC is not injected when gogc is
+0 or GOGC is already defined in extraEnv. This lets users retain full control.
+
+The defaults only apply when a value is unset: Sprig's `default` treats 0 as
+empty, so it can't be used here without making 0 impossible to set.
 */}}
 {{- define "loki.componentEnv" -}}
 {{- $envList := .extraEnv | default list -}}
 {{- $resources := .resources | default dict -}}
-{{- $factor := .factor | default 0.85 | float64 -}}
-{{- $gogc := .gogc | default 80 | int -}}
+{{- $factor := 0.85 -}}
+{{- if not (kindIs "invalid" .factor) -}}{{- $factor = .factor | float64 -}}{{- end -}}
+{{- $gogc := 80 -}}
+{{- if not (kindIs "invalid" .gogc) -}}{{- $gogc = .gogc | int -}}{{- end -}}
 {{- $hasGomemlimit := false -}}
 {{- $hasGogc := false -}}
 {{- range $envList -}}
@@ -1150,12 +1180,12 @@ the list is returned unchanged so users retain full control.
   {{- if eq .name "GOGC" -}}{{- $hasGogc = true -}}{{- end -}}
 {{- end -}}
 {{- $memLimit := dig "limits" "memory" "" $resources -}}
-{{- if and (not $hasGomemlimit) $memLimit -}}
+{{- if and (not $hasGomemlimit) $memLimit (gt $factor 0.0) -}}
   {{- $mib := include "loki.memoryToMiB" $memLimit | int -}}
   {{- $goMemMib := mulf ($mib | float64) $factor | int -}}
   {{- $envList = append $envList (dict "name" "GOMEMLIMIT" "value" (printf "%dMiB" $goMemMib)) -}}
 {{- end -}}
-{{- if not $hasGogc -}}
+{{- if and (not $hasGogc) (gt $gogc 0) -}}
   {{- $envList = append $envList (dict "name" "GOGC" "value" ($gogc | toString)) -}}
 {{- end -}}
 env:

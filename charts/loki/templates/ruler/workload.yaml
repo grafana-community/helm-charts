@@ -2,8 +2,15 @@
 {{- if $isDistributed }}
 {{- $args := list }}
 {{- $zoneAware := .Values.ingester.zoneAwareReplication }}
-{{- if and $zoneAware.enabled $zoneAware.migration.enabled $zoneAware.migration.excludeDefaultZone }}
-  {{- $args = list "-distributor.excluded-zones=zone-default" }}
+{{- if $zoneAware.enabled }}
+  {{- if and $zoneAware.migration.enabled (not $zoneAware.migration.readPath) }}
+    {{- $args = append $args "-distributor.zone-awareness-enabled=false" }}
+  {{- else }}
+    {{- $args = append $args "-distributor.zone-awareness-enabled=true" }}
+  {{- end }}
+  {{- if and $zoneAware.migration.enabled $zoneAware.migration.excludeDefaultZone }}
+    {{- $args = append $args "-distributor.excluded-zones=zone-default" }}
+  {{- end }}
 {{- end }}
 {{- include "loki.component" (dict "ctx" . "component" .Values.ruler "target" "ruler" "args" $args) }}
 {{- end }}

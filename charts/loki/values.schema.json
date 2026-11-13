@@ -3037,6 +3037,461 @@
                 }
             }
         },
+        "dataobjBuilder": {
+            "description": "Configuration for the dataobj builder. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`) and Kafka-based ingestion. The dataobj builder consumes log records from Kafka and builds, uploads and indexes data objects (columnar storage). Configure it through `loki.structuredConfig` (`kafka_config`, `dataobj`).",
+            "type": "object",
+            "properties": {
+                "affinity": {
+                    "description": "Affinity for dataobj builder pods. The value will be passed through tpl.",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for dataobj builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "command": {
+                    "description": "Command to execute instead of defined in Docker image",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dnsConfig": {
+                    "description": "DNSConfig for dataobj builder pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "enabled": {
+                    "description": "Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image: the chart fails to render if `dataobjBuilder.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.",
+                    "type": "boolean"
+                },
+                "extraArgs": {
+                    "description": "Additional CLI args for the dataobj builder",
+                    "type": "array"
+                },
+                "extraContainers": {
+                    "description": "Containers to add to the dataobj builder pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "extraEnv": {
+                    "description": "Environment variables to add to the dataobj builder pods",
+                    "type": "array"
+                },
+                "extraEnvFrom": {
+                    "description": "Environment variables from secrets or configmaps to add to the dataobj builder pods",
+                    "type": "array"
+                },
+                "extraVolumeMounts": {
+                    "description": "Volume mounts to add to the dataobj builder pods",
+                    "type": "array"
+                },
+                "extraVolumes": {
+                    "description": "Volumes to add to the dataobj builder pods",
+                    "type": "array"
+                },
+                "hostAliases": {
+                    "description": "hostAliases to add",
+                    "type": "array"
+                },
+                "hostUsers": {
+                    "description": "Use the host's user namespace in the dataobj builder",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "registry": {
+                            "description": "The Docker registry for the dataobj builder image. Overrides `loki.image.registry`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "repository": {
+                            "description": "Docker image repository for the dataobj builder image. Overrides `loki.image.repository`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "tag": {
+                            "description": "Docker image tag for the dataobj builder image. Overrides `loki.image.tag`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "initContainers": {
+                    "description": "Init containers to add to the dataobj builder pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "description": "Kind of dataobj builder workload. Use a StatefulSet: by default each builder derives the Kafka partition it consumes from the ordinal suffix of its hostname (`dataobj.builder.partition_id`).",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for dataobj builder",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "livenessProbe": {
+                    "description": "liveness probe settings for dataobj builder pods. If empty use `loki.livenessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "nodeSelector": {
+                    "description": "Node selector for dataobj builder pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "persistence": {
+                    "type": "object",
+                    "properties": {
+                        "claims": {
+                            "description": "List of the dataobj builder PVCs",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "accessModes": {
+                                        "description": "Set access modes on the PersistentVolumeClaim",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "annotations": {
+                                        "description": "Annotations for dataobj builder PVCs",
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "labels": {
+                                        "description": "Labels for dataobj builder PVCs",
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "size": {
+                                        "type": "string"
+                                    },
+                                    "storageClass": {
+                                        "description": "Storage class to be used. If defined, storageClassName: \u003cstorageClass\u003e. If set to \"-\", storageClassName: \"\", which disables dynamic provisioning. If empty or set to null, no storageClassName spec is set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).",
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "volumeAttributesClassName": {
+                                        "description": "Volume attributes class name to be used. If empty or set to null, no volumeAttributesClassName spec is set. Requires Kubernetes 1.31",
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "enableStatefulSetAutoDeletePVC": {
+                            "description": "Enable StatefulSetAutoDeletePVC feature",
+                            "type": "boolean"
+                        },
+                        "enabled": {
+                            "description": "Enable creating PVCs for the dataobj builder. Builders keep no state besides scratch data, an emptyDir is used when disabled.",
+                            "type": "boolean"
+                        },
+                        "size": {
+                            "description": "Size of persistent disk",
+                            "type": "string"
+                        },
+                        "storageClass": {
+                            "description": "Storage class to be used. If defined, storageClassName: \u003cstorageClass\u003e. If set to \"-\", storageClassName: \"\", which disables dynamic provisioning. If empty or set to null, no storageClassName spec is set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "whenDeleted": {
+                            "type": "string"
+                        },
+                        "whenScaled": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "podAnnotations": {
+                    "description": "Annotations for dataobj builder pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podDisruptionBudget": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "enabled": {
+                            "description": "Enable Pod Disruption Budget",
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "description": "Labels for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "maxUnavailable": {
+                            "description": "Pod Disruption Budget maxUnavailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "minAvailable": {
+                            "description": "Pod Disruption Budget minAvailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "description": "Pod Disruption Budget unhealthyPodEvictionPolicy",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "podLabels": {
+                    "description": "Labels for dataobj builder pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podManagementPolicy": {
+                    "description": "Pod management policy for the dataobj builder StatefulSet. Builders are independent of each other, so they can start in parallel.",
+                    "type": "string"
+                },
+                "priorityClassName": {
+                    "description": "The name of the PriorityClass for dataobj builder pods",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "readinessProbe": {
+                    "description": "readiness probe settings for dataobj builder pods. If empty, use `loki.readinessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "replicas": {
+                    "description": "Number of replicas for the dataobj builder. Each replica consumes one Kafka partition, so this must equal the partition count of the topic the builders consume (see the `loki_dataobj_builder_required_replicas` metric). Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "resizePolicy": {
+                    "description": "Container resize policy for the dataobj builder Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
+                    "type": "array"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the dataobj builder",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for dataobj builder Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the dataobj builder service. This allows dataobj builder to work with istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless dataobj builder Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless dataobj builder Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for dataobj builder Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for dataobj builder Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for dataobj builder Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for dataobj builder Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for dataobj builder Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for dataobj builder Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for dataobj builder Service",
+                            "type": "string"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "automountServiceAccountToken": {
+                            "description": "Set this toggle to false to opt out of automounting API credentials for the service account",
+                            "type": "boolean"
+                        },
+                        "create": {
+                            "description": "Specifies whether a ServiceAccount should be created",
+                            "type": "boolean"
+                        },
+                        "imagePullSecrets": {
+                            "description": "Image pull secrets for the service account",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "labels": {
+                            "description": "Labels for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "name": {
+                            "description": "The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "startupProbe": {
+                    "description": "startup probe settings for dataobj builder pods. If empty use `loki.startupProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "statefulSetRecreateJob": {
+                    "description": "EXPERIMENTAL: Enable creating a Job to recreate the dataobj builder StatefulSet when its configuration is changed. # Only applicable if `dataobjBuilder.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "strategy": {
+                    "description": "UpdateStrategy or Strategy for the dataobj builder.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "terminationGracePeriodSeconds": {
+                    "description": "Grace period to allow the dataobj builder to shutdown before it is killed. The builder flushes the object it is building on shutdown.",
+                    "type": "integer"
+                },
+                "tolerations": {
+                    "type": "array"
+                },
+                "topologySpreadConstraints": {
+                    "description": "Topology Spread Constraints for dataobj builder pods The value will be passed through tpl.",
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
         "defaults": {
             "type": "object",
             "properties": {
@@ -4803,23 +5258,23 @@
                     "type": "string"
                 },
                 "extraArgs": {
-                    "description": "Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order) (deprecated, use defaults.extraArgs) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order) (deprecated, use defaults.extraArgs) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraEnv": {
-                    "description": "Common environment variables to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnv) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common environment variables to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnv) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraEnvFrom": {
-                    "description": "Common source of environment injections to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnvFrom) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write. For example to inject values from a Secret, use: extraEnvFrom: - secretRef: name: mysecret",
+                    "description": "Common source of environment injections to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnvFrom) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write. For example to inject values from a Secret, use: extraEnvFrom: - secretRef: name: mysecret",
                     "type": "array"
                 },
                 "extraVolumeMounts": {
-                    "description": "Common mount points to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumeMounts) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common mount points to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumeMounts) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraVolumes": {
-                    "description": "Common volumes to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumes) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common volumes to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumes) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "image": {
@@ -5959,6 +6414,10 @@
                                 }
                             }
                         },
+                        "minTimeBetweenZonesDownscale": {
+                            "description": "Minimum time the rollout-operator waits between downscales of different ingester zones. Rendered as the `grafana.com/min-time-between-zones-downscale` annotation on zones with `prepareDownscale` enabled.",
+                            "type": "string"
+                        },
                         "zoneA": {
                             "description": "zoneA configuration",
                             "type": "object",
@@ -5970,9 +6429,20 @@
                                         "type": "string"
                                     }
                                 },
+                                "downscaleLeader": {
+                                    "description": "StatefulSet name rendered as the `grafana.com/rollout-downscale-leader` annotation of zone A. The value will be passed through tpl. If null, this zone never follows another zone.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
                                 "extraAffinity": {
                                     "description": "optionally define extra affinity rules, by default different zones are not allowed to schedule on the same host The value will be passed through tpl.",
                                     "type": "object"
+                                },
+                                "noDownscale": {
+                                    "description": "Adds the `grafana.com/no-downscale` label so that the rollout-operator rejects any downscale of zone A. Takes precedence over `prepareDownscale`. See https://github.com/grafana/rollout-operator#webhooks",
+                                    "type": "boolean"
                                 },
                                 "nodeSelector": {
                                     "description": "optionally define a node selector for this zone",
@@ -6001,6 +6471,10 @@
                                     "additionalProperties": {
                                         "type": "string"
                                     }
+                                },
+                                "prepareDownscale": {
+                                    "description": "Adds the `grafana.com/prepare-downscale` label and annotations so that the rollout-operator calls `/ingester/prepare_shutdown` on the zone A ingesters before they are scaled down, letting them flush and leave the ring. The rollout-operator then also waits `minTimeBetweenZonesDownscale` between zone downscales, so a single Helm upgrade that downscales several zones at once is rejected for the later zones. See https://github.com/grafana/rollout-operator#how-scaling-up-and-down-works",
+                                    "type": "boolean"
                                 }
                             }
                         },
@@ -6014,9 +6488,20 @@
                                         "type": "string"
                                     }
                                 },
+                                "downscaleLeader": {
+                                    "description": "StatefulSet name rendered as the `grafana.com/rollout-downscale-leader` annotation of zone B. The value will be passed through tpl. If null, the zone-a StatefulSet leads this zone when both zones set `prepareDownscale` and the rollout-operator webhooks are enabled.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
                                 "extraAffinity": {
                                     "description": "optionally define extra affinity rules, by default different zones are not allowed to schedule on the same host The value will be passed through tpl.",
                                     "type": "object"
+                                },
+                                "noDownscale": {
+                                    "description": "Adds the `grafana.com/no-downscale` label so that the rollout-operator rejects any downscale of zone B. Takes precedence over `prepareDownscale`. See https://github.com/grafana/rollout-operator#webhooks",
+                                    "type": "boolean"
                                 },
                                 "nodeSelector": {
                                     "description": "optionally define a node selector for this zone",
@@ -6045,6 +6530,10 @@
                                     "additionalProperties": {
                                         "type": "string"
                                     }
+                                },
+                                "prepareDownscale": {
+                                    "description": "Adds the `grafana.com/prepare-downscale` label and annotations so that the rollout-operator calls `/ingester/prepare_shutdown` on the zone B ingesters before they are scaled down, letting them flush and leave the ring. The rollout-operator then also waits `minTimeBetweenZonesDownscale` between zone downscales, so a single Helm upgrade that downscales several zones at once is rejected for the later zones. See https://github.com/grafana/rollout-operator#how-scaling-up-and-down-works",
+                                    "type": "boolean"
                                 }
                             }
                         },
@@ -6058,9 +6547,20 @@
                                         "type": "string"
                                     }
                                 },
+                                "downscaleLeader": {
+                                    "description": "StatefulSet name rendered as the `grafana.com/rollout-downscale-leader` annotation of zone C. The value will be passed through tpl. If null, the zone-b StatefulSet leads this zone when both zones set `prepareDownscale` and the rollout-operator webhooks are enabled.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
                                 "extraAffinity": {
                                     "description": "optionally define extra affinity rules, by default different zones are not allowed to schedule on the same host The value will be passed through tpl.",
                                     "type": "object"
+                                },
+                                "noDownscale": {
+                                    "description": "Adds the `grafana.com/no-downscale` label so that the rollout-operator rejects any downscale of zone C. Takes precedence over `prepareDownscale`. See https://github.com/grafana/rollout-operator#webhooks",
+                                    "type": "boolean"
                                 },
                                 "nodeSelector": {
                                     "description": "optionally define a node selector for this zone",
@@ -6089,6 +6589,10 @@
                                     "additionalProperties": {
                                         "type": "string"
                                     }
+                                },
+                                "prepareDownscale": {
+                                    "description": "Adds the `grafana.com/prepare-downscale` label and annotations so that the rollout-operator calls `/ingester/prepare_shutdown` on the zone C ingesters before they are scaled down, letting them flush and leave the ring. The rollout-operator then also waits `minTimeBetweenZonesDownscale` between zone downscales, so a single Helm upgrade that downscales several zones at once is rejected for the later zones. See https://github.com/grafana/rollout-operator#how-scaling-up-and-down-works",
+                                    "type": "boolean"
                                 }
                             }
                         }
@@ -7923,12 +8427,14 @@
                 },
                 "appProtocol": {
                     "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "deprecated": true,
                     "type": "object",
                     "properties": {
                         "grpc": {
                             "type": "string"
                         }
-                    }
+                    },
+                    "additionalProperties": true
                 },
                 "command": {
                     "description": "Command to execute instead of defined in Docker image",
@@ -8216,6 +8722,79 @@
                     "description": "Resource requests and limits for the pattern ingester",
                     "type": "object",
                     "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for pattern ingester Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the pattern ingester service. This allows pattern ingester to work with istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless pattern ingester Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless pattern ingester Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for pattern ingester Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for pattern ingester Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for pattern ingester Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for pattern ingester Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for pattern ingester Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for pattern ingester Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for pattern ingester Service",
+                            "type": "string"
+                        }
+                    }
                 },
                 "serviceAccount": {
                     "type": "object",
@@ -8508,7 +9087,7 @@
                             ]
                         },
                         "triggers": {
-                            "description": "KEDA triggers for the querier. Defaults to a Prometheus trigger using inflight requests.",
+                            "description": "KEDA triggers for the querier. Defaults to a Prometheus trigger using inflight requests. The default query tells the two schedulers apart by the `container` label, which Prometheus Operator ServiceMonitors and PodMonitors set. Without that label, the ruler-query-scheduler queue also drives querier scaling when `ruler.remoteEvaluationDedicatedQueryPath` is true.",
                             "type": "array",
                             "items": {
                                 "type": "object",
@@ -10838,6 +11417,10 @@
                         "null"
                     ]
                 },
+                "remoteEvaluationDedicatedQueryPath": {
+                    "description": "If set to true, a dedicated query path (`ruler-querier`, `ruler-query-frontend`, and `ruler-query-scheduler`) is deployed for the ruler and `ruler.evaluation.mode` is configured to `remote`. This isolates ruler queries from other query workloads (API/Grafana). Requires a Distributed deployment mode with object storage; rendering fails otherwise.",
+                    "type": "boolean"
+                },
                 "replicas": {
                     "description": "Number of replicas for the ruler. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
                     "type": [
@@ -11011,6 +11594,1402 @@
                 },
                 "topologySpreadConstraints": {
                     "description": "Topology Spread Constraints for ruler pods The value will be passed through tpl.",
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
+        "rulerQuerier": {
+            "description": "Configuration for the ruler-querier. Only deployed when `deploymentMode` is `Distributed`, `ruler.enabled` is `true`, and `ruler.remoteEvaluationDedicatedQueryPath` is `true`.",
+            "type": "object",
+            "properties": {
+                "affinity": {
+                    "description": "Affinity for ruler-querier pods. The value will be passed through tpl.",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for ruler-querier",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "autoscaling": {
+                    "type": "object",
+                    "properties": {
+                        "behavior": {
+                            "description": "HPA behavior configuration, passed directly as a Kubernetes HPA behavior object.",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "customMetrics": {
+                            "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
+                            "type": "array"
+                        },
+                        "enabled": {
+                            "description": "Enable autoscaling for the ruler-querier",
+                            "type": "boolean"
+                        },
+                        "maxReplicas": {
+                            "description": "Maximum autoscaling replicas for the ruler-querier",
+                            "type": "integer"
+                        },
+                        "minReplicas": {
+                            "description": "Minimum autoscaling replicas for the ruler-querier",
+                            "type": "integer"
+                        },
+                        "targetCPUUtilizationPercentage": {
+                            "description": "Target CPU utilization percentage for the ruler-querier",
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "targetMemoryUtilizationPercentage": {
+                            "description": "Target memory utilization percentage for the ruler-querier",
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "command": {
+                    "description": "Command to execute instead of defined in Docker image",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dnsConfig": {
+                    "description": "DNSConfig for ruler-querier pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "extraArgs": {
+                    "description": "Additional CLI args for the ruler-querier",
+                    "type": "array"
+                },
+                "extraContainers": {
+                    "description": "Containers to add to the ruler-querier pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "extraEnv": {
+                    "description": "Environment variables to add to the ruler-querier pods",
+                    "type": "array"
+                },
+                "extraEnvFrom": {
+                    "description": "Environment variables from Secrets or ConfigMaps to add to the ruler-querier pods",
+                    "type": "array"
+                },
+                "extraVolumeMounts": {
+                    "description": "Volume mounts to add to the ruler-querier pods",
+                    "type": "array"
+                },
+                "extraVolumes": {
+                    "description": "Volumes to add to the ruler-querier pods",
+                    "type": "array"
+                },
+                "hostAliases": {
+                    "description": "hostAliases to add",
+                    "type": "array"
+                },
+                "hostUsers": {
+                    "description": "Use the host's user namespace in the ruler-querier",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "digest": {
+                            "description": "Overrides the image tag with an image digest. Overrides `loki.image.digest`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "pullPolicy": {
+                            "description": "Docker image pull policy for the ruler-querier image. Overrides `loki.image.pullPolicy`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "registry": {
+                            "description": "The Docker registry for the ruler-querier image. Overrides `loki.image.registry`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "repository": {
+                            "description": "Docker image repository for the ruler-querier image. Overrides `loki.image.repository`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "tag": {
+                            "description": "Docker image tag for the ruler-querier image. Overrides `loki.image.tag`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "initContainers": {
+                    "description": "Init containers to add to the ruler-querier pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "kedaAutoscaling": {
+                    "type": "object",
+                    "properties": {
+                        "behavior": {
+                            "description": "Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior). Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "cooldownPeriod": {
+                            "description": "Period to wait after the last trigger reported active before scaling the resource back to 0 (seconds). Defaults to defaults.kedaAutoscaling.cooldownPeriod if not set.",
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "enabled": {
+                            "description": "Enable KEDA autoscaling for the ruler-querier. Mutually exclusive with autoscaling.enabled",
+                            "type": "boolean"
+                        },
+                        "fallback": {
+                            "description": "Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved. Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "maxReplicas": {
+                            "description": "Maximum replicas for KEDA autoscaling",
+                            "type": "integer"
+                        },
+                        "minReplicas": {
+                            "description": "Minimum replicas for KEDA autoscaling",
+                            "type": "integer"
+                        },
+                        "pollingInterval": {
+                            "description": "Interval (seconds) to poll each trigger. Defaults to defaults.kedaAutoscaling.pollingInterval if not set.",
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "triggers": {
+                            "description": "KEDA triggers for the ruler-querier. Defaults to a Prometheus trigger using ruler-query-scheduler inflight requests. The default query selects on the `container` label, which Prometheus Operator ServiceMonitors and PodMonitors set. Without that label, the query returns no data and the ruler-querier stays at `minReplicas`.",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "metadata": {
+                                        "type": "object",
+                                        "properties": {
+                                            "authModes": {
+                                                "type": "string"
+                                            },
+                                            "customHeaders": {
+                                                "type": "string"
+                                            },
+                                            "ignoreNullValues": {
+                                                "type": "string"
+                                            },
+                                            "query": {
+                                                "type": "string"
+                                            },
+                                            "serverAddress": {
+                                                "type": "string"
+                                            },
+                                            "threshold": {
+                                                "type": "string"
+                                            },
+                                            "unsafeSsl": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "kind": {
+                    "description": "Kind of ruler-querier workload. StatefulSet and Deployment are supported.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for ruler-querier",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "lifecycle": {
+                    "description": "Lifecycle for the ruler-querier container",
+                    "type": "object"
+                },
+                "livenessProbe": {
+                    "description": "Liveness probe settings for ruler-querier pods. If empty, use `loki.livenessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "nodeSelector": {
+                    "description": "Node selector for ruler-querier pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "podAnnotations": {
+                    "description": "Annotations for ruler-querier pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podDisruptionBudget": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "enabled": {
+                            "description": "Enable Pod Disruption Budget",
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "description": "Labels for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "maxUnavailable": {
+                            "description": "Pod Disruption Budget maxUnavailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "minAvailable": {
+                            "description": "Pod Disruption Budget minAvailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "description": "Pod Disruption Budget unhealthyPodEvictionPolicy",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "podLabels": {
+                    "description": "Labels for ruler-querier pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "priorityClassName": {
+                    "description": "The name of the PriorityClass for ruler-querier pods",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "readinessProbe": {
+                    "description": "Readiness probe settings for ruler-querier pods. If empty, use `loki.readinessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "replicas": {
+                    "description": "Number of replicas for the ruler-querier. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "resizePolicy": {
+                    "description": "Container resize policy for the ruler-querier",
+                    "type": "array"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the ruler-querier",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for ruler-querier Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the ruler-querier Service. This allows ruler-querier to work with Istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional gRPC service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless ruler-querier Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless ruler-querier Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for ruler-querier Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for ruler-querier Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for ruler-querier Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "publishNotReadyAddresses": {
+                            "description": "publishNotReadyAddresses for ruler-querier Service. Defaults to `defaults.service.publishNotReadyAddresses` if not set.",
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for ruler-querier Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for ruler-querier Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for ruler-querier Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for ruler-querier Service",
+                            "type": "string"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "automountServiceAccountToken": {
+                            "description": "Set this toggle to false to opt out of automounting API credentials for the service account",
+                            "type": "boolean"
+                        },
+                        "create": {
+                            "description": "Specifies whether a ServiceAccount should be created",
+                            "type": "boolean"
+                        },
+                        "imagePullSecrets": {
+                            "description": "Image pull secrets for the service account",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "labels": {
+                            "description": "Labels for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "name": {
+                            "description": "The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "startupProbe": {
+                    "description": "Startup probe settings for ruler-querier pods. If empty, use `loki.startupProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "strategy": {
+                    "description": "Strategy for the ruler-querier.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "terminationGracePeriodSeconds": {
+                    "description": "Grace period to allow the ruler-querier to shut down before it is killed",
+                    "type": "integer"
+                },
+                "tolerations": {
+                    "description": "Tolerations for ruler-querier pods",
+                    "type": "array"
+                },
+                "topologySpreadConstraints": {
+                    "description": "Topology Spread Constraints for ruler-querier pods. The value will be passed through tpl.",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "labelSelector": {
+                                "type": "object",
+                                "properties": {
+                                    "matchLabels": {
+                                        "type": "object",
+                                        "properties": {
+                                            "app.kubernetes.io/component": {
+                                                "type": "string"
+                                            },
+                                            "app.kubernetes.io/instance": {
+                                                "type": "string"
+                                            },
+                                            "app.kubernetes.io/name": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "maxSkew": {
+                                "type": "integer"
+                            },
+                            "topologyKey": {
+                                "type": "string"
+                            },
+                            "whenUnsatisfiable": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "rulerQueryFrontend": {
+            "description": "Configuration for the ruler-query-frontend. Only deployed when `deploymentMode` is `Distributed`, `ruler.enabled` is `true`, and `ruler.remoteEvaluationDedicatedQueryPath` is `true`.",
+            "type": "object",
+            "properties": {
+                "affinity": {
+                    "description": "Affinity for ruler-query-frontend pods. The value will be passed through tpl.",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for ruler-query-frontend",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "autoscaling": {
+                    "type": "object",
+                    "properties": {
+                        "behavior": {
+                            "description": "HPA behavior configuration, passed directly as a Kubernetes HPA behavior object.",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "customMetrics": {
+                            "description": "Allows one to define custom metrics using the HPA/v2 schema (for example, Pods, Object or External metrics)",
+                            "type": "array"
+                        },
+                        "enabled": {
+                            "description": "Enable autoscaling for the ruler-query-frontend",
+                            "type": "boolean"
+                        },
+                        "maxReplicas": {
+                            "description": "Maximum autoscaling replicas for the ruler-query-frontend",
+                            "type": "integer"
+                        },
+                        "minReplicas": {
+                            "description": "Minimum autoscaling replicas for the ruler-query-frontend",
+                            "type": "integer"
+                        },
+                        "targetCPUUtilizationPercentage": {
+                            "description": "Target CPU utilization percentage for the ruler-query-frontend",
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "targetMemoryUtilizationPercentage": {
+                            "description": "Target memory utilization percentage for the ruler-query-frontend",
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "command": {
+                    "description": "Command to execute instead of defined in Docker image",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dnsConfig": {
+                    "description": "DNSConfig for ruler-query-frontend pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "extraArgs": {
+                    "description": "Additional CLI args for the ruler-query-frontend",
+                    "type": "array"
+                },
+                "extraContainers": {
+                    "description": "Containers to add to the ruler-query-frontend pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "extraEnv": {
+                    "description": "Environment variables to add to the ruler-query-frontend pods",
+                    "type": "array"
+                },
+                "extraEnvFrom": {
+                    "description": "Environment variables from Secrets or ConfigMaps to add to the ruler-query-frontend pods",
+                    "type": "array"
+                },
+                "extraVolumeMounts": {
+                    "description": "Volume mounts to add to the ruler-query-frontend pods",
+                    "type": "array"
+                },
+                "extraVolumes": {
+                    "description": "Volumes to add to the ruler-query-frontend pods",
+                    "type": "array"
+                },
+                "hostAliases": {
+                    "description": "hostAliases to add",
+                    "type": "array"
+                },
+                "hostUsers": {
+                    "description": "Use the host's user namespace in the ruler-query-frontend",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "digest": {
+                            "description": "Overrides the image tag with an image digest. Overrides `loki.image.digest`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "pullPolicy": {
+                            "description": "Docker image pull policy for the ruler-query-frontend image. Overrides `loki.image.pullPolicy`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "registry": {
+                            "description": "The Docker registry for the ruler-query-frontend image. Overrides `loki.image.registry`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "repository": {
+                            "description": "Docker image repository for the ruler-query-frontend image. Overrides `loki.image.repository`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "tag": {
+                            "description": "Docker image tag for the ruler-query-frontend image. Overrides `loki.image.tag`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "initContainers": {
+                    "description": "Init containers to add to the ruler-query-frontend pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "kedaAutoscaling": {
+                    "type": "object",
+                    "properties": {
+                        "behavior": {
+                            "description": "Behavior configuration for KEDA ScaledObject (horizontalPodAutoscalerConfig.behavior). Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#advanced",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "cooldownPeriod": {
+                            "description": "Period to wait after the last trigger reported active before scaling the resource back to 0 (seconds). Defaults to defaults.kedaAutoscaling.cooldownPeriod if not set.",
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "enabled": {
+                            "description": "Enable KEDA autoscaling for the ruler-query-frontend. Mutually exclusive with autoscaling.enabled",
+                            "type": "boolean"
+                        },
+                        "fallback": {
+                            "description": "Fallback configuration for KEDA ScaledObject. Applied when the trigger metric cannot be retrieved. Ref: https://keda.sh/docs/latest/reference/scaledobject-spec/#fallback",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "maxReplicas": {
+                            "description": "Maximum replicas for KEDA autoscaling",
+                            "type": "integer"
+                        },
+                        "minReplicas": {
+                            "description": "Minimum replicas for KEDA autoscaling",
+                            "type": "integer"
+                        },
+                        "pollingInterval": {
+                            "description": "Interval (seconds) to poll each trigger. Defaults to defaults.kedaAutoscaling.pollingInterval if not set.",
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "triggers": {
+                            "description": "KEDA triggers for the ruler-query-frontend. Ref: https://keda.sh/docs/latest/scalers/",
+                            "type": "array"
+                        }
+                    }
+                },
+                "kind": {
+                    "description": "Kind of ruler-query-frontend workload. StatefulSet and Deployment are supported.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for ruler-query-frontend",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "lifecycle": {
+                    "description": "Lifecycle for the ruler-query-frontend container",
+                    "type": "object"
+                },
+                "livenessProbe": {
+                    "description": "Liveness probe settings for ruler-query-frontend pods. If empty, use `loki.livenessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "nodeSelector": {
+                    "description": "Node selector for ruler-query-frontend pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "podAnnotations": {
+                    "description": "Annotations for ruler-query-frontend pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podDisruptionBudget": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "enabled": {
+                            "description": "Enable Pod Disruption Budget",
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "description": "Labels for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "maxUnavailable": {
+                            "description": "Pod Disruption Budget maxUnavailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "minAvailable": {
+                            "description": "Pod Disruption Budget minAvailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "description": "Pod Disruption Budget unhealthyPodEvictionPolicy",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "podLabels": {
+                    "description": "Labels for ruler-query-frontend pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "priorityClassName": {
+                    "description": "The name of the PriorityClass for ruler-query-frontend pods",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "readinessProbe": {
+                    "description": "Readiness probe settings for ruler-query-frontend pods. If empty, use `loki.readinessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "replicas": {
+                    "description": "Number of replicas for the ruler-query-frontend. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "resizePolicy": {
+                    "description": "Container resize policy for the ruler-query-frontend",
+                    "type": "array"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the ruler-query-frontend",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for ruler-query-frontend Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the ruler-query-frontend Service. This allows ruler-query-frontend to work with Istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional gRPC service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless ruler-query-frontend Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless ruler-query-frontend Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for ruler-query-frontend Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for ruler-query-frontend Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for ruler-query-frontend Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "publishNotReadyAddresses": {
+                            "description": "publishNotReadyAddresses for ruler-query-frontend Service. Defaults to false so terminating pods are withdrawn from headless DNS during shutdown delay.",
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for ruler-query-frontend Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for ruler-query-frontend Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for ruler-query-frontend Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for ruler-query-frontend Service",
+                            "type": "string"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "automountServiceAccountToken": {
+                            "description": "Set this toggle to false to opt out of automounting API credentials for the service account",
+                            "type": "boolean"
+                        },
+                        "create": {
+                            "description": "Specifies whether a ServiceAccount should be created",
+                            "type": "boolean"
+                        },
+                        "imagePullSecrets": {
+                            "description": "Image pull secrets for the service account",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "labels": {
+                            "description": "Labels for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "name": {
+                            "description": "The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "shutdownDelay": {
+                    "description": "On SIGTERM, report 503 on /ready and wait this long before shutdown so the ruler's gRPC client re-resolves DNS and stops sending to this pod. Pair with `-server.grpc.keepalive.max-connection-age=30s`, which forces that re-resolution. \"0s\" disables. Keep terminationGracePeriodSeconds above shutdownDelay + server.graceful_shutdown_timeout.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "startupProbe": {
+                    "description": "Startup probe settings for ruler-query-frontend pods. If empty, use `loki.startupProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "strategy": {
+                    "description": "Strategy for the ruler-query-frontend.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "terminationGracePeriodSeconds": {
+                    "description": "Grace period to allow the ruler-query-frontend to shut down before it is killed",
+                    "type": "integer"
+                },
+                "tolerations": {
+                    "description": "Tolerations for ruler-query-frontend pods",
+                    "type": "array"
+                },
+                "topologySpreadConstraints": {
+                    "description": "Topology Spread Constraints for ruler-query-frontend pods The value will be passed through tpl.",
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
+        "rulerQueryScheduler": {
+            "description": "Configuration for the ruler-query-scheduler. Only deployed when `deploymentMode` is `Distributed`, `ruler.enabled` is `true`, and `ruler.remoteEvaluationDedicatedQueryPath` is `true`.",
+            "type": "object",
+            "properties": {
+                "affinity": {
+                    "description": "Affinity for ruler-query-scheduler pods. The value will be passed through tpl.",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for ruler-query-scheduler",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "command": {
+                    "description": "Command to execute instead of defined in Docker image",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dnsConfig": {
+                    "description": "DNSConfig for ruler-query-scheduler pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "extraArgs": {
+                    "description": "Additional CLI args for the ruler-query-scheduler",
+                    "type": "array"
+                },
+                "extraContainers": {
+                    "description": "Containers to add to the ruler-query-scheduler pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "extraEnv": {
+                    "description": "Environment variables to add to the ruler-query-scheduler pods",
+                    "type": "array"
+                },
+                "extraEnvFrom": {
+                    "description": "Environment variables from Secrets or ConfigMaps to add to the ruler-query-scheduler pods",
+                    "type": "array"
+                },
+                "extraVolumeMounts": {
+                    "description": "Volume mounts to add to the ruler-query-scheduler pods",
+                    "type": "array"
+                },
+                "extraVolumes": {
+                    "description": "Volumes to add to the ruler-query-scheduler pods",
+                    "type": "array"
+                },
+                "hostAliases": {
+                    "description": "hostAliases to add",
+                    "type": "array"
+                },
+                "hostUsers": {
+                    "description": "Use the host's user namespace in the ruler-query-scheduler",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "digest": {
+                            "description": "Overrides the image tag with an image digest. Overrides `loki.image.digest`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "pullPolicy": {
+                            "description": "Docker image pull policy for the ruler-query-scheduler image. Overrides `loki.image.pullPolicy`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "registry": {
+                            "description": "The Docker registry for the ruler-query-scheduler image. Overrides `loki.image.registry`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "repository": {
+                            "description": "Docker image repository for the ruler-query-scheduler image. Overrides `loki.image.repository`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "tag": {
+                            "description": "Docker image tag for the ruler-query-scheduler image. Overrides `loki.image.tag`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "initContainers": {
+                    "description": "Init containers to add to the ruler-query-scheduler pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "description": "Kind of ruler-query-scheduler workload. StatefulSet and Deployment are supported.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for ruler-query-scheduler",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "lifecycle": {
+                    "description": "Lifecycle for the ruler-query-scheduler container",
+                    "type": "object"
+                },
+                "livenessProbe": {
+                    "description": "Liveness probe settings for ruler-query-scheduler pods. If empty, use `loki.livenessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "nodeSelector": {
+                    "description": "Node selector for ruler-query-scheduler pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "podAnnotations": {
+                    "description": "Annotations for ruler-query-scheduler pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podDisruptionBudget": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "enabled": {
+                            "description": "Enable Pod Disruption Budget",
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "description": "Labels for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "maxUnavailable": {
+                            "description": "Pod Disruption Budget maxUnavailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "minAvailable": {
+                            "description": "Pod Disruption Budget minAvailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "description": "Pod Disruption Budget unhealthyPodEvictionPolicy",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "podLabels": {
+                    "description": "Labels for ruler-query-scheduler pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "priorityClassName": {
+                    "description": "The name of the PriorityClass for ruler-query-scheduler pods",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "readinessProbe": {
+                    "description": "Readiness probe settings for ruler-query-scheduler pods. If empty, use `loki.readinessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "replicas": {
+                    "description": "Number of replicas for the ruler-query-scheduler. It should be lower than `-querier.max-concurrent` to avoid generating back-pressure in queriers; it is also recommended that this value evenly divides the latter. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "resizePolicy": {
+                    "description": "Container resize policy for the ruler-query-scheduler",
+                    "type": "array"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the ruler-query-scheduler",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for ruler-query-scheduler Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the ruler-query-scheduler Service. This allows ruler-query-scheduler to work with Istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional gRPC service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless ruler-query-scheduler Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless ruler-query-scheduler Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for ruler-query-scheduler Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for ruler-query-scheduler Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for ruler-query-scheduler Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "publishNotReadyAddresses": {
+                            "description": "publishNotReadyAddresses for ruler-query-scheduler Service. Defaults to `defaults.service.publishNotReadyAddresses` if not set.",
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for ruler-query-scheduler Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for ruler-query-scheduler Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for ruler-query-scheduler Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for ruler-query-scheduler Service",
+                            "type": "string"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "automountServiceAccountToken": {
+                            "description": "Set this toggle to false to opt out of automounting API credentials for the service account",
+                            "type": "boolean"
+                        },
+                        "create": {
+                            "description": "Specifies whether a ServiceAccount should be created",
+                            "type": "boolean"
+                        },
+                        "imagePullSecrets": {
+                            "description": "Image pull secrets for the service account",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "labels": {
+                            "description": "Labels for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "name": {
+                            "description": "The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "startupProbe": {
+                    "description": "Startup probe settings for ruler-query-scheduler pods. If empty, use `loki.startupProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "strategy": {
+                    "description": "Strategy for the ruler-query-scheduler.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "terminationGracePeriodSeconds": {
+                    "description": "Grace period to allow the ruler-query-scheduler to shut down before it is killed",
+                    "type": "integer"
+                },
+                "tolerations": {
+                    "description": "Tolerations for ruler-query-scheduler pods",
+                    "type": "array"
+                },
+                "topologySpreadConstraints": {
+                    "description": "Topology Spread Constraints for ruler-query-scheduler pods The value will be passed through tpl.",
                     "type": "array",
                     "items": {
                         "type": "object"

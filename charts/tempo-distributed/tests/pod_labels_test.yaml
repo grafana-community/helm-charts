@@ -1,0 +1,128 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: pod labels do not carry the chart version
+templates:
+  - distributor/deployment-distributor.yaml
+  - memcached/statefulset-memcached.yaml
+  - memcached/statefulset-memcached-bloom.yaml
+  - memcached/statefulset-memcached-frontend-search.yaml
+  - memcached/statefulset-memcached-parquet-footer.yaml
+  - memcached/statefulset-memcached-parquet-page.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: keeps the chart version off the distributor pod template
+    template: distributor/deployment-distributor.yaml
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+
+  - it: keeps the chart version off the memcached pod template
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+
+  - it: keeps the chart version off the bloom memcached pod template
+    template: memcached/statefulset-memcached-bloom.yaml
+    set:
+      memcachedBloom.enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+
+  - it: keeps the chart version off the frontend-search memcached pod template
+    template: memcached/statefulset-memcached-frontend-search.yaml
+    set:
+      memcachedFrontendSearch.enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+
+  - it: keeps the chart version off the parquet-footer memcached pod template
+    template: memcached/statefulset-memcached-parquet-footer.yaml
+    set:
+      memcachedParquetFooter.enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+
+  - it: keeps the chart version off the parquet-page memcached pod template
+    template: memcached/statefulset-memcached-parquet-page.yaml
+    set:
+      memcachedParquetPage.enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+
+  - it: pins the whole distributor pod label set
+    template: distributor/deployment-distributor.yaml
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/component: distributor
+            app.kubernetes.io/part-of: memberlist
+
+  - it: pins the whole memcached pod label set
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/component: memcached
+
+  - it: keeps every memcached selector key on its pod template
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/component: memcached
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            app.kubernetes.io/name: tempo
+            app.kubernetes.io/instance: RELEASE-NAME
+            app.kubernetes.io/component: memcached
+
+  - it: still applies commonLabels to pod templates
+    template: distributor/deployment-distributor.yaml
+    set:
+      global.commonLabels:
+        team: obs
+    asserts:
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            team: obs
+
+  - it: still applies global.podLabels to the memcached pod template
+    template: memcached/statefulset-memcached.yaml
+    set:
+      global.podLabels:
+        team: obs
+    asserts:
+      - isSubset:
+          path: spec.template.metadata.labels
+          content:
+            team: obs

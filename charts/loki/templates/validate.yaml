@@ -31,14 +31,32 @@
 {{- fail "You have more than zero replicas configured for both the monolithic and simple scalable targets. If this was intentional change the deploymentMode to the transitional 'Monolithic<->SimpleScalable' mode"}}
 {{- end }}
 
+{{- if and .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath (ne (include "loki.deployment.isDistributed" .) "true") }}
+{{- fail "ruler.remoteEvaluationDedicatedQueryPath requires deploymentMode Distributed (or SimpleScalable<->Distributed) with an object storage backend." }}
+{{- end }}
+
 {{- include "loki.validateAutoscaling" (dict "component" .Values.querier "name" "querier") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.distributor "name" "distributor") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.ingester "name" "ingester") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.queryFrontend "name" "query-frontend") }}
+{{- include "loki.validateAutoscaling" (dict "component" .Values.rulerQuerier "name" "ruler-querier") }}
+{{- include "loki.validateAutoscaling" (dict "component" .Values.rulerQueryFrontend "name" "ruler-query-frontend") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomBuilder "name" "bloom-builder") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomGateway "name" "bloom-gateway") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomPlanner "name" "bloom-planner") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.patternIngester "name" "pattern-ingester") }}
+
+{{- if and .Values.dataobjBuilder.enabled (ne (include "loki.deployment.isDistributed" .) "true") }}
+{{- fail "dataobjBuilder.enabled requires deploymentMode Distributed (or SimpleScalable<->Distributed) with an object storage backend." }}
+{{- end }}
+
+{{- /* The dataobj-builder target only exists in Loki 4.0+. Tags that are not semantic versions (branch builds, digests) cannot be checked and are let through. */ -}}
+{{- if .Values.dataobjBuilder.enabled }}
+{{- $dataobjBuilderTag := coalesce .Values.dataobjBuilder.image.tag .Values.loki.image.tag .Chart.AppVersion | toString }}
+{{- if and (regexMatch "^v?[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$" $dataobjBuilderTag) (not (semverCompare ">=4.0.0-0" $dataobjBuilderTag)) }}
+{{- fail (printf "dataobjBuilder.enabled requires Loki 4.0.0 or later, but the dataobj builder image tag is %q. Set loki.image.tag or dataobjBuilder.image.tag to a 4.x version." $dataobjBuilderTag) }}
+{{- end }}
+{{- end }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.overridesExporter "name" "overrides-exporter") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.gateway "name" "gateway") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.read "name" "read") }}
