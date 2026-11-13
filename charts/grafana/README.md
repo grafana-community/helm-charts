@@ -726,8 +726,9 @@ Grafana 13.4 and later can run an embedded NATS server in each pod so that sever
 The chart's default image is older than 13.4, so set `image.tag` to 13.4.0 or later: older versions bind the cluster port to loopback only, so the pods can't connect to each other.
 The pods find each other through the database and connect to each other's pod IP on the NATS cluster port (`[nats] cluster_port`, `6222` by default), so no extra Service is needed.
 
-When `networkPolicy.enabled` is true, the NetworkPolicy also lets the Grafana pods of the release reach each other on the cluster port (`networkPolicy.natsCluster.enabled`, on by default), so that only they can connect to it.
+When `networkPolicy.enabled` is true, the NetworkPolicy also lets the Grafana pods of the release reach each other on the cluster port (`networkPolicy.natsCluster.enabled`, on by default). This rule allows sources matching the release's pod selector in the same namespace; other NetworkPolicies may allow additional sources.
 The port follows `[nats] cluster_port` from `grafana.ini`; set `networkPolicy.natsCluster.port` only to override it.
+If `cluster_port` uses Grafana runtime variable expansion, such as `$__env{NATS_CLUSTER_PORT}`, set `networkPolicy.natsCluster.port` to the same numeric port. Helm cannot resolve expressions evaluated inside the Grafana container. For upgrades using runtime-expanded `cluster_port` values, supply the numeric override or set `networkPolicy.natsCluster.enabled: false`. For example, if the container resolves `NATS_CLUSTER_PORT` to `7322`, set `networkPolicy.natsCluster.port: 7322`.
 
 ```yaml
 replicas: 3

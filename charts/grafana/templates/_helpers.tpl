@@ -362,10 +362,28 @@ This function needs to be called with a context object containing the following 
 {{/*
 NATS cluster port the network policy allows: networkPolicy.natsCluster.port,
 else [nats] cluster_port from grafana.ini, else the NATS default 6222.
-A templated value is resolved, as grafana.ini values are for the config.
+A templated value is resolved, as grafana.ini values are for the config. Helm cannot
+resolve Grafana runtime expansion such as $__env{...}, so the port must then be set
+explicitly; the rendered port must be a number between 1 and 65535.
 */}}
 {{- define "grafana.natsClusterPort" -}}
 {{- $grafanaIni := index .Values "grafana.ini" | default dict -}}
 {{- $nats := index $grafanaIni "nats" | default dict -}}
-{{- tpl (toString (.Values.networkPolicy.natsCluster.port | default (index $nats "cluster_port") | default 6222)) . -}}
+{{- $port := index $nats "cluster_port" -}}
+{{- if or (kindIs "invalid" $port) (eq (toString $port) "") -}}
+{{- $port = 6222 -}}
+{{- end -}}
+{{- if not (kindIs "invalid" .Values.networkPolicy.natsCluster.port) -}}
+{{- $port = .Values.networkPolicy.natsCluster.port -}}
+{{- end -}}
+{{- $resolvedPort := trim (tpl (toString $port) .) -}}
+{{- $portError := "The NATS NetworkPolicy requires a port number between 1 and 65535. Set networkPolicy.natsCluster.port explicitly when grafana.ini.nats.cluster_port uses runtime variable expansion." -}}
+{{- if not (regexMatch "^[0-9]+$" $resolvedPort) -}}
+{{- fail $portError -}}
+{{- end -}}
+{{- $portNumber := atoi $resolvedPort -}}
+{{- if or (lt $portNumber 1) (gt $portNumber 65535) -}}
+{{- fail $portError -}}
+{{- end -}}
+{{- $portNumber -}}
 {{- end }}

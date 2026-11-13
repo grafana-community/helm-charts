@@ -137,3 +137,61 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: should require an explicit policy port for a runtime-expanded Grafana port
+    set:
+      '[grafana.ini].nats.cluster_port': '$__env{NATS_CLUSTER_PORT}'
+    asserts:
+      - failedTemplate:
+          errorMessage: The NATS NetworkPolicy requires a port number between 1 and 65535. Set networkPolicy.natsCluster.port explicitly when grafana.ini.nats.cluster_port uses runtime variable expansion.
+
+  - it: should use the explicit policy port with a runtime-expanded Grafana port
+    set:
+      '[grafana.ini].nats.cluster_port': '$__env{NATS_CLUSTER_PORT}'
+      networkPolicy.natsCluster.port: 7322
+      networkPolicy.egress.enabled: true
+    asserts:
+      - equal:
+          path: spec.ingress[1].ports[0].port
+          value: 7322
+      - equal:
+          path: spec.egress[2].ports[0].port
+          value: 7322
+
+  - it: should allow a runtime-expanded Grafana port when the NATS rule is disabled
+    set:
+      '[grafana.ini].nats.cluster_port': '$__env{NATS_CLUSTER_PORT}'
+      networkPolicy.natsCluster.enabled: false
+    asserts:
+      - lengthEqual:
+          path: spec.ingress
+          count: 1
+
+  - it: should reject a zero Grafana cluster port
+    set:
+      '[grafana.ini].nats.cluster_port': 0
+    asserts:
+      - failedTemplate:
+          errorMessage: The NATS NetworkPolicy requires a port number between 1 and 65535. Set networkPolicy.natsCluster.port explicitly when grafana.ini.nats.cluster_port uses runtime variable expansion.
+
+  - it: should reject a cluster port above the Kubernetes port range
+    set:
+      networkPolicy.natsCluster.port: 65536
+    asserts:
+      - failedTemplate:
+          errorMessage: The NATS NetworkPolicy requires a port number between 1 and 65535. Set networkPolicy.natsCluster.port explicitly when grafana.ini.nats.cluster_port uses runtime variable expansion.
+
+  - it: should reject an explicit zero policy port
+    set:
+      networkPolicy.natsCluster.port: 0
+    asserts:
+      - failedTemplate:
+          errorMessage: The NATS NetworkPolicy requires a port number between 1 and 65535. Set networkPolicy.natsCluster.port explicitly when grafana.ini.nats.cluster_port uses runtime variable expansion.
+
+  - it: should allow the highest Kubernetes port number
+    set:
+      networkPolicy.natsCluster.port: 65535
+    asserts:
+      - equal:
+          path: spec.ingress[1].ports[0].port
+          value: 65535
