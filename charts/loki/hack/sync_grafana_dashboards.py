@@ -30,7 +30,7 @@ def change_style(style, representer):
 
 refs = {
     # renovate: github=grafana/loki
-    'ref.loki': 'v3.7.9',
+    'ref.loki': 'v3.7.10',
 }
 
 # Source files list
