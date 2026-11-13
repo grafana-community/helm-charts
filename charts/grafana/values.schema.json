@@ -714,11 +714,8 @@
                             "type": "boolean"
                         },
                         "port": {
-                            "description": "NATS cluster port. Defaults to `[nats] cluster_port` from `grafana.ini`, then to 6222.",
-                            "type": [
-                                "integer",
-                                "null"
-                            ]
+                            "description": "NATS cluster port. Set it to `[nats] cluster_port` from `grafana.ini` when that is changed.",
+                            "type": "integer"
                         }
                     }
                 }
