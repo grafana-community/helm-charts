@@ -17,7 +17,7 @@ topologySpreadConstraints:
       {{- $selectorLabels | nindent 6 }}
   {{- end }}
   {{- if $constraint.matchLabelKeys }}
-  matchLabelKeys: 
+  matchLabelKeys:
     {{- $constraint.matchLabelKeys | toYaml | nindent 4 }}
   {{- end }}
   {{- if $constraint.nodeAffinityPolicy }}

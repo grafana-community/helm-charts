@@ -35,7 +35,7 @@
             "height": "25px",
             "panels": [
                {
-                  "content": "<p>\n  This dashboard shows the top tenants based on multiple selection criterias.\n  Rows are collapsed by default to avoid querying all of them.\n  Use the templating variable \"limit\" above to select the amount of users to be shown.\n</p>\n",
+                  "content": "<p>\n  This dashboard shows the top tenants based on multiple selection criteria.\n  Rows are collapsed by default to avoid querying all of them.\n  Use the templating variable \"limit\" above to select the amount of users to be shown.\n</p>\n",
                   "datasource": null,
                   "description": "",
                   "id": 1,

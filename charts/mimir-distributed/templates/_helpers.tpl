@@ -513,7 +513,7 @@ Return if we should create a PodSecurityPolicy. Takes into account user values a
 {{- and
       (
         or (semverCompare "< 1.24-0" (include "mimir.kubeVersion" .))
-           (and (semverCompare "< 1.25-0" (include "mimir.kubeVersion" .)) .Values.rbac.forcePSPOnKubernetes124)
+          (and (semverCompare "< 1.25-0" (include "mimir.kubeVersion" .)) .Values.rbac.forcePSPOnKubernetes124)
       )
       (and .Values.rbac.create (eq .Values.rbac.type "psp"))
 -}}

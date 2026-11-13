@@ -43,7 +43,7 @@ spec:
     type: prometheus
     {{- if .Values.kedaAutoscaling.authentication.enabled }}
     authenticationRef:
-       name: "keda-triggger-auth"
+      name: "keda-triggger-auth"
     {{- end }}
   - metadata:
       {{- if .Values.kedaAutoscaling.authentication.enabled }}

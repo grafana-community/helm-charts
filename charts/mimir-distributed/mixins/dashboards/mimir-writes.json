@@ -1697,7 +1697,7 @@
             "panels": [
                {
                   "datasource": "$datasource",
-                  "description": "### Kafka fetch throughput\nThroughput of fetches received from Kafka brokers.\nThis panel shows the rate of bytes fetched from Kafka brokers, and the rate of bytes discarded.\nThe discarded bytes are due to concurrently fetching overlapping offsets.\n\nDiscarded bytes amounting to up to 10% of the total fetched bytes are exepcted during startup when there is higher concurrency in fetching.\nDiscarded bytes amounting to around 1% of the total fetched bytes are expected during normal operation.\n\nHigh values of discarded bytes might indicate inaccurate estimation of record size.\n\n",
+                  "description": "### Kafka fetch throughput\nThroughput of fetches received from Kafka brokers.\nThis panel shows the rate of bytes fetched from Kafka brokers, and the rate of bytes discarded.\nThe discarded bytes are due to concurrently fetching overlapping offsets.\n\nDiscarded bytes amounting to up to 10% of the total fetched bytes are expected during startup when there is higher concurrency in fetching.\nDiscarded bytes amounting to around 1% of the total fetched bytes are expected during normal operation.\n\nHigh values of discarded bytes might indicate inaccurate estimation of record size.\n\n",
                   "fieldConfig": {
                      "defaults": {
                         "custom": {

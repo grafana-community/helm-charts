@@ -740,7 +740,7 @@ groups:
             runbook_url: https://grafana.com/docs/mimir/latest/manage/mimir-runbooks/#mimirrulerfailedringcheck
           expr: |
             sum by (cluster, namespace, job) (rate(cortex_ruler_ring_check_errors_total[4m]))
-               > 0
+              > 0
           for: 5m
           labels:
             severity: critical

@@ -115,7 +115,7 @@ vaultAgent:
   caCertPath: ""
 
 mimir:
-  # -- Base config file for Grafana Mimir. Contains Helm templates that are evaulated at install/upgrade.
+  # -- Base config file for Grafana Mimir. Contains Helm templates that are evaluated at install/upgrade.
   # To modify the resulting configuration, either copy and alter 'mimir.config' as a whole or use the 'mimir.structuredConfig' to add and modify certain YAML elements.
   config: |
     usage_stats:
@@ -337,7 +337,7 @@ mimir:
         {{- end }}
 
 
-  # -- Additional structured values on top of the text based 'mimir.config'. Applied after the text based config is evaluated for templates. Enables adding and modifying YAML elements in the evaulated 'mimir.config'.
+  # -- Additional structured values on top of the text based 'mimir.config'. Applied after the text based config is evaluated for templates. Enables adding and modifying YAML elements in the evaluated 'mimir.config'.
   #
   # Additionally, consider the optional "insecure_skip_verify" key below, it allows you to skip_verify_false in case the s3_endpoint certificate is not trusted.
   # For more information see https://grafana.com/docs/mimir/latest/references/configuration-parameters/
@@ -358,7 +358,7 @@ mimir:
   structuredConfig: {}
 
 # -- runtimeConfig provides a reloadable runtime configuration. Changing the runtimeConfig doesn't require a restart of all components.
-# For more infromation see https://grafana.com/docs/mimir/latest/configure/about-runtime-configuration/
+# For more information see https://grafana.com/docs/mimir/latest/configure/about-runtime-configuration/
 #
 # Example:
 #
@@ -488,7 +488,7 @@ alertmanager:
     enabled: true
 
   # -- Dedicated service account for alertmanager pods.
-  # If not set, the default service account defined at the begining of this file will be used.
+  # If not set, the default service account defined at the beginning of this file will be used.
   # This service account can be used even if the default one is not set.
   serviceAccount:
     create: false
@@ -819,10 +819,10 @@ distributor:
     minReplicaCount: 1
     maxReplicaCount: 10
     # -- Target CPU utilization percentage for KEDA autoscaling. This controls the headroom each pod has compared to its current usage.
-    # targetting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
+    # targeting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
     targetCPUUtilizationPercentage: 100
     # -- Target memory utilization percentage for KEDA autoscaling. This controls the headroom each pod has compared to its current usage.
-    # targetting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
+    # targeting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
     targetMemoryUtilizationPercentage: 100
     behavior:
       scaleDown:
@@ -1344,10 +1344,10 @@ ruler:
     minReplicaCount: 1
     maxReplicaCount: 10
     # -- Target CPU utilization percentage for KEDA autoscaling. This controls the headroom each pod has compared to its current usage.
-    # targetting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
+    # targeting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
     targetCPUUtilizationPercentage: 100
     # -- Target memory utilization percentage for KEDA autoscaling. This controls the headroom each pod has compared to its current usage.
-    # targetting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
+    # targeting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
     targetMemoryUtilizationPercentage: 100
     behavior:
       scaleDown:
@@ -1367,7 +1367,7 @@ ruler:
     extraPorts: []
 
   # -- Dedicated service account for ruler pods.
-  # If not set, the default service account defined at the begining of this file will be used.
+  # If not set, the default service account defined at the beginning of this file will be used.
   # This service account can be used even if the default one is not set.
   serviceAccount:
     create: false
@@ -1609,10 +1609,10 @@ ruler_query_frontend:
     minReplicaCount: 1
     maxReplicaCount: 10
     # -- Target CPU utilization percentage for KEDA autoscaling. This controls the headroom each pod has compared to its current usage.
-    # targetting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
+    # targeting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
     targetCPUUtilizationPercentage: 75
     # -- Target memory utilization percentage for KEDA autoscaling. This controls the headroom each pod has compared to its current usage.
-    # targetting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
+    # targeting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
     targetMemoryUtilizationPercentage: 100
     behavior:
       scaleDown:
@@ -1964,10 +1964,10 @@ query_frontend:
     minReplicaCount: 1
     maxReplicaCount: 10
     # -- Target CPU utilization percentage for KEDA autoscaling. This controls the headroom each pod has compared to its current usage.
-    # targetting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
+    # targeting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
     targetCPUUtilizationPercentage: 75
     # -- Target memory utilization percentage for KEDA autoscaling. This controls the headroom each pod has compared to its current usage.
-    # targetting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
+    # targeting lower percentages overprovisions the containers, so they can handle bursts of traffic and tolerate failures without waiting to scale out.
     targetMemoryUtilizationPercentage: 100
     behavior:
       scaleDown:

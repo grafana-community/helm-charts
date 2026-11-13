@@ -57,7 +57,7 @@
         (eq .backend "memcached")
         (ne .memcached.addresses (include "mimir.chunksCacheAddress" $))
         }}
-      {{- fail (cat 
+      {{- fail (cat
           "you set chunks-cache.enabled, but the address of the chunks cache in the Mimir configuration in 'blocks_storage.bucket_store.chunks_cache.memcached.addresses'"
           " is different from the address of the memcached instance created by the chart. (actual: "
           .memcached.addresses
@@ -73,7 +73,7 @@
         (eq .backend "memcached")
         (ne .memcached.addresses (include "mimir.metadataCacheAddress" $))
         }}
-      {{- fail (cat 
+      {{- fail (cat
           "you set metadata-cache.enabled, but the address of the metadata cache in the Mimir configuration in 'blocks_storage.bucket_store.metadata_cache.memcached.addresses'"
           " is different from the address of the memcached instance created by the chart. (actual: "
           .memcached.addresses
@@ -89,7 +89,7 @@
         (eq .backend "memcached")
         (ne .memcached.addresses (include "mimir.indexCacheAddress" $))
         }}
-      {{- fail (cat 
+      {{- fail (cat
           "you set index-cache.enabled, but the address of the index cache in the Mimir configuration in 'blocks_storage.bucket_store.index_cache.memcached.addresses'"
           " is different from the address of the memcached instance created by the chart. (actual: "
           .memcached.addresses
@@ -108,7 +108,7 @@
         (eq .backend "memcached")
         (ne .memcached.addresses (include "mimir.resultsCacheAddress" $))
         }}
-      {{- fail (cat 
+      {{- fail (cat
           "you set results-cache.enabled, but the address of the results cache in the Mimir configuration in 'frontend.results_cache.memcached.addresses'"
           " is different from the address of the memcached instance created by the chart. (actual: "
           .memcached.addresses

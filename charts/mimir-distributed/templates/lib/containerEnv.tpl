@@ -15,7 +15,7 @@ Params:
 {{- define "mimir.lib.containerEnv" -}}
 {{- $componentSection := include "mimir.componentSectionFromName" . | fromYaml -}}
 {{- /* Build a name→entry lookup from user overrides.
-     global.extraEnv is applied first, component.env second so component.env wins (highest precedence). */ -}}
+    global.extraEnv is applied first, component.env second so component.env wins (highest precedence). */ -}}
 {{- $overridesKV := dict -}}
 {{- range (.ctx.Values.global.extraEnv | default list) -}}
   {{- $_ := set $overridesKV .name . -}}
@@ -24,7 +24,7 @@ Params:
   {{- $_ := set $overridesKV .name . -}}
 {{- end -}}
 {{- /* Walk defaults in their original order so the required ordering is preserved.
-     Apply the user override for a given name in-place rather than appending at the end. */ -}}
+    Apply the user override for a given name in-place rather than appending at the end. */ -}}
 {{- $defaultNames := dict -}}
 {{- $envList := list -}}
 {{- range (.env | default list) -}}
