@@ -159,7 +159,9 @@ jobs:
           chart="${chart#charts/}"
           chart="${chart%%/*}"
 
-          helm dependency update "./target/charts/$chart"
+          if [[ -f "./target/charts/$chart/Chart.yaml" ]]; then
+            helm dependency update "./target/charts/$chart"
+          fi
           helm dependency update "./charts/$chart"
 
           echo chart="$chart" >> "$GITHUB_OUTPUT"
