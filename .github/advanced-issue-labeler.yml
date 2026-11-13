@@ -11,6 +11,8 @@ policy:
             keys: ["grafana-mcp"]
           - name: "chart/loki"
             keys: ["loki"]
+          - name: "chart/mimir-distributed"
+            keys: ["mimir-distributed"]
           - name: "chart/synthetic-monitoring-agent"
             keys: ["synthetic-monitoring-agent"]
           - name: "chart/tempo"
