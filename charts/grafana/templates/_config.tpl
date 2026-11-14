@@ -170,6 +170,19 @@ provider.yaml: |-
         path: {{ .Values.sidecar.dashboards.folder }}{{- with .Values.sidecar.dashboards.defaultFolderName }}/{{ . }}{{- end }}
 {{- end -}}
 
+{{/*
+Hash of grafana.secretsData for the checksum/secret annotation. A generated
+admin password is left out: it is random on install and read back with lookup
+on upgrade, so hashing it would roll the pods on the first upgrade.
+*/}}
+{{- define "grafana.secretsChecksum" -}}
+{{- $data := include "grafana.secretsData" . }}
+{{- if and (not .Values.adminPassword) (hasKey (fromYaml $data) "admin-password") }}
+{{- $data = omit (fromYaml $data) "admin-password" | toYaml }}
+{{- end }}
+{{- $data | sha256sum }}
+{{- end }}
+
 {{- define "grafana.secretsData" -}}
 {{- if and (not .Values.env.GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION) (not .Values.admin.existingSecret) (not .Values.env.GF_SECURITY_ADMIN_PASSWORD__FILE) (not .Values.env.GF_SECURITY_ADMIN_PASSWORD) }}
 admin-user: {{ .Values.adminUser | b64enc | quote }}

@@ -45,7 +45,7 @@ spec:
         checksum/repository-sync: {{ .Files.Get "files/repository-sync.py" | sha256sum }}
         {{- end }}
         {{- if and (or (and (not .Values.admin.existingSecret) (not .Values.env.GF_SECURITY_ADMIN_PASSWORD__FILE) (not .Values.env.GF_SECURITY_ADMIN_PASSWORD)) (and .Values.ldap.enabled (not .Values.ldap.existingSecret))) (not .Values.env.GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION) }}
-        checksum/secret: {{ include "grafana.secretsData" . | sha256sum }}
+        checksum/secret: {{ include "grafana.secretsChecksum" . }}
         {{- end }}
         {{- if .Values.envRenderSecret }}
         checksum/secret-env: {{ tpl (toYaml .Values.envRenderSecret) . | sha256sum }}
