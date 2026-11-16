@@ -1,0 +1,7 @@
+grafana:
+  apiKey: "test"
+
+networkPolicy:
+  enabled: true
+  ingress:
+    allowExternal: false

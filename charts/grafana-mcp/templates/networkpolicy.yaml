@@ -1,0 +1,75 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- $np := .Values.networkPolicy }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "grafana-mcp.fullname" . }}
+  namespace: {{ include "grafana-mcp.namespace" . }}
+  labels:
+    {{- include "grafana-mcp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp-server
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "grafana-mcp.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mcp-server
+  policyTypes:
+    - Ingress
+    {{- if $np.egress.enabled }}
+    - Egress
+    {{- end }}
+  ingress:
+    - ports:
+        - port: {{ .Values.service.port }}
+          protocol: TCP
+        {{- if and .Values.metrics.enabled .Values.metrics.port }}
+        - port: {{ .Values.metrics.port }}
+          protocol: TCP
+        {{- end }}
+        {{- with $np.ingress.extraPorts }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- if not $np.ingress.allowExternal }}
+      from:
+        - podSelector:
+            matchLabels:
+              {{ include "grafana-mcp.fullname" . }}-client: "true"
+        {{- with $np.ingress.namespaceSelector }}
+        - namespaceSelector:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- range $np.ingress.ipBlocks }}
+        - ipBlock:
+            cidr: {{ . | quote }}
+        {{- end }}
+        {{- with $np.ingress.from }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+  {{- if $np.egress.enabled }}
+  egress:
+    {{- if $np.egress.allowDNS }}
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    {{- end }}
+    - ports:
+        {{- if $np.egress.ports }}
+        {{- toYaml $np.egress.ports | nindent 8 }}
+        {{- else }}
+        {{- $port := include "grafana-mcp.grafanaPort" . | int }}
+        - port: {{ $port }}
+          protocol: TCP
+        {{- if ne $port 3000 }}
+        - port: 3000
+          protocol: TCP
+        {{- end }}
+        {{- end }}
+      {{- with $np.egress.to }}
+      to:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- end }}
+{{- end }}
