@@ -201,7 +201,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -557,7 +557,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Adds the appProtocol field to the queryFrontend service. This allows bloomBuilder to work with istio protocol selection.",
+                    "description": "Adds the appProtocol field to the queryFrontend service. This allows bloomBuilder to work with istio protocol selection. @deprecated -- This option is deprecated in favor of `bloomBuilder.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -754,7 +754,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -1029,7 +1029,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for bloom-builder service",
+                    "description": "Annotations for bloom-builder service @deprecated -- This option is deprecated in favor of `bloomBuilder.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -1037,7 +1037,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for bloom-builder service",
+                    "description": "Labels for bloom-builder service @deprecated -- This option is deprecated in favor of `bloomBuilder.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -1088,7 +1088,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `bloomGateway.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -1487,7 +1487,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for bloom-gateway service",
+                    "description": "Annotations for bloom-gateway service @deprecated -- This option is deprecated in favor of `bloomGateway.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -1495,7 +1495,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for bloom-gateway service",
+                    "description": "Labels for bloom-gateway service @deprecated -- This option is deprecated in favor of `bloomGateway.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -1551,7 +1551,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `bloomPlanner.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -1950,7 +1950,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for bloom-planner service",
+                    "description": "Annotations for bloom-planner service @deprecated -- This option is deprecated in favor of `bloomPlanner.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -1958,7 +1958,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for bloom-planner service",
+                    "description": "Labels for bloom-planner service @deprecated -- This option is deprecated in favor of `bloomPlanner.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -2171,7 +2171,7 @@
                             "type": "integer"
                         },
                         "maxUnavailable": {
-                            "description": "Pod Disruption Budget maxUnavailable",
+                            "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                             "deprecated": true,
                             "type": [
                                 "string",
@@ -2356,7 +2356,7 @@
                     "type": "integer"
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -2586,7 +2586,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `compactor.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -2816,7 +2816,7 @@
                             "type": "string"
                         },
                         "volumeAttributesClassName": {
-                            "description": "Size of persistent disk If empty or set to null, no volumeAttributesClassName spec is set. Requires Kubernetes 1.31",
+                            "description": "Size of persistent disk -- Volume attributes class name to be used. If empty or set to null, no volumeAttributesClassName spec is set. Requires Kubernetes 1.31",
                             "type": [
                                 "string",
                                 "null"
@@ -2988,7 +2988,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for compactor service",
+                    "description": "Annotations for compactor service @deprecated -- This option is deprecated in favor of `compactor.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -2996,7 +2996,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for compactor service",
+                    "description": "Labels for compactor service @deprecated -- This option is deprecated in favor of `compactor.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -3004,7 +3004,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for compactor service",
+                    "description": "Service type for compactor service @deprecated -- This option is deprecated in favor of `compactor.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -3784,12 +3784,12 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection.",
+                    "description": "Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection. @deprecated -- This option is deprecated in favor of `distributor.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
                         "grpc": {
-                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `distributor.service.appProtocol.grpc`",
                             "deprecated": true,
                             "type": "string"
                         }
@@ -3989,7 +3989,7 @@
                     ]
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -4205,7 +4205,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for distributor service",
+                    "description": "Annotations for distributor service @deprecated -- This option is deprecated in favor of `ingester.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -4213,7 +4213,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for distributor service",
+                    "description": "Labels for distributor service @deprecated -- This option is deprecated in favor of `ingester.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -4221,7 +4221,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for distributor service",
+                    "description": "Service type for distributor service @deprecated -- This option is deprecated in favor of `ingester.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -4299,7 +4299,7 @@
                     "type": "object",
                     "properties": {
                         "behavior": {
-                            "description": "See `kubectl explain deployment.spec.strategy` for more",
+                            "description": "See `kubectl explain deployment.spec.strategy` for more -- ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy -- Behavior policies while scaling.",
                             "type": "object",
                             "additionalProperties": true
                         },
@@ -5329,7 +5329,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `indexGateway.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -5437,7 +5437,7 @@
                     "type": "object"
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -5716,7 +5716,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for index-gateway service",
+                    "description": "Annotations for index-gateway service @deprecated -- This option is deprecated in favor of `indexGateway.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -5724,7 +5724,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for index-gateway service",
+                    "description": "Labels for index-gateway service @deprecated -- This option is deprecated in favor of `indexGateway.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -5732,7 +5732,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for index-gateway service",
+                    "description": "Service type for index-gateway service @deprecated -- This option is deprecated in favor of `indexGateway.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -5793,12 +5793,12 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection.",
+                    "description": "Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection. @deprecated -- This option is deprecated in favor of `ingester.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
                         "grpc": {
-                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `ingester.service.appProtocol.grpc`",
                             "deprecated": true,
                             "type": "string"
                         }
@@ -6000,7 +6000,7 @@
                     "additionalProperties": true
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -6290,7 +6290,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for ingester service",
+                    "description": "Annotations for ingester service @deprecated -- This option is deprecated in favor of `ingester.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -6298,7 +6298,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for ingester service",
+                    "description": "Labels for ingester service @deprecated -- This option is deprecated in favor of `ingester.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -6306,7 +6306,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for ingester service",
+                    "description": "Service type for ingester service @deprecated -- This option is deprecated in favor of `ingester.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -6986,7 +6986,7 @@
                     "additionalProperties": true
                 },
                 "storage": {
-                    "description": "Storage config. Providing this will automatically populate all necessary storage configs in the templated config.",
+                    "description": "Storage config. Providing this will automatically populate all necessary storage configs in the templated config. -- In case of using thanos storage, enable use_thanos_objstore and the configuration should be done inside the object_store section.",
                     "type": "object",
                     "additionalProperties": true
                 },
@@ -7275,7 +7275,7 @@
                     ]
                 },
                 "push": {
-                    "description": "If true, the canary will send directly to Loki via the address configured for verification --",
+                    "description": "If true, the canary will send directly to Loki via the address configured for verification -- -- If false, it will write to stdout and an Agent will be needed to scrape and send the logs --",
                     "type": "boolean"
                 },
                 "readinessProbe": {
@@ -7871,7 +7871,7 @@
                             "type": "string"
                         },
                         "jobPrefix": {
-                            "description": "ServiceMonitor job label prefix will be used to generate the job label for the scraped metrics.",
+                            "description": "ServiceMonitor job label prefix will be used to generate the job label for the scraped metrics. -- The job label is required for the included dashboards to work.",
                             "type": "string"
                         },
                         "labels": {
@@ -8048,7 +8048,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `overridesExporter.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -8159,7 +8159,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -8375,7 +8375,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for overrides-exporter service",
+                    "description": "Annotations for overrides-exporter service @deprecated -- This option is deprecated in favor of `overridesExporter.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -8383,7 +8383,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for overrides-exporter service",
+                    "description": "Labels for overrides-exporter service @deprecated -- This option is deprecated in favor of `overridesExporter.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -8426,7 +8426,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `patternIngester.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -8542,7 +8542,7 @@
                     "additionalProperties": true
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -8906,12 +8906,12 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.",
+                    "description": "Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection. @deprecated -- This option is deprecated in favor of `querier.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
                         "grpc": {
-                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `querier.service.appProtocol.grpc`",
                             "deprecated": true,
                             "type": "string"
                         }
@@ -9148,7 +9148,7 @@
                     ]
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -9364,7 +9364,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for querier service",
+                    "description": "Annotations for querier service @deprecated -- This option is deprecated in favor of `querier.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -9372,7 +9372,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for querier service",
+                    "description": "Labels for querier service @deprecated -- This option is deprecated in favor of `querier.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -9380,7 +9380,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for querier service",
+                    "description": "Service type for querier service @deprecated -- This option is deprecated in favor of `querier.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -9460,12 +9460,12 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Adds the appProtocol field to the queryFrontend service. This allows queryFrontend to work with istio protocol selection.",
+                    "description": "Adds the appProtocol field to the queryFrontend service. This allows queryFrontend to work with istio protocol selection. @deprecated -- This option is deprecated in favor of `queryFrontend.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
                         "grpc": {
-                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `queryFrontend.service.appProtocol.grpc`",
                             "deprecated": true,
                             "type": "string"
                         }
@@ -9662,7 +9662,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -9878,7 +9878,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for query-frontend service",
+                    "description": "Annotations for query-frontend service @deprecated -- This option is deprecated in favor of `queryFrontend.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -9886,7 +9886,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for query-frontend service",
+                    "description": "Labels for query-frontend service @deprecated -- This option is deprecated in favor of `queryFrontend.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -9894,7 +9894,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for query-frontend service",
+                    "description": "Service type for query-frontend service @deprecated -- This option is deprecated in favor of `queryFrontend.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -9943,7 +9943,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `queryScheduler.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -10047,7 +10047,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -10263,7 +10263,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for query-scheduler service",
+                    "description": "Annotations for query-scheduler service @deprecated -- This option is deprecated in favor of `queryScheduler.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -10271,7 +10271,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for query-scheduler service",
+                    "description": "Labels for query-scheduler service @deprecated -- This option is deprecated in favor of `queryScheduler.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -10279,7 +10279,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for query-scheduler service",
+                    "description": "Service type for query-scheduler service @deprecated -- This option is deprecated in favor of `queryScheduler.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -10528,7 +10528,7 @@
                     "additionalProperties": true
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -10863,7 +10863,7 @@
                     "type": "integer"
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -11174,7 +11174,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `ruler.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -11289,7 +11289,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -11557,7 +11557,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for ruler service",
+                    "description": "Annotations for ruler service @deprecated -- This option is deprecated in favor of `ruler.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -11565,7 +11565,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for ruler service",
+                    "description": "Labels for ruler service @deprecated -- This option is deprecated in favor of `ruler.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -14190,7 +14190,7 @@
                     "type": "object"
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
