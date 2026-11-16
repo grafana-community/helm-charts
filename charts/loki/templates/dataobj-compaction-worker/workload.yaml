@@ -1,0 +1,8 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if $isDistributed }}
+{{- $args := list
+  (printf "-dataobj.compaction.worker.advertise-addr=[$(POD_IP)]:%s" (.Values.loki.server.http_listen_port | toString))
+  (printf "-dataobj.compaction.worker.scheduler-lookup-address=dnssrv+_http-metrics._tcp.%s.%s.svc.%s" (include "loki.resourceName" (dict "ctx" . "component" "dataobj-compaction-planner" "suffix" "headless")) (include "loki.namespace" .) .Values.global.clusterDomain)
+}}
+{{- include "loki.component" (dict "ctx" . "component" .Values.dataobjCompactionWorker "target" "dataobj-compaction-worker" "args" $args "memberlist" false) }}
+{{- end }}
