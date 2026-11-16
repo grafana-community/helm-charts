@@ -133,3 +133,18 @@ true
 true
 {{- end -}}
 {{- end }}
+
+{{/*
+Port of grafana.url: the explicit port, else 443 for https and 80 otherwise
+*/}}
+{{- define "grafana-mcp.grafanaPort" -}}
+{{- $url := urlParse (.Values.grafana.url | default "") -}}
+{{- $port := regexFind ":[0-9]+$" $url.host | trimPrefix ":" -}}
+{{- if $port -}}
+{{- $port -}}
+{{- else if eq $url.scheme "https" -}}
+443
+{{- else -}}
+80
+{{- end -}}
+{{- end -}}

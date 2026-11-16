@@ -250,6 +250,33 @@ route:
     # Ref. https://gateway-api.sigs.k8s.io/guides/http-redirect-rewrite/
     httpsRedirect: false
 
+# -- NetworkPolicy for the MCP server. Only enforced by network plugins that support NetworkPolicy
+# (on EKS, enable network policy in the Amazon VPC CNI).
+networkPolicy:
+  # -- Create a NetworkPolicy
+  enabled: false
+  ingress:
+    # -- Accept connections from any source. When false, only pods labelled `<fullname>-client: "true"` and the sources below can connect.
+    allowExternal: true
+    # -- Namespaces that can connect (LabelSelector)
+    namespaceSelector: {}
+    # @schema item:string
+    # -- CIDR blocks that can connect, e.g. the VPC CIDR for a load balancer in IP mode
+    ipBlocks: []
+    # -- Additional NetworkPolicyPeers that can connect, e.g. a proxy's pods
+    from: []
+    # -- Additional ports to accept connections on, e.g. 15008 for Istio ambient mode
+    extraPorts: []
+  egress:
+    # -- Restrict egress to DNS and Grafana
+    enabled: true
+    # -- Allow DNS (port 53)
+    allowDNS: true
+    # -- Allowed ports. Defaults to the `grafana.url` port and 3000, Grafana's pod port.
+    ports: []
+    # -- Allowed destinations (NetworkPolicyPeers). Defaults to any destination.
+    to: []
+
 # -- Resource requests and limits
 resources: {}
   # limits:

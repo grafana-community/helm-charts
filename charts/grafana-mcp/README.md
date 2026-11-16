@@ -36,6 +36,28 @@ To remove all of the Kubernetes objects associated with the Helm chart release:
 helm delete RELEASE-NAME
 ```
 
+## Network policy
+
+Set `networkPolicy.enabled: true` to create a NetworkPolicy for the MCP server. By default it accepts connections from any source and limits egress to DNS and Grafana (the `grafana.url` port and 3000), so it also works in namespaces with a default deny-all policy. Network policies are only enforced by network plugins that support them; on EKS, enable network policy in the Amazon VPC CNI.
+
+To accept connections only from a proxy or gateway, list its pods:
+
+```yaml
+networkPolicy:
+  enabled: true
+  ingress:
+    allowExternal: false
+    from:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: ingress-nginx
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: ingress-nginx
+```
+
+See `networkPolicy` in `values.yaml` for CIDR blocks, extra ports and egress destinations.
+
 ## Changelog
 
 See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?chart=grafana-mcp).

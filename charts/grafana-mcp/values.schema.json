@@ -322,6 +322,65 @@
                 "null"
             ]
         },
+        "networkPolicy": {
+            "description": "NetworkPolicy for the MCP server. Only enforced by network plugins that support NetworkPolicy (on EKS, enable network policy in the Amazon VPC CNI).",
+            "type": "object",
+            "properties": {
+                "egress": {
+                    "type": "object",
+                    "properties": {
+                        "allowDNS": {
+                            "description": "Allow DNS (port 53)",
+                            "type": "boolean"
+                        },
+                        "enabled": {
+                            "description": "Restrict egress to DNS and Grafana",
+                            "type": "boolean"
+                        },
+                        "ports": {
+                            "description": "Allowed ports. Defaults to the `grafana.url` port and 3000, Grafana's pod port.",
+                            "type": "array"
+                        },
+                        "to": {
+                            "description": "Allowed destinations (NetworkPolicyPeers). Defaults to any destination.",
+                            "type": "array"
+                        }
+                    }
+                },
+                "enabled": {
+                    "description": "Create a NetworkPolicy",
+                    "type": "boolean"
+                },
+                "ingress": {
+                    "type": "object",
+                    "properties": {
+                        "allowExternal": {
+                            "description": "Accept connections from any source. When false, only pods labelled `\u003cfullname\u003e-client: \"true\"` and the sources below can connect.",
+                            "type": "boolean"
+                        },
+                        "extraPorts": {
+                            "description": "Additional ports to accept connections on, e.g. 15008 for Istio ambient mode",
+                            "type": "array"
+                        },
+                        "from": {
+                            "description": "Additional NetworkPolicyPeers that can connect, e.g. a proxy's pods",
+                            "type": "array"
+                        },
+                        "ipBlocks": {
+                            "description": "CIDR blocks that can connect, e.g. the VPC CIDR for a load balancer in IP mode",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "namespaceSelector": {
+                            "description": "Namespaces that can connect (LabelSelector)",
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "nodeSelector": {
             "description": "Node selector",
             "type": "object"
