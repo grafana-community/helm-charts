@@ -3492,6 +3492,729 @@
                 }
             }
         },
+        "dataobjCompactionPlanner": {
+            "description": "Configuration for the dataobj compaction planner. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`). The dataobj compaction planner plans the compaction of the data objects that the dataobj builders (`dataobjBuilder`) write and hands the tasks to the dataobj compaction workers (`dataobjCompactionWorker`). Enabling the component is not enough: it also needs the Loki configuration that the \"Data objects\" section of values.yaml lists.",
+            "type": "object",
+            "properties": {
+                "affinity": {
+                    "description": "Affinity for dataobj compaction planner pods. The value will be passed through tpl.",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for dataobj compaction planner",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "command": {
+                    "description": "Command to execute instead of defined in Docker image",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dnsConfig": {
+                    "description": "DNSConfig for dataobj compaction planner pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "enabled": {
+                    "description": "Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image: the chart fails to render if `dataobjCompactionPlanner.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0. This only creates the workload: the planner stays idle until `dataobj.enabled` and `dataobj.compaction.enabled` are `true` in `loki.structuredConfig`.",
+                    "type": "boolean"
+                },
+                "extraArgs": {
+                    "description": "Additional CLI args for the dataobj compaction planner",
+                    "type": "array"
+                },
+                "extraContainers": {
+                    "description": "Containers to add to the dataobj compaction planner pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "extraEnv": {
+                    "description": "Environment variables to add to the dataobj compaction planner pods",
+                    "type": "array"
+                },
+                "extraEnvFrom": {
+                    "description": "Environment variables from secrets or configmaps to add to the dataobj compaction planner pods",
+                    "type": "array"
+                },
+                "extraVolumeMounts": {
+                    "description": "Volume mounts to add to the dataobj compaction planner pods",
+                    "type": "array"
+                },
+                "extraVolumes": {
+                    "description": "Volumes to add to the dataobj compaction planner pods",
+                    "type": "array"
+                },
+                "hostAliases": {
+                    "description": "hostAliases to add",
+                    "type": "array"
+                },
+                "hostUsers": {
+                    "description": "Use the host's user namespace in the dataobj compaction planner",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "registry": {
+                            "description": "The Docker registry for the dataobj compaction planner image. Overrides `loki.image.registry`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "repository": {
+                            "description": "Docker image repository for the dataobj compaction planner image. Overrides `loki.image.repository`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "tag": {
+                            "description": "Docker image tag for the dataobj compaction planner image. Overrides `loki.image.tag`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "initContainers": {
+                    "description": "Init containers to add to the dataobj compaction planner pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "description": "Kind of dataobj compaction planner workload. Use a StatefulSet: a rolling update then never runs two planners at the same time.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for dataobj compaction planner",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "livenessProbe": {
+                    "description": "liveness probe settings for dataobj compaction planner pods. If empty use `loki.livenessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "nodeSelector": {
+                    "description": "Node selector for dataobj compaction planner pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "podAnnotations": {
+                    "description": "Annotations for dataobj compaction planner pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podDisruptionBudget": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "enabled": {
+                            "description": "Enable Pod Disruption Budget",
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "description": "Labels for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "maxUnavailable": {
+                            "description": "Pod Disruption Budget maxUnavailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "minAvailable": {
+                            "description": "Pod Disruption Budget minAvailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "description": "Pod Disruption Budget unhealthyPodEvictionPolicy",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "podLabels": {
+                    "description": "Labels for dataobj compaction planner pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "priorityClassName": {
+                    "description": "The name of the PriorityClass for dataobj compaction planner pods",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "readinessProbe": {
+                    "description": "readiness probe settings for dataobj compaction planner pods. If empty, use `loki.readinessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "replicas": {
+                    "description": "Number of replicas for the dataobj compaction planner. Run a single replica: planners do not coordinate with each other.",
+                    "type": "integer"
+                },
+                "resizePolicy": {
+                    "description": "Container resize policy for the dataobj compaction planner Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
+                    "type": "array"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the dataobj compaction planner",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for dataobj compaction planner Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the dataobj compaction planner service. This allows dataobj compaction planner to work with istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless dataobj compaction planner Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless dataobj compaction planner Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for dataobj compaction planner Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for dataobj compaction planner Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for dataobj compaction planner Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for dataobj compaction planner Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for dataobj compaction planner Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for dataobj compaction planner Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for dataobj compaction planner Service",
+                            "type": "string"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "automountServiceAccountToken": {
+                            "description": "Set this toggle to false to opt out of automounting API credentials for the service account",
+                            "type": "boolean"
+                        },
+                        "create": {
+                            "description": "Specifies whether a ServiceAccount should be created",
+                            "type": "boolean"
+                        },
+                        "imagePullSecrets": {
+                            "description": "Image pull secrets for the service account",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "labels": {
+                            "description": "Labels for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "name": {
+                            "description": "The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "startupProbe": {
+                    "description": "startup probe settings for dataobj compaction planner pods. If empty use `loki.startupProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "strategy": {
+                    "description": "UpdateStrategy or Strategy for the dataobj compaction planner.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "terminationGracePeriodSeconds": {
+                    "description": "Grace period to allow the dataobj compaction planner to shutdown before it is killed",
+                    "type": "integer"
+                },
+                "tolerations": {
+                    "description": "Tolerations for dataobj compaction planner pods",
+                    "type": "array"
+                },
+                "topologySpreadConstraints": {
+                    "description": "Topology Spread Constraints for dataobj compaction planner pods The value will be passed through tpl.",
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
+        "dataobjCompactionWorker": {
+            "description": "Configuration for the dataobj compaction worker. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`). The dataobj compaction workers run the tasks of the dataobj compaction planner. They find the planner through its headless Service, so enable `dataobjCompactionPlanner` as well. Enabling the component is not enough: it also needs the Loki configuration that the \"Data objects\" section of values.yaml lists.",
+            "type": "object",
+            "properties": {
+                "affinity": {
+                    "description": "Affinity for dataobj compaction worker pods. The value will be passed through tpl.",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for dataobj compaction worker",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "command": {
+                    "description": "Command to execute instead of defined in Docker image",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dnsConfig": {
+                    "description": "DNSConfig for dataobj compaction worker pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "enabled": {
+                    "description": "Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image: the chart fails to render if `dataobjCompactionWorker.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0. This only creates the workload: the workers stay idle until `dataobj.enabled` and `dataobj.compaction.enabled` are `true` in `loki.structuredConfig`.",
+                    "type": "boolean"
+                },
+                "extraArgs": {
+                    "description": "Additional CLI args for the dataobj compaction worker",
+                    "type": "array"
+                },
+                "extraContainers": {
+                    "description": "Containers to add to the dataobj compaction worker pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "extraEnv": {
+                    "description": "Environment variables to add to the dataobj compaction worker pods",
+                    "type": "array"
+                },
+                "extraEnvFrom": {
+                    "description": "Environment variables from secrets or configmaps to add to the dataobj compaction worker pods",
+                    "type": "array"
+                },
+                "extraVolumeMounts": {
+                    "description": "Volume mounts to add to the dataobj compaction worker pods",
+                    "type": "array"
+                },
+                "extraVolumes": {
+                    "description": "Volumes to add to the dataobj compaction worker pods",
+                    "type": "array"
+                },
+                "hostAliases": {
+                    "description": "hostAliases to add",
+                    "type": "array"
+                },
+                "hostUsers": {
+                    "description": "Use the host's user namespace in the dataobj compaction worker",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "registry": {
+                            "description": "The Docker registry for the dataobj compaction worker image. Overrides `loki.image.registry`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "repository": {
+                            "description": "Docker image repository for the dataobj compaction worker image. Overrides `loki.image.repository`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "tag": {
+                            "description": "Docker image tag for the dataobj compaction worker image. Overrides `loki.image.tag`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "initContainers": {
+                    "description": "Init containers to add to the dataobj compaction worker pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "description": "Kind of dataobj compaction worker workload. Workers keep only scratch data, so use a Deployment.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for dataobj compaction worker",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "livenessProbe": {
+                    "description": "liveness probe settings for dataobj compaction worker pods. If empty use `loki.livenessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "nodeSelector": {
+                    "description": "Node selector for dataobj compaction worker pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "podAnnotations": {
+                    "description": "Annotations for dataobj compaction worker pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podDisruptionBudget": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "enabled": {
+                            "description": "Enable Pod Disruption Budget",
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "description": "Labels for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "maxUnavailable": {
+                            "description": "Pod Disruption Budget maxUnavailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "minAvailable": {
+                            "description": "Pod Disruption Budget minAvailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "description": "Pod Disruption Budget unhealthyPodEvictionPolicy",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "podLabels": {
+                    "description": "Labels for dataobj compaction worker pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "priorityClassName": {
+                    "description": "The name of the PriorityClass for dataobj compaction worker pods",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "readinessProbe": {
+                    "description": "readiness probe settings for dataobj compaction worker pods. If empty, use `loki.readinessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "replicas": {
+                    "description": "Number of replicas for the dataobj compaction worker. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "resizePolicy": {
+                    "description": "Container resize policy for the dataobj compaction worker Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
+                    "type": "array"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the dataobj compaction worker",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for dataobj compaction worker Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the dataobj compaction worker service. This allows dataobj compaction worker to work with istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless dataobj compaction worker Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless dataobj compaction worker Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for dataobj compaction worker Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for dataobj compaction worker Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for dataobj compaction worker Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for dataobj compaction worker Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for dataobj compaction worker Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for dataobj compaction worker Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for dataobj compaction worker Service",
+                            "type": "string"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "automountServiceAccountToken": {
+                            "description": "Set this toggle to false to opt out of automounting API credentials for the service account",
+                            "type": "boolean"
+                        },
+                        "create": {
+                            "description": "Specifies whether a ServiceAccount should be created",
+                            "type": "boolean"
+                        },
+                        "imagePullSecrets": {
+                            "description": "Image pull secrets for the service account",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "labels": {
+                            "description": "Labels for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "name": {
+                            "description": "The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "startupProbe": {
+                    "description": "startup probe settings for dataobj compaction worker pods. If empty use `loki.startupProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "strategy": {
+                    "description": "UpdateStrategy or Strategy for the dataobj compaction worker.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "terminationGracePeriodSeconds": {
+                    "description": "Grace period to allow the dataobj compaction worker to shutdown before it is killed",
+                    "type": "integer"
+                },
+                "tolerations": {
+                    "description": "Tolerations for dataobj compaction worker pods",
+                    "type": "array"
+                },
+                "topologySpreadConstraints": {
+                    "description": "Topology Spread Constraints for dataobj compaction worker pods The value will be passed through tpl.",
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
         "defaults": {
             "type": "object",
             "properties": {
@@ -5258,23 +5981,23 @@
                     "type": "string"
                 },
                 "extraArgs": {
-                    "description": "Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order) (deprecated, use defaults.extraArgs) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order) (deprecated, use defaults.extraArgs) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraEnv": {
-                    "description": "Common environment variables to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnv) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common environment variables to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnv) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraEnvFrom": {
-                    "description": "Common source of environment injections to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnvFrom) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write. For example to inject values from a Secret, use: extraEnvFrom: - secretRef: name: mysecret",
+                    "description": "Common source of environment injections to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnvFrom) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write. For example to inject values from a Secret, use: extraEnvFrom: - secretRef: name: mysecret",
                     "type": "array"
                 },
                 "extraVolumeMounts": {
-                    "description": "Common mount points to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumeMounts) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common mount points to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumeMounts) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraVolumes": {
-                    "description": "Common volumes to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumes) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common volumes to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumes) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "image": {

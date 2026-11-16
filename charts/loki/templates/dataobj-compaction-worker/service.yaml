@@ -1,0 +1,4 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if $isDistributed }}
+{{- include "loki.service" (dict "target" "dataobj-compaction-worker" "component" .Values.dataobjCompactionWorker "ctx" .) }}
+{{- end }}

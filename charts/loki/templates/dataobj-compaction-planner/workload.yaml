@@ -1,0 +1,7 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if $isDistributed }}
+{{- $args := list
+  (printf "-dataobj.compaction.scheduler.advertise-addr=[$(POD_IP)]:%s" (.Values.loki.server.http_listen_port | toString))
+}}
+{{- include "loki.component" (dict "ctx" . "component" .Values.dataobjCompactionPlanner "target" "dataobj-compaction-planner" "args" $args "memberlist" false) }}
+{{- end }}
