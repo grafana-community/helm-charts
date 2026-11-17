@@ -57,3 +57,65 @@ tests:
     asserts:
       - notExists:
           path: spec.template.spec.initContainers
+
+  - it: should run the plugins sidecar only as a native sidecar when initPlugins and restartPolicy Always are set
+    set:
+      sidecar.plugins.enabled: true
+      sidecar.plugins.initPlugins: true
+      sidecar.plugins.restartPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: grafana-init-sc-plugins
+      - equal:
+          path: spec.template.spec.initContainers[0].restartPolicy
+          value: Always
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: METHOD
+            value: WATCH
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: REQ_URL
+            value: http://localhost:3000/api/admin/provisioning/plugins/reload
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: REQ_SKIP_INIT
+            value: "true"
+      - notContains:
+          path: spec.template.spec.containers
+          content:
+            name: grafana-sc-plugins
+          any: true
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: grafana
+
+  - it: should keep the plugins sidecar container when restartPolicy is set without initPlugins
+    set:
+      sidecar.plugins.enabled: true
+      sidecar.plugins.restartPolicy: Always
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: grafana-sc-plugins
+          any: true
+
+  - it: should not reload Grafana from the native plugins sidecar when skipReload is true
+    set:
+      sidecar.plugins.enabled: true
+      sidecar.plugins.initPlugins: true
+      sidecar.plugins.restartPolicy: Always
+      sidecar.plugins.skipReload: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: REQ_URL
+          any: true

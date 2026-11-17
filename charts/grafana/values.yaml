@@ -1528,6 +1528,17 @@ sidecar:
     # Deploy the plugins sidecar as an initContainer in addition to a container.
     # This is needed if skipReload is true, to load any plugins defined at startup time.
     initPlugins: false
+    # Use native sidecar https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/
+    # Together with initPlugins, the initContainer replaces the plugins sidecar container.
+    # restartPolicy: Always
+    # # only applies to native sidecars
+    # startupProbe:
+    #   httpGet:
+    #     path: /healthz
+    #     port: 8080
+    #   initialDelaySeconds: 5
+    #   periodSeconds: 5
+    #   failureThreshold: 60 # 5 minutes
     # Additional plugins sidecar volume mounts
     extraMounts: []
     # Sets the size limit of the plugin sidecar emptyDir volume
