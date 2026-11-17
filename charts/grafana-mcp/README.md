@@ -38,7 +38,7 @@ helm delete RELEASE-NAME
 
 ## Network policy
 
-Set `networkPolicy.enabled: true` to create a NetworkPolicy for the MCP server. By default it accepts connections from any source and limits egress to DNS and Grafana (the `grafana.url` port and 3000), so it also works in namespaces with a default deny-all policy. Network policies are only enforced by network plugins that support them; on EKS, enable network policy in the Amazon VPC CNI.
+Set `networkPolicy.enabled: true` to create a NetworkPolicy for the MCP server. By default it accepts connections from any source and allows egress only on the DNS port (53) and the Grafana ports (the `grafana.url` port and 3000), so it also works in namespaces with a default deny-all policy. These egress rules limit ports, not destinations: set `networkPolicy.egress.to` to limit where the Grafana ports can connect (the DNS rule stays open to any destination). Network policies are only enforced by network plugins that support them; on EKS, enable network policy in the Amazon VPC CNI.
 
 To accept connections only from a proxy or gateway, list its pods:
 

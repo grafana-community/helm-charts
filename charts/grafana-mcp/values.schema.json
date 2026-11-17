@@ -359,11 +359,11 @@
                     "type": "object",
                     "properties": {
                         "allowDNS": {
-                            "description": "Allow DNS (port 53)",
+                            "description": "Allow DNS (port 53) to any destination. `to` does not apply to this rule",
                             "type": "boolean"
                         },
                         "enabled": {
-                            "description": "Restrict egress to DNS and Grafana",
+                            "description": "Restrict egress to DNS (port 53) and the Grafana ports. Destinations are not restricted unless `to` is set",
                             "type": "boolean"
                         },
                         "ports": {
@@ -371,7 +371,7 @@
                             "type": "array"
                         },
                         "to": {
-                            "description": "Allowed destinations (NetworkPolicyPeers). Defaults to any destination.",
+                            "description": "Allowed destinations (NetworkPolicyPeers) for the Grafana ports, e.g. Grafana's namespace. Defaults to any destination.",
                             "type": "array"
                         }
                     }
@@ -384,7 +384,7 @@
                     "type": "object",
                     "properties": {
                         "allowExternal": {
-                            "description": "Accept connections from any source. When false, only pods labelled `\u003cfullname\u003e-client: \"true\"` and the sources below can connect.",
+                            "description": "Accept connections from any source. When false, only pods labelled `\u003cfullname\u003e-client: \"true\"` (the install notes show the exact label) and the sources below can connect.",
                             "type": "boolean"
                         },
                         "extraPorts": {
@@ -762,6 +762,39 @@
                 "string",
                 "null"
             ]
+        },
+        "tests": {
+            "description": "`helm test` integration tests",
+            "type": "object",
+            "properties": {
+                "integration": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "description": "Create test pods that call an MCP tool against Grafana and, when `networkPolicy.ingress.allowExternal` is false, check that pods without the client label cannot connect. Needs a Grafana at `grafana.url`",
+                            "type": "boolean"
+                        },
+                        "image": {
+                            "description": "Test image",
+                            "type": "object",
+                            "properties": {
+                                "registry": {
+                                    "description": "The Docker registry",
+                                    "type": "string"
+                                },
+                                "repository": {
+                                    "description": "The Docker repository",
+                                    "type": "string"
+                                },
+                                "tag": {
+                                    "description": "Image tag",
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
         "tolerations": {
             "description": "Tolerations",

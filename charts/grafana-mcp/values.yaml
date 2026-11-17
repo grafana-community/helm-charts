@@ -300,7 +300,7 @@ networkPolicy:
   # -- Create a NetworkPolicy
   enabled: false
   ingress:
-    # -- Accept connections from any source. When false, only pods labelled `<fullname>-client: "true"` and the sources below can connect.
+    # -- Accept connections from any source. When false, only pods labelled `<fullname>-client: "true"` (the install notes show the exact label) and the sources below can connect.
     allowExternal: true
     # -- Namespaces that can connect (LabelSelector)
     namespaceSelector: {}
@@ -312,14 +312,28 @@ networkPolicy:
     # -- Additional ports to accept connections on, e.g. 15008 for Istio ambient mode
     extraPorts: []
   egress:
-    # -- Restrict egress to DNS and Grafana
+    # -- Restrict egress to DNS (port 53) and the Grafana ports. Destinations are not restricted unless `to` is set
     enabled: true
-    # -- Allow DNS (port 53)
+    # -- Allow DNS (port 53) to any destination. `to` does not apply to this rule
     allowDNS: true
     # -- Allowed ports. Defaults to the `grafana.url` port and 3000, Grafana's pod port.
     ports: []
-    # -- Allowed destinations (NetworkPolicyPeers). Defaults to any destination.
+    # -- Allowed destinations (NetworkPolicyPeers) for the Grafana ports, e.g. Grafana's namespace. Defaults to any destination.
     to: []
+
+# -- `helm test` integration tests
+tests:
+  integration:
+    # -- Create test pods that call an MCP tool against Grafana and, when `networkPolicy.ingress.allowExternal` is false, check that pods without the client label cannot connect. Needs a Grafana at `grafana.url`
+    enabled: false
+    # -- Test image
+    image:
+      # -- The Docker registry
+      registry: docker.io
+      # -- The Docker repository
+      repository: bats/bats
+      # -- Image tag
+      tag: 1.11.1
 
 # -- Resource requests and limits
 resources: {}

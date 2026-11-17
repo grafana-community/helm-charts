@@ -33,7 +33,7 @@ spec:
       from:
         - podSelector:
             matchLabels:
-              {{ include "grafana-mcp.fullname" . }}-client: "true"
+              {{ include "grafana-mcp.clientLabel" . }}: "true"
         {{- with $np.ingress.namespaceSelector }}
         - namespaceSelector:
             {{- toYaml . | nindent 12 }}

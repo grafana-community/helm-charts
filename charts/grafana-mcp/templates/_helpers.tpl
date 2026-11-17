@@ -200,3 +200,10 @@ Port of grafana.url: the explicit port, else 443 for https and 80 otherwise
 80
 {{- end -}}
 {{- end -}}
+
+{{/*
+Client label key for the NetworkPolicy: the fullname shortened to 56 characters plus "-client", within the 63-character label key limit
+*/}}
+{{- define "grafana-mcp.clientLabel" -}}
+{{- printf "%s-client" (include "grafana-mcp.fullname" . | trunc 56 | trimSuffix "-") -}}
+{{- end -}}
