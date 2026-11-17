@@ -1,0 +1,241 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: logline index builder
+templates:
+  - logline-index-builder/workload.yaml
+  - logline-index-builder/service.yaml
+  - logline-index-builder/pdb.yaml
+  - validate.yaml
+  - config.yaml
+
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  # the logline-index-builder target needs Loki 4.0+
+  loki.image.tag: 4.0.0
+  loki.logline.minDate: "2026-01-01"
+
+tests:
+  - it: does not render anything when the logline index builder is disabled
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        hasDocuments:
+          count: 0
+      - template: logline-index-builder/service.yaml
+        hasDocuments:
+          count: 0
+      - template: logline-index-builder/pdb.yaml
+        hasDocuments:
+          count: 0
+
+  - it: fails outside of distributed mode
+    set:
+      deploymentMode: SimpleScalable
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loglineIndexBuilder.enabled requires deploymentMode Distributed
+
+  - it: renders a StatefulSet running the logline-index-builder target
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        hasDocuments:
+          count: 1
+      - template: logline-index-builder/workload.yaml
+        isKind:
+          of: StatefulSet
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-logline-index-builder
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: spec.replicas
+          value: 2
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: spec.podManagementPolicy
+          value: Parallel
+      - template: logline-index-builder/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -target=logline-index-builder
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 600
+
+  - it: writes the scratch files to the data volume
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-builder.scratch-dir=/var/loki/logline-index-builder
+
+  - it: is a memberlist member
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
+          value: memberlist
+
+  - it: renders the headless service referenced by the StatefulSet
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+    asserts:
+      - template: logline-index-builder/service.yaml
+        hasDocuments:
+          count: 2
+      - template: logline-index-builder/service.yaml
+        documentIndex: 1
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-logline-index-builder-headless
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-loki-logline-index-builder-headless
+
+  - it: uses an emptyDir data volume by default
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        notExists:
+          path: spec.volumeClaimTemplates
+      - template: logline-index-builder/workload.yaml
+        contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+
+  - it: renders a volumeClaimTemplate when persistence is enabled
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+      loglineIndexBuilder.persistence.enabled: true
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        lengthEqual:
+          path: spec.volumeClaimTemplates
+          count: 1
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: data
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 60Gi
+
+  - it: uses the size and the storage class of the persistence values
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+      loglineIndexBuilder.persistence.enabled: true
+      loglineIndexBuilder.persistence.size: 200Gi
+      loglineIndexBuilder.persistence.storageClass: fast
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 200Gi
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: fast
+
+  - it: does not render a PodDisruptionBudget for one replica
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 1
+      loglineIndexBuilder.podDisruptionBudget.maxUnavailable: 1
+    asserts:
+      - template: logline-index-builder/pdb.yaml
+        hasDocuments:
+          count: 0
+
+  - it: renders a PodDisruptionBudget for more than one replica
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+      loglineIndexBuilder.podDisruptionBudget.maxUnavailable: 1
+    asserts:
+      - template: logline-index-builder/pdb.yaml
+        hasDocuments:
+          count: 1
+      - template: logline-index-builder/pdb.yaml
+        equal:
+          path: spec.maxUnavailable
+          value: 1
+
+  - it: passes extraArgs to the container
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+      loglineIndexBuilder.extraArgs:
+        - -logline-builder.kafka.session-timeout=3m
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-builder.kafka.session-timeout=3m
+
+  - it: fails when the Loki image is older than 4.0
+    set:
+      loki.image.tag: 3.7.9
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loglineIndexBuilder.enabled requires Loki 4.0.0 or later
+
+  - it: checks the component image tag before the global one
+    set:
+      loki.image.tag: 3.7.9
+      loglineIndexBuilder.image.tag: 4.0.0
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        hasDocuments:
+          count: 1
+
+  - it: passes the first date of the logline index to the container
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-store.min-date=2026-01-01
+
+  - it: fails without the first date of the logline index
+    set:
+      loki.logline.minDate: null
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.minDate is required

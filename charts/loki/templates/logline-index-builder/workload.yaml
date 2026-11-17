@@ -1,0 +1,8 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if $isDistributed }}
+{{- $args := list
+  "-logline-builder.scratch-dir=/var/loki/logline-index-builder"
+  (include "loki.logline.minDateArg" .)
+}}
+{{- include "loki.component" (dict "ctx" . "component" .Values.loglineIndexBuilder "target" "logline-index-builder" "args" $args) }}
+{{- end }}

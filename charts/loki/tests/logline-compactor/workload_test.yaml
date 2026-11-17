@@ -1,0 +1,172 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: logline compactor
+templates:
+  - logline-compactor/workload.yaml
+  - logline-compactor/service.yaml
+  - logline-compactor/pdb.yaml
+  - logline-scheduler/service.yaml
+  - validate.yaml
+  - config.yaml
+
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  # the logline-compactor target needs Loki 4.0+
+  loki.image.tag: 4.0.0
+  loki.logline.minDate: "2026-01-01"
+
+tests:
+  - it: does not render anything when the logline compactor is disabled
+    asserts:
+      - template: logline-compactor/workload.yaml
+        hasDocuments:
+          count: 0
+      - template: logline-compactor/service.yaml
+        hasDocuments:
+          count: 0
+      - template: logline-compactor/pdb.yaml
+        hasDocuments:
+          count: 0
+
+  - it: fails outside of distributed mode
+    set:
+      deploymentMode: SimpleScalable
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 2
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loglineCompactor.enabled requires deploymentMode Distributed
+
+  - it: renders a Deployment running the logline-compactor target
+    set:
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 2
+    asserts:
+      - template: logline-compactor/workload.yaml
+        hasDocuments:
+          count: 1
+      - template: logline-compactor/workload.yaml
+        isKind:
+          of: Deployment
+      - template: logline-compactor/workload.yaml
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-logline-compactor
+      - template: logline-compactor/workload.yaml
+        equal:
+          path: spec.replicas
+          value: 2
+      - template: logline-compactor/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -target=logline-compactor
+
+  - it: looks up the scheduler through its service
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 2
+      global.clusterDomain: example.local
+      loki.server.http_listen_port: 3200
+    release:
+      namespace: logging
+    asserts:
+      - template: logline-scheduler/service.yaml
+        documentIndex: 0
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-logline-scheduler
+      - template: logline-scheduler/service.yaml
+        documentIndex: 0
+        contains:
+          path: spec.ports
+          content:
+            name: http-metrics
+            port: 3200
+            targetPort: http-metrics
+            protocol: TCP
+      - template: logline-compactor/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-compaction.scheduler-address=http://RELEASE-NAME-loki-logline-scheduler.logging.svc.example.local:3200
+
+  - it: is not a memberlist seed node
+    set:
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 2
+    asserts:
+      - template: logline-compactor/workload.yaml
+        notExists:
+          path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
+
+  - it: does not render a PodDisruptionBudget for one replica
+    set:
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 1
+      loglineCompactor.podDisruptionBudget.maxUnavailable: 1
+    asserts:
+      - template: logline-compactor/pdb.yaml
+        hasDocuments:
+          count: 0
+
+  - it: renders a PodDisruptionBudget for more than one replica
+    set:
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 2
+      loglineCompactor.podDisruptionBudget.maxUnavailable: 1
+    asserts:
+      - template: logline-compactor/pdb.yaml
+        hasDocuments:
+          count: 1
+      - template: logline-compactor/pdb.yaml
+        equal:
+          path: spec.maxUnavailable
+          value: 1
+
+  - it: fails when the Loki image is older than 4.0
+    set:
+      loki.image.tag: 3.7.9
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 2
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loglineCompactor.enabled requires Loki 4.0.0 or later
+
+  - it: checks the component image tag before the global one
+    set:
+      loki.image.tag: 3.7.9
+      loglineCompactor.image.tag: 4.0.0
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 2
+    asserts:
+      - template: logline-compactor/workload.yaml
+        hasDocuments:
+          count: 1
+
+  - it: passes the first date of the logline index to the container
+    set:
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 2
+    asserts:
+      - template: logline-compactor/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-store.min-date=2026-01-01
+
+  - it: fails without the first date of the logline index
+    set:
+      loki.logline.minDate: null
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 2
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.minDate is required

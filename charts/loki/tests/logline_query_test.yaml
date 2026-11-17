@@ -1,0 +1,92 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: logline index in queries
+templates:
+  - querier/workload.yaml
+  - query-frontend/workload.yaml
+  - validate.yaml
+  - config.yaml
+
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: does not pass the logline flags by default
+    asserts:
+      - template: querier/workload.yaml
+        notContains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+      - template: query-frontend/workload.yaml
+        notContains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+
+  - it: passes the logline flags to the querier and the query frontend
+    set:
+      loki.logline.minDate: "2026-01-01"
+      loki.logline.query.enabled: true
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-store.min-date=2026-01-01
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+      - template: query-frontend/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-store.min-date=2026-01-01
+      - template: query-frontend/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+
+  - it: keeps the zone awareness flag of the querier
+    set:
+      loki.logline.minDate: "2026-01-01"
+      loki.logline.query.enabled: true
+      ingester.zoneAwareReplication.enabled: true
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.zone-awareness-enabled=true
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+
+  - it: fails without the first date of the logline index
+    set:
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.minDate is required
+
+  - it: fails with a date in another form
+    set:
+      loki.logline.minDate: "2026-01-01T00:00:00Z"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.minDate is required
+
+  - it: fails outside of distributed mode
+    set:
+      deploymentMode: SimpleScalable
+      loki.logline.minDate: "2026-01-01"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.query.enabled requires deploymentMode Distributed

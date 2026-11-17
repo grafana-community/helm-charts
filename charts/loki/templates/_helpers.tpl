@@ -1199,6 +1199,13 @@ env:
 {{- end -}}
 
 {{/*
+The argument with the first date of the logline index
+*/}}
+{{- define "loki.logline.minDateArg" -}}
+{{- printf "-logline-store.min-date=%s" (.Values.loki.logline.minDate | toString) -}}
+{{- end -}}
+
+{{/*
 format rules dir
 */}}
 {{- define "loki.rulerRulesDirName" -}}

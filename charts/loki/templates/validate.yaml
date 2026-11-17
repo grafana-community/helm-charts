@@ -46,8 +46,8 @@
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomPlanner "name" "bloom-planner") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.patternIngester "name" "pattern-ingester") }}
 
-{{- /* The dataobj targets only exist in Loki 4.0+. Tags that are not semantic versions (branch builds, digests) cannot be checked and are let through. */ -}}
-{{- range $key, $name := dict "dataobjBuilder" "dataobj builder" "dataobjCompactionPlanner" "dataobj compaction planner" "dataobjCompactionWorker" "dataobj compaction worker" }}
+{{- /* The dataobj and logline targets only exist in Loki 4.0+. Tags that are not semantic versions (branch builds, digests) cannot be checked and are let through. */ -}}
+{{- range $key, $name := dict "dataobjBuilder" "dataobj builder" "dataobjCompactionPlanner" "dataobj compaction planner" "dataobjCompactionWorker" "dataobj compaction worker" "loglineIndexBuilder" "logline index builder" "loglineScheduler" "logline scheduler" "loglineCompactor" "logline compactor" }}
 {{- $component := index $.Values $key }}
 {{- if $component.enabled }}
 {{- if ne (include "loki.deployment.isDistributed" $) "true" }}
@@ -57,6 +57,17 @@
 {{- if and (regexMatch "^v?[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$" $tag) (not (semverCompare ">=4.0.0-0" $tag)) }}
 {{- fail (printf "%s.enabled requires Loki 4.0.0 or later, but the %s image tag is %q. Set loki.image.tag or %s.image.tag to a 4.x version." $key $name $tag $key) }}
 {{- end }}
+{{- end }}
+{{- end }}
+{{- if and .Values.loglineScheduler.enabled (gt (int .Values.loglineScheduler.replicas) 1) }}
+{{- fail "loglineScheduler.replicas must not be more than 1. Logline schedulers do not coordinate with each other, so two schedulers can merge the same indexes twice." }}
+{{- end }}
+{{- if and .Values.loki.logline.query.enabled (ne (include "loki.deployment.isDistributed" .) "true") }}
+{{- fail "loki.logline.query.enabled requires deploymentMode Distributed (or SimpleScalable<->Distributed) with an object storage backend." }}
+{{- end }}
+{{- if or .Values.loglineIndexBuilder.enabled .Values.loglineScheduler.enabled .Values.loglineCompactor.enabled .Values.loki.logline.query.enabled }}
+{{- if not (regexMatch "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" (.Values.loki.logline.minDate | toString)) }}
+{{- fail "loki.logline.minDate is required, in the form YYYY-MM-DD, when a logline component or loki.logline.query.enabled is on." }}
 {{- end }}
 {{- end }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.overridesExporter "name" "overrides-exporter") }}
