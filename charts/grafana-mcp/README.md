@@ -40,7 +40,7 @@ helm delete RELEASE-NAME
 
 Set `networkPolicy.enabled: true` to create a NetworkPolicy for the MCP server. By default it accepts connections from any source and allows egress only on the DNS port (53) and the Grafana ports (the `grafana.url` port and 3000), so it also works in namespaces with a default deny-all policy. These egress rules limit ports, not destinations: set `networkPolicy.egress.to` to limit where the Grafana ports can connect (the DNS rule stays open to any destination). Network policies are only enforced by network plugins that support them; on EKS, enable network policy in the Amazon VPC CNI.
 
-To accept connections only from a proxy or gateway, list its pods:
+To accept connections only from a proxy or gateway, set `allowExternal: false` and list its pods. The sources under `ingress` (`from`, `namespaceSelector` and `ipBlocks`) only apply when `allowExternal` is false, so the chart fails to render if they are set while it is true:
 
 ```yaml
 networkPolicy:
@@ -55,6 +55,8 @@ networkPolicy:
           matchLabels:
             app.kubernetes.io/name: ingress-nginx
 ```
+
+With `allowExternal: false`, Prometheus is also blocked. If `serviceMonitor.enabled` is true, add Prometheus's pods to `from` as well, or its scrapes will time out.
 
 See `networkPolicy` in `values.yaml` for CIDR blocks, extra ports and egress destinations.
 

@@ -235,3 +235,51 @@ tests:
           path: spec.ingress[0].from[0].podSelector.matchLabels
           value:
             ooooooooooooooooooooooooooooooooooooooooooooooooooooooo-client: "true"
+
+  - it: should fail when namespaceSelector is set while allowExternal is true
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+    asserts:
+      - failedTemplate:
+          errorMessage: networkPolicy.ingress.namespaceSelector, ipBlocks and from only apply when networkPolicy.ingress.allowExternal is false. Set allowExternal to false, or remove them.
+
+  - it: should fail when ipBlocks are set while allowExternal is true
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          ipBlocks:
+            - 10.0.0.0/8
+    asserts:
+      - failedTemplate:
+          errorPattern: only apply when networkPolicy.ingress.allowExternal is false
+
+  - it: should fail when from is set while allowExternal is true
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          allowExternal: true
+          from:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+    asserts:
+      - failedTemplate:
+          errorPattern: only apply when networkPolicy.ingress.allowExternal is false
+
+  - it: should not check ingress sources when the NetworkPolicy is disabled
+    set:
+      networkPolicy:
+        enabled: false
+        ingress:
+          ipBlocks:
+            - 10.0.0.0/8
+    asserts:
+      - hasDocuments:
+          count: 0
