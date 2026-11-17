@@ -181,3 +181,57 @@ tests:
                 - namespaceSelector:
                     matchLabels:
                       kubernetes.io/metadata.name: grafana
+
+  - it: should keep the client label key at 63 characters when the fullname is 56
+    release:
+      name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          allowExternal: false
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0].podSelector.matchLabels
+          value:
+            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-grafana-mcp-client: "true"
+
+  - it: should shorten the fullname in the client label key so it stays within 63 characters
+    release:
+      name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          allowExternal: false
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0].podSelector.matchLabels
+          value:
+            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-grafana-mc-client: "true"
+
+  - it: should shorten a 63-character fullnameOverride in the client label key
+    set:
+      fullnameOverride: ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+      networkPolicy:
+        enabled: true
+        ingress:
+          allowExternal: false
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0].podSelector.matchLabels
+          value:
+            oooooooooooooooooooooooooooooooooooooooooooooooooooooooo-client: "true"
+
+  - it: should not leave a double hyphen in the client label key when the shortened fullname ends with one
+    set:
+      fullnameOverride: ooooooooooooooooooooooooooooooooooooooooooooooooooooooo-ppppppp
+      networkPolicy:
+        enabled: true
+        ingress:
+          allowExternal: false
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0].podSelector.matchLabels
+          value:
+            ooooooooooooooooooooooooooooooooooooooooooooooooooooooo-client: "true"

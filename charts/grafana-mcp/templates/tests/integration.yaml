@@ -1,0 +1,119 @@
+{{- if .Values.tests.integration.enabled }}
+{{- $fullname := include "grafana-mcp.fullname" . }}
+{{- $image := .Values.tests.integration.image }}
+{{- $denied := and .Values.networkPolicy.enabled (not .Values.networkPolicy.ingress.allowExternal) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $fullname }}-integration-tests
+  namespace: {{ include "grafana-mcp.namespace" . }}
+  labels:
+    {{- include "grafana-mcp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: integration-tests
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  client.bats: |
+    MCP="http://{{ $fullname }}:{{ .Values.service.port }}"
+
+    post() {
+      wget -q -T 15 -O /dev/null "${AUTH[@]}" --header "Content-Type: application/json" --post-data "$2" "${MCP}$1"
+    }
+
+    teardown() {
+      if [ -n "${SSE_PID:-}" ]; then kill "${SSE_PID}" 2>/dev/null || true; fi
+    }
+
+    @test "a pod with the client label gets an MCP tool call answered by Grafana" {
+      AUTH=()
+      if [ -n "${MCP_TOKEN:-}" ]; then AUTH=(--header "Authorization: Bearer ${MCP_TOKEN}"); fi
+      wget -q -O /tmp/sse "${AUTH[@]}" --header "Accept: text/event-stream" "${MCP}/sse" 3>&- &
+      SSE_PID=$!
+      for _ in $(seq 1 30); do grep -q '^data: /' /tmp/sse 2>/dev/null && break; sleep 1; done
+      endpoint=$(grep -m1 '^data: /' /tmp/sse | sed 's/^data: //' | tr -d '\r')
+      [ -n "${endpoint}" ]
+      post "${endpoint}" '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"helm-test","version":"1"}}}'
+      post "${endpoint}" '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+      post "${endpoint}" '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"search_dashboards","arguments":{"query":""}}}'
+      for _ in $(seq 1 30); do grep -q '"id":2' /tmp/sse && break; sleep 1; done
+      result=$(grep '"id":2' /tmp/sse || true)
+      echo "tools/call answer: ${result}" >&3
+      [[ "${result}" == *'"result"'* ]]
+      [[ "${result}" != *'"isError":true'* ]]
+    }
+  {{- if $denied }}
+  denied.bats: |
+    HOST="{{ $fullname }}"
+    PORT="{{ .Values.service.port }}"
+
+    @test "the MCP Service name resolves" {
+      run nslookup "${HOST}"
+      [[ "${output}" == *"Name:"* ]]
+    }
+
+    @test "a pod without the client label cannot connect to the MCP server" {
+      run timeout 10 bash -c "exec 3<>/dev/tcp/${HOST}/${PORT}"
+      [ "${status}" -ne 0 ]
+    }
+  {{- end }}
+{{- range $test := (ternary (list "client" "denied") (list "client") $denied) }}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ $fullname }}-test-{{ $test }}
+  namespace: {{ include "grafana-mcp.namespace" $ }}
+  labels:
+    {{- include "grafana-mcp.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: integration-tests
+    {{- if eq $test "client" }}
+    {{ include "grafana-mcp.clientLabel" $ }}: "true"
+    {{- end }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    runAsGroup: 65534
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: bats
+      image: "{{ $image.registry }}/{{ $image.repository }}:{{ $image.tag }}"
+      command:
+        - bats
+        - --tap
+        - /tests/{{ $test }}.bats
+      {{- if and (eq $test "client") (include "grafana-mcp.serverAuthEnabled" $) }}
+      env:
+        - name: MCP_TOKEN
+          valueFrom:
+            secretKeyRef:
+              {{- if $.Values.serverAuth.tokenSecret.name }}
+              name: {{ $.Values.serverAuth.tokenSecret.name }}
+              key: {{ $.Values.serverAuth.tokenSecret.key }}
+              {{- else }}
+              name: {{ $fullname }}
+              key: server-token
+              {{- end }}
+      {{- end }}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: tests
+          mountPath: /tests
+  volumes:
+    - name: tests
+      configMap:
+        name: {{ $fullname }}-integration-tests
+{{- end }}
+{{- end }}

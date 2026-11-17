@@ -1,0 +1,81 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana-mcp integration tests
+templates:
+  - tests/integration.yaml
+tests:
+  - it: should not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render the tool-call test only when the network policy accepts any source
+    set:
+      tests:
+        integration:
+          enabled: true
+    asserts:
+      - hasDocuments:
+          count: 2
+      - notExists:
+          path: data["denied.bats"]
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-grafana-mcp-test-client
+        documentIndex: 1
+
+  - it: should label the tool-call pod as a client and add the denied test when only clients can connect
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          allowExternal: false
+      tests:
+        integration:
+          enabled: true
+    asserts:
+      - hasDocuments:
+          count: 3
+      - exists:
+          path: data["denied.bats"]
+        documentIndex: 0
+      - equal:
+          path: metadata.labels["RELEASE-NAME-grafana-mcp-client"]
+          value: "true"
+        documentIndex: 1
+      - notExists:
+          path: metadata.labels["RELEASE-NAME-grafana-mcp-client"]
+        documentIndex: 2
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: integration-tests
+        documentIndex: 2
+
+  - it: should read the caller token from the configured secret
+    set:
+      serverAuth:
+        tokenSecret:
+          name: my-token
+          key: token
+      tests:
+        integration:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.containers[0].env[0].valueFrom.secretKeyRef
+          value:
+            name: my-token
+            key: token
+        documentIndex: 1
+
+  - it: should send no token when caller authentication is disabled
+    set:
+      serverAuth:
+        token: null
+      tests:
+        integration:
+          enabled: true
+    asserts:
+      - notExists:
+          path: spec.containers[0].env
+        documentIndex: 1
