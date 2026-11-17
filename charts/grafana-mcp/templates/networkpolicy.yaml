@@ -1,5 +1,8 @@
 {{- if .Values.networkPolicy.enabled }}
 {{- $np := .Values.networkPolicy }}
+{{- if and $np.ingress.allowExternal (or $np.ingress.namespaceSelector $np.ingress.ipBlocks $np.ingress.from) }}
+{{- fail "networkPolicy.ingress.namespaceSelector, ipBlocks and from only apply when networkPolicy.ingress.allowExternal is false. Set allowExternal to false, or remove them." }}
+{{- end }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
