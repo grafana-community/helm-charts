@@ -3352,9 +3352,9 @@ gateway:
     # -- Optional list of imagePullSecrets. Overrides `global.image.pullSecrets`
     pullSecrets: []
     # -- The gateway image repository
-    repository: nginxinc/nginx-unprivileged
+    repository: nginx/nginx-unprivileged
     # -- The gateway image tag
-    tag: 1.31-alpine
+    tag: 1.31.8-alpine
     # -- The gateway image pull policy
     pullPolicy: IfNotPresent
   # -- The name of the PriorityClass for gateway pods

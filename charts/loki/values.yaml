@@ -32,15 +32,15 @@ global:
   dnsNamespace: "kube-system"
   # -- Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order)
   # (deprecated, use defaults.extraArgs)
-  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
+  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraArgs: []
   # -- Common environment variables to add to all pods directly managed by this chart.
   # (deprecated, use defaults.extraEnv)
-  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
+  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraEnv: []
   # -- Common source of environment injections to add to all pods directly managed by this chart.
   # (deprecated, use defaults.extraEnvFrom)
-  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
+  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   # For example to inject values from a Secret, use:
   # extraEnvFrom:
   #   - secretRef:
@@ -48,11 +48,11 @@ global:
   extraEnvFrom: []
   # -- Common volumes to add to all pods directly managed by this chart.
   # (deprecated, use defaults.extraVolumes)
-  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
+  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraVolumes: []
   # -- Common mount points to add to all pods directly managed by this chart.
   # (deprecated, use defaults.extraVolumeMounts)
-  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
+  # scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.
   extraVolumeMounts: []
 # -- Overrides the chart's name
 nameOverride: ""
@@ -1784,7 +1784,7 @@ gateway:
       # -- NGINX access log exporter image repository. Not used by the Envoy gateway.
       repository: "jkroepke/access-log-exporter"
       # -- NGINX access log exporter image tag. Not used by the Envoy gateway.
-      tag: "1.0.1"
+      tag: "1.0.2"
       # -- NGINX access log exporter image pull policy. Not used by the Envoy gateway.
       pullPolicy: IfNotPresent
     # @schema additionalProperties:true
@@ -6122,6 +6122,39 @@ patternIngester:
     # -- Set this toggle to false to opt out of automounting API credentials for the service account
     automountServiceAccountToken: true
 
+######################################################################################################################
+#
+# Data objects (EXPERIMENTAL, Loki 4.0 or later): dataobjBuilder, dataobjCompactionPlanner and dataobjCompactionWorker.
+#
+# Enabling these components is not enough, because the chart does not change the Loki configuration.
+# They also need these values:
+#
+# loki:
+#   storage:
+#     # Loki reads data objects with the Thanos object storage config (`loki.storage.object_store`).
+#     use_thanos_objstore: true
+#   # Loki 4.0 rejects the `boltdb_shipper` key of the chart defaults.
+#   storage_config:
+#     boltdb_shipper: null
+#   structuredConfig:
+#     dataobj:
+#       enabled: true
+#       builder:
+#         # The same topic as `kafka_config.topic`. With Kafka-based ingestion, Loki rejects a config without this key.
+#         topic: <topic>
+#       # Only for the dataobj compaction planner and workers.
+#       compaction:
+#         enabled: true
+#   # Only for the dataobj compaction planner. Compaction is off for every tenant by default. `limits_config` turns it
+#   # on for all tenants. To turn it on for one tenant, set the same keys under `loki.runtimeConfig.overrides.<tenant>`.
+#   limits_config:
+#     # Compact the index objects.
+#     dataobj_index_compaction_enabled: true
+#     # Optional: also compact the log objects. Loki rejects this key without the index key.
+#     dataobj_log_compaction_enabled: true
+#
+######################################################################################################################
+
 # -- Configuration for the dataobj builder. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`) and Kafka-based ingestion.
 # The dataobj builder consumes log records from Kafka and builds, uploads and indexes data objects (columnar storage).
 # Configure it through `loki.structuredConfig` (`kafka_config`, `dataobj`).
@@ -6342,6 +6375,385 @@ dataobjBuilder:
     enableStatefulSetAutoDeletePVC: false
     whenDeleted: Retain
     whenScaled: Retain
+  serviceAccount:
+    # -- Specifies whether a ServiceAccount should be created
+    create: false
+    # @schema type:[string, null]
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: null
+    # @schema item:object;itemProperties:{"name": {"type": "string"}}
+    # -- Image pull secrets for the service account
+    imagePullSecrets: []
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for the service account
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for the service account
+    labels: {}
+    # -- Set this toggle to false to opt out of automounting API credentials for the service account
+    automountServiceAccountToken: true
+
+# -- Configuration for the dataobj compaction planner. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`).
+# The dataobj compaction planner plans the compaction of the data objects that the dataobj builders (`dataobjBuilder`) write
+# and hands the tasks to the dataobj compaction workers (`dataobjCompactionWorker`).
+# Enabling the component is not enough: it also needs the Loki configuration that the "Data objects" section of values.yaml lists.
+dataobjCompactionPlanner:
+  # -- Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image:
+  # the chart fails to render if `dataobjCompactionPlanner.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.
+  # This only creates the workload: the planner stays idle until `dataobj.enabled` and `dataobj.compaction.enabled` are `true` in `loki.structuredConfig`.
+  enabled: false
+  # -- Kind of dataobj compaction planner workload. Use a StatefulSet: a rolling update then never runs two planners at the same time.
+  kind: StatefulSet
+  # -- Number of replicas for the dataobj compaction planner. Run a single replica: planners do not coordinate with each other.
+  replicas: 0
+  # @schema skipProperties:true;additionalProperties:true
+  # -- UpdateStrategy or Strategy for the dataobj compaction planner.
+  strategy:
+    rollingUpdate:
+      partition: 0
+  # @schema additionalProperties:true
+  # -- DNSConfig for dataobj compaction planner pods
+  dnsConfig: {}
+  # -- hostAliases to add
+  hostAliases: []
+  # @schema type:[boolean, null]
+  #  - ip: 1.2.3.4
+  #    hostnames:
+  #      - domain.tld
+  # -- Use the host's user namespace in the dataobj compaction planner
+  hostUsers: null
+  image:
+    # @schema type:[string, null]
+    # -- The Docker registry for the dataobj compaction planner image. Overrides `loki.image.registry`
+    registry: null
+    # @schema type:[string, null]
+    # -- Docker image repository for the dataobj compaction planner image. Overrides `loki.image.repository`
+    repository: null
+    # @schema type:[string, null]
+    # -- Docker image tag for the dataobj compaction planner image. Overrides `loki.image.tag`
+    tag: null
+  # @schema type:[string, null]
+  # -- Command to execute instead of defined in Docker image
+  command: null
+  # @schema type:[string, null]
+  # -- The name of the PriorityClass for dataobj compaction planner pods
+  priorityClassName: null
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for dataobj compaction planner
+  labels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for dataobj compaction planner
+  annotations: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for dataobj compaction planner pods
+  podLabels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for dataobj compaction planner pods
+  podAnnotations: {}
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
+  # -- Affinity for dataobj compaction planner pods.
+  # @default -- Hard node anti-affinity
+  # The value will be passed through tpl.
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: dataobj-compaction-planner
+              app.kubernetes.io/name: '{{ include "loki.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+          topologyKey: kubernetes.io/hostname
+  # -- Additional CLI args for the dataobj compaction planner
+  extraArgs: []
+  # -- Environment variables to add to the dataobj compaction planner pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to the dataobj compaction planner pods
+  extraEnvFrom: []
+  # -- Volume mounts to add to the dataobj compaction planner pods
+  extraVolumeMounts: []
+  # -- Volumes to add to the dataobj compaction planner pods
+  extraVolumes: []
+  # @schema skipProperties:true;additionalProperties:true
+  # -- readiness probe settings for dataobj compaction planner pods. If empty, use `loki.readinessProbe`
+  readinessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- liveness probe settings for dataobj compaction planner pods. If empty use `loki.livenessProbe`
+  livenessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- startup probe settings for dataobj compaction planner pods. If empty use `loki.startupProbe`
+  startupProbe: {}
+  # @schema additionalProperties:true
+  # -- Resource requests and limits for the dataobj compaction planner
+  resources: {}
+  # -- Container resize policy for the dataobj compaction planner
+  # Example:
+  # resizePolicy:
+  #   - resourceName: cpu
+  #     restartPolicy: NotRequired
+  #   - resourceName: memory
+  #     restartPolicy: RestartContainer
+  resizePolicy: []
+  # @schema type:[string, array, null]
+  # -- Containers to add to the dataobj compaction planner pods
+  extraContainers: []
+  # @schema type:[string, array, null]
+  # -- Init containers to add to the dataobj compaction planner pods
+  initContainers: []
+  # -- Grace period to allow the dataobj compaction planner to shutdown before it is killed
+  terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget minAvailable
+    minAvailable: null
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget maxUnavailable
+    maxUnavailable: null
+    # @schema type:[string, null]
+    # -- Pod Disruption Budget unhealthyPodEvictionPolicy
+    unhealthyPodEvictionPolicy: null
+  # @schema additionalProperties:true
+  # -- Node selector for dataobj compaction planner pods
+  nodeSelector: {}
+  # @schema item:object
+  # -- Topology Spread Constraints for dataobj compaction planner pods
+  # The value will be passed through tpl.
+  topologySpreadConstraints: []
+  # -- Tolerations for dataobj compaction planner pods
+  tolerations: []
+  service:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for dataobj compaction planner Service
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Additional labels for dataobj compaction planner Service
+    labels: {}
+    # -- Service Type for dataobj compaction planner Service
+    type: "ClusterIP"
+    # -- trafficDistribution for dataobj compaction planner Service
+    trafficDistribution: ""
+    # -- Session affinity for dataobj compaction planner Service
+    sessionAffinity: ""
+    # @schema additionalProperties:true
+    # -- Session affinity config for dataobj compaction planner Service
+    sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for dataobj compaction planner Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for dataobj compaction planner Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
+    # -- Adds the appProtocol field to the dataobj compaction planner service. This allows dataobj compaction planner to work with istio protocol selection.
+    appProtocol:
+    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
+    headlessService:
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional annotations for headless dataobj compaction planner Service
+      annotations: {}
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional labels for headless dataobj compaction planner Service
+      labels: {}
+  serviceAccount:
+    # -- Specifies whether a ServiceAccount should be created
+    create: false
+    # @schema type:[string, null]
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: null
+    # @schema item:object;itemProperties:{"name": {"type": "string"}}
+    # -- Image pull secrets for the service account
+    imagePullSecrets: []
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for the service account
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for the service account
+    labels: {}
+    # -- Set this toggle to false to opt out of automounting API credentials for the service account
+    automountServiceAccountToken: true
+
+# -- Configuration for the dataobj compaction worker. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`).
+# The dataobj compaction workers run the tasks of the dataobj compaction planner. They find the planner through its headless Service,
+# so enable `dataobjCompactionPlanner` as well.
+# Enabling the component is not enough: it also needs the Loki configuration that the "Data objects" section of values.yaml lists.
+dataobjCompactionWorker:
+  # -- Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image:
+  # the chart fails to render if `dataobjCompactionWorker.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.
+  # This only creates the workload: the workers stay idle until `dataobj.enabled` and `dataobj.compaction.enabled` are `true` in `loki.structuredConfig`.
+  enabled: false
+  # -- Kind of dataobj compaction worker workload. Workers keep only scratch data, so use a Deployment.
+  kind: Deployment
+  # @schema type:[integer, null]
+  # -- Number of replicas for the dataobj compaction worker. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
+  replicas: 0
+  # @schema skipProperties:true;additionalProperties:true
+  # -- UpdateStrategy or Strategy for the dataobj compaction worker.
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  # @schema additionalProperties:true
+  # -- DNSConfig for dataobj compaction worker pods
+  dnsConfig: {}
+  # -- hostAliases to add
+  hostAliases: []
+  # @schema type:[boolean, null]
+  #  - ip: 1.2.3.4
+  #    hostnames:
+  #      - domain.tld
+  # -- Use the host's user namespace in the dataobj compaction worker
+  hostUsers: null
+  image:
+    # @schema type:[string, null]
+    # -- The Docker registry for the dataobj compaction worker image. Overrides `loki.image.registry`
+    registry: null
+    # @schema type:[string, null]
+    # -- Docker image repository for the dataobj compaction worker image. Overrides `loki.image.repository`
+    repository: null
+    # @schema type:[string, null]
+    # -- Docker image tag for the dataobj compaction worker image. Overrides `loki.image.tag`
+    tag: null
+  # @schema type:[string, null]
+  # -- Command to execute instead of defined in Docker image
+  command: null
+  # @schema type:[string, null]
+  # -- The name of the PriorityClass for dataobj compaction worker pods
+  priorityClassName: null
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for dataobj compaction worker
+  labels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for dataobj compaction worker
+  annotations: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for dataobj compaction worker pods
+  podLabels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for dataobj compaction worker pods
+  podAnnotations: {}
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
+  # -- Affinity for dataobj compaction worker pods.
+  # @default -- Hard node anti-affinity
+  # The value will be passed through tpl.
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: dataobj-compaction-worker
+              app.kubernetes.io/name: '{{ include "loki.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+          topologyKey: kubernetes.io/hostname
+  # -- Additional CLI args for the dataobj compaction worker
+  extraArgs: []
+  # -- Environment variables to add to the dataobj compaction worker pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to the dataobj compaction worker pods
+  extraEnvFrom: []
+  # -- Volume mounts to add to the dataobj compaction worker pods
+  extraVolumeMounts: []
+  # -- Volumes to add to the dataobj compaction worker pods
+  extraVolumes: []
+  # @schema skipProperties:true;additionalProperties:true
+  # -- readiness probe settings for dataobj compaction worker pods. If empty, use `loki.readinessProbe`
+  readinessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- liveness probe settings for dataobj compaction worker pods. If empty use `loki.livenessProbe`
+  livenessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- startup probe settings for dataobj compaction worker pods. If empty use `loki.startupProbe`
+  startupProbe: {}
+  # @schema additionalProperties:true
+  # -- Resource requests and limits for the dataobj compaction worker
+  resources: {}
+  # -- Container resize policy for the dataobj compaction worker
+  # Example:
+  # resizePolicy:
+  #   - resourceName: cpu
+  #     restartPolicy: NotRequired
+  #   - resourceName: memory
+  #     restartPolicy: RestartContainer
+  resizePolicy: []
+  # @schema type:[string, array, null]
+  # -- Containers to add to the dataobj compaction worker pods
+  extraContainers: []
+  # @schema type:[string, array, null]
+  # -- Init containers to add to the dataobj compaction worker pods
+  initContainers: []
+  # -- Grace period to allow the dataobj compaction worker to shutdown before it is killed
+  terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget minAvailable
+    minAvailable: null
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget maxUnavailable
+    maxUnavailable: null
+    # @schema type:[string, null]
+    # -- Pod Disruption Budget unhealthyPodEvictionPolicy
+    unhealthyPodEvictionPolicy: null
+  # @schema additionalProperties:true
+  # -- Node selector for dataobj compaction worker pods
+  nodeSelector: {}
+  # @schema item:object
+  # -- Topology Spread Constraints for dataobj compaction worker pods
+  # The value will be passed through tpl.
+  topologySpreadConstraints: []
+  # -- Tolerations for dataobj compaction worker pods
+  tolerations: []
+  service:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for dataobj compaction worker Service
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Additional labels for dataobj compaction worker Service
+    labels: {}
+    # -- Service Type for dataobj compaction worker Service
+    type: "ClusterIP"
+    # -- trafficDistribution for dataobj compaction worker Service
+    trafficDistribution: ""
+    # -- Session affinity for dataobj compaction worker Service
+    sessionAffinity: ""
+    # @schema additionalProperties:true
+    # -- Session affinity config for dataobj compaction worker Service
+    sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for dataobj compaction worker Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for dataobj compaction worker Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
+    # -- Adds the appProtocol field to the dataobj compaction worker service. This allows dataobj compaction worker to work with istio protocol selection.
+    appProtocol:
+    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
+    headlessService:
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional annotations for headless dataobj compaction worker Service
+      annotations: {}
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional labels for headless dataobj compaction worker Service
+      labels: {}
   serviceAccount:
     # -- Specifies whether a ServiceAccount should be created
     create: false

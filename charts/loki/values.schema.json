@@ -201,7 +201,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -557,7 +557,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Adds the appProtocol field to the queryFrontend service. This allows bloomBuilder to work with istio protocol selection.",
+                    "description": "Adds the appProtocol field to the queryFrontend service. This allows bloomBuilder to work with istio protocol selection. @deprecated -- This option is deprecated in favor of `bloomBuilder.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -754,7 +754,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -1029,7 +1029,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for bloom-builder service",
+                    "description": "Annotations for bloom-builder service @deprecated -- This option is deprecated in favor of `bloomBuilder.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -1037,7 +1037,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for bloom-builder service",
+                    "description": "Labels for bloom-builder service @deprecated -- This option is deprecated in favor of `bloomBuilder.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -1088,7 +1088,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `bloomGateway.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -1487,7 +1487,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for bloom-gateway service",
+                    "description": "Annotations for bloom-gateway service @deprecated -- This option is deprecated in favor of `bloomGateway.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -1495,7 +1495,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for bloom-gateway service",
+                    "description": "Labels for bloom-gateway service @deprecated -- This option is deprecated in favor of `bloomGateway.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -1551,7 +1551,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `bloomPlanner.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -1950,7 +1950,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for bloom-planner service",
+                    "description": "Annotations for bloom-planner service @deprecated -- This option is deprecated in favor of `bloomPlanner.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -1958,7 +1958,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for bloom-planner service",
+                    "description": "Labels for bloom-planner service @deprecated -- This option is deprecated in favor of `bloomPlanner.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -2171,7 +2171,7 @@
                             "type": "integer"
                         },
                         "maxUnavailable": {
-                            "description": "Pod Disruption Budget maxUnavailable",
+                            "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                             "deprecated": true,
                             "type": [
                                 "string",
@@ -2356,7 +2356,7 @@
                     "type": "integer"
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -2586,7 +2586,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `compactor.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -2816,7 +2816,7 @@
                             "type": "string"
                         },
                         "volumeAttributesClassName": {
-                            "description": "Size of persistent disk If empty or set to null, no volumeAttributesClassName spec is set. Requires Kubernetes 1.31",
+                            "description": "Size of persistent disk -- Volume attributes class name to be used. If empty or set to null, no volumeAttributesClassName spec is set. Requires Kubernetes 1.31",
                             "type": [
                                 "string",
                                 "null"
@@ -2988,7 +2988,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for compactor service",
+                    "description": "Annotations for compactor service @deprecated -- This option is deprecated in favor of `compactor.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -2996,7 +2996,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for compactor service",
+                    "description": "Labels for compactor service @deprecated -- This option is deprecated in favor of `compactor.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -3004,7 +3004,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for compactor service",
+                    "description": "Service type for compactor service @deprecated -- This option is deprecated in favor of `compactor.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -3492,6 +3492,729 @@
                 }
             }
         },
+        "dataobjCompactionPlanner": {
+            "description": "Configuration for the dataobj compaction planner. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`). The dataobj compaction planner plans the compaction of the data objects that the dataobj builders (`dataobjBuilder`) write and hands the tasks to the dataobj compaction workers (`dataobjCompactionWorker`). Enabling the component is not enough: it also needs the Loki configuration that the \"Data objects\" section of values.yaml lists.",
+            "type": "object",
+            "properties": {
+                "affinity": {
+                    "description": "Affinity for dataobj compaction planner pods. The value will be passed through tpl.",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for dataobj compaction planner",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "command": {
+                    "description": "Command to execute instead of defined in Docker image",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dnsConfig": {
+                    "description": "DNSConfig for dataobj compaction planner pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "enabled": {
+                    "description": "Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image: the chart fails to render if `dataobjCompactionPlanner.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0. This only creates the workload: the planner stays idle until `dataobj.enabled` and `dataobj.compaction.enabled` are `true` in `loki.structuredConfig`.",
+                    "type": "boolean"
+                },
+                "extraArgs": {
+                    "description": "Additional CLI args for the dataobj compaction planner",
+                    "type": "array"
+                },
+                "extraContainers": {
+                    "description": "Containers to add to the dataobj compaction planner pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "extraEnv": {
+                    "description": "Environment variables to add to the dataobj compaction planner pods",
+                    "type": "array"
+                },
+                "extraEnvFrom": {
+                    "description": "Environment variables from secrets or configmaps to add to the dataobj compaction planner pods",
+                    "type": "array"
+                },
+                "extraVolumeMounts": {
+                    "description": "Volume mounts to add to the dataobj compaction planner pods",
+                    "type": "array"
+                },
+                "extraVolumes": {
+                    "description": "Volumes to add to the dataobj compaction planner pods",
+                    "type": "array"
+                },
+                "hostAliases": {
+                    "description": "hostAliases to add",
+                    "type": "array"
+                },
+                "hostUsers": {
+                    "description": "Use the host's user namespace in the dataobj compaction planner",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "registry": {
+                            "description": "The Docker registry for the dataobj compaction planner image. Overrides `loki.image.registry`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "repository": {
+                            "description": "Docker image repository for the dataobj compaction planner image. Overrides `loki.image.repository`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "tag": {
+                            "description": "Docker image tag for the dataobj compaction planner image. Overrides `loki.image.tag`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "initContainers": {
+                    "description": "Init containers to add to the dataobj compaction planner pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "description": "Kind of dataobj compaction planner workload. Use a StatefulSet: a rolling update then never runs two planners at the same time.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for dataobj compaction planner",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "livenessProbe": {
+                    "description": "liveness probe settings for dataobj compaction planner pods. If empty use `loki.livenessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "nodeSelector": {
+                    "description": "Node selector for dataobj compaction planner pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "podAnnotations": {
+                    "description": "Annotations for dataobj compaction planner pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podDisruptionBudget": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "enabled": {
+                            "description": "Enable Pod Disruption Budget",
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "description": "Labels for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "maxUnavailable": {
+                            "description": "Pod Disruption Budget maxUnavailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "minAvailable": {
+                            "description": "Pod Disruption Budget minAvailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "description": "Pod Disruption Budget unhealthyPodEvictionPolicy",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "podLabels": {
+                    "description": "Labels for dataobj compaction planner pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "priorityClassName": {
+                    "description": "The name of the PriorityClass for dataobj compaction planner pods",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "readinessProbe": {
+                    "description": "readiness probe settings for dataobj compaction planner pods. If empty, use `loki.readinessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "replicas": {
+                    "description": "Number of replicas for the dataobj compaction planner. Run a single replica: planners do not coordinate with each other.",
+                    "type": "integer"
+                },
+                "resizePolicy": {
+                    "description": "Container resize policy for the dataobj compaction planner Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
+                    "type": "array"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the dataobj compaction planner",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for dataobj compaction planner Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the dataobj compaction planner service. This allows dataobj compaction planner to work with istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless dataobj compaction planner Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless dataobj compaction planner Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for dataobj compaction planner Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for dataobj compaction planner Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for dataobj compaction planner Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for dataobj compaction planner Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for dataobj compaction planner Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for dataobj compaction planner Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for dataobj compaction planner Service",
+                            "type": "string"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "automountServiceAccountToken": {
+                            "description": "Set this toggle to false to opt out of automounting API credentials for the service account",
+                            "type": "boolean"
+                        },
+                        "create": {
+                            "description": "Specifies whether a ServiceAccount should be created",
+                            "type": "boolean"
+                        },
+                        "imagePullSecrets": {
+                            "description": "Image pull secrets for the service account",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "labels": {
+                            "description": "Labels for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "name": {
+                            "description": "The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "startupProbe": {
+                    "description": "startup probe settings for dataobj compaction planner pods. If empty use `loki.startupProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "strategy": {
+                    "description": "UpdateStrategy or Strategy for the dataobj compaction planner.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "terminationGracePeriodSeconds": {
+                    "description": "Grace period to allow the dataobj compaction planner to shutdown before it is killed",
+                    "type": "integer"
+                },
+                "tolerations": {
+                    "description": "Tolerations for dataobj compaction planner pods",
+                    "type": "array"
+                },
+                "topologySpreadConstraints": {
+                    "description": "Topology Spread Constraints for dataobj compaction planner pods The value will be passed through tpl.",
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
+        "dataobjCompactionWorker": {
+            "description": "Configuration for the dataobj compaction worker. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`). The dataobj compaction workers run the tasks of the dataobj compaction planner. They find the planner through its headless Service, so enable `dataobjCompactionPlanner` as well. Enabling the component is not enough: it also needs the Loki configuration that the \"Data objects\" section of values.yaml lists.",
+            "type": "object",
+            "properties": {
+                "affinity": {
+                    "description": "Affinity for dataobj compaction worker pods. The value will be passed through tpl.",
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "additionalProperties": true
+                },
+                "annotations": {
+                    "description": "Annotations for dataobj compaction worker",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "command": {
+                    "description": "Command to execute instead of defined in Docker image",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dnsConfig": {
+                    "description": "DNSConfig for dataobj compaction worker pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "enabled": {
+                    "description": "Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image: the chart fails to render if `dataobjCompactionWorker.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0. This only creates the workload: the workers stay idle until `dataobj.enabled` and `dataobj.compaction.enabled` are `true` in `loki.structuredConfig`.",
+                    "type": "boolean"
+                },
+                "extraArgs": {
+                    "description": "Additional CLI args for the dataobj compaction worker",
+                    "type": "array"
+                },
+                "extraContainers": {
+                    "description": "Containers to add to the dataobj compaction worker pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "extraEnv": {
+                    "description": "Environment variables to add to the dataobj compaction worker pods",
+                    "type": "array"
+                },
+                "extraEnvFrom": {
+                    "description": "Environment variables from secrets or configmaps to add to the dataobj compaction worker pods",
+                    "type": "array"
+                },
+                "extraVolumeMounts": {
+                    "description": "Volume mounts to add to the dataobj compaction worker pods",
+                    "type": "array"
+                },
+                "extraVolumes": {
+                    "description": "Volumes to add to the dataobj compaction worker pods",
+                    "type": "array"
+                },
+                "hostAliases": {
+                    "description": "hostAliases to add",
+                    "type": "array"
+                },
+                "hostUsers": {
+                    "description": "Use the host's user namespace in the dataobj compaction worker",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "registry": {
+                            "description": "The Docker registry for the dataobj compaction worker image. Overrides `loki.image.registry`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "repository": {
+                            "description": "Docker image repository for the dataobj compaction worker image. Overrides `loki.image.repository`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        "tag": {
+                            "description": "Docker image tag for the dataobj compaction worker image. Overrides `loki.image.tag`",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "initContainers": {
+                    "description": "Init containers to add to the dataobj compaction worker pods",
+                    "type": [
+                        "string",
+                        "array",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "description": "Kind of dataobj compaction worker workload. Workers keep only scratch data, so use a Deployment.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "Labels for dataobj compaction worker",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "livenessProbe": {
+                    "description": "liveness probe settings for dataobj compaction worker pods. If empty use `loki.livenessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "nodeSelector": {
+                    "description": "Node selector for dataobj compaction worker pods",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "podAnnotations": {
+                    "description": "Annotations for dataobj compaction worker pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "podDisruptionBudget": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "enabled": {
+                            "description": "Enable Pod Disruption Budget",
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "description": "Labels for Pod Disruption Budget",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "maxUnavailable": {
+                            "description": "Pod Disruption Budget maxUnavailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "minAvailable": {
+                            "description": "Pod Disruption Budget minAvailable",
+                            "type": [
+                                "string",
+                                "integer",
+                                "null"
+                            ]
+                        },
+                        "unhealthyPodEvictionPolicy": {
+                            "description": "Pod Disruption Budget unhealthyPodEvictionPolicy",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "podLabels": {
+                    "description": "Labels for dataobj compaction worker pods",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "priorityClassName": {
+                    "description": "The name of the PriorityClass for dataobj compaction worker pods",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "readinessProbe": {
+                    "description": "readiness probe settings for dataobj compaction worker pods. If empty, use `loki.readinessProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "replicas": {
+                    "description": "Number of replicas for the dataobj compaction worker. Set to null to omit spec.replicas from the workload, allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "resizePolicy": {
+                    "description": "Container resize policy for the dataobj compaction worker Example: resizePolicy: - resourceName: cpu restartPolicy: NotRequired - resourceName: memory restartPolicy: RestartContainer",
+                    "type": "array"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the dataobj compaction worker",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for dataobj compaction worker Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "appProtocol": {
+                            "description": "Adds the appProtocol field to the dataobj compaction worker service. This allows dataobj compaction worker to work with istio protocol selection.",
+                            "type": "object",
+                            "properties": {
+                                "grpc": {
+                                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headlessService": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "description": "Additional annotations for headless dataobj compaction worker Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "labels": {
+                                    "description": "Additional labels for headless dataobj compaction worker Service",
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "ipFamilies": {
+                            "description": "ipFamilies for dataobj compaction worker Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "array"
+                        },
+                        "ipFamilyPolicy": {
+                            "description": "ipFamilyPolicy for dataobj compaction worker Service Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services",
+                            "type": "string"
+                        },
+                        "labels": {
+                            "description": "Additional labels for dataobj compaction worker Service",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "sessionAffinity": {
+                            "description": "Session affinity for dataobj compaction worker Service",
+                            "type": "string"
+                        },
+                        "sessionAffinityConfig": {
+                            "description": "Session affinity config for dataobj compaction worker Service",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
+                        "trafficDistribution": {
+                            "description": "trafficDistribution for dataobj compaction worker Service",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Service Type for dataobj compaction worker Service",
+                            "type": "string"
+                        }
+                    }
+                },
+                "serviceAccount": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "description": "Annotations for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "automountServiceAccountToken": {
+                            "description": "Set this toggle to false to opt out of automounting API credentials for the service account",
+                            "type": "boolean"
+                        },
+                        "create": {
+                            "description": "Specifies whether a ServiceAccount should be created",
+                            "type": "boolean"
+                        },
+                        "imagePullSecrets": {
+                            "description": "Image pull secrets for the service account",
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "labels": {
+                            "description": "Labels for the service account",
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "name": {
+                            "description": "The name of the ServiceAccount to use. If not set and create is true, a name is generated using the fullname template",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                },
+                "startupProbe": {
+                    "description": "startup probe settings for dataobj compaction worker pods. If empty use `loki.startupProbe`",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "strategy": {
+                    "description": "UpdateStrategy or Strategy for the dataobj compaction worker.",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "terminationGracePeriodSeconds": {
+                    "description": "Grace period to allow the dataobj compaction worker to shutdown before it is killed",
+                    "type": "integer"
+                },
+                "tolerations": {
+                    "description": "Tolerations for dataobj compaction worker pods",
+                    "type": "array"
+                },
+                "topologySpreadConstraints": {
+                    "description": "Topology Spread Constraints for dataobj compaction worker pods The value will be passed through tpl.",
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
         "defaults": {
             "type": "object",
             "properties": {
@@ -3784,12 +4507,12 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection.",
+                    "description": "Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection. @deprecated -- This option is deprecated in favor of `distributor.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
                         "grpc": {
-                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `distributor.service.appProtocol.grpc`",
                             "deprecated": true,
                             "type": "string"
                         }
@@ -3989,7 +4712,7 @@
                     ]
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -4205,7 +4928,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for distributor service",
+                    "description": "Annotations for distributor service @deprecated -- This option is deprecated in favor of `ingester.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -4213,7 +4936,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for distributor service",
+                    "description": "Labels for distributor service @deprecated -- This option is deprecated in favor of `ingester.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -4221,7 +4944,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for distributor service",
+                    "description": "Service type for distributor service @deprecated -- This option is deprecated in favor of `ingester.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -4299,7 +5022,7 @@
                     "type": "object",
                     "properties": {
                         "behavior": {
-                            "description": "See `kubectl explain deployment.spec.strategy` for more",
+                            "description": "See `kubectl explain deployment.spec.strategy` for more -- ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy -- Behavior policies while scaling.",
                             "type": "object",
                             "additionalProperties": true
                         },
@@ -5258,23 +5981,23 @@
                     "type": "string"
                 },
                 "extraArgs": {
-                    "description": "Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order) (deprecated, use defaults.extraArgs) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common additional CLI arguments for all jobs (that is, -log.level debug, -config.expand-env=true or -log-config-reverse-order) (deprecated, use defaults.extraArgs) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraEnv": {
-                    "description": "Common environment variables to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnv) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common environment variables to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnv) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraEnvFrom": {
-                    "description": "Common source of environment injections to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnvFrom) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write. For example to inject values from a Secret, use: extraEnvFrom: - secretRef: name: mysecret",
+                    "description": "Common source of environment injections to add to all pods directly managed by this chart. (deprecated, use defaults.extraEnvFrom) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write. For example to inject values from a Secret, use: extraEnvFrom: - secretRef: name: mysecret",
                     "type": "array"
                 },
                 "extraVolumeMounts": {
-                    "description": "Common mount points to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumeMounts) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common mount points to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumeMounts) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "extraVolumes": {
-                    "description": "Common volumes to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumes) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
+                    "description": "Common volumes to add to all pods directly managed by this chart. (deprecated, use defaults.extraVolumes) scope: backend, bloom-builder, bloom-gateway, bloom-planner, compactor, dataobj-builder, dataobj-compaction-planner, dataobj-compaction-worker, distributor, index-gateway, ingester, overrides-exporter, pattern-ingester, querier, query-frontend, query-scheduler, read, ruler, write.",
                     "type": "array"
                 },
                 "image": {
@@ -5329,7 +6052,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `indexGateway.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -5437,7 +6160,7 @@
                     "type": "object"
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -5716,7 +6439,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for index-gateway service",
+                    "description": "Annotations for index-gateway service @deprecated -- This option is deprecated in favor of `indexGateway.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -5724,7 +6447,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for index-gateway service",
+                    "description": "Labels for index-gateway service @deprecated -- This option is deprecated in favor of `indexGateway.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -5732,7 +6455,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for index-gateway service",
+                    "description": "Service type for index-gateway service @deprecated -- This option is deprecated in favor of `indexGateway.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -5793,12 +6516,12 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection.",
+                    "description": "Adds the appProtocol field to the ingester service. This allows ingester to work with istio protocol selection. @deprecated -- This option is deprecated in favor of `ingester.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
                         "grpc": {
-                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `ingester.service.appProtocol.grpc`",
                             "deprecated": true,
                             "type": "string"
                         }
@@ -6000,7 +6723,7 @@
                     "additionalProperties": true
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -6290,7 +7013,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for ingester service",
+                    "description": "Annotations for ingester service @deprecated -- This option is deprecated in favor of `ingester.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -6298,7 +7021,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for ingester service",
+                    "description": "Labels for ingester service @deprecated -- This option is deprecated in favor of `ingester.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -6306,7 +7029,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for ingester service",
+                    "description": "Service type for ingester service @deprecated -- This option is deprecated in favor of `ingester.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -6986,7 +7709,7 @@
                     "additionalProperties": true
                 },
                 "storage": {
-                    "description": "Storage config. Providing this will automatically populate all necessary storage configs in the templated config.",
+                    "description": "Storage config. Providing this will automatically populate all necessary storage configs in the templated config. -- In case of using thanos storage, enable use_thanos_objstore and the configuration should be done inside the object_store section.",
                     "type": "object",
                     "additionalProperties": true
                 },
@@ -7275,7 +7998,7 @@
                     ]
                 },
                 "push": {
-                    "description": "If true, the canary will send directly to Loki via the address configured for verification --",
+                    "description": "If true, the canary will send directly to Loki via the address configured for verification -- -- If false, it will write to stdout and an Agent will be needed to scrape and send the logs --",
                     "type": "boolean"
                 },
                 "readinessProbe": {
@@ -7871,7 +8594,7 @@
                             "type": "string"
                         },
                         "jobPrefix": {
-                            "description": "ServiceMonitor job label prefix will be used to generate the job label for the scraped metrics.",
+                            "description": "ServiceMonitor job label prefix will be used to generate the job label for the scraped metrics. -- The job label is required for the included dashboards to work.",
                             "type": "string"
                         },
                         "labels": {
@@ -8048,7 +8771,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `overridesExporter.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -8159,7 +8882,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -8375,7 +9098,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for overrides-exporter service",
+                    "description": "Annotations for overrides-exporter service @deprecated -- This option is deprecated in favor of `overridesExporter.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -8383,7 +9106,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for overrides-exporter service",
+                    "description": "Labels for overrides-exporter service @deprecated -- This option is deprecated in favor of `overridesExporter.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -8426,7 +9149,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `patternIngester.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -8542,7 +9265,7 @@
                     "additionalProperties": true
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -8906,12 +9629,12 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection.",
+                    "description": "Adds the appProtocol field to the querier service. This allows querier to work with istio protocol selection. @deprecated -- This option is deprecated in favor of `querier.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
                         "grpc": {
-                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `querier.service.appProtocol.grpc`",
                             "deprecated": true,
                             "type": "string"
                         }
@@ -9148,7 +9871,7 @@
                     ]
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -9364,7 +10087,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for querier service",
+                    "description": "Annotations for querier service @deprecated -- This option is deprecated in favor of `querier.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -9372,7 +10095,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for querier service",
+                    "description": "Labels for querier service @deprecated -- This option is deprecated in favor of `querier.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -9380,7 +10103,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for querier service",
+                    "description": "Service type for querier service @deprecated -- This option is deprecated in favor of `querier.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -9460,12 +10183,12 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Adds the appProtocol field to the queryFrontend service. This allows queryFrontend to work with istio protocol selection.",
+                    "description": "Adds the appProtocol field to the queryFrontend service. This allows queryFrontend to work with istio protocol selection. @deprecated -- This option is deprecated in favor of `queryFrontend.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
                         "grpc": {
-                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                            "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `queryFrontend.service.appProtocol.grpc`",
                             "deprecated": true,
                             "type": "string"
                         }
@@ -9662,7 +10385,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -9878,7 +10601,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for query-frontend service",
+                    "description": "Annotations for query-frontend service @deprecated -- This option is deprecated in favor of `queryFrontend.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -9886,7 +10609,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for query-frontend service",
+                    "description": "Labels for query-frontend service @deprecated -- This option is deprecated in favor of `queryFrontend.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -9894,7 +10617,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for query-frontend service",
+                    "description": "Service type for query-frontend service @deprecated -- This option is deprecated in favor of `queryFrontend.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -9943,7 +10666,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `queryScheduler.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -10047,7 +10770,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -10263,7 +10986,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for query-scheduler service",
+                    "description": "Annotations for query-scheduler service @deprecated -- This option is deprecated in favor of `queryScheduler.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -10271,7 +10994,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for query-scheduler service",
+                    "description": "Labels for query-scheduler service @deprecated -- This option is deprecated in favor of `queryScheduler.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -10279,7 +11002,7 @@
                     }
                 },
                 "serviceType": {
-                    "description": "Service type for query-scheduler service",
+                    "description": "Service type for query-scheduler service @deprecated -- This option is deprecated in favor of `queryScheduler.service.type`",
                     "deprecated": true,
                     "type": "string"
                 },
@@ -10528,7 +11251,7 @@
                     "additionalProperties": true
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -10863,7 +11586,7 @@
                     "type": "integer"
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -11174,7 +11897,7 @@
                     }
                 },
                 "appProtocol": {
-                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\"",
+                    "description": "Set the optional grpc service protocol. Ex: \"grpc\", \"http2\" or \"https\" @deprecated -- This option is deprecated in favor of `ruler.service.appProtocol`",
                     "deprecated": true,
                     "type": "object",
                     "properties": {
@@ -11289,7 +12012,7 @@
                     }
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
@@ -11557,7 +12280,7 @@
                     }
                 },
                 "serviceAnnotations": {
-                    "description": "Annotations for ruler service",
+                    "description": "Annotations for ruler service @deprecated -- This option is deprecated in favor of `ruler.service.annotations`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -11565,7 +12288,7 @@
                     }
                 },
                 "serviceLabels": {
-                    "description": "Labels for ruler service",
+                    "description": "Labels for ruler service @deprecated -- This option is deprecated in favor of `ruler.service.labels`",
                     "deprecated": true,
                     "type": "object",
                     "additionalProperties": {
@@ -14190,7 +14913,7 @@
                     "type": "object"
                 },
                 "maxUnavailable": {
-                    "description": "Pod Disruption Budget maxUnavailable",
+                    "description": "Pod Disruption Budget maxUnavailable @deprecated -- This is deprecated in favor of `podDisruptionBudget.maxUnavailable`.",
                     "deprecated": true,
                     "type": [
                         "string",
