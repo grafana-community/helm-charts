@@ -65,6 +65,15 @@
 {{- if and .Values.loki.logline.query.enabled (ne (include "loki.deployment.isDistributed" .) "true") }}
 {{- fail "loki.logline.query.enabled requires deploymentMode Distributed (or SimpleScalable<->Distributed) with an object storage backend." }}
 {{- end }}
+{{- if .Values.loki.logline.query.enabled }}
+{{- /* The logline flags only exist in Loki 4.0+. */ -}}
+{{- range $key, $name := dict "queryFrontend" "query frontend" "querier" "querier" }}
+{{- $tag := coalesce (index $.Values $key).image.tag $.Values.loki.image.tag $.Chart.AppVersion | toString }}
+{{- if and (regexMatch "^v?[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$" $tag) (not (semverCompare ">=4.0.0-0" $tag)) }}
+{{- fail (printf "loki.logline.query.enabled requires Loki 4.0.0 or later, but the %s image tag is %q. Set loki.image.tag or %s.image.tag to a 4.x version." $name $tag $key) }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- if or .Values.loglineIndexBuilder.enabled .Values.loglineScheduler.enabled .Values.loglineCompactor.enabled .Values.loki.logline.query.enabled }}
 {{- $minDate := .Values.loki.logline.store.min_date | toString }}
 {{- /* Loki rejects a date that is not in the calendar. The check parses and formats in UTC, so the time zone of the Helm client does not change the result. */ -}}

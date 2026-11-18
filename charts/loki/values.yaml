@@ -870,7 +870,8 @@ loki:
       min_date: null
     query:
       # -- Use the logline index in queries. Helm then passes `-logline-store.min-date`, `-logline-query.enabled=true`
-      # and `loki.logline.extraArgs` to the query frontend and the querier.
+      # and `loki.logline.extraArgs` to the query frontend and the querier. Requires a Loki 4.0 or later image: the chart
+      # fails to render if the image tag of the query frontend or the querier is a semantic version below 4.0.0.
       enabled: false
     # -- Additional CLI args for each component that uses the logline index: the three logline components and, with
     # `loki.logline.query.enabled`, the query frontend and the querier. Use it for a setting that must be the same on

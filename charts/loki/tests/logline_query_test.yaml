@@ -11,6 +11,8 @@ set:
   loki.useTestSchema: true
   loki.storage.bucketNames.chunks: chunks
   loki.storage.bucketNames.ruler: ruler
+  # the logline flags need Loki 4.0+
+  loki.image.tag: 4.0.0
 
 tests:
   - it: does not pass the logline flags by default
@@ -154,6 +156,41 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: loki.logline.store.min_date is required
+
+  - it: fails when the Loki image is older than 4.0
+    set:
+      loki.image.tag: 3.7.9
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.query.enabled requires Loki 4.0.0 or later
+
+  - it: fails when the image of one component is older than 4.0
+    set:
+      querier.image.tag: 3.7.9
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: but the querier image tag is "3.7.9"
+
+  - it: checks the component image tags before the global one
+    set:
+      loki.image.tag: 3.7.9
+      querier.image.tag: 4.0.0
+      queryFrontend.image.tag: 4.0.0
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
 
   - it: fails outside of distributed mode
     set:
