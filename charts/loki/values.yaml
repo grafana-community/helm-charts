@@ -6801,7 +6801,8 @@ dataobjCompactionWorker:
 # The builders consume the Kafka topic of the ingesters, so the components need Kafka-based ingestion.
 #
 # Enabling these components is not enough. Loki reads the `-logline-*` settings from CLI flags only, so
-# `loki.structuredConfig` cannot set them. Helm passes the flags to the components from these values:
+# `loki.structuredConfig` cannot set them. Helm passes the flags to the components from the `loki.logline` values.
+# A complete configuration contains these values:
 #
 # loki:
 #   logline:
@@ -6825,6 +6826,17 @@ dataobjCompactionWorker:
 #   # `loki.runtimeConfig.overrides.<tenant>`.
 #   limits_config:
 #     logline_query_mode: dry_run
+# # Required. Each component is off by default and has 0 replicas.
+# loglineIndexBuilder:
+#   enabled: true
+#   replicas: 3
+# loglineScheduler:
+#   enabled: true
+#   # Helm fails to render with more than 1 replica.
+#   replicas: 1
+# loglineCompactor:
+#   enabled: true
+#   replicas: 2
 #
 # In the `SimpleScalable<->Distributed` mode, the `read` pods do not get these flags, so they run each query without
 # the index.
