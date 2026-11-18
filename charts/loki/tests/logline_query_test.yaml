@@ -26,7 +26,7 @@ tests:
 
   - it: passes the logline flags to the querier and the query frontend
     set:
-      loki.logline.minDate: "2026-01-01"
+      loki.logline.store.min_date: "2026-01-01"
       loki.logline.query.enabled: true
     asserts:
       - template: querier/workload.yaml
@@ -46,9 +46,54 @@ tests:
           path: spec.template.spec.containers[0].args
           content: -logline-query.enabled=true
 
+  - it: passes the shared logline args to the querier and the query frontend
+    set:
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+      loki.logline.extraArgs:
+        - -logline-index.ngram-length=5
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+      - template: query-frontend/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+
+  - it: does not pass the shared logline args when queries do not use the index
+    set:
+      loki.logline.extraArgs:
+        - -logline-index.ngram-length=5
+    asserts:
+      - template: querier/workload.yaml
+        notContains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+      - template: query-frontend/workload.yaml
+        notContains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+
+  - it: renders when the shared logline args are null
+    set:
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+      loki.logline.extraArgs: null
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+      - template: query-frontend/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+
   - it: keeps the zone awareness flag of the querier
     set:
-      loki.logline.minDate: "2026-01-01"
+      loki.logline.store.min_date: "2026-01-01"
       loki.logline.query.enabled: true
       ingester.zoneAwareReplication.enabled: true
     asserts:
@@ -68,22 +113,52 @@ tests:
       - validate.yaml
     asserts:
       - failedTemplate:
-          errorPattern: loki.logline.minDate is required
+          errorPattern: loki.logline.store.min_date is required
 
   - it: fails with a date in another form
     set:
-      loki.logline.minDate: "2026-01-01T00:00:00Z"
+      loki.logline.store.min_date: "2026-01-01T00:00:00Z"
       loki.logline.query.enabled: true
     templates:
       - validate.yaml
     asserts:
       - failedTemplate:
-          errorPattern: loki.logline.minDate is required
+          errorPattern: loki.logline.store.min_date is required
+
+  - it: accepts a leap day
+    set:
+      loki.logline.store.min_date: "2028-02-29"
+      loki.logline.query.enabled: true
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-store.min-date=2028-02-29
+
+  - it: fails with a month that is not in the calendar
+    set:
+      loki.logline.store.min_date: "2026-13-01"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.store.min_date is required
+
+  - it: fails with a day that is not in the month
+    set:
+      loki.logline.store.min_date: "2026-02-30"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.store.min_date is required
 
   - it: fails outside of distributed mode
     set:
       deploymentMode: SimpleScalable
-      loki.logline.minDate: "2026-01-01"
+      loki.logline.store.min_date: "2026-01-01"
       loki.logline.query.enabled: true
     templates:
       - validate.yaml

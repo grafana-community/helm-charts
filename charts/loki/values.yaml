@@ -863,14 +863,22 @@ loki:
   # -- Settings of the logline index (EXPERIMENTAL, Loki 4.0 or later). Loki reads these settings from CLI flags only,
   # so Helm passes them as arguments to the components. See the "Logline index" section of values.yaml.
   logline:
-    # @schema type:[string, null]
-    # -- The first date, in the form YYYY-MM-DD, from which Loki trusts the logline index. Required when a logline
-    # component or `loki.logline.query.enabled` is on. Helm passes it as `-logline-store.min-date`.
-    minDate: null
+    store:
+      # @schema type:[string, null]
+      # -- The first date, in the form YYYY-MM-DD, from which Loki trusts the logline index. Required when a logline
+      # component or `loki.logline.query.enabled` is on. Helm passes it as `-logline-store.min-date`.
+      min_date: null
     query:
-      # -- Use the logline index in queries. Helm then passes `-logline-store.min-date` and `-logline-query.enabled=true`
-      # to the query frontend and the querier.
+      # -- Use the logline index in queries. Helm then passes `-logline-store.min-date`, `-logline-query.enabled=true`
+      # and `loki.logline.extraArgs` to the query frontend and the querier.
       enabled: false
+    # -- Additional CLI args for each component that uses the logline index: the three logline components and, with
+    # `loki.logline.query.enabled`, the query frontend and the querier. Use it for a setting that must be the same on
+    # all of them. Loki does not record the n-gram length in the index, so each component must use the same length.
+    # The commented entries are the Loki defaults.
+    extraArgs: []
+    #  - -logline-index.ngram-length=6
+    #  - -logline-store.bucket-prefix=logline/
   # @schema skipProperties:true;additionalProperties:true
   # --  Optional querier configuration
   query_range: {}
@@ -6790,21 +6798,26 @@ dataobjCompactionWorker:
 #
 # With the logline index, a query with a search text skips the time ranges that cannot contain that text.
 # The builders consume the Kafka topic of the ingesters, so the components need Kafka-based ingestion.
-# Loki reads and writes the index with the Thanos object storage config, so `loki.storage.use_thanos_objstore` must be
-# true.
 #
 # Enabling these components is not enough. Loki reads the `-logline-*` settings from CLI flags only, so
 # `loki.structuredConfig` cannot set them. Helm passes the flags to the components from these values:
 #
 # loki:
 #   logline:
-#     # Required. Loki does not use the index before this date. From this date on, Loki trusts the index: in the
-#     # `live` mode, a query returns no logs for a time range without an index. Use a date from which the builders
-#     # index every record, for example the day after their first start.
-#     minDate: <YYYY-MM-DD>
+#     store:
+#       # Required. Loki does not use the index before this date. From this date on, Loki trusts the index: in the
+#       # `live` mode, a query returns no logs for a time range without an index. Use a date from which the builders
+#       # index every record, for example the day after their first start.
+#       min_date: <YYYY-MM-DD>
 #     # Required to use the index in queries.
 #     query:
 #       enabled: true
+#     # Optional. Flags for each component that uses the index. Set a flag here when its value must be the same on
+#     # all of them. Loki does not record the n-gram length in the index, so each component must use the same
+#     # length. These entries are the Loki defaults.
+#     extraArgs:
+#       - -logline-index.ngram-length=6
+#       - -logline-store.bucket-prefix=logline/
 #   # Required to use the index in queries. With `dry_run`, Loki looks up the index and logs the result, but it
 #   # does not change the query. With `live`, a query skips the time ranges that the index does not return.
 #   # `limits_config` sets the mode for all tenants. To set it for one tenant, set the same key under
@@ -6812,11 +6825,14 @@ dataobjCompactionWorker:
 #   limits_config:
 #     logline_query_mode: dry_run
 #
+# In the `SimpleScalable<->Distributed` mode, the `read` pods do not get these flags, so they run each query without
+# the index.
+#
 ######################################################################################################################
 
 # -- Configuration for the logline index builder. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`) and Kafka-based ingestion.
 # The logline index builder consumes log records from Kafka and builds and uploads the logline index.
-# Enabling the component is not enough: it also needs `loki.logline.minDate`. See the "Logline index" section of values.yaml.
+# Enabling the component is not enough: it also needs `loki.logline.store.min_date`. See the "Logline index" section of values.yaml.
 loglineIndexBuilder:
   # -- Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image:
   # the chart fails to render if `loglineIndexBuilder.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.
@@ -6994,12 +7010,17 @@ loglineIndexBuilder:
       labels: {}
   persistence:
     # -- Enable creating PVCs for the logline index builder. Builders keep no state besides scratch data, which they delete at
-    # every start. When disabled, the scratch data is in an emptyDir on the node disk.
-    # The scratch data can need 2 to 3 times `-logline-builder.flush-on-max-bytes` (default 20GiB).
-    enabled: false
+    # every start. The scratch data can need 2 to 3 times `-logline-builder.flush-on-max-bytes` (default 20GiB).
+    # When disabled, the scratch data is in an emptyDir on the node disk. Then set `dataVolumeParameters.emptyDir.sizeLimit`
+    # and an `ephemeral-storage` request in `resources`, so that the scratch data cannot fill the node disk.
+    enabled: true
     # -- Set access modes on the PersistentVolumeClaim
     accessModes:
       - ReadWriteOnce
+    # @schema skipProperties:true;additionalProperties:true
+    # -- Parameters used for the `data` volume when persistence is disabled
+    dataVolumeParameters:
+      emptyDir: {}
     # -- Size of persistent disk
     size: 60Gi
     # @schema type:[string, null]
@@ -7046,7 +7067,7 @@ loglineIndexBuilder:
 # -- Configuration for the logline scheduler. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`).
 # The logline scheduler plans the compaction of the indexes that the logline index builders (`loglineIndexBuilder`) write,
 # hands the jobs to the logline compactors (`loglineCompactor`) and deletes the indexes that are past the retention period.
-# Enabling the component is not enough: it also needs `loki.logline.minDate`. See the "Logline index" section of values.yaml.
+# Enabling the component is not enough: it also needs `loki.logline.store.min_date`. See the "Logline index" section of values.yaml.
 loglineScheduler:
   # -- Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image:
   # the chart fails to render if `loglineScheduler.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.
@@ -7270,7 +7291,7 @@ loglineScheduler:
 # -- Configuration for the logline compactor. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`).
 # The logline compactors run the compaction jobs of the logline scheduler. They request the jobs from its Service,
 # so enable `loglineScheduler` as well.
-# Enabling the component is not enough: it also needs `loki.logline.minDate`. See the "Logline index" section of values.yaml.
+# Enabling the component is not enough: it also needs `loki.logline.store.min_date`. See the "Logline index" section of values.yaml.
 loglineCompactor:
   # -- Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image:
   # the chart fails to render if `loglineCompactor.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.

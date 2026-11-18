@@ -9,7 +9,7 @@
   {{- end }}
 {{- end }}
 {{- if .Values.loki.logline.query.enabled }}
-{{ $args = concat $args (list (include "loki.logline.minDateArg" .) "-logline-query.enabled=true") }}
+{{ $args = concat $args (list (include "loki.logline.minDateArg" .) "-logline-query.enabled=true") (.Values.loki.logline.extraArgs | default list) }}
 {{- end }}
 ---
 {{- include "loki.component" (dict "ctx" . "component" .Values.querier "target" "querier" "args" $args) }}

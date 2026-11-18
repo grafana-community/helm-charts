@@ -14,7 +14,7 @@ set:
   loki.storage.bucketNames.ruler: ruler
   # the logline-index-builder target needs Loki 4.0+
   loki.image.tag: 4.0.0
-  loki.logline.minDate: "2026-01-01"
+  loki.logline.store.min_date: "2026-01-01"
 
 tests:
   - it: does not render anything when the logline index builder is disabled
@@ -110,26 +110,10 @@ tests:
           path: spec.serviceName
           value: RELEASE-NAME-loki-logline-index-builder-headless
 
-  - it: uses an emptyDir data volume by default
+  - it: renders a volumeClaimTemplate by default
     set:
       loglineIndexBuilder.enabled: true
       loglineIndexBuilder.replicas: 2
-    asserts:
-      - template: logline-index-builder/workload.yaml
-        notExists:
-          path: spec.volumeClaimTemplates
-      - template: logline-index-builder/workload.yaml
-        contains:
-          path: spec.template.spec.volumes
-          content:
-            name: data
-            emptyDir: {}
-
-  - it: renders a volumeClaimTemplate when persistence is enabled
-    set:
-      loglineIndexBuilder.enabled: true
-      loglineIndexBuilder.replicas: 2
-      loglineIndexBuilder.persistence.enabled: true
     asserts:
       - template: logline-index-builder/workload.yaml
         lengthEqual:
@@ -148,7 +132,6 @@ tests:
     set:
       loglineIndexBuilder.enabled: true
       loglineIndexBuilder.replicas: 2
-      loglineIndexBuilder.persistence.enabled: true
       loglineIndexBuilder.persistence.size: 200Gi
       loglineIndexBuilder.persistence.storageClass: fast
     asserts:
@@ -160,6 +143,37 @@ tests:
         equal:
           path: spec.volumeClaimTemplates[0].spec.storageClassName
           value: fast
+
+  - it: uses an emptyDir data volume when persistence is disabled
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+      loglineIndexBuilder.persistence.enabled: false
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        notExists:
+          path: spec.volumeClaimTemplates
+      - template: logline-index-builder/workload.yaml
+        contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+
+  - it: sets a size limit on the emptyDir data volume
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+      loglineIndexBuilder.persistence.enabled: false
+      loglineIndexBuilder.persistence.dataVolumeParameters.emptyDir.sizeLimit: 60Gi
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir:
+              sizeLimit: 60Gi
 
   - it: does not render a PodDisruptionBudget for one replica
     set:
@@ -197,6 +211,39 @@ tests:
           path: spec.template.spec.containers[0].args
           content: -logline-builder.kafka.session-timeout=3m
 
+  - it: puts the shared logline args before the extraArgs of the component
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+      loki.logline.extraArgs:
+        - -logline-index.ngram-length=5
+      loglineIndexBuilder.extraArgs:
+        - -logline-index.ngram-length=4
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - -config.file=/etc/loki/config/config.yaml
+            - -config.expand-env=true
+            - -memberlist.advertise-addr=$(POD_IP)
+            - -target=logline-index-builder
+            - -logline-builder.scratch-dir=/var/loki/logline-index-builder
+            - -logline-store.min-date=2026-01-01
+            - -logline-index.ngram-length=5
+            - -logline-index.ngram-length=4
+
+  - it: renders when the shared logline args are null
+    set:
+      loglineIndexBuilder.enabled: true
+      loglineIndexBuilder.replicas: 2
+      loki.logline.extraArgs: null
+    asserts:
+      - template: logline-index-builder/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-store.min-date=2026-01-01
+
   - it: fails when the Loki image is older than 4.0
     set:
       loki.image.tag: 3.7.9
@@ -231,11 +278,11 @@ tests:
 
   - it: fails without the first date of the logline index
     set:
-      loki.logline.minDate: null
+      loki.logline.store.min_date: null
       loglineIndexBuilder.enabled: true
       loglineIndexBuilder.replicas: 2
     templates:
       - validate.yaml
     asserts:
       - failedTemplate:
-          errorPattern: loki.logline.minDate is required
+          errorPattern: loki.logline.store.min_date is required

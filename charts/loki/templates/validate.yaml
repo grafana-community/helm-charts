@@ -66,8 +66,10 @@
 {{- fail "loki.logline.query.enabled requires deploymentMode Distributed (or SimpleScalable<->Distributed) with an object storage backend." }}
 {{- end }}
 {{- if or .Values.loglineIndexBuilder.enabled .Values.loglineScheduler.enabled .Values.loglineCompactor.enabled .Values.loki.logline.query.enabled }}
-{{- if not (regexMatch "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" (.Values.loki.logline.minDate | toString)) }}
-{{- fail "loki.logline.minDate is required, in the form YYYY-MM-DD, when a logline component or loki.logline.query.enabled is on." }}
+{{- $minDate := .Values.loki.logline.store.min_date | toString }}
+{{- /* Loki rejects a date that is not in the calendar. The check parses and formats in UTC, so the time zone of the Helm client does not change the result. */ -}}
+{{- if or (not (regexMatch "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" $minDate)) (ne (dateInZone "2006-01-02" (toDate "2006-01-02Z07:00" (printf "%sZ" $minDate)) "UTC") $minDate) }}
+{{- fail "loki.logline.store.min_date is required, as a valid date in the form YYYY-MM-DD, when a logline component or loki.logline.query.enabled is on." }}
 {{- end }}
 {{- end }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.overridesExporter "name" "overrides-exporter") }}

@@ -14,7 +14,7 @@ set:
   loki.storage.bucketNames.ruler: ruler
   # the logline-scheduler target needs Loki 4.0+
   loki.image.tag: 4.0.0
-  loki.logline.minDate: "2026-01-01"
+  loki.logline.store.min_date: "2026-01-01"
 
 tests:
   - it: does not render anything when the logline scheduler is disabled
@@ -203,13 +203,25 @@ tests:
           path: spec.template.spec.containers[0].args
           content: -logline-store.min-date=2026-01-01
 
+  - it: passes the shared logline args to the container
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+      loki.logline.extraArgs:
+        - -logline-index.ngram-length=5
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+
   - it: fails without the first date of the logline index
     set:
-      loki.logline.minDate: null
+      loki.logline.store.min_date: null
       loglineScheduler.enabled: true
       loglineScheduler.replicas: 1
     templates:
       - validate.yaml
     asserts:
       - failedTemplate:
-          errorPattern: loki.logline.minDate is required
+          errorPattern: loki.logline.store.min_date is required

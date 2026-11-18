@@ -15,7 +15,7 @@ set:
   loki.storage.bucketNames.ruler: ruler
   # the logline-compactor target needs Loki 4.0+
   loki.image.tag: 4.0.0
-  loki.logline.minDate: "2026-01-01"
+  loki.logline.store.min_date: "2026-01-01"
 
 tests:
   - it: does not render anything when the logline compactor is disabled
@@ -160,13 +160,25 @@ tests:
           path: spec.template.spec.containers[0].args
           content: -logline-store.min-date=2026-01-01
 
+  - it: passes the shared logline args to the container
+    set:
+      loglineCompactor.enabled: true
+      loglineCompactor.replicas: 2
+      loki.logline.extraArgs:
+        - -logline-index.ngram-length=5
+    asserts:
+      - template: logline-compactor/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+
   - it: fails without the first date of the logline index
     set:
-      loki.logline.minDate: null
+      loki.logline.store.min_date: null
       loglineCompactor.enabled: true
       loglineCompactor.replicas: 2
     templates:
       - validate.yaml
     asserts:
       - failedTemplate:
-          errorPattern: loki.logline.minDate is required
+          errorPattern: loki.logline.store.min_date is required

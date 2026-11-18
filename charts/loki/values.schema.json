@@ -7437,7 +7437,7 @@
             }
         },
         "loglineCompactor": {
-            "description": "Configuration for the logline compactor. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`). The logline compactors run the compaction jobs of the logline scheduler. They request the jobs from its Service, so enable `loglineScheduler` as well. Enabling the component is not enough: it also needs `loki.logline.minDate`. See the \"Logline index\" section of values.yaml.",
+            "description": "Configuration for the logline compactor. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`). The logline compactors run the compaction jobs of the logline scheduler. They request the jobs from its Service, so enable `loglineScheduler` as well. Enabling the component is not enough: it also needs `loki.logline.store.min_date`. See the \"Logline index\" section of values.yaml.",
             "type": "object",
             "properties": {
                 "affinity": {
@@ -7800,7 +7800,7 @@
             }
         },
         "loglineIndexBuilder": {
-            "description": "Configuration for the logline index builder. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`) and Kafka-based ingestion. The logline index builder consumes log records from Kafka and builds and uploads the logline index. Enabling the component is not enough: it also needs `loki.logline.minDate`. See the \"Logline index\" section of values.yaml.",
+            "description": "Configuration for the logline index builder. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`) and Kafka-based ingestion. The logline index builder consumes log records from Kafka and builds and uploads the logline index. Enabling the component is not enough: it also needs `loki.logline.store.min_date`. See the \"Logline index\" section of values.yaml.",
             "type": "object",
             "properties": {
                 "affinity": {
@@ -7945,12 +7945,17 @@
                                 "type": "string"
                             }
                         },
+                        "dataVolumeParameters": {
+                            "description": "Parameters used for the `data` volume when persistence is disabled",
+                            "type": "object",
+                            "additionalProperties": true
+                        },
                         "enableStatefulSetAutoDeletePVC": {
                             "description": "Enable StatefulSetAutoDeletePVC feature",
                             "type": "boolean"
                         },
                         "enabled": {
-                            "description": "Enable creating PVCs for the logline index builder. Builders keep no state besides scratch data, which they delete at every start. When disabled, the scratch data is in an emptyDir on the node disk. The scratch data can need 2 to 3 times `-logline-builder.flush-on-max-bytes` (default 20GiB).",
+                            "description": "Enable creating PVCs for the logline index builder. Builders keep no state besides scratch data, which they delete at every start. The scratch data can need 2 to 3 times `-logline-builder.flush-on-max-bytes` (default 20GiB). When disabled, the scratch data is in an emptyDir on the node disk. Then set `dataVolumeParameters.emptyDir.sizeLimit` and an `ephemeral-storage` request in `resources`, so that the scratch data cannot fill the node disk.",
                             "type": "boolean"
                         },
                         "labels": {
@@ -8234,7 +8239,7 @@
             }
         },
         "loglineScheduler": {
-            "description": "Configuration for the logline scheduler. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`). The logline scheduler plans the compaction of the indexes that the logline index builders (`loglineIndexBuilder`) write, hands the jobs to the logline compactors (`loglineCompactor`) and deletes the indexes that are past the retention period. Enabling the component is not enough: it also needs `loki.logline.minDate`. See the \"Logline index\" section of values.yaml.",
+            "description": "Configuration for the logline scheduler. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`). The logline scheduler plans the compaction of the indexes that the logline index builders (`loglineIndexBuilder`) write, hands the jobs to the logline compactors (`loglineCompactor`) and deletes the indexes that are past the retention period. Enabling the component is not enough: it also needs `loki.logline.store.min_date`. See the \"Logline index\" section of values.yaml.",
             "type": "object",
             "properties": {
                 "affinity": {
@@ -8814,19 +8819,28 @@
                     "description": "Settings of the logline index (EXPERIMENTAL, Loki 4.0 or later). Loki reads these settings from CLI flags only, so Helm passes them as arguments to the components. See the \"Logline index\" section of values.yaml.",
                     "type": "object",
                     "properties": {
-                        "minDate": {
-                            "description": "The first date, in the form YYYY-MM-DD, from which Loki trusts the logline index. Required when a logline component or `loki.logline.query.enabled` is on. Helm passes it as `-logline-store.min-date`.",
-                            "type": [
-                                "string",
-                                "null"
-                            ]
+                        "extraArgs": {
+                            "description": "Additional CLI args for each component that uses the logline index: the three logline components and, with `loki.logline.query.enabled`, the query frontend and the querier. Use it for a setting that must be the same on all of them. Loki does not record the n-gram length in the index, so each component must use the same length. The commented entries are the Loki defaults.",
+                            "type": "array"
                         },
                         "query": {
                             "type": "object",
                             "properties": {
                                 "enabled": {
-                                    "description": "Use the logline index in queries. Helm then passes `-logline-store.min-date` and `-logline-query.enabled=true` to the query frontend and the querier.",
+                                    "description": "Use the logline index in queries. Helm then passes `-logline-store.min-date`, `-logline-query.enabled=true` and `loki.logline.extraArgs` to the query frontend and the querier.",
                                     "type": "boolean"
+                                }
+                            }
+                        },
+                        "store": {
+                            "type": "object",
+                            "properties": {
+                                "min_date": {
+                                    "description": "The first date, in the form YYYY-MM-DD, from which Loki trusts the logline index. Required when a logline component or `loki.logline.query.enabled` is on. Helm passes it as `-logline-store.min-date`.",
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
                                 }
                             }
                         }
