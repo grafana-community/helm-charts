@@ -1,0 +1,227 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: logline scheduler
+templates:
+  - logline-scheduler/workload.yaml
+  - logline-scheduler/service.yaml
+  - logline-scheduler/pdb.yaml
+  - validate.yaml
+  - config.yaml
+
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  # the logline-scheduler target needs Loki 4.0+
+  loki.image.tag: 4.0.0
+  loki.logline.store.min_date: "2026-01-01"
+
+tests:
+  - it: does not render anything when the logline scheduler is disabled
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        hasDocuments:
+          count: 0
+      - template: logline-scheduler/service.yaml
+        hasDocuments:
+          count: 0
+      - template: logline-scheduler/pdb.yaml
+        hasDocuments:
+          count: 0
+
+  - it: fails outside of distributed mode
+    set:
+      deploymentMode: SimpleScalable
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loglineScheduler.enabled requires deploymentMode Distributed
+
+  - it: renders a StatefulSet running the logline-scheduler target
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        hasDocuments:
+          count: 1
+      - template: logline-scheduler/workload.yaml
+        isKind:
+          of: StatefulSet
+      - template: logline-scheduler/workload.yaml
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-logline-scheduler
+      - template: logline-scheduler/workload.yaml
+        equal:
+          path: spec.replicas
+          value: 1
+      - template: logline-scheduler/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -target=logline-scheduler
+
+  - it: keeps the job state on the data volume
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-compaction.job-state-dir=/var/loki/logline-scheduler
+
+  - it: is not a memberlist seed node
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        notExists:
+          path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
+
+  - it: renders the headless service referenced by the StatefulSet
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+    asserts:
+      - template: logline-scheduler/service.yaml
+        hasDocuments:
+          count: 2
+      - template: logline-scheduler/service.yaml
+        documentIndex: 1
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-logline-scheduler-headless
+      - template: logline-scheduler/workload.yaml
+        equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-loki-logline-scheduler-headless
+
+  - it: renders a volumeClaimTemplate by default
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        lengthEqual:
+          path: spec.volumeClaimTemplates
+          count: 1
+      - template: logline-scheduler/workload.yaml
+        equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: data
+      - template: logline-scheduler/workload.yaml
+        equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 1Gi
+
+  - it: uses the size and the storage class of the persistence values
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+      loglineScheduler.persistence.size: 5Gi
+      loglineScheduler.persistence.storageClass: fast
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 5Gi
+      - template: logline-scheduler/workload.yaml
+        equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: fast
+
+  - it: uses an emptyDir data volume when persistence is disabled
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+      loglineScheduler.persistence.enabled: false
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        notExists:
+          path: spec.volumeClaimTemplates
+      - template: logline-scheduler/workload.yaml
+        contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+
+  - it: does not render a PodDisruptionBudget for one replica
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+      loglineScheduler.podDisruptionBudget.maxUnavailable: 1
+    asserts:
+      - template: logline-scheduler/pdb.yaml
+        hasDocuments:
+          count: 0
+
+  - it: fails for more than one replica
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 2
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loglineScheduler.replicas must not be more than 1
+
+  - it: fails when the Loki image is older than 4.0
+    set:
+      loki.image.tag: 3.7.9
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loglineScheduler.enabled requires Loki 4.0.0 or later
+
+  - it: checks the component image tag before the global one
+    set:
+      loki.image.tag: 3.7.9
+      loglineScheduler.image.tag: 4.0.0
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        hasDocuments:
+          count: 1
+
+  - it: passes the first date of the logline index to the container
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-store.min-date=2026-01-01
+
+  - it: passes the shared logline args to the container
+    set:
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+      loki.logline.extraArgs:
+        - -logline-index.ngram-length=5
+    asserts:
+      - template: logline-scheduler/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+
+  - it: fails without the first date of the logline index
+    set:
+      loki.logline.store.min_date: null
+      loglineScheduler.enabled: true
+      loglineScheduler.replicas: 1
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.store.min_date is required

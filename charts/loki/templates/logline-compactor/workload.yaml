@@ -1,0 +1,8 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if $isDistributed }}
+{{- $args := concat (list
+  (printf "-logline-compaction.scheduler-address=http://%s.%s.svc.%s:%s" (include "loki.resourceName" (dict "ctx" . "component" "logline-scheduler")) (include "loki.namespace" .) .Values.global.clusterDomain (.Values.loki.server.http_listen_port | toString))
+  (include "loki.logline.minDateArg" .)
+) (.Values.loki.logline.extraArgs | default list) }}
+{{- include "loki.component" (dict "ctx" . "component" .Values.loglineCompactor "target" "logline-compactor" "args" $args "memberlist" false) }}
+{{- end }}

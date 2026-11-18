@@ -860,6 +860,26 @@ loki:
     gateway:
       # enable gateway proxying to UI under /ui
       enabled: true
+  # -- Settings of the logline index (EXPERIMENTAL, Loki 4.0 or later). Loki reads these settings from CLI flags only,
+  # so Helm passes them as arguments to the components. See the "Logline index" section of values.yaml.
+  logline:
+    store:
+      # @schema type:[string, null]
+      # -- The first date, in the form YYYY-MM-DD, from which Loki trusts the logline index. Required when a logline
+      # component or `loki.logline.query.enabled` is on. Helm passes it as `-logline-store.min-date`.
+      min_date: null
+    query:
+      # -- Use the logline index in queries. Helm then passes `-logline-store.min-date`, `-logline-query.enabled=true`
+      # and `loki.logline.extraArgs` to the query frontend and the querier. Requires a Loki 4.0 or later image: the chart
+      # fails to render if the image tag of the query frontend or the querier is a semantic version below 4.0.0.
+      enabled: false
+    # -- Additional CLI args for each component that uses the logline index: the three logline components and, with
+    # `loki.logline.query.enabled`, the query frontend and the querier. Use it for a setting that must be the same on
+    # all of them. Loki does not record the n-gram length in the index, so each component must use the same length.
+    # The commented entries are the Loki defaults.
+    extraArgs: []
+    #  - -logline-index.ngram-length=6
+    #  - -logline-store.bucket-prefix=logline/
   # @schema skipProperties:true;additionalProperties:true
   # --  Optional querier configuration
   query_range: {}
@@ -6753,6 +6773,705 @@ dataobjCompactionWorker:
       annotations: {}
       # @schema additionalProperties:{"type":"string"}
       # -- Additional labels for headless dataobj compaction worker Service
+      labels: {}
+  serviceAccount:
+    # -- Specifies whether a ServiceAccount should be created
+    create: false
+    # @schema type:[string, null]
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: null
+    # @schema item:object;itemProperties:{"name": {"type": "string"}}
+    # -- Image pull secrets for the service account
+    imagePullSecrets: []
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for the service account
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for the service account
+    labels: {}
+    # -- Set this toggle to false to opt out of automounting API credentials for the service account
+    automountServiceAccountToken: true
+
+######################################################################################################################
+#
+# Logline index (EXPERIMENTAL, Loki 4.0 or later): loglineIndexBuilder, loglineScheduler and loglineCompactor.
+#
+# With the logline index, a query with a search text skips the time ranges that cannot contain that text.
+# The builders consume the Kafka topic of the ingesters, so the components need Kafka-based ingestion.
+#
+# Enabling these components is not enough. Loki reads the `-logline-*` settings from CLI flags only, so
+# `loki.structuredConfig` cannot set them. Helm passes the flags to the components from the `loki.logline` values.
+# A complete configuration contains these values:
+#
+# loki:
+#   logline:
+#     store:
+#       # Required. Loki does not use the index before this date. From this date on, Loki trusts the index: in the
+#       # `live` mode, a query returns no logs for a time range without an index. Use a date from which the builders
+#       # index every record, for example the day after their first start.
+#       min_date: <YYYY-MM-DD>
+#     # Required to use the index in queries.
+#     query:
+#       enabled: true
+#     # Optional. Flags for each component that uses the index. Set a flag here when its value must be the same on
+#     # all of them. Loki does not record the n-gram length in the index, so each component must use the same
+#     # length. These entries are the Loki defaults.
+#     extraArgs:
+#       - -logline-index.ngram-length=6
+#       - -logline-store.bucket-prefix=logline/
+#   # Required to use the index in queries. With `dry_run`, Loki looks up the index and logs the result, but it
+#   # does not change the query. With `live`, a query skips the time ranges that the index does not return.
+#   # `limits_config` sets the mode for all tenants. To set it for one tenant, set the same key under
+#   # `loki.runtimeConfig.overrides.<tenant>`.
+#   limits_config:
+#     logline_query_mode: dry_run
+# # Required. Each component is off by default and has 0 replicas.
+# loglineIndexBuilder:
+#   enabled: true
+#   replicas: 3
+# loglineScheduler:
+#   enabled: true
+#   # Helm fails to render with more than 1 replica.
+#   replicas: 1
+# loglineCompactor:
+#   enabled: true
+#   replicas: 2
+#
+# In the `SimpleScalable<->Distributed` mode, the `read` pods do not get these flags, so they run each query without
+# the index.
+#
+######################################################################################################################
+
+# -- Configuration for the logline index builder. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`) and Kafka-based ingestion.
+# The logline index builder consumes log records from Kafka and builds and uploads the logline index.
+# Enabling the component is not enough: it also needs `loki.logline.store.min_date`. See the "Logline index" section of values.yaml.
+loglineIndexBuilder:
+  # -- Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image:
+  # the chart fails to render if `loglineIndexBuilder.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.
+  enabled: false
+  # -- Kind of logline index builder workload. Use a StatefulSet: each builder uses its hostname as the static member ID
+  # of its Kafka consumer group, so a pod that restarts with the same name keeps its partitions.
+  kind: StatefulSet
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the logline index builder StatefulSet when its configuration is changed.
+  ## Only applicable if `loglineIndexBuilder.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
+  # @schema type:[integer, null]
+  # -- Number of replicas for the logline index builder. The builders share the partitions of the topic through a Kafka
+  # consumer group, so the count does not have to equal the partition count. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
+  replicas: 0
+  # -- Pod management policy for the logline index builder StatefulSet. Builders do not depend on each other, so they can start in parallel.
+  podManagementPolicy: Parallel
+  # @schema skipProperties:true;additionalProperties:true
+  # -- UpdateStrategy or Strategy for the logline index builder.
+  strategy:
+    rollingUpdate:
+      partition: 0
+  # @schema additionalProperties:true
+  # -- DNSConfig for logline index builder pods
+  dnsConfig: {}
+  # -- hostAliases to add
+  hostAliases: []
+  # @schema type:[boolean, null]
+  #  - ip: 1.2.3.4
+  #    hostnames:
+  #      - domain.tld
+  # -- Use the host's user namespace in the logline index builder
+  hostUsers: null
+  image:
+    # @schema type:[string, null]
+    # -- The Docker registry for the logline index builder image. Overrides `loki.image.registry`
+    registry: null
+    # @schema type:[string, null]
+    # -- Docker image repository for the logline index builder image. Overrides `loki.image.repository`
+    repository: null
+    # @schema type:[string, null]
+    # -- Docker image tag for the logline index builder image. Overrides `loki.image.tag`
+    tag: null
+  # @schema type:[string, null]
+  # -- Command to execute instead of defined in Docker image
+  command: null
+  # @schema type:[string, null]
+  # -- The name of the PriorityClass for logline index builder pods
+  priorityClassName: null
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for logline index builder
+  labels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for logline index builder
+  annotations: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for logline index builder pods
+  podLabels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for logline index builder pods
+  podAnnotations: {}
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
+  # -- Affinity for logline index builder pods.
+  # @default -- Hard node anti-affinity
+  # The value will be passed through tpl.
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: logline-index-builder
+              app.kubernetes.io/name: '{{ include "loki.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+          topologyKey: kubernetes.io/hostname
+  # -- Additional CLI args for the logline index builder
+  extraArgs: []
+  # -- Environment variables to add to the logline index builder pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to the logline index builder pods
+  extraEnvFrom: []
+  # -- Volume mounts to add to the logline index builder pods
+  extraVolumeMounts: []
+  # -- Volumes to add to the logline index builder pods
+  extraVolumes: []
+  # @schema skipProperties:true;additionalProperties:true
+  # -- readiness probe settings for logline index builder pods. If empty, use `loki.readinessProbe`
+  readinessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- liveness probe settings for logline index builder pods. If empty use `loki.livenessProbe`
+  livenessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- startup probe settings for logline index builder pods. If empty use `loki.startupProbe`
+  startupProbe: {}
+  # @schema additionalProperties:true
+  # -- Resource requests and limits for the logline index builder
+  resources: {}
+  # -- Container resize policy for the logline index builder
+  # Example:
+  # resizePolicy:
+  #   - resourceName: cpu
+  #     restartPolicy: NotRequired
+  #   - resourceName: memory
+  #     restartPolicy: RestartContainer
+  resizePolicy: []
+  # @schema type:[string, array, null]
+  # -- Containers to add to the logline index builder pods
+  extraContainers: []
+  # @schema type:[string, array, null]
+  # -- Init containers to add to the logline index builder pods
+  initContainers: []
+  # -- Grace period to allow the logline index builder to shutdown before it is killed. On shutdown, the builder waits up to
+  # 5 minutes for a flush in progress and then flushes the index it is building, which can take another 5 minutes.
+  terminationGracePeriodSeconds: 600
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget minAvailable
+    minAvailable: null
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget maxUnavailable
+    maxUnavailable: null
+    # @schema type:[string, null]
+    # -- Pod Disruption Budget unhealthyPodEvictionPolicy
+    unhealthyPodEvictionPolicy: null
+  # @schema additionalProperties:true
+  # -- Node selector for logline index builder pods
+  nodeSelector: {}
+  # @schema item:object
+  # -- Topology Spread Constraints for logline index builder pods
+  # The value will be passed through tpl.
+  topologySpreadConstraints: []
+  # -- Tolerations for logline index builder pods
+  tolerations: []
+  service:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for logline index builder Service
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Additional labels for logline index builder Service
+    labels: {}
+    # -- Service Type for logline index builder Service
+    type: "ClusterIP"
+    # -- trafficDistribution for logline index builder Service
+    trafficDistribution: ""
+    # -- Session affinity for logline index builder Service
+    sessionAffinity: ""
+    # @schema additionalProperties:true
+    # -- Session affinity config for logline index builder Service
+    sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for logline index builder Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for logline index builder Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
+    # -- Adds the appProtocol field to the logline index builder service. This allows logline index builder to work with istio protocol selection.
+    appProtocol:
+    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
+    headlessService:
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional annotations for headless logline index builder Service
+      annotations: {}
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional labels for headless logline index builder Service
+      labels: {}
+  persistence:
+    # -- Enable creating PVCs for the logline index builder. Builders keep no state besides scratch data, which they delete at
+    # every start. The scratch data can need 2 to 3 times `-logline-builder.flush-on-max-bytes` (default 20GiB).
+    # When disabled, the scratch data is in an emptyDir on the node disk. Then set `dataVolumeParameters.emptyDir.sizeLimit`
+    # and an `ephemeral-storage` request in `resources`, so that the scratch data cannot fill the node disk.
+    enabled: true
+    # -- Set access modes on the PersistentVolumeClaim
+    accessModes:
+      - ReadWriteOnce
+    # @schema skipProperties:true;additionalProperties:true
+    # -- Parameters used for the `data` volume when persistence is disabled
+    dataVolumeParameters:
+      emptyDir: {}
+    # -- Size of persistent disk
+    size: 60Gi
+    # @schema type:[string, null]
+    # -- Storage class to be used.
+    # If defined, storageClassName: <storageClass>.
+    # If set to "-", storageClassName: "", which disables dynamic provisioning.
+    # If empty or set to null, no storageClassName spec is
+    # set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).
+    storageClass: null
+    # @schema type:[string, null]
+    # -- Volume attributes class name to be used.
+    # If empty or set to null, no volumeAttributesClassName spec is set.
+    # Requires Kubernetes 1.31
+    volumeAttributesClassName: null
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for logline index builder PVCs
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for logline index builder PVCs
+    labels: {}
+    # -- Enable StatefulSetAutoDeletePVC feature
+    enableStatefulSetAutoDeletePVC: false
+    whenDeleted: Retain
+    whenScaled: Retain
+  serviceAccount:
+    # -- Specifies whether a ServiceAccount should be created
+    create: false
+    # @schema type:[string, null]
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: null
+    # @schema item:object;itemProperties:{"name": {"type": "string"}}
+    # -- Image pull secrets for the service account
+    imagePullSecrets: []
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for the service account
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for the service account
+    labels: {}
+    # -- Set this toggle to false to opt out of automounting API credentials for the service account
+    automountServiceAccountToken: true
+
+# -- Configuration for the logline scheduler. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`).
+# The logline scheduler plans the compaction of the indexes that the logline index builders (`loglineIndexBuilder`) write,
+# hands the jobs to the logline compactors (`loglineCompactor`) and deletes the indexes that are past the retention period.
+# Enabling the component is not enough: it also needs `loki.logline.store.min_date`. See the "Logline index" section of values.yaml.
+loglineScheduler:
+  # -- Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image:
+  # the chart fails to render if `loglineScheduler.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.
+  enabled: false
+  # -- Kind of logline scheduler workload. Use a StatefulSet: a rolling update then never runs two schedulers at the same time,
+  # and the scheduler keeps the state of its compaction jobs on a PVC.
+  kind: StatefulSet
+  # -- EXPERIMENTAL: Enable creating a Job to recreate the logline scheduler StatefulSet when its configuration is changed.
+  ## Only applicable if `loglineScheduler.kind` is StatefulSet. Useful for PVC size changes, which require recreating the StatefulSet.
+  statefulSetRecreateJob:
+    enabled: false
+  # -- Number of replicas for the logline scheduler. Run a single replica: schedulers do not coordinate with each other,
+  # so the chart fails to render with more than one replica.
+  replicas: 0
+  # @schema skipProperties:true;additionalProperties:true
+  # -- UpdateStrategy or Strategy for the logline scheduler.
+  strategy:
+    rollingUpdate:
+      partition: 0
+  # @schema additionalProperties:true
+  # -- DNSConfig for logline scheduler pods
+  dnsConfig: {}
+  # -- hostAliases to add
+  hostAliases: []
+  # @schema type:[boolean, null]
+  #  - ip: 1.2.3.4
+  #    hostnames:
+  #      - domain.tld
+  # -- Use the host's user namespace in the logline scheduler
+  hostUsers: null
+  image:
+    # @schema type:[string, null]
+    # -- The Docker registry for the logline scheduler image. Overrides `loki.image.registry`
+    registry: null
+    # @schema type:[string, null]
+    # -- Docker image repository for the logline scheduler image. Overrides `loki.image.repository`
+    repository: null
+    # @schema type:[string, null]
+    # -- Docker image tag for the logline scheduler image. Overrides `loki.image.tag`
+    tag: null
+  # @schema type:[string, null]
+  # -- Command to execute instead of defined in Docker image
+  command: null
+  # @schema type:[string, null]
+  # -- The name of the PriorityClass for logline scheduler pods
+  priorityClassName: null
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for logline scheduler
+  labels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for logline scheduler
+  annotations: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for logline scheduler pods
+  podLabels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for logline scheduler pods
+  podAnnotations: {}
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
+  # -- Affinity for logline scheduler pods.
+  # @default -- Hard node anti-affinity
+  # The value will be passed through tpl.
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: logline-scheduler
+              app.kubernetes.io/name: '{{ include "loki.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+          topologyKey: kubernetes.io/hostname
+  # -- Additional CLI args for the logline scheduler
+  extraArgs: []
+  # -- Environment variables to add to the logline scheduler pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to the logline scheduler pods
+  extraEnvFrom: []
+  # -- Volume mounts to add to the logline scheduler pods
+  extraVolumeMounts: []
+  # -- Volumes to add to the logline scheduler pods
+  extraVolumes: []
+  # @schema skipProperties:true;additionalProperties:true
+  # -- readiness probe settings for logline scheduler pods. If empty, use `loki.readinessProbe`
+  readinessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- liveness probe settings for logline scheduler pods. If empty use `loki.livenessProbe`
+  livenessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- startup probe settings for logline scheduler pods. If empty use `loki.startupProbe`
+  startupProbe: {}
+  # @schema additionalProperties:true
+  # -- Resource requests and limits for the logline scheduler
+  resources: {}
+  # -- Container resize policy for the logline scheduler
+  # Example:
+  # resizePolicy:
+  #   - resourceName: cpu
+  #     restartPolicy: NotRequired
+  #   - resourceName: memory
+  #     restartPolicy: RestartContainer
+  resizePolicy: []
+  # @schema type:[string, array, null]
+  # -- Containers to add to the logline scheduler pods
+  extraContainers: []
+  # @schema type:[string, array, null]
+  # -- Init containers to add to the logline scheduler pods
+  initContainers: []
+  # -- Grace period to allow the logline scheduler to shutdown before it is killed
+  terminationGracePeriodSeconds: 30
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget minAvailable
+    minAvailable: null
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget maxUnavailable
+    maxUnavailable: null
+    # @schema type:[string, null]
+    # -- Pod Disruption Budget unhealthyPodEvictionPolicy
+    unhealthyPodEvictionPolicy: null
+  # @schema additionalProperties:true
+  # -- Node selector for logline scheduler pods
+  nodeSelector: {}
+  # @schema item:object
+  # -- Topology Spread Constraints for logline scheduler pods
+  # The value will be passed through tpl.
+  topologySpreadConstraints: []
+  # -- Tolerations for logline scheduler pods
+  tolerations: []
+  service:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for logline scheduler Service
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Additional labels for logline scheduler Service
+    labels: {}
+    # -- Service Type for logline scheduler Service
+    type: "ClusterIP"
+    # -- trafficDistribution for logline scheduler Service
+    trafficDistribution: ""
+    # -- Session affinity for logline scheduler Service
+    sessionAffinity: ""
+    # @schema additionalProperties:true
+    # -- Session affinity config for logline scheduler Service
+    sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for logline scheduler Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for logline scheduler Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
+    # -- Adds the appProtocol field to the logline scheduler service. This allows logline scheduler to work with istio protocol selection.
+    appProtocol:
+    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
+    headlessService:
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional annotations for headless logline scheduler Service
+      annotations: {}
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional labels for headless logline scheduler Service
+      labels: {}
+  persistence:
+    # -- Enable creating PVCs for the logline scheduler. The scheduler keeps the state of the compaction jobs in progress there.
+    # The state must be durable: without it, a restart of the scheduler can merge the same indexes twice. An emptyDir is used when disabled.
+    enabled: true
+    # -- Set access modes on the PersistentVolumeClaim
+    accessModes:
+      - ReadWriteOnce
+    # -- Size of persistent disk
+    size: 1Gi
+    # @schema type:[string, null]
+    # -- Storage class to be used.
+    # If defined, storageClassName: <storageClass>.
+    # If set to "-", storageClassName: "", which disables dynamic provisioning.
+    # If empty or set to null, no storageClassName spec is
+    # set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).
+    storageClass: null
+    # @schema type:[string, null]
+    # -- Volume attributes class name to be used.
+    # If empty or set to null, no volumeAttributesClassName spec is set.
+    # Requires Kubernetes 1.31
+    volumeAttributesClassName: null
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for logline scheduler PVCs
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for logline scheduler PVCs
+    labels: {}
+    # -- Enable StatefulSetAutoDeletePVC feature
+    enableStatefulSetAutoDeletePVC: false
+    whenDeleted: Retain
+    whenScaled: Retain
+  serviceAccount:
+    # -- Specifies whether a ServiceAccount should be created
+    create: false
+    # @schema type:[string, null]
+    # -- The name of the ServiceAccount to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: null
+    # @schema item:object;itemProperties:{"name": {"type": "string"}}
+    # -- Image pull secrets for the service account
+    imagePullSecrets: []
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for the service account
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for the service account
+    labels: {}
+    # -- Set this toggle to false to opt out of automounting API credentials for the service account
+    automountServiceAccountToken: true
+
+# -- Configuration for the logline compactor. EXPERIMENTAL: requires Loki 4.0 or later (`loki.image.tag`).
+# The logline compactors run the compaction jobs of the logline scheduler. They request the jobs from its Service,
+# so enable `loglineScheduler` as well.
+# Enabling the component is not enough: it also needs `loki.logline.store.min_date`. See the "Logline index" section of values.yaml.
+loglineCompactor:
+  # -- Enable the component. Requires `deploymentMode` to be set to `Distributed` and a Loki 4.0 or later image:
+  # the chart fails to render if `loglineCompactor.image.tag` / `loki.image.tag` (or the chart appVersion) is a semantic version below 4.0.0.
+  enabled: false
+  # -- Kind of logline compactor workload. Compactors do not keep local data, so use a Deployment.
+  kind: Deployment
+  # @schema type:[integer, null]
+  # -- Number of replicas for the logline compactor. Set to null to omit spec.replicas from the workload,
+  # allowing an external controller (e.g. HPA, KEDA, rollout-operator) to manage replica counts without Helm resetting them.
+  replicas: 0
+  # @schema skipProperties:true;additionalProperties:true
+  # -- UpdateStrategy or Strategy for the logline compactor.
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  # @schema additionalProperties:true
+  # -- DNSConfig for logline compactor pods
+  dnsConfig: {}
+  # -- hostAliases to add
+  hostAliases: []
+  # @schema type:[boolean, null]
+  #  - ip: 1.2.3.4
+  #    hostnames:
+  #      - domain.tld
+  # -- Use the host's user namespace in the logline compactor
+  hostUsers: null
+  image:
+    # @schema type:[string, null]
+    # -- The Docker registry for the logline compactor image. Overrides `loki.image.registry`
+    registry: null
+    # @schema type:[string, null]
+    # -- Docker image repository for the logline compactor image. Overrides `loki.image.repository`
+    repository: null
+    # @schema type:[string, null]
+    # -- Docker image tag for the logline compactor image. Overrides `loki.image.tag`
+    tag: null
+  # @schema type:[string, null]
+  # -- Command to execute instead of defined in Docker image
+  command: null
+  # @schema type:[string, null]
+  # -- The name of the PriorityClass for logline compactor pods
+  priorityClassName: null
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for logline compactor
+  labels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for logline compactor
+  annotations: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Labels for logline compactor pods
+  podLabels: {}
+  # @schema additionalProperties:{"type":"string"}
+  # -- Annotations for logline compactor pods
+  podAnnotations: {}
+  # @schema type:[object, null];skipProperties:true;additionalProperties:true
+  # -- Affinity for logline compactor pods.
+  # @default -- Hard node anti-affinity
+  # The value will be passed through tpl.
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: logline-compactor
+              app.kubernetes.io/name: '{{ include "loki.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+          topologyKey: kubernetes.io/hostname
+  # -- Additional CLI args for the logline compactor
+  extraArgs: []
+  # -- Environment variables to add to the logline compactor pods
+  extraEnv: []
+  # -- Environment variables from secrets or configmaps to add to the logline compactor pods
+  extraEnvFrom: []
+  # -- Volume mounts to add to the logline compactor pods
+  extraVolumeMounts: []
+  # -- Volumes to add to the logline compactor pods
+  extraVolumes: []
+  # @schema skipProperties:true;additionalProperties:true
+  # -- readiness probe settings for logline compactor pods. If empty, use `loki.readinessProbe`
+  readinessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- liveness probe settings for logline compactor pods. If empty use `loki.livenessProbe`
+  livenessProbe: {}
+  # @schema skipProperties:true;additionalProperties:true
+  # -- startup probe settings for logline compactor pods. If empty use `loki.startupProbe`
+  startupProbe: {}
+  # @schema additionalProperties:true
+  # -- Resource requests and limits for the logline compactor
+  resources: {}
+  # -- Container resize policy for the logline compactor
+  # Example:
+  # resizePolicy:
+  #   - resourceName: cpu
+  #     restartPolicy: NotRequired
+  #   - resourceName: memory
+  #     restartPolicy: RestartContainer
+  resizePolicy: []
+  # @schema type:[string, array, null]
+  # -- Containers to add to the logline compactor pods
+  extraContainers: []
+  # @schema type:[string, array, null]
+  # -- Init containers to add to the logline compactor pods
+  initContainers: []
+  # -- Grace period to allow the logline compactor to shutdown before it is killed. On shutdown, the compactor tells the
+  # scheduler that it stops its job, and it tries that for up to 30 seconds.
+  terminationGracePeriodSeconds: 60
+  podDisruptionBudget:
+    # -- Enable Pod Disruption Budget
+    enabled: true
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for Pod Disruption Budget
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Labels for Pod Disruption Budget
+    labels: {}
+
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget minAvailable
+    minAvailable: null
+    # @schema type:[string, integer, null]
+    # -- Pod Disruption Budget maxUnavailable
+    maxUnavailable: null
+    # @schema type:[string, null]
+    # -- Pod Disruption Budget unhealthyPodEvictionPolicy
+    unhealthyPodEvictionPolicy: null
+  # @schema additionalProperties:true
+  # -- Node selector for logline compactor pods
+  nodeSelector: {}
+  # @schema item:object
+  # -- Topology Spread Constraints for logline compactor pods
+  # The value will be passed through tpl.
+  topologySpreadConstraints: []
+  # -- Tolerations for logline compactor pods
+  tolerations: []
+  service:
+    # @schema additionalProperties:{"type":"string"}
+    # -- Annotations for logline compactor Service
+    annotations: {}
+    # @schema additionalProperties:{"type":"string"}
+    # -- Additional labels for logline compactor Service
+    labels: {}
+    # -- Service Type for logline compactor Service
+    type: "ClusterIP"
+    # -- trafficDistribution for logline compactor Service
+    trafficDistribution: ""
+    # -- Session affinity for logline compactor Service
+    sessionAffinity: ""
+    # @schema additionalProperties:true
+    # -- Session affinity config for logline compactor Service
+    sessionAffinityConfig: {}
+    # -- ipFamilyPolicy for logline compactor Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilyPolicy: ""
+    # -- ipFamilies for logline compactor Service
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
+    ipFamilies: []
+    # -- Adds the appProtocol field to the logline compactor service. This allows logline compactor to work with istio protocol selection.
+    appProtocol:
+    # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
+      grpc: ""
+    headlessService:
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional annotations for headless logline compactor Service
+      annotations: {}
+      # @schema additionalProperties:{"type":"string"}
+      # -- Additional labels for headless logline compactor Service
       labels: {}
   serviceAccount:
     # -- Specifies whether a ServiceAccount should be created
