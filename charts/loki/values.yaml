@@ -1347,7 +1347,7 @@ gateway:
     # -- The NGINX gateway image repository
     repository: nginx/nginx-unprivileged
     # -- The NGINX gateway image tag
-    tag: 1.31-alpine
+    tag: 1.31.9-alpine3.24
     # @schema type:[string, null]
     # -- Overrides the NGINX gateway image tag with an image digest
     digest: null
