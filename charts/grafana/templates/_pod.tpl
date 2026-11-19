@@ -448,6 +448,7 @@ initContainers:
       {{- end }}
 {{- end}}
 {{- if and .Values.sidecar.plugins.enabled .Values.sidecar.plugins.initPlugins }}
+  {{- $nativeSidecar := eq (.Values.sidecar.plugins.restartPolicy | default "") "Always" }}
   - name: {{ include "grafana.name" . }}-init-sc-plugins
     {{- $registry := .Values.global.imageRegistry | default .Values.sidecar.image.registry -}}
     {{- if .Values.sidecar.image.sha }}
@@ -456,6 +457,13 @@ initContainers:
     image: "{{ $registry }}/{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
     {{- end }}
     imagePullPolicy: {{ .Values.sidecar.imagePullPolicy }}
+    {{- if .Values.sidecar.plugins.restartPolicy }}
+    restartPolicy: {{ .Values.sidecar.plugins.restartPolicy }}
+    {{- with .Values.sidecar.plugins.startupProbe }}
+    startupProbe:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- end }}
     env:
       {{- range $key, $value := .Values.sidecar.plugins.env }}
       - name: "{{ $key }}"
@@ -466,7 +474,7 @@ initContainers:
         value: "true"
       {{- end }}
       - name: METHOD
-        value: LIST
+        value: {{ ternary .Values.sidecar.plugins.watchMethod "LIST" $nativeSidecar }}
       - name: LABEL
         value: "{{ tpl .Values.sidecar.plugins.label $root }}"
       {{- if .Values.sidecar.plugins.labelValue }}
@@ -502,6 +510,68 @@ initContainers:
       - name: SCRIPT
         value: {{ quote . }}
       {{- end }}
+      {{- if $nativeSidecar }}
+      {{- if and (not .Values.env.GF_SECURITY_ADMIN_USER) (not .Values.env.GF_SECURITY_ADMIN_USER__FILE) (not .Values.env.GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION) }}
+      - name: REQ_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: {{ (tpl .Values.admin.existingSecret .) | default (include "grafana.fullname" .) }}
+            key: {{ .Values.admin.userKey | default "admin-user" }}
+      {{- end }}
+      {{- if and (not .Values.env.GF_SECURITY_ADMIN_PASSWORD) (not .Values.env.GF_SECURITY_ADMIN_PASSWORD__FILE) (not .Values.env.GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION) }}
+      - name: REQ_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: {{ (tpl .Values.admin.existingSecret .) | default (include "grafana.fullname" .) }}
+            key: {{ .Values.admin.passwordKey | default "admin-password" }}
+      {{- end }}
+      {{- if not .Values.sidecar.plugins.skipReload }}
+      - name: REQ_URL
+        value: {{ .Values.sidecar.plugins.reloadURL }}
+      - name: REQ_METHOD
+        value: POST
+      {{- if eq .Values.sidecar.plugins.watchMethod "WATCH" }}
+      - name: REQ_SKIP_INIT
+        value: "true"
+      {{- end }}
+      {{- end }}
+      {{- if .Values.sidecar.plugins.watchServerTimeout }}
+      {{- if ne .Values.sidecar.plugins.watchMethod "WATCH" }}
+        {{- fail (printf "Cannot use .Values.sidecar.plugins.watchServerTimeout with .Values.sidecar.plugins.watchMethod %s" .Values.sidecar.plugins.watchMethod) }}
+      {{- end }}
+      - name: WATCH_SERVER_TIMEOUT
+        value: "{{ .Values.sidecar.plugins.watchServerTimeout }}"
+      {{- end }}
+      {{- if .Values.sidecar.plugins.watchClientTimeout }}
+      {{- if ne .Values.sidecar.plugins.watchMethod "WATCH" }}
+        {{- fail (printf "Cannot use .Values.sidecar.plugins.watchClientTimeout with .Values.sidecar.plugins.watchMethod %s" .Values.sidecar.plugins.watchMethod) }}
+      {{- end }}
+      - name: WATCH_CLIENT_TIMEOUT
+        value: "{{ .Values.sidecar.plugins.watchClientTimeout }}"
+      {{- end }}
+      {{- if .Values.sidecar.plugins.maxTotalRetries }}
+      - name: REQ_RETRY_TOTAL
+        value: "{{ .Values.sidecar.plugins.maxTotalRetries }}"
+      {{- end }}
+      {{- if .Values.sidecar.plugins.maxConnectRetries }}
+      - name: REQ_RETRY_CONNECT
+        value: "{{ .Values.sidecar.plugins.maxConnectRetries }}"
+      {{- end }}
+      {{- if .Values.sidecar.plugins.maxReadRetries }}
+      - name: REQ_RETRY_READ
+        value: "{{ .Values.sidecar.plugins.maxReadRetries }}"
+      {{- end }}
+      {{- end }}
+    {{- if $nativeSidecar }}
+    {{- with .Values.sidecar.livenessProbe }}
+    livenessProbe:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.sidecar.readinessProbe }}
+    readinessProbe:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- end }}
     {{- with .Values.sidecar.resources }}
     resources:
       {{- toYaml . | nindent 6 }}
@@ -1189,7 +1259,7 @@ containers:
       {{- toYaml . | trim | nindent 6 }}
       {{- end }}
 {{- end}}
-{{- if .Values.sidecar.plugins.enabled }}
+{{- if and .Values.sidecar.plugins.enabled (not (and .Values.sidecar.plugins.initPlugins (eq (.Values.sidecar.plugins.restartPolicy | default "") "Always"))) }}
   - name: {{ include "grafana.name" . }}-sc-plugins
     {{- $registry := .Values.global.imageRegistry | default .Values.sidecar.image.registry -}}
     {{- if .Values.sidecar.image.sha }}
