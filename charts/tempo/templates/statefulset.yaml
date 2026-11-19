@@ -11,7 +11,7 @@ metadata:
   {{- end }}
 spec:
   replicas: {{ .Values.replicas }}
-  {{- if .Values.revisionHistoryLimit }}
+  {{- if ne .Values.revisionHistoryLimit nil }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   {{- end }}
   {{- if and (.Values.persistence.enableStatefulSetAutoDeletePVC) (.Values.persistence.enabled) }}
