@@ -1,5 +1,12 @@
 # synthetic-monitoring-agent Helm Chart
 
+> [!IMPORTANT]
+> The official Helm chart for the synthetic-monitoring-agent is maintained in the [grafana/synthetic-monitoring-agent](https://github.com/grafana/synthetic-monitoring-agent/tree/main/charts/synthetic-monitoring-agent) repository.
+>
+> The official chart starts at version `2.0.0` and is published to the `grafana` Helm repository, `https://grafana.github.io/helm-charts`, and as an OCI artifact, `oci://ghcr.io/grafana/helm-charts/synthetic-monitoring-agent`.
+>
+> Version `2.0.0` is a breaking change for 1.x releases: most values are renamed. To migrate a 1.x release, follow the [upgrade instructions](https://github.com/grafana/synthetic-monitoring-agent/tree/main/charts/synthetic-monitoring-agent#upgrading).
+
 Grafana's Synthetic Monitoring application. The agent provides probe functionality and executes network checks for monitoring remote targets.
 
 > [!NOTE]
