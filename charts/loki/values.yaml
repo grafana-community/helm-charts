@@ -322,9 +322,11 @@ loki:
   #    If you choose this approach the burden is on you to maintain any changes we make to the templated config.
   # 3. Use an existing secret or configmap to provide the configuration.
   #    This option is mostly provided for folks who have external processes which provide or modify the configuration.
-  #    When using this option you can specify a different name for loki.generatedConfigObjectName and configObjectName
-  #    if you have a process which takes the generated config and modifies it, or you can stop the chart from generating
-  #    a config entirely by setting loki.generatedConfigObjectName to
+  #    Set loki.configObjectName to the name of your object and loki.configStorageType to ConfigMap or Secret to match
+  #    it. The object must hold the Loki configuration under the key config.yaml.
+  #    If you have a process which takes the generated config and modifies it, keep loki.generatedConfigObjectName and
+  #    give it a different name than loki.configObjectName. To stop the chart from generating a config entirely, set
+  #    loki.generatedConfigObjectName to "" (an empty string).
   #
   ######################################################################################################################
 
