@@ -4,25 +4,15 @@ templates:
   - service.yaml
   - deployment.yaml
 tests:
-  - it: should target the named container port by default
+  - it: should target the default container port by number
     template: service.yaml
-    asserts:
-      - equal:
-          path: spec.ports[0].targetPort
-          value: grafana
-
-  - it: should target the default container port by number when useNumericTargetPort is enabled
-    template: service.yaml
-    set:
-      service.useNumericTargetPort: true
     asserts:
       - equal:
           path: spec.ports[0].targetPort
           value: 3000
 
-  - it: should keep the numeric targetPort in sync with the grafana containerPort
+  - it: should keep the targetPort in sync with the grafana containerPort
     set:
-      service.useNumericTargetPort: true
       service.targetPort: 4181
     asserts:
       - template: service.yaml
@@ -37,10 +27,8 @@ tests:
             containerPort: 4181
             protocol: TCP
 
-  - it: should keep service port and name unchanged when useNumericTargetPort is enabled
+  - it: should keep service port and name unchanged
     template: service.yaml
-    set:
-      service.useNumericTargetPort: true
     asserts:
       - equal:
           path: spec.ports[0].port
@@ -48,11 +36,3 @@ tests:
       - equal:
           path: spec.ports[0].name
           value: service
-
-  - it: should reject a non-boolean useNumericTargetPort
-    template: service.yaml
-    set:
-      service.useNumericTargetPort: 1
-    asserts:
-      - failedTemplate:
-          errorPattern: useNumericTargetPort
