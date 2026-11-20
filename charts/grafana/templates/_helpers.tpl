@@ -101,6 +101,26 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Name of the helm test pod (app.kubernetes.io/name label).
+Truncated to 58 chars to leave room for the -test suffix within the 63-char label limit.
+*/}}
+{{- define "grafana.test.name" -}}
+{{- printf "%s-test" (include "grafana.name" . | trunc 58 | trimSuffix "-") }}
+{{- end }}
+
+{{/*
+Helm test pod labels
+
+Same as grafana.labels, but with app.kubernetes.io/name set to grafana.test.name.
+The test pod must not match the grafana Service selector, otherwise it becomes
+a Service endpoint and receives a share of the traffic it sends.
+*/}}
+{{- define "grafana.test.labels" -}}
+{{- $labels := include "grafana.labels" . | fromYaml }}
+{{- toYaml (mergeOverwrite $labels (dict "app.kubernetes.io/name" (include "grafana.test.name" .))) }}
+{{- end }}
+
+{{/*
 Create a fully qualified name for image-renderer resources.
 We truncate at 47 chars to reserve space for the longest suffix (-image-renderer, 16 chars)
 so the Service name stays within the 63-char DNS label limit.

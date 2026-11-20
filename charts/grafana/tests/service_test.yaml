@@ -1,0 +1,51 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: service target port
+templates:
+  - service.yaml
+  - deployment.yaml
+  - tests/test.yaml
+tests:
+  - it: should target the default container port by number
+    template: service.yaml
+    asserts:
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 3000
+
+  - it: should keep the targetPort in sync with the grafana containerPort
+    set:
+      service.targetPort: 4181
+    asserts:
+      - template: service.yaml
+        equal:
+          path: spec.ports[0].targetPort
+          value: 4181
+      - template: deployment.yaml
+        contains:
+          path: spec.template.spec.containers[?(@.name == "grafana")].ports
+          content:
+            name: grafana
+            containerPort: 4181
+            protocol: TCP
+
+  - it: should keep service port and name unchanged
+    template: service.yaml
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+      - equal:
+          path: spec.ports[0].name
+          value: service
+
+  - it: should not let the service select the helm test pod
+    template: tests/test.yaml
+    set:
+      testFramework.enabled: true
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: grafana-test
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
