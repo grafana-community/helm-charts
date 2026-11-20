@@ -3,6 +3,7 @@ suite: service target port
 templates:
   - service.yaml
   - deployment.yaml
+  - tests/test.yaml
 tests:
   - it: should target the default container port by number
     template: service.yaml
@@ -36,3 +37,15 @@ tests:
       - equal:
           path: spec.ports[0].name
           value: service
+
+  - it: should not let the service select the helm test pod
+    template: tests/test.yaml
+    set:
+      testFramework.enabled: true
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: grafana-test
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
