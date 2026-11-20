@@ -1,0 +1,62 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: memcached args and PodDisruptionBudgets
+templates:
+  - memcached/statefulset-memcached.yaml
+  - memcached/statefulset-memcached-bloom.yaml
+  - memcached/poddisruptionbudget-memcached.yaml
+  - memcached/poddisruptionbudget-memcached-bloom.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: keeps global.extraArgs off the shared memcached container
+    template: memcached/statefulset-memcached.yaml
+    set:
+      global.extraArgs: [-tempo.flag=1]
+      memcached.extraArgs: [-v]
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "memcached")].args
+          content: -v
+      - notContains:
+          path: spec.template.spec.containers[?(@.name == "memcached")].args
+          content: -tempo.flag=1
+
+  - it: keeps global.extraArgs off a per-role memcached container
+    template: memcached/statefulset-memcached-bloom.yaml
+    set:
+      global.extraArgs: [-tempo.flag=1]
+      memcachedBloom.enabled: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[?(@.name == "memcached")].args
+          content: -tempo.flag=1
+
+  - it: renders unhealthyPodEvictionPolicy on the shared memcached PDB
+    template: memcached/poddisruptionbudget-memcached.yaml
+    set:
+      memcached.replicas: 2
+      memcached.podDisruptionBudget.unhealthyPodEvictionPolicy: AlwaysAllow
+    asserts:
+      - equal:
+          path: spec.unhealthyPodEvictionPolicy
+          value: AlwaysAllow
+
+  - it: renders unhealthyPodEvictionPolicy on a per-role memcached PDB
+    template: memcached/poddisruptionbudget-memcached-bloom.yaml
+    set:
+      memcachedBloom.enabled: true
+      memcachedBloom.replicas: 2
+      memcachedBloom.podDisruptionBudget.unhealthyPodEvictionPolicy: AlwaysAllow
+    asserts:
+      - equal:
+          path: spec.unhealthyPodEvictionPolicy
+          value: AlwaysAllow
+
+  - it: renders no shared memcached PDB when memcached is disabled
+    template: memcached/poddisruptionbudget-memcached.yaml
+    set:
+      memcached.enabled: false
+      memcached.replicas: 2
+    asserts:
+      - hasDocuments:
+          count: 0

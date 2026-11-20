@@ -1,0 +1,1 @@
+{{- include "tempo.memcached.service" (dict "ctx" $ "memcachedConfig" .Values.memcachedParquetPage "component" "memcached-parquet-page") }}

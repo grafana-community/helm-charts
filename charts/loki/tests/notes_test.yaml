@@ -158,3 +158,38 @@ tests:
       - matchRegexRaw:
           pattern: "http://.*loki-query-frontend\\.NAMESPACE\\.svc\\.cluster\\.local:3100/"
         template: NOTES.txt
+      - notMatchRegexRaw:
+          pattern: "\\* ruler querier"
+        template: NOTES.txt
+
+  - it: lists dedicated ruler query path components when enabled in distributed mode
+    set:
+      deploymentMode: Distributed
+      ruler.remoteEvaluationDedicatedQueryPath: true
+    asserts:
+      - matchRegexRaw:
+          pattern: "\\* ruler querier"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "\\* ruler query frontend"
+        template: NOTES.txt
+      - matchRegexRaw:
+          pattern: "\\* ruler query scheduler"
+        template: NOTES.txt
+
+  - it: lists the ruler in distributed mode when ruler is enabled
+    set:
+      deploymentMode: Distributed
+    asserts:
+      - matchRegexRaw:
+          pattern: "\\* ruler\\n"
+        template: NOTES.txt
+
+  - it: omits the ruler in distributed mode when ruler is disabled
+    set:
+      deploymentMode: Distributed
+      ruler.enabled: false
+    asserts:
+      - notMatchRegexRaw:
+          pattern: "\\* ruler"
+        template: NOTES.txt

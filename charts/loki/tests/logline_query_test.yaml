@@ -1,0 +1,204 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: logline index in queries
+templates:
+  - querier/workload.yaml
+  - query-frontend/workload.yaml
+  - validate.yaml
+  - config.yaml
+
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  # the logline flags need Loki 4.0+
+  loki.image.tag: 4.0.0
+
+tests:
+  - it: does not pass the logline flags by default
+    asserts:
+      - template: querier/workload.yaml
+        notContains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+      - template: query-frontend/workload.yaml
+        notContains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+
+  - it: passes the logline flags to the querier and the query frontend
+    set:
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-store.min-date=2026-01-01
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+      - template: query-frontend/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-store.min-date=2026-01-01
+      - template: query-frontend/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+
+  - it: passes the shared logline args to the querier and the query frontend
+    set:
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+      loki.logline.extraArgs:
+        - -logline-index.ngram-length=5
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+      - template: query-frontend/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+
+  - it: does not pass the shared logline args when queries do not use the index
+    set:
+      loki.logline.extraArgs:
+        - -logline-index.ngram-length=5
+    asserts:
+      - template: querier/workload.yaml
+        notContains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+      - template: query-frontend/workload.yaml
+        notContains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-index.ngram-length=5
+
+  - it: renders when the shared logline args are null
+    set:
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+      loki.logline.extraArgs: null
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+      - template: query-frontend/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+
+  - it: keeps the zone awareness flag of the querier
+    set:
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+      ingester.zoneAwareReplication.enabled: true
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.zone-awareness-enabled=true
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+
+  - it: fails without the first date of the logline index
+    set:
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.store.min_date is required
+
+  - it: fails with a date in another form
+    set:
+      loki.logline.store.min_date: "2026-01-01T00:00:00Z"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.store.min_date is required
+
+  - it: accepts a leap day
+    set:
+      loki.logline.store.min_date: "2028-02-29"
+      loki.logline.query.enabled: true
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-store.min-date=2028-02-29
+
+  - it: fails with a month that is not in the calendar
+    set:
+      loki.logline.store.min_date: "2026-13-01"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.store.min_date is required
+
+  - it: fails with a day that is not in the month
+    set:
+      loki.logline.store.min_date: "2026-02-30"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.store.min_date is required
+
+  - it: fails when the Loki image is older than 4.0
+    set:
+      loki.image.tag: 3.7.9
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.query.enabled requires Loki 4.0.0 or later
+
+  - it: fails when the image of one component is older than 4.0
+    set:
+      querier.image.tag: 3.7.9
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: but the querier image tag is "3.7.9"
+
+  - it: checks the component image tags before the global one
+    set:
+      loki.image.tag: 3.7.9
+      querier.image.tag: 4.0.0
+      queryFrontend.image.tag: 4.0.0
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+    asserts:
+      - template: querier/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -logline-query.enabled=true
+
+  - it: fails outside of distributed mode
+    set:
+      deploymentMode: SimpleScalable
+      loki.logline.store.min_date: "2026-01-01"
+      loki.logline.query.enabled: true
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: loki.logline.query.enabled requires deploymentMode Distributed

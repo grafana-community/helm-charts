@@ -1,0 +1,167 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: dataobj builder
+templates:
+  - dataobj-builder/workload.yaml
+  - dataobj-builder/service.yaml
+  - dataobj-builder/pdb.yaml
+  - validate.yaml
+  - config.yaml
+
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  # the dataobj-builder target needs Loki 4.0+
+  loki.image.tag: 4.0.0
+
+tests:
+  - it: does not render anything when the dataobj builder is disabled
+    asserts:
+      - template: dataobj-builder/workload.yaml
+        hasDocuments:
+          count: 0
+      - template: dataobj-builder/service.yaml
+        hasDocuments:
+          count: 0
+      - template: dataobj-builder/pdb.yaml
+        hasDocuments:
+          count: 0
+
+  - it: fails outside of distributed mode
+    set:
+      deploymentMode: SimpleScalable
+      dataobjBuilder.enabled: true
+      dataobjBuilder.replicas: 2
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: dataobjBuilder.enabled requires deploymentMode Distributed
+
+  - it: renders a StatefulSet running the dataobj-builder target
+    set:
+      dataobjBuilder.enabled: true
+      dataobjBuilder.replicas: 2
+    asserts:
+      - template: dataobj-builder/workload.yaml
+        hasDocuments:
+          count: 1
+      - template: dataobj-builder/workload.yaml
+        isKind:
+          of: StatefulSet
+      - template: dataobj-builder/workload.yaml
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-dataobj-builder
+      - template: dataobj-builder/workload.yaml
+        equal:
+          path: spec.replicas
+          value: 2
+      - template: dataobj-builder/workload.yaml
+        equal:
+          path: spec.podManagementPolicy
+          value: Parallel
+      - template: dataobj-builder/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -target=dataobj-builder
+      - template: dataobj-builder/workload.yaml
+        equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 300
+
+  - it: is not a memberlist seed node
+    set:
+      dataobjBuilder.enabled: true
+      dataobjBuilder.replicas: 2
+    asserts:
+      - template: dataobj-builder/workload.yaml
+        notExists:
+          path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
+
+  - it: renders the headless service referenced by the StatefulSet
+    set:
+      dataobjBuilder.enabled: true
+      dataobjBuilder.replicas: 2
+    asserts:
+      - template: dataobj-builder/service.yaml
+        hasDocuments:
+          count: 2
+      - template: dataobj-builder/service.yaml
+        documentIndex: 1
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-dataobj-builder-headless
+      - template: dataobj-builder/workload.yaml
+        equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-loki-dataobj-builder-headless
+
+  - it: renders a PodDisruptionBudget for more than one replica
+    set:
+      dataobjBuilder.enabled: true
+      dataobjBuilder.replicas: 2
+      dataobjBuilder.podDisruptionBudget.maxUnavailable: 1
+    asserts:
+      - template: dataobj-builder/pdb.yaml
+        hasDocuments:
+          count: 1
+      - template: dataobj-builder/pdb.yaml
+        equal:
+          path: spec.maxUnavailable
+          value: 1
+
+  - it: passes extraArgs to the container
+    set:
+      dataobjBuilder.enabled: true
+      dataobjBuilder.replicas: 2
+      dataobjBuilder.extraArgs:
+        - -dataobj.builder.topic=loki-logs
+    asserts:
+      - template: dataobj-builder/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -dataobj.builder.topic=loki-logs
+
+  - it: fails when the Loki image is older than 4.0
+    set:
+      loki.image.tag: 3.7.9
+      dataobjBuilder.enabled: true
+      dataobjBuilder.replicas: 2
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: dataobjBuilder.enabled requires Loki 4.0.0 or later
+
+  - it: accepts a 4.x release candidate
+    set:
+      loki.image.tag: 4.0.0-rc.3
+      dataobjBuilder.enabled: true
+      dataobjBuilder.replicas: 2
+    asserts:
+      - template: dataobj-builder/workload.yaml
+        hasDocuments:
+          count: 1
+
+  - it: checks the component image tag before the global one
+    set:
+      loki.image.tag: 3.7.9
+      dataobjBuilder.image.tag: 4.0.0
+      dataobjBuilder.enabled: true
+      dataobjBuilder.replicas: 2
+    asserts:
+      - template: dataobj-builder/workload.yaml
+        hasDocuments:
+          count: 1
+
+  - it: does not check tags that are not semantic versions
+    set:
+      loki.image.tag: main-1a2b3c4
+      dataobjBuilder.enabled: true
+      dataobjBuilder.replicas: 2
+    asserts:
+      - template: dataobj-builder/workload.yaml
+        hasDocuments:
+          count: 1

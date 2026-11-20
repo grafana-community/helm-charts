@@ -1,0 +1,168 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: memcached sizing flags
+templates:
+  - memcached/statefulset-memcached.yaml
+  - memcached/statefulset-memcached-bloom.yaml
+  - memcached/statefulset-memcached-parquet-page.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: shared memcached gets the default sizing flags
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - -m 1024
+            - -I 5m
+            - -c 4096
+
+  - it: other extraArgs render after the sizing flags
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcached.extraArgs:
+        - -v
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - -m 1024
+            - -I 5m
+            - -c 4096
+            - -v
+
+  - it: false sizing values omit the flags and the args key
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcached.allocatedMemory: false
+      memcached.maxItemMemory: false
+      memcached.connectionLimit: false
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].args
+
+  - it: per-role memcached uses its own sizing values
+    template: memcached/statefulset-memcached-bloom.yaml
+    set:
+      memcachedBloom.enabled: true
+      memcachedBloom.allocatedMemory: 2048
+      memcachedBloom.maxItemMemory: 8
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - -m 2048
+            - -I 8m
+            - -c 4096
+
+  - it: parquet-page memcached gets the default sizing flags, which fit a full page
+    template: memcached/statefulset-memcached-parquet-page.yaml
+    set:
+      memcachedParquetPage.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - -m 1024
+            - -I 5m
+            - -c 4096
+
+  - it: parquet-page cache entry gets max_item_size from its own maxItemMemory
+    template: configmap-tempo.yaml
+    set:
+      memcachedParquetPage.enabled: true
+      memcachedParquetPage.maxItemMemory: 8
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "host: .*-memcached-parquet-page\n\\s+max_item_size: 8388608\n"
+
+  - it: shared cache entry gets max_item_size from maxItemMemory
+    template: configmap-tempo.yaml
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "max_item_size: 5242880"
+
+  - it: per-role cache entry gets max_item_size from its own maxItemMemory
+    template: configmap-tempo.yaml
+    set:
+      memcachedBloom.enabled: true
+      memcachedBloom.maxItemMemory: 8
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "max_item_size: 8388608"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "max_item_size: 5242880"
+
+  - it: false maxItemMemory omits max_item_size
+    template: configmap-tempo.yaml
+    set:
+      memcached.maxItemMemory: false
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "max_item_size"
+
+  - it: resources stay empty by default
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value: {}
+
+  - it: deriveResources derives empty resources from allocatedMemory and allocatedCPU
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcached.deriveResources: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 1229Mi
+            requests:
+              cpu: 500m
+              memory: 1229Mi
+
+  - it: explicit resources are used as is with deriveResources
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcached.deriveResources: true
+      memcached.resources:
+        requests:
+          memory: 2Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            requests:
+              memory: 2Gi
+
+  - it: false allocatedMemory derives no resources
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcached.deriveResources: true
+      memcached.allocatedMemory: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value: {}
+
+  - it: per-role resources are derived from its own values, and false allocatedCPU omits the CPU request
+    template: memcached/statefulset-memcached-bloom.yaml
+    set:
+      memcachedBloom.enabled: true
+      memcachedBloom.deriveResources: true
+      memcachedBloom.allocatedMemory: 2048
+      memcachedBloom.allocatedCPU: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 2458Mi
+            requests:
+              memory: 2458Mi

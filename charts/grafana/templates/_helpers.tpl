@@ -76,6 +76,23 @@ app.kubernetes.io/version: {{ mustRegexReplaceAllLiteral "@sha.*" (tpl (toString
 {{- end }}
 
 {{/*
+Pod labels
+
+Same as grafana.labels without helm.sh/chart. That label changes on every chart
+version bump, and inside a pod template it rolls the pods on upgrade even when
+neither the configuration nor the image has changed. It stays on the objects.
+*/}}
+{{- define "grafana.podLabels" -}}
+{{ include "grafana.selectorLabels" . }}
+{{- if or .Chart.AppVersion .Values.image.tag }}
+app.kubernetes.io/version: {{ mustRegexReplaceAllLiteral "@sha.*" (tpl (toString .Values.image.tag) .) "" | default .Chart.AppVersion | trimSuffix "-distroless" | trunc 63 | trimSuffix "-" | quote }}
+{{- end }}
+{{- with .Values.extraLabels }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
 Selector labels
 */}}
 {{- define "grafana.selectorLabels" -}}
@@ -340,4 +357,16 @@ This function needs to be called with a context object containing the following 
 {{- $data = append $data (pick (fromYaml .) "data" "stringData") -}}
 {{- end -}}
 {{ $data | toYaml | sha256sum }}
+{{- end }}
+
+{{/*
+NATS cluster port the network policy allows. It is set explicitly rather than read from
+grafana.ini, where Grafana can expand it at runtime, which Helm cannot resolve.
+*/}}
+{{- define "grafana.natsClusterPort" -}}
+{{- $port := int .Values.networkPolicy.natsCluster.port -}}
+{{- if or (lt $port 1) (gt $port 65535) -}}
+{{- fail "networkPolicy.natsCluster.port must be a port number between 1 and 65535." -}}
+{{- end -}}
+{{- $port -}}
 {{- end }}

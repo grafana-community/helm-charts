@@ -1,0 +1,8 @@
+{{- $isDistributed := eq (include "loki.deployment.isDistributed" .) "true" -}}
+{{- if $isDistributed }}
+{{- $args := concat (list
+  "-logline-compaction.job-state-dir=/var/loki/logline-scheduler"
+  (include "loki.logline.minDateArg" .)
+) (.Values.loki.logline.extraArgs | default list) }}
+{{- include "loki.component" (dict "ctx" . "component" .Values.loglineScheduler "target" "logline-scheduler" "args" $args "memberlist" false) }}
+{{- end }}

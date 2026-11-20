@@ -1,0 +1,45 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: memcached revisionHistoryLimit
+templates:
+  - chunks-cache/statefulset.yaml
+  - results-cache/statefulset.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  memcached.enabled: true
+  chunksCache.enabled: true
+  resultsCache.enabled: true
+
+tests:
+  - it: should default revisionHistoryLimit to loki.revisionHistoryLimit
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 10
+        template: chunks-cache/statefulset.yaml
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 10
+        template: results-cache/statefulset.yaml
+
+  - it: should apply loki.revisionHistoryLimit to the chunks, l2 and results caches
+    set:
+      loki.revisionHistoryLimit: 3
+      chunksCache.l2.enabled: true
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 3
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 0
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 3
+        template: chunks-cache/statefulset.yaml
+        documentIndex: 1
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 3
+        template: results-cache/statefulset.yaml

@@ -1968,6 +1968,18 @@ networkPolicy:
   #
   explicitIpBlocks: []
 
+  natsCluster:
+    # -- Allow the embedded NATS cluster traffic between the Grafana pods of this release.
+    # Grafana 13.4+ runs an embedded NATS server in each pod when `[nats] enabled = true` is set in `grafana.ini`.
+    # The pods discover each other through the shared database and connect to each other's pod IP on the cluster port,
+    # so this is only useful with more than one replica and an external MySQL or PostgreSQL database.
+    # When true, an ingress rule (and an egress rule if `networkPolicy.egress.enabled` is true)
+    # allows the Grafana pods to reach each other on the NATS cluster port. Without NATS nothing listens there.
+    enabled: false
+    # @schema type:[integer]
+    # -- NATS cluster port. Set it to `[nats] cluster_port` from `grafana.ini` when that is changed.
+    port: 6222
+
   egress:
     # -- When enabled, an egress network policy will be
     # created allowing grafana to connect to external data sources from kubernetes cluster.
@@ -2041,10 +2053,10 @@ extraObjects: []
 assertNoLeakedSecrets: true
 
 # updateMode options are:
-# Off: n the Off update mode, the VPA recommender still analyzes resource usage and generates recommendations, but these recommendations are not automatically applied to Pods. The recommendations are only stored in the VPA object's .status field.
+# Off: In the Off update mode, the VPA recommender still analyzes resource usage and generates recommendations, but these recommendations are not automatically applied to Pods. The recommendations are only stored in the VPA object's .status field.
 # Initial: In Initial mode, VPA only sets resource requests when Pods are first created. It does not update resources for already running Pods, even if recommendations change over time. The recommendations apply only during Pod creation.
-# Recreate: In Recreate mode, VPA actively manages Pod resources by evicting Pods when their current resource requests differ significantly from recommendations. When a Pod is evicted, the workload controller (managing a Deployment, StatefulSet, etc) creates a replacement Pod, and the VPA admission controller applies the updated resource requests to the new Pod.
-# InPlaceOrRecreate: In Recreate mode, VPA actively manages Pod resources by evicting Pods when their current resource requests differ significantly from recommendations. When a Pod is evicted, the workload controller (managing a Deployment, StatefulSet, etc) creates a replacement Pod, and the VPA admission controller applies the updated resource requests to the new Pod.
+# Recreate: In Recreate mode, VPA actively manages Pod resources by evicting Pods when their current resource requests differ significantly from recommendations. When a Pod is evicted, the workload controller (managing a Deployment, StatefulSet, etc.) creates a replacement Pod, and the VPA admission controller applies the updated resource requests to the new Pod.
+# InPlaceOrRecreate: In InPlaceOrRecreate mode, VPA actively manages Pod resources by attempting to update them in place without restarting the Pod. If an in-place update is not possible, VPA falls back to evicting the Pod. The workload controller then creates a replacement Pod, and the VPA admission controller applies the updated resource requests.
 # Auto (deprecated): The Auto update mode is deprecated since VPA version 1.4.0. Use Recreate for eviction-based updates, or InPlaceOrRecreate for in-place updates with eviction fallback.
 verticalPodAutoscaler:
   enabled: false

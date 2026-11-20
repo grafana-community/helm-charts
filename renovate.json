@@ -125,6 +125,22 @@
         "grafana/grafana",
         "docker.io/grafana/grafana"
       ]
+    },
+    {
+      "description": "Treat the Alpine version in nginx tags (e.g. 1.31.9-alpine3.24) as part of the version, so Alpine base bumps are offered as updates",
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-alpine(?<build>\\d+)\\.(?<revision>\\d+)(?<compatibility>-.+)?$",
+      "matchCurrentValue": "/^\\d+\\.\\d+\\.\\d+-alpine\\d+\\.\\d+(-.+)?$/",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "nginx",
+        "docker.io/nginx",
+        "nginx/nginx-unprivileged",
+        "docker.io/nginx/nginx-unprivileged",
+        "nginxinc/nginx-unprivileged",
+        "docker.io/nginxinc/nginx-unprivileged"
+      ]
     }
   ]
 }

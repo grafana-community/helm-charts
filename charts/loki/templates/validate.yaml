@@ -31,14 +31,56 @@
 {{- fail "You have more than zero replicas configured for both the monolithic and simple scalable targets. If this was intentional change the deploymentMode to the transitional 'Monolithic<->SimpleScalable' mode"}}
 {{- end }}
 
+{{- if and .Values.ruler.enabled .Values.ruler.remoteEvaluationDedicatedQueryPath (ne (include "loki.deployment.isDistributed" .) "true") }}
+{{- fail "ruler.remoteEvaluationDedicatedQueryPath requires deploymentMode Distributed (or SimpleScalable<->Distributed) with an object storage backend." }}
+{{- end }}
+
 {{- include "loki.validateAutoscaling" (dict "component" .Values.querier "name" "querier") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.distributor "name" "distributor") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.ingester "name" "ingester") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.queryFrontend "name" "query-frontend") }}
+{{- include "loki.validateAutoscaling" (dict "component" .Values.rulerQuerier "name" "ruler-querier") }}
+{{- include "loki.validateAutoscaling" (dict "component" .Values.rulerQueryFrontend "name" "ruler-query-frontend") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomBuilder "name" "bloom-builder") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomGateway "name" "bloom-gateway") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.bloomPlanner "name" "bloom-planner") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.patternIngester "name" "pattern-ingester") }}
+
+{{- /* The dataobj and logline targets only exist in Loki 4.0+. Tags that are not semantic versions (branch builds, digests) cannot be checked and are let through. */ -}}
+{{- range $key, $name := dict "dataobjBuilder" "dataobj builder" "dataobjCompactionPlanner" "dataobj compaction planner" "dataobjCompactionWorker" "dataobj compaction worker" "loglineIndexBuilder" "logline index builder" "loglineScheduler" "logline scheduler" "loglineCompactor" "logline compactor" }}
+{{- $component := index $.Values $key }}
+{{- if $component.enabled }}
+{{- if ne (include "loki.deployment.isDistributed" $) "true" }}
+{{- fail (printf "%s.enabled requires deploymentMode Distributed (or SimpleScalable<->Distributed) with an object storage backend." $key) }}
+{{- end }}
+{{- $tag := coalesce $component.image.tag $.Values.loki.image.tag $.Chart.AppVersion | toString }}
+{{- if and (regexMatch "^v?[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$" $tag) (not (semverCompare ">=4.0.0-0" $tag)) }}
+{{- fail (printf "%s.enabled requires Loki 4.0.0 or later, but the %s image tag is %q. Set loki.image.tag or %s.image.tag to a 4.x version." $key $name $tag $key) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if and .Values.loglineScheduler.enabled (gt (int .Values.loglineScheduler.replicas) 1) }}
+{{- fail "loglineScheduler.replicas must not be more than 1. Logline schedulers do not coordinate with each other, so two schedulers can merge the same indexes twice." }}
+{{- end }}
+{{- if and .Values.loki.logline.query.enabled (ne (include "loki.deployment.isDistributed" .) "true") }}
+{{- fail "loki.logline.query.enabled requires deploymentMode Distributed (or SimpleScalable<->Distributed) with an object storage backend." }}
+{{- end }}
+{{- if .Values.loki.logline.query.enabled }}
+{{- /* The logline flags only exist in Loki 4.0+. */ -}}
+{{- range $key, $name := dict "queryFrontend" "query frontend" "querier" "querier" }}
+{{- $tag := coalesce (index $.Values $key).image.tag $.Values.loki.image.tag $.Chart.AppVersion | toString }}
+{{- if and (regexMatch "^v?[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$" $tag) (not (semverCompare ">=4.0.0-0" $tag)) }}
+{{- fail (printf "loki.logline.query.enabled requires Loki 4.0.0 or later, but the %s image tag is %q. Set loki.image.tag or %s.image.tag to a 4.x version." $name $tag $key) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if or .Values.loglineIndexBuilder.enabled .Values.loglineScheduler.enabled .Values.loglineCompactor.enabled .Values.loki.logline.query.enabled }}
+{{- $minDate := .Values.loki.logline.store.min_date | toString }}
+{{- /* Loki rejects a date that is not in the calendar. The check parses and formats in UTC, so the time zone of the Helm client does not change the result. */ -}}
+{{- if or (not (regexMatch "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" $minDate)) (ne (dateInZone "2006-01-02" (toDate "2006-01-02Z07:00" (printf "%sZ" $minDate)) "UTC") $minDate) }}
+{{- fail "loki.logline.store.min_date is required, as a valid date in the form YYYY-MM-DD, when a logline component or loki.logline.query.enabled is on." }}
+{{- end }}
+{{- end }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.overridesExporter "name" "overrides-exporter") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.gateway "name" "gateway") }}
 {{- include "loki.validateAutoscaling" (dict "component" .Values.read "name" "read") }}

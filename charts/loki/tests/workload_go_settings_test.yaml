@@ -1,0 +1,159 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: Go runtime settings (GOMEMLIMIT / GOGC) injection
+templates:
+  - ingester/workload.yaml
+  - config.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  ingester.zoneAwareReplication.enabled: false
+  ingester.replicas: 1
+  read.replicas: 0
+  write.replicas: 0
+  backend.replicas: 0
+  ingester.resources.limits.memory: 3Gi
+
+tests:
+  - it: injects GOMEMLIMIT at 85% of the memory limit and GOGC=80 by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: 2611MiB
+        template: ingester/workload.yaml
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOGC
+            value: "80"
+        template: ingester/workload.yaml
+        documentIndex: 0
+
+  - it: uses a custom factor and gogc
+    set:
+      defaults.goSettings.goMemLimitFactor: 0.5
+      defaults.goSettings.gogc: 50
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: 1536MiB
+        template: ingester/workload.yaml
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOGC
+            value: "50"
+        template: ingester/workload.yaml
+        documentIndex: 0
+
+  - it: does not inject GOMEMLIMIT when goMemLimitFactor is 0
+    set:
+      defaults.goSettings.goMemLimitFactor: 0
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].env[?(@.name == "GOMEMLIMIT")]
+        template: ingester/workload.yaml
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOGC
+            value: "80"
+        template: ingester/workload.yaml
+        documentIndex: 0
+
+  - it: does not inject GOGC when gogc is 0
+    set:
+      defaults.goSettings.gogc: 0
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].env[?(@.name == "GOGC")]
+        template: ingester/workload.yaml
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: 2611MiB
+        template: ingester/workload.yaml
+        documentIndex: 0
+
+  - it: falls back to the defaults when goSettings values are null
+    set:
+      defaults.goSettings.goMemLimitFactor: null
+      defaults.goSettings.gogc: null
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: 2611MiB
+        template: ingester/workload.yaml
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOGC
+            value: "80"
+        template: ingester/workload.yaml
+        documentIndex: 0
+
+  - it: does not inject GOMEMLIMIT without a memory limit
+    set:
+      ingester.resources.limits.memory: null
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].env[?(@.name == "GOMEMLIMIT")]
+        template: ingester/workload.yaml
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOGC
+            value: "80"
+        template: ingester/workload.yaml
+        documentIndex: 0
+
+  - it: keeps a user-provided GOMEMLIMIT and GOGC
+    set:
+      ingester.extraEnv:
+        - name: GOMEMLIMIT
+          value: "off"
+        - name: GOGC
+          value: "100"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: "off"
+        template: ingester/workload.yaml
+        documentIndex: 0
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOGC
+            value: "100"
+        template: ingester/workload.yaml
+        documentIndex: 0
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOMEMLIMIT
+            value: 2611MiB
+        template: ingester/workload.yaml
+        documentIndex: 0
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GOGC
+            value: "80"
+        template: ingester/workload.yaml
+        documentIndex: 0

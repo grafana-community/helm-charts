@@ -43,3 +43,26 @@
 {{- end }}
 {{- end }}
 {{- end }}
+{{- range $section := list "memcached" "memcachedBloom" "memcachedParquetFooter" "memcachedFrontendSearch" "memcachedParquetPage" }}
+{{- $memcached := index $.Values $section | default dict }}
+{{- if $memcached.enabled }}
+{{- range ($memcached.extraArgs | default list) }}
+{{- if regexMatch "^\\s*(-[mIc]|--memory-limit|--max-item-size|--conn-limit)([\\s=0-9]|$)" (toString .) }}
+{{- fail (printf "%s.extraArgs contains %q, a memcached sizing flag the chart already renders. Use %s.allocatedMemory (-m), %s.maxItemMemory (-I) or %s.connectionLimit (-c) instead: memcached keeps the last occurrence of a flag, so the one in extraArgs would silently override the chart's value. See UPGRADE.md." $section (toString .) $section $section $section) }}
+{{- end }}
+{{- end }}
+{{- range $key := list "allocatedMemory" "maxItemMemory" "connectionLimit" }}
+{{- with index $memcached $key }}
+{{- if or (lt (float64 .) 1.0) (ne (float64 .) (float64 (int .))) }}
+{{- fail (printf "%s.%s must be a whole number of at least 1, got %v." $section $key .) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- with $memcached.maxItemMemory }}
+{{- $memory := $memcached.allocatedMemory | default 64 }}
+{{- if gt (mul (int .) 2) (int $memory) }}
+{{- fail (printf "%s.maxItemMemory (%d MB) is more than half of the memcached memory (%d MB, %s.allocatedMemory or memcached's default of 64): memcached refuses to start when -I exceeds half of -m." $section (int .) (int $memory) $section) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

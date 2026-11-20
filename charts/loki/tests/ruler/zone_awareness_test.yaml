@@ -1,0 +1,58 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ruler ingester zone awareness
+templates:
+  - ruler/workload.yaml
+  - config.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  ruler.enabled: true
+tests:
+  - it: does not set zone awareness when zone-aware replication is disabled
+    set:
+      ingester.zoneAwareReplication.enabled: false
+    template: ruler/workload.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.zone-awareness-enabled=true
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.zone-awareness-enabled=false
+
+  - it: enables zone awareness when zone-aware replication is enabled
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ruler.extraArgs:
+        - -log.level=debug
+    template: ruler/workload.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.zone-awareness-enabled=true
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -log.level=debug
+
+  - it: disables zone awareness during migration before the read path is migrated
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.zoneAwareReplication.migration.enabled: true
+    template: ruler/workload.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.zone-awareness-enabled=false
+
+  - it: enables zone awareness during migration once the read path is migrated
+    set:
+      ingester.zoneAwareReplication.enabled: true
+      ingester.zoneAwareReplication.migration.enabled: true
+      ingester.zoneAwareReplication.migration.readPath: true
+    template: ruler/workload.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: -distributor.zone-awareness-enabled=true

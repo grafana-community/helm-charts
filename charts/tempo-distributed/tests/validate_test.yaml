@@ -218,3 +218,112 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: fails when memcached extraArgs set -m
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.extraArgs:
+        - -m 8192
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcached.extraArgs contains \"-m 8192\", a memcached sizing flag the chart already renders. Use memcached.allocatedMemory (-m), memcached.maxItemMemory (-I) or memcached.connectionLimit (-c) instead: memcached keeps the last occurrence of a flag, so the one in extraArgs would silently override the chart's value. See UPGRADE.md."
+
+  - it: fails when per-role memcached extraArgs set a long-form sizing flag
+    set:
+      ingest.kafka.address: kafka:9092
+      memcachedBloom.enabled: true
+      memcachedBloom.extraArgs:
+        - --max-item-size=16m
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcachedBloom.extraArgs contains \"--max-item-size=16m\", a memcached sizing flag the chart already renders. Use memcachedBloom.allocatedMemory (-m), memcachedBloom.maxItemMemory (-I) or memcachedBloom.connectionLimit (-c) instead: memcached keeps the last occurrence of a flag, so the one in extraArgs would silently override the chart's value. See UPGRADE.md."
+
+  - it: fails when parquet-page memcached extraArgs set a sizing flag
+    set:
+      ingest.kafka.address: kafka:9092
+      memcachedParquetPage.enabled: true
+      memcachedParquetPage.extraArgs:
+        - -I 2m
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcachedParquetPage.extraArgs contains \"-I 2m\", a memcached sizing flag the chart already renders. Use memcachedParquetPage.allocatedMemory (-m), memcachedParquetPage.maxItemMemory (-I) or memcachedParquetPage.connectionLimit (-c) instead: memcached keeps the last occurrence of a flag, so the one in extraArgs would silently override the chart's value. See UPGRADE.md."
+
+  - it: fails when memcached extraArgs set -c without a space
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.extraArgs:
+        - -c4096
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcached.extraArgs contains \"-c4096\", a memcached sizing flag the chart already renders. Use memcached.allocatedMemory (-m), memcached.maxItemMemory (-I) or memcached.connectionLimit (-c) instead: memcached keeps the last occurrence of a flag, so the one in extraArgs would silently override the chart's value. See UPGRADE.md."
+
+  - it: passes when memcached extraArgs hold other flags
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.extraArgs:
+        - -v
+        - -C
+        - -o modern
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: passes when a disabled per-role memcached has a sizing flag in extraArgs
+    set:
+      ingest.kafka.address: kafka:9092
+      memcachedBloom.extraArgs:
+        - -m 8192
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: fails when maxItemMemory is not a whole number
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.maxItemMemory: 0.5
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcached.maxItemMemory must be a whole number of at least 1, got 0.5."
+
+  - it: fails when allocatedMemory is not a whole number
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.allocatedMemory: 1.5
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcached.allocatedMemory must be a whole number of at least 1, got 1.5."
+
+  - it: fails when connectionLimit is not a number
+    set:
+      ingest.kafka.address: kafka:9092
+      memcachedBloom.enabled: true
+      memcachedBloom.connectionLimit: 4k
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcachedBloom.connectionLimit must be a whole number of at least 1, got 4k."
+
+  - it: fails when maxItemMemory is more than half of allocatedMemory
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.allocatedMemory: 8
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcached.maxItemMemory (5 MB) is more than half of the memcached memory (8 MB, memcached.allocatedMemory or memcached's default of 64): memcached refuses to start when -I exceeds half of -m."
+
+  - it: fails when maxItemMemory is more than half of memcached's default memory
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.allocatedMemory: false
+      memcached.maxItemMemory: 33
+    asserts:
+      - failedTemplate:
+          errorMessage: "memcached.maxItemMemory (33 MB) is more than half of the memcached memory (64 MB, memcached.allocatedMemory or memcached's default of 64): memcached refuses to start when -I exceeds half of -m."
+
+  - it: passes when maxItemMemory is exactly half of allocatedMemory
+    set:
+      ingest.kafka.address: kafka:9092
+      memcached.allocatedMemory: 10
+      memcached.maxItemMemory: 5
+    asserts:
+      - hasDocuments:
+          count: 0

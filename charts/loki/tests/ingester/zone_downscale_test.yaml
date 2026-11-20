@@ -1,0 +1,202 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: ingester zone statefulsets rollout-operator downscale
+templates:
+  - ingester/workload.yaml
+  - config.yaml
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  ingester.zoneAwareReplication.enabled: true
+  ingester.replicas: 3
+
+tests:
+  # ── Defaults ─────────────────────────────────────────────────────────────────
+
+  - it: should not add downscale labels by default
+    asserts:
+      - notExists:
+          path: metadata.labels["grafana.com/prepare-downscale"]
+        template: ingester/workload.yaml
+      - notExists:
+          path: metadata.labels["grafana.com/no-downscale"]
+        template: ingester/workload.yaml
+
+  - it: should not add downscale annotations by default
+    asserts:
+      - notExists:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-path"]
+        template: ingester/workload.yaml
+      - notExists:
+          path: metadata.annotations["grafana.com/min-time-between-zones-downscale"]
+        template: ingester/workload.yaml
+      - notExists:
+          path: metadata.annotations["grafana.com/rollout-downscale-leader"]
+        template: ingester/workload.yaml
+
+  # ── prepareDownscale ─────────────────────────────────────────────────────────
+
+  - it: should add prepare-downscale label and annotations when prepareDownscale is enabled
+    set:
+      ingester.zoneAwareReplication.zoneA.prepareDownscale: true
+      ingester.zoneAwareReplication.zoneB.prepareDownscale: true
+      ingester.zoneAwareReplication.zoneC.prepareDownscale: true
+    asserts:
+      - equal:
+          path: metadata.labels["grafana.com/prepare-downscale"]
+          value: "true"
+        template: ingester/workload.yaml
+      - equal:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-path"]
+          value: ingester/prepare_shutdown
+        template: ingester/workload.yaml
+      - equal:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-port"]
+          value: "3100"
+        template: ingester/workload.yaml
+      - equal:
+          path: metadata.annotations["grafana.com/min-time-between-zones-downscale"]
+          value: 30m
+        template: ingester/workload.yaml
+
+  - it: should only add prepare-downscale label to the zones that enable it
+    set:
+      ingester.zoneAwareReplication.zoneB.prepareDownscale: true
+    asserts:
+      - notExists:
+          path: metadata.labels["grafana.com/prepare-downscale"]
+        documentIndex: 0
+        template: ingester/workload.yaml
+      - equal:
+          path: metadata.labels["grafana.com/prepare-downscale"]
+          value: "true"
+        documentIndex: 1
+        template: ingester/workload.yaml
+      - notExists:
+          path: metadata.labels["grafana.com/prepare-downscale"]
+        documentIndex: 2
+        template: ingester/workload.yaml
+
+  - it: should use the configured http listen port and minTimeBetweenZonesDownscale
+    set:
+      loki.server.http_listen_port: 8080
+      ingester.zoneAwareReplication.minTimeBetweenZonesDownscale: 6h
+      ingester.zoneAwareReplication.zoneA.prepareDownscale: true
+    asserts:
+      - equal:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-port"]
+          value: "8080"
+        documentIndex: 0
+        template: ingester/workload.yaml
+      - equal:
+          path: metadata.annotations["grafana.com/min-time-between-zones-downscale"]
+          value: 6h
+        documentIndex: 0
+        template: ingester/workload.yaml
+
+  - it: should let zone annotations override generated downscale annotations
+    set:
+      ingester.zoneAwareReplication.zoneA.prepareDownscale: true
+      ingester.zoneAwareReplication.zoneA.annotations:
+        grafana.com/prepare-downscale-http-port: "9999"
+    asserts:
+      - equal:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-port"]
+          value: "9999"
+        documentIndex: 0
+        template: ingester/workload.yaml
+
+  # ── noDownscale ──────────────────────────────────────────────────────────────
+
+  - it: should add no-downscale label and skip prepare-downscale when noDownscale is enabled
+    set:
+      ingester.zoneAwareReplication.zoneA.noDownscale: true
+      ingester.zoneAwareReplication.zoneA.prepareDownscale: true
+    asserts:
+      - equal:
+          path: metadata.labels["grafana.com/no-downscale"]
+          value: "true"
+        documentIndex: 0
+        template: ingester/workload.yaml
+      - notExists:
+          path: metadata.labels["grafana.com/prepare-downscale"]
+        documentIndex: 0
+        template: ingester/workload.yaml
+      - notExists:
+          path: metadata.annotations["grafana.com/prepare-downscale-http-path"]
+        documentIndex: 0
+        template: ingester/workload.yaml
+
+  # ── downscaleLeader ──────────────────────────────────────────────────────────
+
+  - it: should not compute a downscale leader when the rollout-operator is disabled
+    set:
+      ingester.zoneAwareReplication.zoneA.prepareDownscale: true
+      ingester.zoneAwareReplication.zoneB.prepareDownscale: true
+      ingester.zoneAwareReplication.zoneC.prepareDownscale: true
+    asserts:
+      - notExists:
+          path: metadata.annotations["grafana.com/rollout-downscale-leader"]
+        template: ingester/workload.yaml
+
+  - it: should make each zone follow the previous zone when the rollout-operator webhooks are enabled
+    set:
+      rollout_operator.enabled: true
+      ingester.zoneAwareReplication.zoneA.prepareDownscale: true
+      ingester.zoneAwareReplication.zoneB.prepareDownscale: true
+      ingester.zoneAwareReplication.zoneC.prepareDownscale: true
+    asserts:
+      - notExists:
+          path: metadata.annotations["grafana.com/rollout-downscale-leader"]
+        documentIndex: 0
+        template: ingester/workload.yaml
+      - equal:
+          path: metadata.annotations["grafana.com/rollout-downscale-leader"]
+          value: RELEASE-NAME-loki-ingester-zone-a
+        documentIndex: 1
+        template: ingester/workload.yaml
+      - equal:
+          path: metadata.annotations["grafana.com/rollout-downscale-leader"]
+          value: RELEASE-NAME-loki-ingester-zone-b
+        documentIndex: 2
+        template: ingester/workload.yaml
+
+  - it: should not compute a downscale leader when the rollout-operator webhooks are disabled
+    set:
+      rollout_operator.enabled: true
+      rollout_operator.webhooks.enabled: false
+      ingester.zoneAwareReplication.zoneA.prepareDownscale: true
+      ingester.zoneAwareReplication.zoneB.prepareDownscale: true
+      ingester.zoneAwareReplication.zoneC.prepareDownscale: true
+    asserts:
+      - notExists:
+          path: metadata.annotations["grafana.com/rollout-downscale-leader"]
+        template: ingester/workload.yaml
+
+  - it: should not follow a previous zone that does not prepare downscales
+    set:
+      rollout_operator.enabled: true
+      ingester.zoneAwareReplication.zoneA.noDownscale: true
+      ingester.zoneAwareReplication.zoneB.prepareDownscale: true
+      ingester.zoneAwareReplication.zoneC.prepareDownscale: true
+    asserts:
+      - notExists:
+          path: metadata.annotations["grafana.com/rollout-downscale-leader"]
+        documentIndex: 1
+        template: ingester/workload.yaml
+      - equal:
+          path: metadata.annotations["grafana.com/rollout-downscale-leader"]
+          value: RELEASE-NAME-loki-ingester-zone-b
+        documentIndex: 2
+        template: ingester/workload.yaml
+
+  - it: should use an explicit downscaleLeader passed through tpl
+    set:
+      ingester.zoneAwareReplication.zoneC.downscaleLeader: "{{ .Release.Name }}-custom"
+    asserts:
+      - equal:
+          path: metadata.annotations["grafana.com/rollout-downscale-leader"]
+          value: RELEASE-NAME-custom
+        documentIndex: 2
+        template: ingester/workload.yaml

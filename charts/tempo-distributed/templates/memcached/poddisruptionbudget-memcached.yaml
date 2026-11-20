@@ -1,18 +1,1 @@
-{{- if and (gt (int .Values.memcached.replicas) 1) .Values.memcached.podDisruptionBudget.enabled }}
-{{ $dict := dict "ctx" . "component" "memcached" }}
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: {{ include "tempo.resourceName" $dict }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "tempo.labels" $dict | nindent 4 }}
-spec:
-  selector:
-    matchLabels:
-      {{- include "tempo.selectorLabels" $dict | nindent 6 }}
-  maxUnavailable: {{ .Values.memcached.maxUnavailable }}
-  {{- with .Values.memcached.podDisruptionBudget.unhealthyPodEvictionPolicy }}
-  unhealthyPodEvictionPolicy: {{ . }}
-  {{- end }}
-{{- end }}
+{{- include "tempo.memcached.pdb" (dict "ctx" $ "memcachedConfig" .Values.memcached "component" "memcached") }}

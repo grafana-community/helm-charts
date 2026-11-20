@@ -1,0 +1,148 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: dataobj compaction planner
+templates:
+  - dataobj-compaction-planner/workload.yaml
+  - dataobj-compaction-planner/service.yaml
+  - dataobj-compaction-planner/pdb.yaml
+  - validate.yaml
+  - config.yaml
+
+set:
+  deploymentMode: Distributed
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+  # the dataobj-compaction-planner target needs Loki 4.0+
+  loki.image.tag: 4.0.0
+
+tests:
+  - it: does not render anything when the dataobj compaction planner is disabled
+    asserts:
+      - template: dataobj-compaction-planner/workload.yaml
+        hasDocuments:
+          count: 0
+      - template: dataobj-compaction-planner/service.yaml
+        hasDocuments:
+          count: 0
+      - template: dataobj-compaction-planner/pdb.yaml
+        hasDocuments:
+          count: 0
+
+  - it: fails outside of distributed mode
+    set:
+      deploymentMode: SimpleScalable
+      dataobjCompactionPlanner.enabled: true
+      dataobjCompactionPlanner.replicas: 1
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: dataobjCompactionPlanner.enabled requires deploymentMode Distributed
+
+  - it: renders a StatefulSet running the dataobj-compaction-planner target
+    set:
+      dataobjCompactionPlanner.enabled: true
+      dataobjCompactionPlanner.replicas: 1
+    asserts:
+      - template: dataobj-compaction-planner/workload.yaml
+        hasDocuments:
+          count: 1
+      - template: dataobj-compaction-planner/workload.yaml
+        isKind:
+          of: StatefulSet
+      - template: dataobj-compaction-planner/workload.yaml
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-dataobj-compaction-planner
+      - template: dataobj-compaction-planner/workload.yaml
+        equal:
+          path: spec.replicas
+          value: 1
+      - template: dataobj-compaction-planner/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -target=dataobj-compaction-planner
+
+  - it: advertises the scheduler on the pod IP and the HTTP port
+    set:
+      dataobjCompactionPlanner.enabled: true
+      dataobjCompactionPlanner.replicas: 1
+      loki.server.http_listen_port: 3200
+    asserts:
+      - template: dataobj-compaction-planner/workload.yaml
+        contains:
+          path: spec.template.spec.containers[0].args
+          content: -dataobj.compaction.scheduler.advertise-addr=[$(POD_IP)]:3200
+
+  - it: is not a memberlist seed node
+    set:
+      dataobjCompactionPlanner.enabled: true
+      dataobjCompactionPlanner.replicas: 1
+    asserts:
+      - template: dataobj-compaction-planner/workload.yaml
+        notExists:
+          path: spec.template.metadata.labels["app.kubernetes.io/part-of"]
+
+  - it: renders the headless service referenced by the StatefulSet
+    set:
+      dataobjCompactionPlanner.enabled: true
+      dataobjCompactionPlanner.replicas: 1
+    asserts:
+      - template: dataobj-compaction-planner/service.yaml
+        hasDocuments:
+          count: 2
+      - template: dataobj-compaction-planner/service.yaml
+        documentIndex: 1
+        equal:
+          path: metadata.name
+          value: RELEASE-NAME-loki-dataobj-compaction-planner-headless
+      - template: dataobj-compaction-planner/workload.yaml
+        equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-loki-dataobj-compaction-planner-headless
+
+  - it: does not render a PodDisruptionBudget for one replica
+    set:
+      dataobjCompactionPlanner.enabled: true
+      dataobjCompactionPlanner.replicas: 1
+      dataobjCompactionPlanner.podDisruptionBudget.maxUnavailable: 1
+    asserts:
+      - template: dataobj-compaction-planner/pdb.yaml
+        hasDocuments:
+          count: 0
+
+  - it: renders a PodDisruptionBudget for more than one replica
+    set:
+      dataobjCompactionPlanner.enabled: true
+      dataobjCompactionPlanner.replicas: 2
+      dataobjCompactionPlanner.podDisruptionBudget.maxUnavailable: 1
+    asserts:
+      - template: dataobj-compaction-planner/pdb.yaml
+        hasDocuments:
+          count: 1
+      - template: dataobj-compaction-planner/pdb.yaml
+        equal:
+          path: spec.maxUnavailable
+          value: 1
+
+  - it: fails when the Loki image is older than 4.0
+    set:
+      loki.image.tag: 3.7.9
+      dataobjCompactionPlanner.enabled: true
+      dataobjCompactionPlanner.replicas: 1
+    templates:
+      - validate.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: dataobjCompactionPlanner.enabled requires Loki 4.0.0 or later
+
+  - it: checks the component image tag before the global one
+    set:
+      loki.image.tag: 3.7.9
+      dataobjCompactionPlanner.image.tag: 4.0.0
+      dataobjCompactionPlanner.enabled: true
+      dataobjCompactionPlanner.replicas: 1
+    asserts:
+      - template: dataobj-compaction-planner/workload.yaml
+        hasDocuments:
+          count: 1

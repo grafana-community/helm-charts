@@ -58,6 +58,9 @@ tests:
       - equal:
           path: spec.scaleTargetRef.kind
           value: Deployment
+      - equal:
+          path: spec.triggers[0].metadata.query
+          value: sum(max_over_time(loki_query_scheduler_inflight_requests{container!="ruler-query-scheduler",quantile="0.75"}[2m]))
 
   - it: should include customHeaders in default Prometheus trigger
     set:

@@ -1,5 +1,65 @@
 # Upgrade guide
 
+## v3.25 → v3.26
+
+### memcached no longer receives `global.extraArgs`
+
+The per-role memcached clusters (`memcachedBloom`, `memcachedParquetFooter`,
+`memcachedFrontendSearch`) no longer append `global.extraArgs`, matching the shared `memcached`.
+If you relied on `global.extraArgs` to pass a flag to every memcached cluster, set it in each
+section's `extraArgs` instead.
+
+## v3.23 → v3.24
+
+### memcached starts with explicit sizing flags
+
+The memcached StatefulSets used to start with no arguments, so memcached ran on its built-in
+64 MB of memory, 1 MB maximum item size and 1024 connections, and rejected larger parquet
+footers with `SERVER_ERROR object too large for cache`. Each memcached section (`memcached`,
+`memcachedBloom`, `memcachedParquetFooter`, `memcachedFrontendSearch`) now has
+`allocatedMemory`, `maxItemMemory` and `connectionLimit`, rendered as `-m 1024 -I 5m -c 4096`
+by default. The generated cache config sets Tempo's `max_item_size` to match `maxItemMemory`.
+
+Each memcached pod can now use about 1 GB instead of 64 MB. The chart still leaves `resources`
+unset, so if a section sets a memory limit, keep it well above `allocatedMemory`, or the pod is
+OOM-killed once the cache fills.
+
+If you passed `-m`, `-I` or `-c` (or `--memory-limit`, `--max-item-size`, `--conn-limit`)
+through a section's `extraArgs` to work around the old defaults, the render now fails. Move
+those values to `allocatedMemory`, `maxItemMemory` and `connectionLimit`. To keep the previous
+behaviour, set the three values to `false`.
+
+The memcached pods restart on upgrade because their arguments change. Every Tempo component
+also rolls, because the generated `tempo.yaml` gains `max_item_size` and its config checksum
+changes.
+
+## v3.22 → v3.23
+
+### `helm.sh/chart` and `app.kubernetes.io/version` are no longer pod labels
+
+Pod templates no longer carry `helm.sh/chart` or `app.kubernetes.io/version`, so a
+chart release that changes neither the configuration nor the image no longer restarts
+any pod. Both labels remain on the objects themselves, so
+`kubectl get statefulset -L helm.sh/chart` is unaffected.
+
+**Upgrading to 3.23 rolls every Tempo and memcached pod once.** The gateway pods are
+not restarted.
+
+If you group metrics by pod label (`kube_pod_labels` joined on `label_helm_sh_chart`
+or `label_app_kubernetes_io_version`, for example), those series stop being populated
+for Tempo pods. Use the object-level labels, or add the values you need through
+`global.podLabels`, `tempo.podLabels` or a component `podLabels` block.
+
+### memcached pod labels
+
+The memcached StatefulSets, including the per-role `bloom`, `frontend-search` and
+`parquet-footer` clusters, move from `tempo.labels` to `tempo.podLabels` for their pod
+templates, which is what the other workloads already used. In practice their pod
+templates lose `global.labels` (which `values.yaml` documents as not applying to pods)
+and gain `global.podLabels`. Their selector keys, `app.kubernetes.io/name`,
+`app.kubernetes.io/instance` and `app.kubernetes.io/component`, are unchanged, so the
+immutable selectors still match.
+
 ## v3.20 → v3.21
 
 ### Stateless components default to soft anti-affinity
