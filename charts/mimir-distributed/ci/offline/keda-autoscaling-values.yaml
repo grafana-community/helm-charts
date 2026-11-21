@@ -1,0 +1,92 @@
+# Pin kube version so results are the same for running in CI and locally where the installed kube version may be different.
+kubeVersionOverride: "1.32"
+
+metaMonitoring:
+  grafanaAgent:
+    metrics:
+      enabled: false
+      # Leave the remote empty to use the default to send it to Mimir directly
+      # remote: #
+
+distributor:
+  kedaAutoscaling:
+    enabled: true
+    preserveReplicas: true
+    minReplicaCount: 1
+    maxReplicaCount: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+    fallback:
+      enabled: true
+      failureThreshold: 3
+      replicas: 6
+      behavior: "static"
+
+ruler:
+  remoteEvaluationDedicatedQueryPath: true
+  kedaAutoscaling:
+    enabled: true
+    preserveReplicas: true
+    minReplicaCount: 1
+    maxReplicaCount: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+    fallback:
+      enabled: true
+      failureThreshold: 3
+      replicas: 6
+      behavior: "static"
+
+querier:
+  kedaAutoscaling:
+    enabled: true
+    preserveReplicas: true
+    minReplicaCount: 2
+    maxReplicaCount: 10
+    querySchedulerInflightRequestsThreshold: 6
+    fallback:
+      enabled: true
+      failureThreshold: 3
+      replicas: 6
+      behavior: "static"
+
+query_frontend:
+  kedaAutoscaling:
+    enabled: true
+    preserveReplicas: true
+    minReplicaCount: 1
+    maxReplicaCount: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+    fallback:
+      enabled: true
+      failureThreshold: 3
+      replicas: 6
+      behavior: "static"
+
+ruler_querier:
+  kedaAutoscaling:
+    enabled: true
+    preserveReplicas: true
+    minReplicaCount: 1
+    maxReplicaCount: 10
+    querySchedulerInflightRequestsThreshold: 13
+    fallback:
+      enabled: true
+      failureThreshold: 3
+      replicas: 6
+      behavior: "static"
+
+ruler_query_frontend:
+  kedaAutoscaling:
+    enabled: true
+    minReplicaCount: 1
+    maxReplicaCount: 10
+    preserveReplicas: true
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 100
+    fallback:
+      enabled: true
+      failureThreshold: 3
+      replicas: 6
+      behavior: "static"

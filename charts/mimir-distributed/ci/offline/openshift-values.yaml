@@ -1,0 +1,30 @@
+# Pin kube version so results are the same for running in CI and locally where the installed kube version may be different.
+kubeVersionOverride: "1.32"
+
+# Not supporting minio on OpenShift
+minio:
+  enabled: false
+
+# Set rbac type to SecurityContextConstraints (SCC)
+rbac:
+  type: scc
+
+  podSecurityContext:
+    fsGroup: null
+    runAsGroup: null
+    runAsUser: null
+
+rollout_operator:
+  podSecurityContext:
+    fsGroup: null
+    runAsGroup: null
+    runAsUser: null
+
+# Run the meta-monitoring agent under its own service account, in a namespace other than the release
+# namespace, to cover the SCC Role and RoleBinding that the chart creates alongside that account.
+metaMonitoring:
+  grafanaAgent:
+    enabled: true
+    namespace: citestns-monitoring
+    serviceAccount:
+      create: true
