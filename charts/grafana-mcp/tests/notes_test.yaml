@@ -1,0 +1,24 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana-mcp notes
+templates:
+  - NOTES.txt
+tests:
+  - it: should show the client label when only labelled pods can connect
+    release:
+      name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          allowExternal: false
+    asserts:
+      - matchRegexRaw:
+          pattern: 'Only pods labelled "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-grafana-mc-client: true"'
+
+  - it: should not show the client label when any source can connect
+    set:
+      networkPolicy:
+        enabled: true
+    asserts:
+      - notMatchRegexRaw:
+          pattern: Only pods labelled

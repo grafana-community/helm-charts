@@ -2,7 +2,9 @@ suite: values schema
 templates:
   - deployment.yaml
   - hpa.yaml
+  - networkpolicy.yaml
   - poddisruptionbudget.yaml
+  - tests/integration.yaml
   - secret.yaml
   - service.yaml
 tests:
@@ -150,3 +152,87 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: podAnnotations
+
+  - it: should reject the grafana chart's top-level networkPolicy.allowExternal key
+    template: networkpolicy.yaml
+    set:
+      networkPolicy:
+        enabled: true
+        allowExternal: false
+    asserts:
+      - failedTemplate:
+          errorPattern: allowExternal
+
+  - it: should reject an unknown networkPolicy.ingress key
+    template: networkpolicy.yaml
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          explicitIpBlocks:
+            - 10.0.0.0/8
+    asserts:
+      - failedTemplate:
+          errorPattern: explicitIpBlocks
+
+  - it: should reject an unknown networkPolicy.egress key
+    template: networkpolicy.yaml
+    set:
+      networkPolicy:
+        enabled: true
+        egress:
+          blockDNSResolution: true
+    asserts:
+      - failedTemplate:
+          errorPattern: blockDNSResolution
+
+  - it: should accept a LabelSelector in networkPolicy.ingress.namespaceSelector
+    template: networkpolicy.yaml
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          allowExternal: false
+          namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - monitoring
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[1].namespaceSelector.matchExpressions[0].values
+          value:
+            - monitoring
+
+  - it: should reject an unknown tests key
+    template: tests/integration.yaml
+    set:
+      tests:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: additional properties 'enabled' not allowed
+
+  - it: should reject an unknown tests.integration key
+    template: tests/integration.yaml
+    set:
+      tests:
+        integration:
+          enabled: true
+          timeout: 60
+    asserts:
+      - failedTemplate:
+          errorPattern: timeout
+
+  - it: should reject an unknown tests.integration.image key
+    template: tests/integration.yaml
+    set:
+      tests:
+        integration:
+          enabled: true
+          image:
+            pullPolicy: Always
+    asserts:
+      - failedTemplate:
+          errorPattern: pullPolicy

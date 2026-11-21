@@ -1,0 +1,12 @@
+# The test pods call the MCP server by its Service name, which mcp-grafana only accepts when listed.
+extraArgs:
+  - --allowed-hosts=grafana-mcp:8000
+
+networkPolicy:
+  enabled: true
+  ingress:
+    allowExternal: false
+
+tests:
+  integration:
+    enabled: true

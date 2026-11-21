@@ -250,6 +250,53 @@ route:
     # Ref. https://gateway-api.sigs.k8s.io/guides/http-redirect-rewrite/
     httpsRedirect: false
 
+# @schema additionalProperties:false
+# -- NetworkPolicy for the MCP server. Only enforced by network plugins that support NetworkPolicy
+# (on EKS, enable network policy in the Amazon VPC CNI).
+networkPolicy:
+  # -- Create a NetworkPolicy
+  enabled: false
+  # @schema additionalProperties:false
+  ingress:
+    # -- Accept connections from any source. When false, only pods labelled `<fullname>-client: "true"` (the install notes show the exact label) and the sources below can connect. Must be false when `namespaceSelector`, `ipBlocks` or `from` are set; the chart fails otherwise.
+    allowExternal: true
+    # -- Namespaces that can connect (LabelSelector)
+    namespaceSelector: {}
+    # @schema item:string
+    # -- CIDR blocks that can connect, e.g. the VPC CIDR for a load balancer in IP mode
+    ipBlocks: []
+    # -- Additional NetworkPolicyPeers that can connect, e.g. a proxy's pods, or Prometheus when `serviceMonitor.enabled` is true
+    from: []
+    # -- Additional ports to accept connections on, e.g. 15008 for Istio ambient mode
+    extraPorts: []
+  # @schema additionalProperties:false
+  egress:
+    # -- Restrict egress to DNS (port 53) and the Grafana ports. Destinations are not restricted unless `to` is set
+    enabled: true
+    # -- Allow DNS (port 53) to any destination. `to` does not apply to this rule
+    allowDNS: true
+    # -- Allowed ports. Defaults to the `grafana.url` port and 3000, Grafana's pod port.
+    ports: []
+    # -- Allowed destinations (NetworkPolicyPeers) for the Grafana ports, e.g. Grafana's namespace. Defaults to any destination.
+    to: []
+
+# @schema additionalProperties:false
+# -- `helm test` integration tests
+tests:
+  # @schema additionalProperties:false
+  integration:
+    # -- Create test pods that call an MCP tool against Grafana and, when `networkPolicy.ingress.allowExternal` is false, check that pods without the client label cannot connect. Needs a Grafana at `grafana.url`
+    enabled: false
+    # @schema additionalProperties:false
+    # -- Test image
+    image:
+      # -- The Docker registry
+      registry: docker.io
+      # -- The Docker repository
+      repository: bats/bats
+      # -- Image tag
+      tag: 1.11.1
+
 # -- Resource requests and limits
 resources: {}
   # limits:
