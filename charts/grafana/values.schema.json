@@ -739,6 +739,9 @@
                 "disableWarning": {
                     "type": "boolean"
                 },
+                "emptyDir": {
+                    "type": "object"
+                },
                 "enabled": {
                     "type": "boolean"
                 },
