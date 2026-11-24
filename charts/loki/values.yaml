@@ -1189,7 +1189,8 @@ rbac:
   sccEnabled: false
   # -- Toggle this to true to allow the use of hostPath volumes on OpenShift
   sccAllowHostDirVolumePlugin: false
-  # -- Whether to install RBAC in the namespace only or cluster-wide. Useful if you want to watch ConfigMap globally.
+  # -- Whether to install RBAC in the namespace only or cluster-wide. When true, the chart never creates a ClusterRole,
+  # even if `sidecar.rules.searchNamespace` is `ALL`; the rules sidecar then only gets a Role in the release namespace.
   namespaced: false
 
 ######################################################################################################################
@@ -9458,10 +9459,11 @@ sidecar:
     # -- Comma separated list of namespaces. If specified, the sidecar will search for config-maps/secrets inside these namespaces.
     # Otherwise the namespace in which the sidecar is running will be used.
     # It's also possible to specify 'ALL' to search in all namespaces.
+    # The chart grants the sidecar read access with a Role in each of these namespaces, or with a ClusterRole for 'ALL'.
     searchNamespace: null
     # -- Method to use to detect ConfigMap changes. With WATCH the sidecar will do a WATCH request, with SLEEP it will list all ConfigMaps, then sleep for 60 seconds.
     watchMethod: WATCH
-    # -- Search in configmap, secret, or both.
+    # -- Search in configmap, secret, or both. The sidecar RBAC only grants access to the selected resources.
     resource: both
     # @schema type:[string, null]
     # -- Absolute path to the shell script to execute after a configmap or secret has been reloaded.

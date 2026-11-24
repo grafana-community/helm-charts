@@ -156,6 +156,20 @@ This chart emits `apiVersion: v1` and `kind: PersistentVolumeClaim` on each VCT.
 
 ## Upgrading
 
+### From 21.6.x to 21.7.0
+
+The RBAC for the rules sidecar now matches what the sidecar reads. Previously, unless `rbac.namespaced` was set, the chart always created a ClusterRole with `get/watch/list` on all ConfigMaps and Secrets in the cluster, and bound it to the ServiceAccount shared by the Loki components. That happened even though the sidecar only reads its own namespace unless `sidecar.rules.searchNamespace` is set, and even when no pod ran the sidecar.
+
+- With `sidecar.rules.searchNamespace` unset (the default), the chart creates a Role and RoleBinding in the release namespace instead of the ClusterRole and ClusterRoleBinding.
+- With a list of namespaces, it creates a Role and RoleBinding in each of them. Those namespaces must exist, and Helm needs permission to create RBAC objects in them.
+- With `ALL`, it still creates a ClusterRole and ClusterRoleBinding, unless `rbac.namespaced` is true.
+- The rules only include `configmaps` and/or `secrets`, depending on `sidecar.rules.resource`.
+- The binding covers the ServiceAccounts of the workloads that run the sidecar: the single binary, the backend, or the ruler (when `ruler.sidecar` is true).
+- Nothing is rendered when no workload runs the sidecar, for example in Distributed mode with the default `ruler.sidecar: false`, or with `sidecar.rules.enabled: false`. The empty `rules: []` ClusterRole and its binding are gone.
+- `rbac.useExistingRole` still binds the given ClusterRole, and the chart does not create its own sidecar Role next to it.
+
+Rule ConfigMaps and Secrets in the release namespace keep loading with the default values. If something else running under the Loki ServiceAccount relied on the cluster-wide read access, grant it separately.
+
 ### From 20.x to 21.0.0
 
 **Breaking** `rollout_operator.webhooks.failurePolicy` now defaults to `Fail` instead of `Ignore`, matching the rollout-operator chart. Previously, when the rollout-operator was unreachable or a webhook call timed out, the API server skipped its webhooks, so ingesters could be scaled down without preparing for shutdown and remain in the ring.

@@ -1,17 +1,34 @@
-{{- if or .Values.rbac.sccEnabled (and .Values.rbac.namespaced .Values.sidecar.rules.enabled) }}
+{{- $releaseNamespace := include "loki.namespace" . }}
+{{- $sidecarNamespaces := splitList "," (include "loki.rulesSidecar.roleNamespaces" .) | compact }}
+{{- $sidecarServiceAccounts := splitList "," (include "loki.rulesSidecar.serviceAccounts" .) | compact }}
+{{- $namespaces := $sidecarNamespaces }}
+{{- if .Values.rbac.sccEnabled }}
+{{- $namespaces = prepend $namespaces $releaseNamespace | uniq }}
+{{- end }}
+{{- range $namespace := $namespaces }}
+{{- $serviceAccounts := list }}
+{{- if and $.Values.rbac.sccEnabled (eq $namespace $releaseNamespace) }}
+{{- $serviceAccounts = append $serviceAccounts (include "loki.serviceAccountName" (dict "ctx" $ "component" $.Values "target" "")) }}
+{{- end }}
+{{- if has $namespace $sidecarNamespaces }}
+{{- $serviceAccounts = concat $serviceAccounts $sidecarServiceAccounts }}
+{{- end }}
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "loki.fullname" . }}
-  namespace: {{ include "loki.namespace" . }}
+  name: {{ include "loki.fullname" $ }}
+  namespace: {{ $namespace }}
   labels:
-    {{- include "loki.labels" . | nindent 4 }}
+    {{- include "loki.labels" $ | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "loki.fullname" . }}
+  name: {{ include "loki.fullname" $ }}
 subjects:
+  {{- range $serviceAccounts | uniq }}
   - kind: ServiceAccount
-    name: {{ include "loki.serviceAccountName" (dict "ctx" . "component" .Values "target" "") }}
-    namespace: {{ include "loki.namespace" $ }}
+    name: {{ . }}
+    namespace: {{ $releaseNamespace }}
+  {{- end }}
 {{- end }}

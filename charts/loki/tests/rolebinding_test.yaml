@@ -4,7 +4,17 @@ templates:
   - rolebinding.yaml
 
 tests:
-  - it: is not rendered by default
+  - it: is rendered by default for the rules sidecar
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.namespace
+          value: NAMESPACE
+
+  - it: is not rendered when sidecar.rules.enabled=false
+    set:
+      sidecar.rules.enabled: false
     asserts:
       - hasDocuments:
           count: 0

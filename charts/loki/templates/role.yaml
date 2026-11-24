@@ -1,13 +1,20 @@
-{{- if or .Values.rbac.sccEnabled (and .Values.rbac.namespaced .Values.sidecar.rules.enabled) }}
+{{- $releaseNamespace := include "loki.namespace" . }}
+{{- $sidecarNamespaces := splitList "," (include "loki.rulesSidecar.roleNamespaces" .) | compact }}
+{{- $namespaces := $sidecarNamespaces }}
+{{- if .Values.rbac.sccEnabled }}
+{{- $namespaces = prepend $namespaces $releaseNamespace | uniq }}
+{{- end }}
+{{- range $namespace := $namespaces }}
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "loki.fullname" . }}
-  namespace: {{ include "loki.namespace" . }}
+  name: {{ include "loki.fullname" $ }}
+  namespace: {{ $namespace }}
   labels:
-    {{- include "loki.labels" . | nindent 4 }}
+    {{- include "loki.labels" $ | nindent 4 }}
 rules:
-  {{- if .Values.rbac.sccEnabled }}
+  {{- if and $.Values.rbac.sccEnabled (eq $namespace $releaseNamespace) }}
   - apiGroups:
       - security.openshift.io
     resources:
@@ -15,11 +22,11 @@ rules:
     verbs:
       - use
     resourceNames:
-      - {{ include "loki.fullname" . }}
+      - {{ include "loki.fullname" $ }}
   {{- end }}
-  {{- if and .Values.rbac.namespaced .Values.sidecar.rules.enabled }}
+  {{- if has $namespace $sidecarNamespaces }}
   - apiGroups: [""] # "" indicates the core API group
-    resources: ["configmaps", "secrets"]
+    resources: {{ splitList "," (include "loki.rulesSidecar.resources" $) | toJson }}
     verbs: ["get", "watch", "list"]
   {{- end }}
 {{- end }}
