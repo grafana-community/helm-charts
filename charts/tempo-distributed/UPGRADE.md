@@ -1,5 +1,46 @@
 # Upgrade guide
 
+## v3.30 → v4.0
+
+### Pods run with the `RuntimeDefault` seccomp profile and `runAsNonRoot`
+
+`tempo.podSecurityContext` now sets `runAsNonRoot: true` and `seccompProfile.type: RuntimeDefault`
+next to `fsGroup: 1000`, and `tempo.securityContext` adds `seccompProfile.type: RuntimeDefault`.
+Together with the existing container defaults, the pods of every Tempo component, the gateway,
+memcached and the memcached exporter now pass the `restricted`
+[Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/).
+The UID, GID and `fsGroup` stay at 1000, so the ownership of existing volumes does not change.
+
+**Upgrading to 4.0 rolls every Tempo, gateway and memcached pod once**, because the pod templates
+change.
+
+Check the following before you upgrade:
+
+- The pod-level `runAsNonRoot: true` also applies to containers that have no security context of
+  their own, such as `initContainers` and `extraContainers` you add to a component. A container
+  whose image runs as root, with no numeric `runAsUser`, now fails to start with
+  `container has runAsNonRoot and image will run as root`. Give such a container its own
+  `securityContext.runAsUser`, or set `tempo.podSecurityContext.runAsNonRoot: false`.
+- A component-level `podSecurityContext` or `containerSecurityContext` replaces the `tempo.*`
+  value as a whole, as before. If you set one, add `runAsNonRoot` and `seccompProfile` to it
+  yourself to get the same result.
+- The gateway, memcached and the memcached exporter only read `tempo.podSecurityContext` and
+  `tempo.securityContext`.
+- The opt-in parts of the chart are not covered yet and still fail the `restricted` profile: the
+  `helm test` integration pod (`tests.integration.enabled`), the StatefulSet recreate hook Job
+  (`enableStatefulSetRecreationForSizeChange`) and the `grafana-agent-operator` subchart
+  (`metaMonitoring.grafanaAgent.installOperator`).
+- To keep the previous behaviour, set the new fields to `null`:
+
+  ```yaml
+  tempo:
+    podSecurityContext:
+      runAsNonRoot: null
+      seccompProfile: null
+    securityContext:
+      seccompProfile: null
+  ```
+
 ## v3.25 → v3.26
 
 ### memcached no longer receives `global.extraArgs`

@@ -51,6 +51,14 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 A major chart version change indicates that there is an incompatible breaking change needing manual actions.
 
+### From chart versions < 4.0.0
+
+Every Tempo, gateway and memcached pod now runs with `runAsNonRoot: true` and the
+`RuntimeDefault` seccomp profile, so these workloads pass the `restricted` Pod Security
+Standard. They all roll once on upgrade. Custom `initContainers` or `extraContainers` whose
+image runs as root need their own numeric `runAsUser`. See [`UPGRADE.md`](./UPGRADE.md#v330--v40)
+for details, the parts of the chart not covered yet, and how to keep the previous behaviour.
+
 ### StatefulSet governing service (`tempo.useHeadlessGoverningService`)
 
 Five StatefulSets in this chart write a short, unprefixed `spec.serviceName`: the
