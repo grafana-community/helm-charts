@@ -1,0 +1,125 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: sidecar RBAC follows the sidecar resource setting
+templates:
+  - clusterrole.yaml
+  - role.yaml
+
+tests:
+  - it: grants configmaps and secrets for the default resource (both)
+    template: clusterrole.yaml
+    set:
+      sidecar.dashboards.enabled: true
+    asserts:
+      - equal:
+          path: rules
+          value:
+            - apiGroups: [""]
+              resources: ["configmaps", "secrets"]
+              verbs: ["get", "watch", "list"]
+
+  - it: grants only configmaps when every enabled sidecar reads configmaps
+    template: clusterrole.yaml
+    set:
+      sidecar.dashboards.enabled: true
+      sidecar.dashboards.resource: configmap
+      sidecar.datasources.enabled: true
+      sidecar.datasources.resource: configmap
+    asserts:
+      - equal:
+          path: rules[0].resources
+          value: ["configmaps"]
+
+  - it: grants only secrets when every enabled sidecar reads secrets
+    template: clusterrole.yaml
+    set:
+      sidecar.repositories.enabled: true
+    asserts:
+      - equal:
+          path: rules[0].resources
+          value: ["secrets"]
+
+  - it: combines the resources of all enabled sidecars
+    template: clusterrole.yaml
+    set:
+      sidecar.dashboards.enabled: true
+      sidecar.dashboards.resource: configmap
+      sidecar.datasources.enabled: true
+      sidecar.datasources.resource: secret
+    asserts:
+      - equal:
+          path: rules[0].resources
+          value: ["configmaps", "secrets"]
+
+  - it: ignores the resource of disabled sidecars
+    template: clusterrole.yaml
+    set:
+      sidecar.dashboards.enabled: true
+      sidecar.dashboards.resource: configmap
+      sidecar.datasources.enabled: false
+      sidecar.datasources.resource: both
+    asserts:
+      - equal:
+          path: rules[0].resources
+          value: ["configmaps"]
+
+  - it: grants access for the notifiers sidecar
+    template: clusterrole.yaml
+    set:
+      sidecar.notifiers.enabled: true
+      sidecar.notifiers.resource: configmap
+    asserts:
+      - equal:
+          path: rules[0].resources
+          value: ["configmaps"]
+
+  - it: renders no rules without sidecars
+    template: clusterrole.yaml
+    asserts:
+      - equal:
+          path: rules
+          value: []
+
+  - it: keeps extra ClusterRole rules
+    template: clusterrole.yaml
+    set:
+      sidecar.dashboards.enabled: true
+      sidecar.dashboards.resource: configmap
+      rbac.extraClusterRoleRules:
+        - apiGroups: ["apps"]
+          resources: ["deployments"]
+          verbs: ["get"]
+    asserts:
+      - equal:
+          path: rules
+          value:
+            - apiGroups: [""]
+              resources: ["configmaps"]
+              verbs: ["get", "watch", "list"]
+            - apiGroups: ["apps"]
+              resources: ["deployments"]
+              verbs: ["get"]
+
+  - it: applies the same resources to the namespaced Role
+    template: role.yaml
+    set:
+      rbac.namespaced: true
+      sidecar.dashboards.enabled: true
+      sidecar.dashboards.resource: configmap
+    asserts:
+      - equal:
+          path: rules
+          value:
+            - apiGroups: [""]
+              resources: ["configmaps"]
+              verbs: ["get", "watch", "list"]
+
+  - it: grants access for the alerts sidecar in the namespaced Role
+    template: role.yaml
+    set:
+      rbac.namespaced: true
+      sidecar.alerts.enabled: true
+      sidecar.alerts.resource: secret
+    asserts:
+      - equal:
+          path: rules[0].resources
+          value: ["secrets"]

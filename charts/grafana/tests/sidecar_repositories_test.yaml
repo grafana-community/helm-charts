@@ -283,7 +283,7 @@ tests:
       - failedTemplate:
           errorMessage: Cannot use .Values.sidecar.repositories.watchServerTimeout with .Values.sidecar.repositories.watchMethod SLEEP
 
-  - it: should grant read access to secrets and configmaps in the clusterrole
+  - it: should grant read access to secrets only in the clusterrole
     set:
       sidecar.repositories.enabled: true
     template: clusterrole.yaml
@@ -292,10 +292,10 @@ tests:
           path: rules
           content:
             apiGroups: [""]
-            resources: ["configmaps", "secrets"]
+            resources: ["secrets"]
             verbs: ["get", "watch", "list"]
 
-  - it: should grant read access to secrets and configmaps in the namespaced role
+  - it: should grant read access to secrets only in the namespaced role
     set:
       sidecar.repositories.enabled: true
       rbac.namespaced: true
@@ -305,5 +305,5 @@ tests:
           path: rules
           content:
             apiGroups: [""]
-            resources: ["configmaps", "secrets"]
+            resources: ["secrets"]
             verbs: ["get", "watch", "list"]

@@ -12,11 +12,12 @@ metadata:
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-{{- if or $.Values.sidecar.dashboards.enabled $.Values.sidecar.datasources.enabled $.Values.sidecar.plugins.enabled $.Values.sidecar.repositories.enabled $.Values.rbac.extraRoleRules }}
+{{- $sidecarResources := include "grafana.sidecarResources" $ }}
+{{- if or $sidecarResources $.Values.rbac.extraRoleRules }}
 rules:
-  {{- if or $.Values.sidecar.dashboards.enabled $.Values.sidecar.datasources.enabled $.Values.sidecar.plugins.enabled $.Values.sidecar.repositories.enabled }}
+  {{- with $sidecarResources }}
   - apiGroups: [""] # "" indicates the core API group
-    resources: ["configmaps", "secrets"]
+    resources: {{ splitList "," . | toJson }}
     verbs: ["get", "watch", "list"]
   {{- end }}
   {{- with $.Values.rbac.extraRoleRules }}
