@@ -3,10 +3,12 @@ suite: grafana-mcp deployment
 templates:
   - deployment.yaml
 tests:
-  - it: should not render args by default
+  - it: should render only --allowed-hosts by default
     asserts:
-      - notExists:
+      - equal:
           path: spec.template.spec.containers[0].args
+          value:
+            - --allowed-hosts=localhost:8000,127.0.0.1:8000,[::1]:8000,RELEASE-NAME-grafana-mcp:8000,RELEASE-NAME-grafana-mcp.NAMESPACE:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc.cluster.local:8000
 
   - it: should render --disable-write when it is the only args value set
     set:
@@ -16,6 +18,7 @@ tests:
           path: spec.template.spec.containers[0].args
           value:
             - --disable-write
+            - --allowed-hosts=localhost:8000,127.0.0.1:8000,[::1]:8000,RELEASE-NAME-grafana-mcp:8000,RELEASE-NAME-grafana-mcp.NAMESPACE:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc.cluster.local:8000
 
   - it: should render --disable-write before extraArgs
     set:
@@ -27,6 +30,7 @@ tests:
           path: spec.template.spec.containers[0].args
           value:
             - --disable-write
+            - --allowed-hosts=localhost:8000,127.0.0.1:8000,[::1]:8000,RELEASE-NAME-grafana-mcp:8000,RELEASE-NAME-grafana-mcp.NAMESPACE:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc.cluster.local:8000
             - --transport=streamable-http
 
   - it: should read generated MCP_GRAFANA_SERVER_TOKEN from chart-managed secret by default
@@ -131,6 +135,7 @@ tests:
           path: spec.template.spec.containers[0].args
           value:
             - --metrics
+            - --allowed-hosts=localhost:8000,127.0.0.1:8000,[::1]:8000,RELEASE-NAME-grafana-mcp:8000,RELEASE-NAME-grafana-mcp.NAMESPACE:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc.cluster.local:8000
       - notContains:
           path: spec.template.spec.containers[0].ports
           content:
@@ -147,6 +152,7 @@ tests:
           value:
             - --metrics
             - --metrics-address=:9090
+            - --allowed-hosts=localhost:8000,127.0.0.1:8000,[::1]:8000,RELEASE-NAME-grafana-mcp:8000,RELEASE-NAME-grafana-mcp.NAMESPACE:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc.cluster.local:8000
       - contains:
           path: spec.template.spec.containers[0].ports
           content:
@@ -158,8 +164,10 @@ tests:
     set:
       metrics.port: 9090
     asserts:
-      - notExists:
+      - equal:
           path: spec.template.spec.containers[0].args
+          value:
+            - --allowed-hosts=localhost:8000,127.0.0.1:8000,[::1]:8000,RELEASE-NAME-grafana-mcp:8000,RELEASE-NAME-grafana-mcp.NAMESPACE:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc:8000,RELEASE-NAME-grafana-mcp.NAMESPACE.svc.cluster.local:8000
       - notContains:
           path: spec.template.spec.containers[0].ports
           content:

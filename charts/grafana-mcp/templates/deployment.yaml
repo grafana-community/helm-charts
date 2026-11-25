@@ -152,7 +152,8 @@ spec:
           envFrom:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if or (.Values.debug) (.Values.metrics.enabled) (.Values.disableWrite) (.Values.disabledCategories) (.Values.extraArgs) }}
+          {{- $allowedHosts := include "grafana-mcp.allowedHosts" . }}
+          {{- if or (.Values.debug) (.Values.metrics.enabled) (.Values.disableWrite) (.Values.disabledCategories) $allowedHosts (.Values.extraArgs) }}
           args:
             {{- if .Values.debug }}
             - -debug
@@ -168,6 +169,9 @@ spec:
             {{- end }}
             {{- range .Values.disabledCategories }}
             - --disable-{{ . }}
+            {{- end }}
+            {{- with $allowedHosts }}
+            - --allowed-hosts={{ . }}
             {{- end }}
             {{- with .Values.extraArgs }}
             {{- toYaml . | nindent 12 }}
