@@ -133,3 +133,55 @@ true
 true
 {{- end -}}
 {{- end }}
+
+{{/*
+Comma-separated Host header allowlist for --allowed-hosts. mcp-grafana matches the Host
+header exactly, so Service names carry the Service port, which clients include unless it
+is 80. The loopback addresses are always listed: they are the upstream default that the
+flag replaces, and the liveness probe sends Host: localhost:<port>. Empty for image tags
+older than v0.17.1, which do not know the flag.
+*/}}
+{{- define "grafana-mcp.allowedHosts" -}}
+{{- $tag := .Values.image.tag | default .Chart.AppVersion | toString | trimPrefix "v" -}}
+{{- $supported := true -}}
+{{- if regexMatch "^[0-9]+\\.[0-9]+\\.[0-9]+" $tag -}}
+{{- $supported = semverCompare ">=0.17.1-0" (regexFind "^[0-9]+\\.[0-9]+\\.[0-9]+" $tag) -}}
+{{- end -}}
+{{- if $supported -}}
+{{- $port := toString .Values.service.port -}}
+{{- $hosts := list -}}
+{{- range list "localhost" "127.0.0.1" "[::1]" -}}
+{{- $hosts = append $hosts (printf "%s:%s" . $port) -}}
+{{- end -}}
+{{- if and .Values.allowedHosts.service .Values.service.enabled -}}
+{{- $name := include "grafana-mcp.fullname" . -}}
+{{- $ns := include "grafana-mcp.namespace" . -}}
+{{- range list $name (printf "%s.%s" $name $ns) (printf "%s.%s.svc" $name $ns) (printf "%s.%s.svc.%s" $name $ns $.Values.clusterDomain) -}}
+{{- $hosts = append $hosts (printf "%s:%s" . $port) -}}
+{{- if eq $port "80" -}}
+{{- $hosts = append $hosts . -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if .Values.allowedHosts.ingress -}}
+{{- if .Values.ingress.enabled -}}
+{{- range .Values.ingress.hosts -}}
+{{- with .host -}}
+{{- $hosts = append $hosts (tpl . $) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- range $_, $route := .Values.route -}}
+{{- if $route.enabled -}}
+{{- range $route.hostnames -}}
+{{- $hosts = append $hosts (tpl . $) -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- range .Values.allowedHosts.extra -}}
+{{- $hosts = append $hosts . -}}
+{{- end -}}
+{{- $hosts | uniq | join "," -}}
+{{- end -}}
+{{- end -}}
