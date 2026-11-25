@@ -102,6 +102,45 @@ podMonitor:
   # -- PodMonitor scrape timeout in Go duration format (e.g. 15s)
   scrapeTimeout: null
 
+prometheusRule:
+  # -- Create a PrometheusRule (Prometheus Operator) with alerts on the vulture's own metrics.
+  enabled: false
+  # -- Alternative namespace for the PrometheusRule
+  namespace: null
+  # -- PrometheusRule annotations
+  annotations: {}
+  # -- Additional PrometheusRule labels, e.g. the labels your Prometheus selects rules by
+  labels: {}
+  # -- PromQL label matchers that select this vulture's series. Empty selects
+  # `namespace="<release namespace>", pod=~"<fullname>-.*"`, the labels a PodMonitor scrape adds.
+  # Set it when the vulture is scraped another way, e.g. `job="tempo-vulture"`.
+  selector: ""
+  # -- Labels added to every alert
+  additionalRuleLabels: {}
+  highErrorRate:
+    # -- Alert when the share of traces the vulture wrote but could not read back correctly (not found by ID,
+    # search, TraceQL or metrics, missing spans, wrong result, failed request) is above `threshold`.
+    # Same expression as `TempoVultureHighErrorRate` in the upstream tempo-mixin, with a wider default `rateWindow`.
+    enabled: true
+    # -- Error ratio above which the alert fires
+    threshold: 0.1
+    # -- Rate window. The upstream mixin uses 1m because its vulture runs with 10s read and 5s search backoffs;
+    # with this chart's defaults the vulture reads every 30s and searches every 60s, so a 1m window can hold
+    # no reads, the ratio turns undefined and the alert's `for` restarts.
+    rateWindow: 5m
+    # -- How long the ratio must stay above the threshold
+    for: 5m
+    # -- Alert severity
+    severity: critical
+  notReporting:
+    # -- Alert when no vulture metrics are scraped, for example when the vulture is not running or its
+    # scrape fails. An error-rate alert cannot fire in that case, because there are no series to evaluate.
+    enabled: true
+    # -- How long the metrics must be missing
+    for: 10m
+    # -- Alert severity
+    severity: warning
+
 tempoAddress:
   # -- the URL towards your Tempo distributor, e.g. http://distributor
   push:
