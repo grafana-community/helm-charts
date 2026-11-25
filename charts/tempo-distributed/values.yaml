@@ -719,8 +719,10 @@ backendScheduler:
           block_retention: 48h
           # Duration to keep blocks that have been compacted elsewhere
           compacted_block_retention: 1h
-          # -- The time between compaction cycles
-          compaction_cycle: 30s
+          # `compaction_cycle` and `max_time_per_tenant` are no longer rendered by default. Tempo only
+          # read them in the ring-based compaction loop, which no component starts since Tempo 3.0;
+          # the backend-scheduler and backend-workers do not use them. Set them here only if you run an
+          # image that still needs them.
           # -- Blocks in this time window will be compacted together
           compaction_window: 1h
           # -- Maximum size of a compacted block in bytes
@@ -731,8 +733,6 @@ backendScheduler:
           max_block_bytes: 107374182400
           # -- Maximum number of traces in a compacted block. WARNING: Deprecated. Use max_block_bytes instead.
           max_compaction_objects: 6000000
-          # -- The maximum amount of time to spend compacting a single tenant before moving to the next
-          max_time_per_tenant: 5m
           # -- Number of tenants to process in parallel during retention
           retention_concurrency: 10
         # -- Maximum number of compaction jobs to create per tenant
@@ -1616,7 +1616,12 @@ queryFrontend:
       # max_result_limit: 262144 maximum number of results returned by search requests
     # -- Trace by ID lookup configuration
     trace_by_id:
-      # -- The number of shards to split a trace by ID query into.
+      # -- Number of blocks per shard of a trace by ID query (Tempo 3.1+). The number of shards follows
+      # the number of blocks in the queried time range, capped by `max_outstanding_per_tenant`. Unset
+      # uses Tempo's default of 30. Set to 0 to use the fixed `query_shards` instead.
+      blocks_per_shard: null
+      # -- Fixed number of shards to split a trace by ID query into. Since Tempo 3.1 it only applies
+      # when `blocks_per_shard` is 0.
       query_shards: 50
     metrics:
       # -- The number of concurrent jobs to execute when querying the backend.
@@ -2117,11 +2122,15 @@ config: |
         compaction:
           block_retention: {{ .Values.backendScheduler.config.provider.compaction.compaction.block_retention }}
           compacted_block_retention: {{ .Values.backendScheduler.config.provider.compaction.compaction.compacted_block_retention }}
-          compaction_cycle: {{ .Values.backendScheduler.config.provider.compaction.compaction.compaction_cycle }}
+          {{- with .Values.backendScheduler.config.provider.compaction.compaction.compaction_cycle }}
+          compaction_cycle: {{ . }}
+          {{- end }}
           compaction_window: {{ .Values.backendScheduler.config.provider.compaction.compaction.compaction_window }}
           max_block_bytes: {{ .Values.backendScheduler.config.provider.compaction.compaction.max_block_bytes }}
           max_compaction_objects: {{ .Values.backendScheduler.config.provider.compaction.compaction.max_compaction_objects }}
-          max_time_per_tenant: {{ .Values.backendScheduler.config.provider.compaction.compaction.max_time_per_tenant }}
+          {{- with .Values.backendScheduler.config.provider.compaction.compaction.max_time_per_tenant }}
+          max_time_per_tenant: {{ . }}
+          {{- end }}
           retention_concurrency: {{ .Values.backendScheduler.config.provider.compaction.compaction.retention_concurrency }}
         max_jobs_per_tenant: {{ .Values.backendScheduler.config.provider.compaction.max_jobs_per_tenant }}
         min_input_blocks: {{ .Values.backendScheduler.config.provider.compaction.min_input_blocks }}
@@ -2285,7 +2294,12 @@ config: |
       max_result_limit: {{ . }}
       {{- end }}
     trace_by_id:
-      query_shards: {{ .Values.queryFrontend.config.trace_by_id.query_shards }}
+      {{- with .Values.queryFrontend.config.trace_by_id }}
+      {{- if not (kindIs "invalid" .blocks_per_shard) }}
+      blocks_per_shard: {{ .blocks_per_shard }}
+      {{- end }}
+      query_shards: {{ .query_shards }}
+      {{- end }}
     metrics:
       concurrent_jobs:  {{ .Values.queryFrontend.config.metrics.concurrent_jobs }}
       target_bytes_per_job:  {{ .Values.queryFrontend.config.metrics.target_bytes_per_job }}
