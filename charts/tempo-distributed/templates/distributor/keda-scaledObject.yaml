@@ -1,0 +1,3 @@
+{{- if and .Values.distributor.autoscaling.enabled .Values.distributor.autoscaling.keda.enabled }}
+{{- include "tempo.lib.keda" (dict "ctx" $ "component" .Values.distributor "target" "distributor" "kind" "Deployment") }}
+{{- end }}

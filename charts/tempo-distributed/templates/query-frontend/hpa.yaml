@@ -1,4 +1,4 @@
-{{- if .Values.queryFrontend.autoscaling.enabled }}
+{{- if and .Values.queryFrontend.autoscaling.enabled (not .Values.queryFrontend.autoscaling.keda.enabled) }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

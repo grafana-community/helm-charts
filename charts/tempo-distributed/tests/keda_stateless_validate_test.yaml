@@ -1,0 +1,39 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: KEDA autoscaling validation for the distributor, querier, query-frontend and gateway
+templates:
+  - validate.yaml
+set:
+  ingest.kafka.address: kafka:9092
+tests:
+  - it: fails when distributor KEDA autoscaling has no triggers
+    set:
+      distributor.autoscaling.enabled: true
+      distributor.autoscaling.keda.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: distributor.autoscaling.keda.enabled needs at least one entry in distributor.autoscaling.keda.triggers; KEDA does not create a ScaledObject without triggers, and the HPA is not rendered while KEDA is enabled.
+
+  - it: fails when querier KEDA autoscaling has no triggers
+    set:
+      querier.autoscaling.enabled: true
+      querier.autoscaling.keda.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: querier.autoscaling.keda.enabled needs at least one entry in querier.autoscaling.keda.triggers; KEDA does not create a ScaledObject without triggers, and the HPA is not rendered while KEDA is enabled.
+
+  - it: fails when queryFrontend KEDA autoscaling has no triggers
+    set:
+      queryFrontend.autoscaling.enabled: true
+      queryFrontend.autoscaling.keda.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: queryFrontend.autoscaling.keda.enabled needs at least one entry in queryFrontend.autoscaling.keda.triggers; KEDA does not create a ScaledObject without triggers, and the HPA is not rendered while KEDA is enabled.
+
+  - it: fails when gateway KEDA autoscaling has no triggers
+    set:
+      gateway.autoscaling.enabled: true
+      gateway.autoscaling.keda.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: gateway.autoscaling.keda.enabled needs at least one entry in gateway.autoscaling.keda.triggers; KEDA does not create a ScaledObject without triggers, and the HPA is not rendered while KEDA is enabled.
+
