@@ -297,8 +297,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe
           value:
-            httpGet:
-              path: /ready
+            tcpSocket:
               port: http-metrics
             initialDelaySeconds: 60
             timeoutSeconds: 5
@@ -314,8 +313,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe
           value:
-            httpGet:
-              path: /ready
+            tcpSocket:
               port: http-metrics
             initialDelaySeconds: 0
             timeoutSeconds: 5
@@ -325,13 +323,15 @@ tests:
     template: distributor/deployment-distributor.yaml
     set:
       distributor.livenessProbe:
-        tcpSocket:
+        httpGet:
+          path: /ready
           port: http-metrics
     asserts:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe
           value:
-            tcpSocket:
+            httpGet:
+              path: /ready
               port: http-metrics
             initialDelaySeconds: 60
             timeoutSeconds: 5
@@ -360,8 +360,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe
           value:
-            httpGet:
-              path: /ready
+            tcpSocket:
               port: http-metrics
             timeoutSeconds: 5
 
@@ -369,27 +368,27 @@ tests:
     template: distributor/deployment-distributor.yaml
     set:
       tempo.livenessProbe:
-        httpGet: null
-        tcpSocket:
-          port: http-metrics
+        tcpSocket: null
+        exec:
+          command: ["true"]
     asserts:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe
           value:
-            tcpSocket:
-              port: http-metrics
+            exec:
+              command: ["true"]
             initialDelaySeconds: 60
             timeoutSeconds: 5
 
-  - it: merges component livenessProbe httpGet fields over the inherited ones
+  - it: merges component readinessProbe httpGet fields over the inherited ones
     template: distributor/deployment-distributor.yaml
     set:
-      distributor.livenessProbe:
+      distributor.readinessProbe:
         httpGet:
           path: /live
     asserts:
       - equal:
-          path: spec.template.spec.containers[0].livenessProbe.httpGet
+          path: spec.template.spec.containers[0].readinessProbe.httpGet
           value:
             path: /live
             port: http-metrics
@@ -570,8 +569,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe
           value:
-            httpGet:
-              path: /ready
+            tcpSocket:
               port: http-metrics
             initialDelaySeconds: 60
             timeoutSeconds: 9
