@@ -1,0 +1,54 @@
+suite: liveness and readiness probes
+templates:
+  - deployment.yaml
+  - statefulset.yaml
+  - configmap.yaml
+  - dashboards-json-configmap.yaml
+  - configmap-dashboard-provider.yaml
+  - secret.yaml
+tests:
+  # /api/health fails while the database is unreachable or the apiserver is starting.
+  # Liveness must not use it, or a database outage restarts every replica.
+  - it: checks liveness on /healthz and readiness on /api/health
+    template: deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            httpGet:
+              path: /healthz
+              port: grafana
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
+            failureThreshold: 10
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe
+          value:
+            httpGet:
+              path: /api/health
+              port: grafana
+
+  - it: uses the same probes on the StatefulSet
+    template: statefulset.yaml
+    set:
+      persistence:
+        enabled: true
+        type: statefulset
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /healthz
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /api/health
+
+  - it: keeps a liveness path set in values
+    template: deployment.yaml
+    set:
+      livenessProbe.httpGet.path: /api/health
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet
+          value:
+            path: /api/health
+            port: grafana
