@@ -42,6 +42,19 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### To 0.15.0
+
+The vulture pod now runs with a restricted security context by default: as the image's
+non-root user (UID and GID 10001) with the `RuntimeDefault` seccomp profile, no privilege
+escalation, all capabilities dropped and a read-only root filesystem. The service account
+token is no longer mounted (`automountServiceAccountToken` and
+`serviceAccount.automountServiceAccountToken` default to `false`), since vulture does not
+call the Kubernetes API. The pod is recreated once on upgrade.
+
+If you run a custom image that needs another user or writes to its filesystem, override
+`podSecurityContext` or `securityContext`. Setting a map to `{}` keeps the defaults merged in;
+set a field to `null` to remove it, for example `securityContext.readOnlyRootFilesystem: null`.
+
 ### To 0.14.2
 
 The pod template no longer carries `helm.sh/chart` or `app.kubernetes.io/version`, so a
