@@ -1,0 +1,65 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: security context and service account token
+templates:
+  - deployment.yaml
+  - serviceaccount.yaml
+set:
+  tempoAddress:
+    push: http://distributor
+    query: http://query-frontend:3100
+tests:
+  - it: runs the pod as the image's non-root user with the RuntimeDefault seccomp profile
+    template: deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+
+  - it: restricts the vulture container
+    template: deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+
+  - it: does not mount the service account token by default
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
+        template: deployment.yaml
+      - equal:
+          path: automountServiceAccountToken
+          value: false
+        template: serviceaccount.yaml
+
+  - it: mounts the token when enabled
+    template: deployment.yaml
+    set:
+      automountServiceAccountToken: true
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: true
+
+  - it: removes a default security context field set to null
+    template: deployment.yaml
+    set:
+      securityContext:
+        readOnlyRootFilesystem: null
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
