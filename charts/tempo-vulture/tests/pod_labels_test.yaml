@@ -1,0 +1,55 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: pod labels do not carry the chart version
+templates:
+  - deployment.yaml
+set:
+  tempoAddress:
+    push: http://distributor
+    query: http://query-frontend:3100
+tests:
+  - it: leaves helm.sh/chart and app.kubernetes.io/version out of the pod template
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - notExists:
+          path: spec.template.metadata.labels["app.kubernetes.io/version"]
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/name"]
+          value: tempo-vulture
+      - equal:
+          path: spec.template.metadata.labels["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
+
+  - it: keeps both labels on the Deployment itself
+    asserts:
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["app.kubernetes.io/version"]
+
+  - it: renders the same pod template for two chart versions
+    chart:
+      version: 9.9.9
+      appVersion: 9.9.9
+    set:
+      image.tag: "3.1.1"
+    asserts:
+      - notExists:
+          path: spec.template.metadata.labels["helm.sh/chart"]
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: docker.io/grafana/tempo-vulture:3.1.1
+
+  - it: keeps global.commonLabels and podLabels on the pod
+    set:
+      global.commonLabels:
+        team: observability
+      podLabels:
+        tier: canary
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels.team
+          value: observability
+      - equal:
+          path: spec.template.metadata.labels.tier
+          value: canary

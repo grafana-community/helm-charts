@@ -40,6 +40,19 @@ helm delete RELEASE-NAME
 
 See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?chart=tempo-vulture).
 
+## Upgrading
+
+### To 0.14.2
+
+The pod template no longer carries `helm.sh/chart` or `app.kubernetes.io/version`, so a
+chart release that changes neither the configuration nor the image no longer restarts the
+vulture pod. Both labels remain on the Deployment, ServiceAccount and PodMonitor
+themselves. Upgrading to 0.14.2 restarts the pod once.
+
+If you select or group by these labels on the pod (for example `kube_pod_labels` joined on
+`label_helm_sh_chart`), use the object-level labels or add what you need through
+`podLabels`.
+
 ---
 
 ## Configuration

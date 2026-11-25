@@ -46,6 +46,19 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
+Pod template labels. Unlike the common labels, they leave out helm.sh/chart and
+app.kubernetes.io/version, so a chart release that changes neither the configuration
+nor the image does not restart the pod.
+*/}}
+{{- define "tempo-vulture.podLabels" -}}
+{{ include "tempo-vulture.selectorLabels" . }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- with .Values.global.commonLabels }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
 Selector labels
 */}}
 {{- define "tempo-vulture.selectorLabels" -}}
