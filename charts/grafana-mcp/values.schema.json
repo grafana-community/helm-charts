@@ -708,6 +708,14 @@
             "description": "Tolerations",
             "type": "array"
         },
+        "toolsConfig": {
+            "description": "Tool selection file (mcp-grafana v2.4.0+), rendered into a ConfigMap and passed as `--config`. Unknown keys, categories or tool names stop the server from starting. Tool flags such as `disableWrite` and `disabledCategories` override the matching setting in the file. See https://github.com/grafana/mcp-grafana/blob/main/docs/sources/configure/enable-and-disable-tools.md",
+            "type": [
+                "object",
+                "null"
+            ],
+            "additionalProperties": true
+        },
         "topologySpreadConstraints": {
             "description": "Topology spread constraints",
             "type": "array"
