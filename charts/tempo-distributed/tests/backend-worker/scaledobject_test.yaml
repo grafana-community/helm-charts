@@ -133,3 +133,60 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: ScaledObject renders advanced.scalingModifiers from its fields
+    template: backend-worker/keda-scaledObject.yaml
+    set:
+      backendScheduler.enabled: true
+      backendWorker.autoscaling.enabled: true
+      backendWorker.autoscaling.keda.enabled: true
+      backendWorker.autoscaling.keda.triggers:
+        - name: blocks
+          type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            query: sum(tempodb_compaction_outstanding_blocks)
+            threshold: "250"
+        - name: cpu
+          type: cpu
+          metricType: Utilization
+          metadata:
+            value: "80"
+      backendWorker.autoscaling.keda.advanced:
+        scalingModifiers:
+          formula: max(blocks, cpu)
+          target: "250"
+          activationTarget: "10"
+          metricType: AverageValue
+    asserts:
+      - equal:
+          path: spec.advanced.scalingModifiers
+          value:
+            formula: max(blocks, cpu)
+            target: "250"
+            activationTarget: "10"
+            metricType: AverageValue
+
+  - it: ScaledObject renders scalingModifiers without the optional fields
+    template: backend-worker/keda-scaledObject.yaml
+    set:
+      backendScheduler.enabled: true
+      backendWorker.autoscaling.enabled: true
+      backendWorker.autoscaling.keda.enabled: true
+      backendWorker.autoscaling.keda.triggers:
+        - name: blocks
+          type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            query: sum(tempodb_compaction_outstanding_blocks)
+            threshold: "250"
+      backendWorker.autoscaling.keda.advanced:
+        scalingModifiers:
+          formula: blocks * 2
+          target: "500"
+    asserts:
+      - equal:
+          path: spec.advanced.scalingModifiers
+          value:
+            formula: blocks * 2
+            target: "500"

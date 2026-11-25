@@ -79,8 +79,8 @@ spec:
     {{- end }}
     {{- with .scalingModifiers }}
     scalingModifiers:
-      formula: {{ . | quote }}
-      target: {{ . | quote }}
+      formula: {{ .formula | quote }}
+      target: {{ .target | quote }}
       {{- with .activationTarget }}
       activationTarget: {{ . | quote }}
       {{- end }}
