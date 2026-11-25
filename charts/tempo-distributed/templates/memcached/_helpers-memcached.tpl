@@ -169,11 +169,11 @@ spec:
           ports:
             - containerPort: 9150
               name: http-metrics
-          {{- with $.ctx.Values.memcachedExporter.livenessProbe }}
+          {{- with (include "tempo.resolveProbe" (list $.ctx.Values.memcachedExporter.livenessProbe) | fromYaml) }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with $.ctx.Values.memcachedExporter.readinessProbe }}
+          {{- with (include "tempo.resolveProbe" (list $.ctx.Values.memcachedExporter.readinessProbe) | fromYaml) }}
           readinessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}

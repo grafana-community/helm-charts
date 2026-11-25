@@ -128,14 +128,32 @@ tests:
           path: spec.template.spec.containers[1].readinessProbe.httpGet.path
           value: /metrics
 
-  - it: drops the memcached exporter probes when set to null
+  - it: disables the memcached exporter probes with enabled false
     set:
       memcachedExporter.enabled: true
-      memcachedExporter.livenessProbe: null
-      memcachedExporter.readinessProbe: null
+      memcachedExporter.livenessProbe.enabled: false
+      memcachedExporter.readinessProbe.enabled: false
     template: memcached/statefulset-memcached.yaml
     asserts:
       - notExists:
           path: spec.template.spec.containers[1].livenessProbe
       - notExists:
           path: spec.template.spec.containers[1].readinessProbe
+
+  - it: merges memcached exporter probe overrides over the defaults
+    set:
+      memcachedExporter.enabled: true
+      memcachedExporter.livenessProbe:
+        initialDelaySeconds: 120
+        failureThreshold: null
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe
+          value:
+            httpGet:
+              path: /metrics
+              port: http-metrics
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            timeoutSeconds: 5

@@ -2793,7 +2793,7 @@ memcachedExporter:
   resources: {}
   # -- Additional CLI args for the memcached exporter
   extraArgs: []
-  # -- Liveness probe for the memcached exporter container. Set to `null` to disable it.
+  # -- Liveness probe for the memcached exporter container. Set `enabled: false` to disable it.
   livenessProbe:
     httpGet:
       path: /metrics
@@ -2802,7 +2802,7 @@ memcachedExporter:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  # -- Readiness probe for the memcached exporter container. Set to `null` to disable it.
+  # -- Readiness probe for the memcached exporter container. Set `enabled: false` to disable it.
   readinessProbe:
     httpGet:
       path: /metrics
