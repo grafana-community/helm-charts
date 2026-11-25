@@ -1,0 +1,156 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: metrics-generator autoscaling
+templates:
+  - lib/hpa.tpl
+  - lib/keda.tpl
+  - configmap-tempo.yaml
+  - metrics-generator/hpa-metrics-generator.yaml
+  - metrics-generator/keda-scaledObject-metrics-generator.yaml
+  - metrics-generator/deployment-metrics-generator.yaml
+  - metrics-generator/statefulset-metrics-generator.yaml
+  - metrics-generator/poddisruptionbudget-metrics-generator.yaml
+set:
+  ingest.kafka.address: kafka:9092
+  metricsGenerator.enabled: true
+tests:
+  - it: renders no HPA or ScaledObject and keeps the replica count by default
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: metrics-generator/hpa-metrics-generator.yaml
+      - hasDocuments:
+          count: 0
+        template: metrics-generator/keda-scaledObject-metrics-generator.yaml
+      - equal:
+          path: spec.replicas
+          value: 1
+        template: metrics-generator/deployment-metrics-generator.yaml
+
+  - it: renders an HPA for the Deployment and drops the replica count
+    set:
+      metricsGenerator.autoscaling.enabled: true
+      metricsGenerator.autoscaling.minReplicas: 2
+      metricsGenerator.autoscaling.maxReplicas: 6
+      metricsGenerator.autoscaling.hpa.enabled: true
+      metricsGenerator.autoscaling.hpa.targetMemoryUtilizationPercentage: 80
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef
+          value:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: RELEASE-NAME-tempo-metrics-generator
+        template: metrics-generator/hpa-metrics-generator.yaml
+      - equal:
+          path: spec.minReplicas
+          value: 2
+        template: metrics-generator/hpa-metrics-generator.yaml
+      - equal:
+          path: spec.maxReplicas
+          value: 6
+        template: metrics-generator/hpa-metrics-generator.yaml
+      - equal:
+          path: spec.metrics
+          value:
+            - type: Resource
+              resource:
+                name: memory
+                target:
+                  type: Utilization
+                  averageUtilization: 80
+            - type: Resource
+              resource:
+                name: cpu
+                target:
+                  type: Utilization
+                  averageUtilization: 100
+        template: metrics-generator/hpa-metrics-generator.yaml
+      - notExists:
+          path: spec.replicas
+        template: metrics-generator/deployment-metrics-generator.yaml
+      - hasDocuments:
+          count: 0
+        template: metrics-generator/keda-scaledObject-metrics-generator.yaml
+
+  - it: targets the StatefulSet when the metrics-generator runs as one
+    set:
+      metricsGenerator.kind: StatefulSet
+      metricsGenerator.autoscaling.enabled: true
+      metricsGenerator.autoscaling.hpa.enabled: true
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.kind
+          value: StatefulSet
+        template: metrics-generator/hpa-metrics-generator.yaml
+      - notExists:
+          path: spec.replicas
+        template: metrics-generator/statefulset-metrics-generator.yaml
+
+  - it: renders a KEDA ScaledObject with the configured triggers
+    set:
+      metricsGenerator.kind: StatefulSet
+      metricsGenerator.autoscaling.enabled: true
+      metricsGenerator.autoscaling.minReplicas: 1
+      metricsGenerator.autoscaling.maxReplicas: 12
+      metricsGenerator.autoscaling.keda.enabled: true
+      metricsGenerator.autoscaling.keda.triggers:
+        - type: prometheus
+          metricType: Value
+          metadata:
+            serverAddress: http://prometheus:9090
+            threshold: "1"
+            query: min(vector(12))
+    asserts:
+      - equal:
+          path: kind
+          value: ScaledObject
+        template: metrics-generator/keda-scaledObject-metrics-generator.yaml
+      - equal:
+          path: spec.scaleTargetRef
+          value:
+            apiVersion: apps/v1
+            kind: StatefulSet
+            name: RELEASE-NAME-tempo-metrics-generator
+        template: metrics-generator/keda-scaledObject-metrics-generator.yaml
+      - equal:
+          path: spec.maxReplicaCount
+          value: 12
+        template: metrics-generator/keda-scaledObject-metrics-generator.yaml
+      - equal:
+          path: spec.triggers
+          value:
+            - type: prometheus
+              metricType: Value
+              metadata:
+                serverAddress: http://prometheus:9090
+                threshold: "1"
+                query: min(vector(12))
+        template: metrics-generator/keda-scaledObject-metrics-generator.yaml
+      - hasDocuments:
+          count: 0
+        template: metrics-generator/hpa-metrics-generator.yaml
+      - notExists:
+          path: spec.replicas
+        template: metrics-generator/statefulset-metrics-generator.yaml
+
+  - it: renders nothing while the metrics-generator is disabled
+    set:
+      metricsGenerator.enabled: false
+      metricsGenerator.autoscaling.enabled: true
+      metricsGenerator.autoscaling.hpa.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: metrics-generator/hpa-metrics-generator.yaml
+
+  - it: uses minReplicas to decide whether to render the PDB
+    set:
+      metricsGenerator.replicas: 1
+      metricsGenerator.autoscaling.enabled: true
+      metricsGenerator.autoscaling.minReplicas: 2
+      metricsGenerator.autoscaling.hpa.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: metrics-generator/poddisruptionbudget-metrics-generator.yaml
+

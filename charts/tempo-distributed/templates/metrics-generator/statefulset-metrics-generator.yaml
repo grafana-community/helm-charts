@@ -13,7 +13,9 @@ metadata:
   {{- end }}
 spec:
   minReadySeconds: {{ .Values.metricsGenerator.minReadySeconds }}
+  {{- if not .Values.metricsGenerator.autoscaling.enabled }}
   replicas: {{ .Values.metricsGenerator.replicas }}
+  {{- end }}
   revisionHistoryLimit: {{ .Values.tempo.revisionHistoryLimit }}
   podManagementPolicy: Parallel
   updateStrategy:

@@ -1,0 +1,3 @@
+{{- if and .Values.metricsGenerator.enabled .Values.metricsGenerator.autoscaling.enabled .Values.metricsGenerator.autoscaling.keda.enabled }}
+{{- include "tempo.lib.keda" (dict "ctx" $ "component" .Values.metricsGenerator "target" "metrics-generator" "kind" .Values.metricsGenerator.kind) }}
+{{- end }}

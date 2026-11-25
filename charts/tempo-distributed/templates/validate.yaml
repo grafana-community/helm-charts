@@ -66,3 +66,14 @@
 {{- end }}
 {{- end }}
 {{- end }}
+{{- with .Values.metricsGenerator }}
+{{- if and .enabled .autoscaling.enabled }}
+{{- include "tempo.lib.validateAutoscaling" (dict "component" . "name" "metricsGenerator") }}
+{{- if not (or .autoscaling.hpa.enabled .autoscaling.keda.enabled) }}
+{{- fail "metricsGenerator.autoscaling.enabled removes the static replica count, so it needs metricsGenerator.autoscaling.hpa.enabled or metricsGenerator.autoscaling.keda.enabled; otherwise nothing sets the number of metrics-generators." }}
+{{- end }}
+{{- if and .autoscaling.keda.enabled (empty .autoscaling.keda.triggers) }}
+{{- fail "metricsGenerator.autoscaling.keda.enabled needs at least one entry in metricsGenerator.autoscaling.keda.triggers; KEDA does not create a ScaledObject without triggers." }}
+{{- end }}
+{{- end }}
+{{- end }}
