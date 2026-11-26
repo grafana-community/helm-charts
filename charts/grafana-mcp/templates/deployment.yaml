@@ -35,6 +35,9 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       annotations:
+        {{- with .Values.toolsConfig }}
+        checksum/tools-config: {{ toYaml . | sha256sum }}
+        {{- end }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -152,10 +155,14 @@ spec:
           envFrom:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if or (.Values.debug) (.Values.metrics.enabled) (.Values.disableWrite) (.Values.disabledCategories) (.Values.extraArgs) }}
+          {{- $allowedHosts := include "grafana-mcp.allowedHosts" . }}
+          {{- if or (.Values.debug) .Values.toolsConfig (.Values.metrics.enabled) (.Values.disableWrite) (.Values.disabledCategories) $allowedHosts (.Values.extraArgs) }}
           args:
             {{- if .Values.debug }}
             - -debug
+            {{- end }}
+            {{- if .Values.toolsConfig }}
+            - --config=/etc/mcp-grafana/tools.yaml
             {{- end }}
             {{- if .Values.metrics.enabled }}
             - --metrics
@@ -168,6 +175,9 @@ spec:
             {{- end }}
             {{- range .Values.disabledCategories }}
             - --disable-{{ . }}
+            {{- end }}
+            {{- with $allowedHosts }}
+            - --allowed-hosts={{ . }}
             {{- end }}
             {{- with .Values.extraArgs }}
             {{- toYaml . | nindent 12 }}
@@ -186,16 +196,30 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.volumeMounts }}
+          {{- if or .Values.toolsConfig .Values.volumeMounts }}
           volumeMounts:
+            {{- if .Values.toolsConfig }}
+            - name: tools-config
+              mountPath: /etc/mcp-grafana
+              readOnly: true
+            {{- end }}
+            {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- end }}
         {{- with .Values.extraContainers }}
         {{- tpl (toYaml .) $ | nindent 8 }}
         {{- end }}
-      {{- with .Values.volumes }}
+      {{- if or .Values.toolsConfig .Values.volumes }}
       volumes:
+        {{- if .Values.toolsConfig }}
+        - name: tools-config
+          configMap:
+            name: {{ include "grafana-mcp.fullname" . }}-tools
+        {{- end }}
+        {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

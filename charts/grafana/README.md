@@ -47,6 +47,16 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 A major chart version change (like v1.2.3 -> v2.0.0) indicates that there is an
 incompatible breaking change needing manual actions.
 
+### To 14.6.0
+
+The default liveness probe calls `/healthz` instead of `/api/health`. `/api/health` returns 503
+while the database is unreachable or the apiserver is still starting, so a database outage
+failed the liveness probe on every replica and the kubelet restarted them all. `/healthz` only
+checks that the web server is up. The readiness probe still calls `/api/health`, so a pod that
+cannot reach the database still stops receiving traffic.
+
+To keep the previous behavior, set `livenessProbe.httpGet.path: /api/health`.
+
 ### To 14.4.0
 
 Pod templates no longer carry `helm.sh/chart`. The label changed on every chart version

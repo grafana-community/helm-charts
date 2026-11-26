@@ -83,6 +83,17 @@ serverAuth:
     # -- Key within the secret that contains the bearer token
     key: ""
 
+# @schema type:[object, null];skipProperties:true;additionalProperties:true
+# -- Tool selection file (mcp-grafana v2.4.0+), rendered into a ConfigMap and passed as `--config`. Unknown keys,
+# categories or tool names stop the server from starting. Tool flags such as `disableWrite` and `disabledCategories`
+# override the matching setting in the file. See
+# https://github.com/grafana/mcp-grafana/blob/main/docs/sources/configure/enable-and-disable-tools.md
+toolsConfig: {}
+#  tools:
+#    categories: [search, dashboard, prometheus, loki]
+#    mode: read-only
+#    deny: [query_sql]
+
 # -- Enable debug mode
 debug: false
 
@@ -92,6 +103,25 @@ disabledCategories: []
 
 # -- Disable write operations to Grafana
 disableWrite: false
+
+# -- Host header values the MCP server accepts, passed as `--allowed-hosts`. Since v0.17.1 mcp-grafana answers
+# 403 to any other Host header, and without the flag it accepts only loopback addresses, which rejects in-cluster
+# clients, Ingress and HTTPRoute traffic. The loopback addresses (`localhost`, `127.0.0.1`, `[::1]` with the
+# Service port) are always included, so the liveness probe and `kubectl port-forward` keep working.
+# An `--allowed-hosts` in `extraArgs` takes precedence.
+allowedHosts:
+  # -- Allow the Service's names: `<name>`, `<name>.<namespace>`, `<name>.<namespace>.svc` and
+  # `<name>.<namespace>.svc.<clusterDomain>`, with the Service port
+  service: true
+  # -- Allow the hosts of the Ingress and the hostnames of enabled routes
+  ingress: true
+  # @schema item:string
+  # -- Additional Host header values, matched exactly and including the port when the client sends one.
+  # `*` disables Host validation; only use it behind a proxy that validates the Host header.
+  extra: []
+
+# -- Cluster DNS domain, used for the fully qualified Service name in `allowedHosts`
+clusterDomain: cluster.local
 
 # -- Additional command line arguments
 extraArgs: []
@@ -108,12 +138,26 @@ envValueFrom: {}
 # -- Environment variables from ConfigMaps or Secrets
 envFrom: []
 
-# -- MCP server Readiness probe configuration
-readinessProbe: {}
-#
+# @schema type:[object, null];skipProperties:true;additionalProperties:true
+# -- MCP server Readiness probe configuration, set to `null` to remove it. A TCP check on the MCP port: an HTTP probe would be
+# rejected with 403, because kubelet sends the pod IP as the Host header.
+readinessProbe:
+  tcpSocket:
+    port: mcp-http
+  periodSeconds: 10
 
-# -- MCP server Liveness probe configuration
-livenessProbe: {}
+# @schema type:[object, null];skipProperties:true;additionalProperties:true
+# -- MCP server Liveness probe configuration, set to `null` to remove it. `/healthz` always answers 200 while the server runs; the
+# Host header matches the loopback address mcp-grafana accepts by default.
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: mcp-http
+    httpHeaders:
+      - name: Host
+        value: localhost:8000
+  periodSeconds: 20
+  timeoutSeconds: 5
 
 # -- MCP server Startup probe configuration
 startupProbe: {}

@@ -103,9 +103,12 @@ readinessProbe:
     port: grafana
 
 # @schema skipProperties:true;additionalProperties:true
+## Liveness probe. `/healthz` answers as soon as the web server is up. Unlike `/api/health`, which the
+## readiness probe uses, it does not fail while the database is unreachable or the apiserver is still
+## starting, so a database outage does not restart every replica.
 livenessProbe:
   httpGet:
-    path: /api/health
+    path: /healthz
     port: grafana
   initialDelaySeconds: 60
   timeoutSeconds: 30

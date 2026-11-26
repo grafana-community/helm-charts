@@ -251,15 +251,20 @@ def locked_sync(timeout=API_TIMEOUT):
 
 
 def deferred_sync():
-    try:
-        wait_for(sidecar_ready, "initial sidecar sync")
-    except TimeoutError as e:
-        log("ERROR", str(e))
-        return 1
-    finally:
-        os.unlink(DEFERRED_MARKER)
-    # Nothing triggers another run after the initial sync, so wait as long as Grafana needs to start.
-    return locked_sync(timeout=None)
+    # Each run of the initial list starts one of these; the first to lock the marker syncs, the others exit.
+    # A lock, unlike a marker that only has to exist, is released when its process dies, so it cannot go stale.
+    with open(DEFERRED_MARKER, "w") as marker:
+        try:
+            fcntl.flock(marker, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return 0
+        try:
+            wait_for(sidecar_ready, "initial sidecar sync")
+        except TimeoutError as e:
+            log("ERROR", str(e))
+            return 1
+        # Nothing triggers another run after the initial sync, so wait as long as Grafana needs to start.
+        return locked_sync(timeout=None)
 
 
 def main():

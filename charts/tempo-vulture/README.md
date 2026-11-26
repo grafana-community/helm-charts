@@ -40,6 +40,38 @@ helm delete RELEASE-NAME
 
 See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?chart=tempo-vulture).
 
+## Upgrading
+
+### To 0.16.0
+
+`affinity` and `priorityClassName` are now listed in `values.yaml` (the Deployment already
+rendered them), and the new `topologySpreadConstraints` value adds topology spread
+constraints to the vulture pod. With default values the rendered manifests are unchanged.
+
+### To 0.15.0
+
+The vulture pod now runs with a restricted security context by default: as the image's
+non-root user (UID and GID 10001) with the `RuntimeDefault` seccomp profile, no privilege
+escalation, all capabilities dropped and a read-only root filesystem. The service account
+token is no longer mounted (`automountServiceAccountToken` and
+`serviceAccount.automountServiceAccountToken` default to `false`), since vulture does not
+call the Kubernetes API. The pod is recreated once on upgrade.
+
+If you run a custom image that needs another user or writes to its filesystem, override
+`podSecurityContext` or `securityContext`. Setting a map to `{}` keeps the defaults merged in;
+set a field to `null` to remove it, for example `securityContext.readOnlyRootFilesystem: null`.
+
+### To 0.14.2
+
+The pod template no longer carries `helm.sh/chart` or `app.kubernetes.io/version`, so a
+chart release that changes neither the configuration nor the image no longer restarts the
+vulture pod. Both labels remain on the Deployment, ServiceAccount and PodMonitor
+themselves. Upgrading to 0.14.2 restarts the pod once.
+
+If you select or group by these labels on the pod (for example `kube_pod_labels` joined on
+`label_helm_sh_chart`), use the object-level labels or add what you need through
+`podLabels`.
+
 ---
 
 ## Configuration

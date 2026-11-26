@@ -1,0 +1,120 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana-mcp allowed hosts and probes
+templates:
+  - deployment.yaml
+release:
+  name: mcp
+  namespace: obs
+tests:
+  - it: allows the loopback addresses and the Service's in-cluster names with the Service port
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --allowed-hosts=localhost:8000,127.0.0.1:8000,[::1]:8000,mcp-grafana-mcp:8000,mcp-grafana-mcp.obs:8000,mcp-grafana-mcp.obs.svc:8000,mcp-grafana-mcp.obs.svc.cluster.local:8000
+
+  - it: adds the Service names without a port when the Service port is 80
+    set:
+      service.port: 80
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: ",mcp-grafana-mcp.obs.svc:80,mcp-grafana-mcp.obs.svc,"
+
+  - it: uses clusterDomain for the fully qualified Service name
+    set:
+      clusterDomain: k8s.example
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: ",mcp-grafana-mcp.obs.svc.k8s.example:8000$"
+
+  - it: adds the Ingress hosts, the templated route hostnames and extra hosts
+    set:
+      ingress.enabled: true
+      route.main.enabled: true
+      route.main.hostnames:
+        - "mcp.{{ .Release.Namespace }}.example.com"
+      allowedHosts.extra:
+        - mcp.internal:8443
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: ",mcp-grafana.local,mcp.obs.example.com,mcp.internal:8443$"
+
+  - it: leaves out Ingress and route hosts that are not enabled
+    set:
+      route.main.hostnames:
+        - mcp.example.com
+    asserts:
+      - notMatchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: "mcp-grafana.local|mcp.example.com"
+
+  - it: leaves out the Service names when allowedHosts.service is false
+    set:
+      allowedHosts.service: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - --allowed-hosts=localhost:8000,127.0.0.1:8000,[::1]:8000
+
+  - it: renders --allowed-hosts before extraArgs so an explicit flag there wins
+    set:
+      extraArgs:
+        - --allowed-hosts=*
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: "^--allowed-hosts=localhost:8000,"
+      - equal:
+          path: spec.template.spec.containers[0].args[1]
+          value: --allowed-hosts=*
+
+  - it: does not pass --allowed-hosts to images older than v0.17.1
+    set:
+      image.tag: v0.16.0
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].args
+
+  - it: passes --allowed-hosts to non-semver image tags
+    set:
+      image.tag: main
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].args[0]
+          pattern: "^--allowed-hosts="
+
+  - it: checks readiness with a TCP connection to the MCP port
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe
+          value:
+            tcpSocket:
+              port: mcp-http
+            periodSeconds: 10
+
+  - it: checks liveness on /healthz with a loopback Host header
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            httpGet:
+              path: /healthz
+              port: mcp-http
+              httpHeaders:
+                - name: Host
+                  value: localhost:8000
+            periodSeconds: 20
+            timeoutSeconds: 5
+
+  - it: removes a probe set to null
+    set:
+      readinessProbe: null
+      livenessProbe: null
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe

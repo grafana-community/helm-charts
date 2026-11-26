@@ -1,0 +1,82 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: grafana-mcp tools config
+templates:
+  - deployment.yaml
+  - configmap-tools.yaml
+release:
+  name: mcp
+  namespace: obs
+tests:
+  - it: renders no --config flag, tools volume or checksum by default
+    template: deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - --allowed-hosts=localhost:8000,127.0.0.1:8000,[::1]:8000,mcp-grafana-mcp:8000,mcp-grafana-mcp.obs:8000,mcp-grafana-mcp.obs.svc:8000,mcp-grafana-mcp.obs.svc.cluster.local:8000
+      - notExists:
+          path: spec.template.spec.volumes
+      - notExists:
+          path: spec.template.metadata.annotations["checksum/tools-config"]
+
+  - it: does not render the tools ConfigMap by default
+    template: configmap-tools.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders toolsConfig into a ConfigMap
+    template: configmap-tools.yaml
+    set:
+      toolsConfig:
+        tools:
+          categories: [search, dashboard]
+          mode: read-only
+    asserts:
+      - equal:
+          path: metadata.name
+          value: mcp-grafana-mcp-tools
+      - equal:
+          path: data["tools.yaml"]
+          value: |
+            tools:
+              categories:
+              - search
+              - dashboard
+              mode: read-only
+
+  - it: mounts the tools config read-only, passes --config and adds a checksum
+    template: deployment.yaml
+    set:
+      toolsConfig:
+        tools:
+          mode: read-only
+      volumes:
+        - name: scratch
+          emptyDir: {}
+      volumeMounts:
+        - name: scratch
+          mountPath: /scratch
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --config=/etc/mcp-grafana/tools.yaml
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - name: tools-config
+              mountPath: /etc/mcp-grafana
+              readOnly: true
+            - name: scratch
+              mountPath: /scratch
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - name: tools-config
+              configMap:
+                name: mcp-grafana-mcp-tools
+            - name: scratch
+              emptyDir: {}
+      - matchRegex:
+          path: spec.template.metadata.annotations["checksum/tools-config"]
+          pattern: "^[0-9a-f]{64}$"

@@ -1349,7 +1349,7 @@ gateway:
     # -- The NGINX gateway image repository
     repository: nginx/nginx-unprivileged
     # -- The NGINX gateway image tag
-    tag: 1.31.9-alpine3.24
+    tag: 1.31.10-alpine3.24
     # @schema type:[string, null]
     # -- Overrides the NGINX gateway image tag with an image digest
     digest: null
@@ -1806,7 +1806,7 @@ gateway:
       # -- NGINX access log exporter image repository. Not used by the Envoy gateway.
       repository: "jkroepke/access-log-exporter"
       # -- NGINX access log exporter image tag. Not used by the Envoy gateway.
-      tag: "1.0.2"
+      tag: "1.0.3"
       # -- NGINX access log exporter image pull policy. Not used by the Envoy gateway.
       pullPolicy: IfNotPresent
     # @schema additionalProperties:true

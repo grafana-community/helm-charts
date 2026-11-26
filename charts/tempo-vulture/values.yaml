@@ -45,14 +45,38 @@ resources: {}
 nodeSelector: {}
 # -- Tolerations for vulture pods
 tolerations: []
-# -- SecurityContext holds container-level security attributes and common container settings
-securityContext: {}
-# -- podSecurityContext holds pod-level security attributes and common container settings
-podSecurityContext: {}
+# -- Affinity for vulture pods
+affinity: {}
+# -- Topology spread constraints for vulture pods
+topologySpreadConstraints: []
+# -- Priority class name for vulture pods
+priorityClassName: null
+
+# -- SecurityContext holds container-level security attributes and common container settings.
+# Vulture writes no files, so the root filesystem can be read-only.
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+# -- podSecurityContext holds pod-level security attributes and common container settings.
+# 10001 is the user and group the tempo-vulture image runs as.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Mount the service account token into the vulture pod. Vulture does not call the Kubernetes API.
+automountServiceAccountToken: false
 
 serviceAccount:
   # -- Specifies whether a ServiceAccount should be created
   create: true
+  # -- Automount API credentials for the ServiceAccount
+  automountServiceAccountToken: false
   # -- The name of the ServiceAccount to use.
   # If not set and create is true, a name is generated using the fullname template
   name: null
