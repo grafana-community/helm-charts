@@ -92,7 +92,8 @@ jobs:
 
       # GitHub generates the release notes from all pull requests merged since
       # the previous release of the chart, including those of other charts.
-      # Keep only the entries of the released chart.
+      # Keep only the entries of the released chart, based on the "[<chart>]"
+      # prefix of the pull request titles.
       - name: Filter release notes
         if: steps.cr.outputs.changed_charts != ''
         run: |
@@ -102,9 +103,10 @@ jobs:
             name=$(yq '.name' "$chart/Chart.yaml")
             release="$name-$(yq '.version' "$chart/Chart.yaml")"
             notes="$RUNNER_TEMP/$release.md"
-            gh release view "$release" --json body --jq .body > "$notes"
-            ./scripts/filter-release-notes.sh "$name" < "$notes" > "$notes.filtered"
-            gh release edit "$release" --notes-file "$notes.filtered"
+            gh release view "$release" --json body --jq .body \
+              | grep -vP "^\* (?!\[\Q$name\E\] )|^## New Contributors$" \
+              | cat -s > "$notes"
+            gh release edit "$release" --notes-file "$notes"
           done
         env:
           CHANGED_CHARTS: "${{ steps.cr.outputs.changed_charts }}"
