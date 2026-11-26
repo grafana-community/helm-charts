@@ -1,0 +1,57 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: config object
+templates:
+  - config.yaml
+  - monolithic/workload.yaml
+set:
+  deploymentMode: Monolithic
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: generates a ConfigMap with the config under config.yaml by default
+    template: config.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - exists:
+          path: data["config.yaml"]
+
+  - it: generates nothing when generatedConfigObjectName is empty
+    template: config.yaml
+    set:
+      loki.generatedConfigObjectName: ""
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: mounts an existing ConfigMap named by configObjectName
+    template: monolithic/workload.yaml
+    set:
+      loki.generatedConfigObjectName: ""
+      loki.configObjectName: my-loki-config
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config
+            configMap:
+              name: my-loki-config
+              items:
+                - key: config.yaml
+                  path: config.yaml
+
+  - it: mounts an existing Secret when configStorageType is Secret
+    template: monolithic/workload.yaml
+    set:
+      loki.generatedConfigObjectName: ""
+      loki.configStorageType: Secret
+      loki.configObjectName: my-loki-config
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config
+            secret:
+              secretName: my-loki-config
