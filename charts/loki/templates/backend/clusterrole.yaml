@@ -1,4 +1,4 @@
-{{- if and (not .Values.rbac.namespaced) (not .Values.rbac.useExistingRole) }}
+{{- if eq (include "loki.rulesSidecar.clusterWide" .) "true" }}
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -9,12 +9,8 @@ metadata:
 {{ toYaml . | indent 4 }}
 {{- end }}
   name: {{ template "loki.fullname" . }}-clusterrole
-{{- if .Values.sidecar.rules.enabled }}
 rules:
 - apiGroups: [""] # "" indicates the core API group
-  resources: ["configmaps", "secrets"]
+  resources: {{ splitList "," (include "loki.rulesSidecar.resources" .) | toJson }}
   verbs: ["get", "watch", "list"]
-{{- else }}
-rules: []
-{{- end }}
 {{- end }}

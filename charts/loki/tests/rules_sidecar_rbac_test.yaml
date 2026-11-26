@@ -1,0 +1,325 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: rules sidecar RBAC follows the sidecar scope and resource setting
+templates:
+  - role.yaml
+  - rolebinding.yaml
+  - backend/clusterrole.yaml
+  - backend/clusterrolebinding.yaml
+
+set:
+  loki.useTestSchema: true
+  loki.storage.bucketNames.chunks: chunks
+  loki.storage.bucketNames.ruler: ruler
+
+tests:
+  - it: grants configmaps and secrets in the release namespace by default
+    asserts:
+      - template: role.yaml
+        hasDocuments:
+          count: 1
+      - template: role.yaml
+        equal:
+          path: metadata.namespace
+          value: NAMESPACE
+      - template: role.yaml
+        equal:
+          path: rules
+          value:
+            - apiGroups: [""]
+              resources: ["configmaps", "secrets"]
+              verbs: ["get", "watch", "list"]
+      - template: rolebinding.yaml
+        equal:
+          path: subjects
+          value:
+            - kind: ServiceAccount
+              name: RELEASE-NAME-loki
+              namespace: NAMESPACE
+      - template: backend/clusterrole.yaml
+        hasDocuments:
+          count: 0
+      - template: backend/clusterrolebinding.yaml
+        hasDocuments:
+          count: 0
+
+  - it: grants only configmaps when the sidecar reads configmaps
+    set:
+      sidecar.rules.resource: configmap
+    template: role.yaml
+    asserts:
+      - equal:
+          path: rules[0].resources
+          value: ["configmaps"]
+
+  - it: grants only secrets when the sidecar reads secrets
+    set:
+      sidecar.rules.resource: secret
+    template: role.yaml
+    asserts:
+      - equal:
+          path: rules[0].resources
+          value: ["secrets"]
+
+  - it: grants a Role in each namespace listed in searchNamespace
+    set:
+      sidecar.rules.searchNamespace: "team-a,team-b"
+      sidecar.rules.resource: configmap
+    asserts:
+      - template: role.yaml
+        hasDocuments:
+          count: 2
+      - template: role.yaml
+        documentIndex: 0
+        equal:
+          path: metadata.namespace
+          value: team-a
+      - template: role.yaml
+        documentIndex: 1
+        equal:
+          path: metadata.namespace
+          value: team-b
+      - template: role.yaml
+        documentIndex: 1
+        equal:
+          path: rules[0].resources
+          value: ["configmaps"]
+      - template: rolebinding.yaml
+        hasDocuments:
+          count: 2
+      - template: rolebinding.yaml
+        documentIndex: 1
+        equal:
+          path: metadata.namespace
+          value: team-b
+      - template: rolebinding.yaml
+        documentIndex: 1
+        equal:
+          path: subjects
+          value:
+            - kind: ServiceAccount
+              name: RELEASE-NAME-loki
+              namespace: NAMESPACE
+      - template: backend/clusterrole.yaml
+        hasDocuments:
+          count: 0
+      - template: backend/clusterrolebinding.yaml
+        hasDocuments:
+          count: 0
+
+  - it: grants a ClusterRole when searchNamespace is ALL
+    set:
+      sidecar.rules.searchNamespace: ALL
+      sidecar.rules.resource: configmap
+    asserts:
+      - template: backend/clusterrole.yaml
+        equal:
+          path: rules
+          value:
+            - apiGroups: [""]
+              resources: ["configmaps"]
+              verbs: ["get", "watch", "list"]
+      - template: backend/clusterrolebinding.yaml
+        equal:
+          path: subjects
+          value:
+            - kind: ServiceAccount
+              name: RELEASE-NAME-loki
+              namespace: NAMESPACE
+      - template: backend/clusterrolebinding.yaml
+        equal:
+          path: roleRef.name
+          value: RELEASE-NAME-loki-clusterrole
+      - template: role.yaml
+        hasDocuments:
+          count: 0
+      - template: rolebinding.yaml
+        hasDocuments:
+          count: 0
+
+  - it: keeps RBAC in the release namespace with rbac.namespaced and searchNamespace ALL
+    set:
+      sidecar.rules.searchNamespace: ALL
+      rbac.namespaced: true
+    asserts:
+      - template: role.yaml
+        hasDocuments:
+          count: 1
+      - template: role.yaml
+        equal:
+          path: metadata.namespace
+          value: NAMESPACE
+      - template: backend/clusterrole.yaml
+        hasDocuments:
+          count: 0
+      - template: backend/clusterrolebinding.yaml
+        hasDocuments:
+          count: 0
+
+  - it: renders no RBAC when the rules sidecar is disabled
+    set:
+      sidecar.rules.enabled: false
+    asserts:
+      - template: role.yaml
+        hasDocuments:
+          count: 0
+      - template: rolebinding.yaml
+        hasDocuments:
+          count: 0
+      - template: backend/clusterrole.yaml
+        hasDocuments:
+          count: 0
+      - template: backend/clusterrolebinding.yaml
+        hasDocuments:
+          count: 0
+
+  - it: renders no RBAC when the single binary does not run the sidecar
+    set:
+      singleBinary.sidecar: false
+      sidecar.rules.searchNamespace: ALL
+    asserts:
+      - template: role.yaml
+        hasDocuments:
+          count: 0
+      - template: rolebinding.yaml
+        hasDocuments:
+          count: 0
+      - template: backend/clusterrole.yaml
+        hasDocuments:
+          count: 0
+      - template: backend/clusterrolebinding.yaml
+        hasDocuments:
+          count: 0
+
+  - it: binds the backend service account in SimpleScalable mode
+    set:
+      deploymentMode: SimpleScalable
+      backend.serviceAccount.create: true
+    asserts:
+      - template: role.yaml
+        hasDocuments:
+          count: 1
+      - template: rolebinding.yaml
+        equal:
+          path: subjects
+          value:
+            - kind: ServiceAccount
+              name: RELEASE-NAME-loki-backend
+              namespace: NAMESPACE
+
+  - it: renders no RBAC in Distributed mode when the ruler does not run the sidecar
+    set:
+      deploymentMode: Distributed
+    asserts:
+      - template: role.yaml
+        hasDocuments:
+          count: 0
+      - template: rolebinding.yaml
+        hasDocuments:
+          count: 0
+      - template: backend/clusterrole.yaml
+        hasDocuments:
+          count: 0
+      - template: backend/clusterrolebinding.yaml
+        hasDocuments:
+          count: 0
+
+  - it: binds the ruler service account in Distributed mode when the ruler runs the sidecar
+    set:
+      deploymentMode: Distributed
+      ruler.sidecar: true
+      ruler.serviceAccount.create: true
+    asserts:
+      - template: role.yaml
+        hasDocuments:
+          count: 1
+      - template: rolebinding.yaml
+        equal:
+          path: subjects
+          value:
+            - kind: ServiceAccount
+              name: RELEASE-NAME-loki-ruler
+              namespace: NAMESPACE
+
+  - it: renders no RBAC in Distributed mode when the ruler is disabled
+    set:
+      deploymentMode: Distributed
+      ruler.enabled: false
+      ruler.sidecar: true
+    asserts:
+      - template: role.yaml
+        hasDocuments:
+          count: 0
+      - template: rolebinding.yaml
+        hasDocuments:
+          count: 0
+
+  - it: binds every service account that runs the sidecar while migrating to Distributed
+    set:
+      deploymentMode: SimpleScalable<->Distributed
+      sidecar.rules.searchNamespace: ALL
+      backend.serviceAccount.create: true
+      ruler.sidecar: true
+      ruler.serviceAccount.create: true
+    asserts:
+      - template: backend/clusterrolebinding.yaml
+        equal:
+          path: subjects
+          value:
+            - kind: ServiceAccount
+              name: RELEASE-NAME-loki-backend
+              namespace: NAMESPACE
+            - kind: ServiceAccount
+              name: RELEASE-NAME-loki-ruler
+              namespace: NAMESPACE
+
+  - it: binds rbac.useExistingRole instead of rendering chart roles
+    set:
+      rbac.useExistingRole: my-cluster-role
+    asserts:
+      - template: backend/clusterrolebinding.yaml
+        equal:
+          path: roleRef.name
+          value: my-cluster-role
+      - template: backend/clusterrole.yaml
+        hasDocuments:
+          count: 0
+      - template: role.yaml
+        hasDocuments:
+          count: 0
+
+  - it: keeps the SecurityContextConstraints rule in the release namespace
+    set:
+      rbac.sccEnabled: true
+      sidecar.rules.searchNamespace: team-a
+    asserts:
+      - template: role.yaml
+        hasDocuments:
+          count: 2
+      - template: role.yaml
+        documentIndex: 0
+        equal:
+          path: metadata.namespace
+          value: NAMESPACE
+      - template: role.yaml
+        documentIndex: 0
+        equal:
+          path: rules[0].apiGroups
+          value: ["security.openshift.io"]
+      - template: role.yaml
+        documentIndex: 0
+        lengthEqual:
+          path: rules
+          count: 1
+      - template: role.yaml
+        documentIndex: 1
+        equal:
+          path: metadata.namespace
+          value: team-a
+      - template: role.yaml
+        documentIndex: 1
+        equal:
+          path: rules
+          value:
+            - apiGroups: [""]
+              resources: ["configmaps", "secrets"]
+              verbs: ["get", "watch", "list"]

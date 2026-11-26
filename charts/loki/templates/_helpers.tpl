@@ -1223,3 +1223,79 @@ monolithic replicas calculation
 {{- end }}
 {{- printf "%d" $replicas }}
 {{- end }}
+
+{{/*
+Service accounts of the workloads that run the rules sidecar (single binary, backend or ruler,
+depending on the deployment mode and their `sidecar` toggle). Returned as a comma-separated list,
+empty when no rendered workload runs the sidecar.
+*/}}
+{{- define "loki.rulesSidecar.serviceAccounts" -}}
+{{- $serviceAccounts := list -}}
+{{- if .Values.sidecar.rules.enabled -}}
+{{- if and (eq (include "loki.deployment.isMonolithic" .) "true") .Values.singleBinary.sidecar (ne .Values.singleBinary.enabled false) -}}
+{{- $serviceAccounts = append $serviceAccounts (include "loki.serviceAccountName" (dict "ctx" . "component" .Values "target" "")) -}}
+{{- end -}}
+{{- if and (eq (include "loki.deployment.isScalable" .) "true") .Values.backend.sidecar (ne .Values.backend.enabled false) -}}
+{{- $serviceAccounts = append $serviceAccounts (include "loki.serviceAccountName" (dict "ctx" . "component" .Values.backend "target" "backend")) -}}
+{{- end -}}
+{{- if and (eq (include "loki.deployment.isDistributed" .) "true") .Values.ruler.sidecar .Values.ruler.enabled -}}
+{{- $serviceAccounts = append $serviceAccounts (include "loki.serviceAccountName" (dict "ctx" . "component" .Values.ruler "target" "ruler")) -}}
+{{- end -}}
+{{- end -}}
+{{- $serviceAccounts | uniq | join "," -}}
+{{- end -}}
+
+{{/*
+Core API resources ("configmaps", "secrets") read by the rules sidecar, derived from
+`sidecar.rules.resource` (configmap, secret or both). Returned as a comma-separated list.
+*/}}
+{{- define "loki.rulesSidecar.resources" -}}
+{{- $resources := list -}}
+{{- if has .Values.sidecar.rules.resource (list "configmap" "both") -}}
+{{- $resources = append $resources "configmaps" -}}
+{{- end -}}
+{{- if has .Values.sidecar.rules.resource (list "secret" "both") -}}
+{{- $resources = append $resources "secrets" -}}
+{{- end -}}
+{{- $resources | join "," -}}
+{{- end -}}
+
+{{/*
+Namespaces the rules sidecar reads from: `sidecar.rules.searchNamespace`, or the release namespace
+when it is unset. "ALL" stands for every namespace. Returned as a comma-separated list.
+*/}}
+{{- define "loki.rulesSidecar.searchNamespaces" -}}
+{{- $namespaces := list -}}
+{{- range splitList "," (join "," (.Values.sidecar.rules.searchNamespace | default list)) -}}
+{{- with trim . -}}
+{{- $namespaces = append $namespaces . -}}
+{{- end -}}
+{{- end -}}
+{{- $namespaces | default (list (include "loki.namespace" .)) | uniq | join "," -}}
+{{- end -}}
+
+{{/*
+"true" when the rules sidecar needs a ClusterRole: it runs, searches "ALL" namespaces, and
+RBAC is not restricted to namespaces (`rbac.namespaced`) or provided through `rbac.useExistingRole`.
+*/}}
+{{- define "loki.rulesSidecar.clusterWide" -}}
+{{- if and (include "loki.rulesSidecar.serviceAccounts" .) (include "loki.rulesSidecar.resources" .) (not .Values.rbac.namespaced) (not .Values.rbac.useExistingRole) -}}
+{{- has "ALL" (splitList "," (include "loki.rulesSidecar.searchNamespaces" .)) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Namespaces that get a Role (and RoleBinding) for the rules sidecar, as a comma-separated list.
+Empty when no workload runs the sidecar, when a ClusterRole is used instead, or when
+`rbac.useExistingRole` provides the permissions. With `rbac.namespaced`, "ALL" falls back to
+the release namespace.
+*/}}
+{{- define "loki.rulesSidecar.roleNamespaces" -}}
+{{- if and (include "loki.rulesSidecar.serviceAccounts" .) (include "loki.rulesSidecar.resources" .) (or .Values.rbac.namespaced (not .Values.rbac.useExistingRole)) (ne (include "loki.rulesSidecar.clusterWide" .) "true") -}}
+{{- $namespaces := splitList "," (include "loki.rulesSidecar.searchNamespaces" .) -}}
+{{- if has "ALL" $namespaces -}}
+{{- $namespaces = list (include "loki.namespace" .) -}}
+{{- end -}}
+{{- $namespaces | join "," -}}
+{{- end -}}
+{{- end -}}

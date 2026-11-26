@@ -1,5 +1,6 @@
-{{- $isSimpleScalable := eq (include "loki.deployment.isScalable" .) "true" -}}
-{{- if (not .Values.rbac.namespaced) }}
+{{- $clusterWide := eq (include "loki.rulesSidecar.clusterWide" .) "true" -}}
+{{- if and (not .Values.rbac.namespaced) (or $clusterWide .Values.rbac.useExistingRole) }}
+{{- $serviceAccounts := include "loki.rulesSidecar.serviceAccounts" . | default (include "loki.serviceAccountName" (dict "ctx" . "component" .Values.backend "target" "backend")) }}
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -11,9 +12,11 @@ metadata:
 {{ toYaml . | indent 4 }}
 {{- end }}
 subjects:
+  {{- range splitList "," $serviceAccounts }}
   - kind: ServiceAccount
-    name: {{ include "loki.serviceAccountName" (dict "ctx" . "component" .Values.backend "target" "backend" ) }}
-    namespace: {{ include "loki.namespace" . }}
+    name: {{ . }}
+    namespace: {{ include "loki.namespace" $ }}
+  {{- end }}
 roleRef:
   kind: ClusterRole
 {{- if (not .Values.rbac.useExistingRole) }}
