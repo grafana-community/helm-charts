@@ -10,6 +10,39 @@ entries:
           url: https://github.com/grafana/grafana
     apiVersion: v2
     appVersion: 13.3.2
+    created: "2026-11-26T06:57:14.238609137Z"
+    description: The leading tool for querying and visualizing time series and metrics.
+    digest: 1b6922e341b853d67a74f61515fd8b5234b6db4d0a19c910740a5ef677b38f62
+    home: https://grafana.com
+    icon: https://artifacthub.io/image/b4fed1a7-6c8f-4945-b99d-096efa3e4116
+    keywords:
+    - monitoring
+    - metric
+    kubeVersion: ^1.25.0-0
+    maintainers:
+    - email: github@jkroepke.de
+      name: Jan-Otto Kröpke
+      url: https://github.com/jkroepke
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    name: grafana
+    sources:
+    - https://github.com/grafana/grafana
+    - https://github.com/grafana-community/helm-charts
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/grafana-14.6.1/grafana-14.6.1.tgz
+    version: 14.6.1
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Chart Source
+          url: https://github.com/grafana-community/helm-charts
+        - name: Upstream Project
+          url: https://github.com/grafana/grafana
+    apiVersion: v2
+    appVersion: 13.3.2
     created: "2026-11-25T08:34:03.509391865Z"
     description: The leading tool for querying and visualizing time series and metrics.
     digest: 96ab276ec2981c928b640f097bd1ad60f217171199d59c554b9e69948c4f5271
@@ -66851,6 +66884,30 @@ entries:
   tempo-vulture:
   - apiVersion: v2
     appVersion: 3.1.1
+    created: "2026-11-26T06:57:14.464306262Z"
+    description: Grafana Tempo Vulture - A tool to monitor Tempo performance.
+    digest: f6b0ac7e9a1376f87a29c0b2221776028851c1e06f6e2b4f7361bfcab5338110
+    home: https://grafana.com/docs/tempo/latest/
+    icon: https://raw.githubusercontent.com/grafana/tempo/main/cmd/tempo/app/static/tempo-icon.png
+    maintainers:
+    - email: avivguiser@gmail.com
+      name: Aviv Guiser
+      url: https://github.com/KyriosGN0
+    - email: quentin.bisson@gmail.com
+      name: Quentin Bisson
+      url: https://github.com/QuentinBisson
+    - email: sheikhabubaker761@gmail.com
+      name: Mohammad Abubaker
+      url: https://github.com/Sheikh-Abubaker
+    name: tempo-vulture
+    sources:
+    - https://github.com/grafana/tempo
+    type: application
+    urls:
+    - https://github.com/grafana-community/helm-charts/releases/download/tempo-vulture-0.16.0/tempo-vulture-0.16.0.tgz
+    version: 0.16.0
+  - apiVersion: v2
+    appVersion: 3.1.1
     created: "2026-11-25T07:40:07.183496966Z"
     description: Grafana Tempo Vulture - A tool to monitor Tempo performance.
     digest: ff1e3f4f8c8dd9711c5285ef3c1320f685b86201fc0dcf77ef0da98aec4f1064
@@ -67636,4 +67693,4 @@ entries:
     urls:
     - https://github.com/grafana-community/helm-charts/releases/download/tempo-vulture-0.1.0/tempo-vulture-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-25T10:15:02.559509217Z"
+generated: "2026-11-26T06:57:14.466815485Z"
