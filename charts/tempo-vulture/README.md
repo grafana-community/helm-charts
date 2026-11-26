@@ -42,6 +42,12 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### To 0.16.0
+
+`affinity` and `priorityClassName` are now listed in `values.yaml` (the Deployment already
+rendered them), and the new `topologySpreadConstraints` value adds topology spread
+constraints to the vulture pod. With default values the rendered manifests are unchanged.
+
 ### To 0.15.0
 
 The vulture pod now runs with a restricted security context by default: as the image's

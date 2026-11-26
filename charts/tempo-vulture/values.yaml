@@ -45,6 +45,13 @@ resources: {}
 nodeSelector: {}
 # -- Tolerations for vulture pods
 tolerations: []
+# -- Affinity for vulture pods
+affinity: {}
+# -- Topology spread constraints for vulture pods
+topologySpreadConstraints: []
+# -- Priority class name for vulture pods
+priorityClassName: null
+
 # -- SecurityContext holds container-level security attributes and common container settings.
 # Vulture writes no files, so the root filesystem can be read-only.
 securityContext:
