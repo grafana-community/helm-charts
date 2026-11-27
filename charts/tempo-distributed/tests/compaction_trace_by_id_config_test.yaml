@@ -1,0 +1,54 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: compaction keys and trace by ID sharding in tempo.yaml
+templates:
+  - configmap-tempo.yaml
+tests:
+  - it: does not render compaction_cycle or max_time_per_tenant by default
+    asserts:
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "compaction_cycle"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "max_time_per_tenant"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "\\n\\s+compaction_window: 1h\\n"
+
+  - it: renders compaction_cycle and max_time_per_tenant for the scheduler and the workers when set
+    set:
+      backendScheduler.config.provider.compaction.compaction.compaction_cycle: 45s
+      backendScheduler.config.provider.compaction.compaction.max_time_per_tenant: 10m
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?s)backend_scheduler:.*compaction_cycle: 45s.*max_time_per_tenant: 10m.*backend_worker:"
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "(?s)backend_worker:.*compaction_cycle: 45s.*max_time_per_tenant: 10m"
+
+  - it: renders only query_shards for trace by ID by default
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "\\n\\s+trace_by_id:\\n\\s+query_shards: 50\\n"
+      - notMatchRegex:
+          path: data["tempo.yaml"]
+          pattern: "blocks_per_shard"
+
+  - it: renders blocks_per_shard when set
+    set:
+      queryFrontend.config.trace_by_id.blocks_per_shard: 20
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "\\n\\s+trace_by_id:\\n\\s+blocks_per_shard: 20\\n\\s+query_shards: 50\\n"
+
+  - it: renders blocks_per_shard 0 to fall back to query_shards
+    set:
+      queryFrontend.config.trace_by_id.blocks_per_shard: 0
+      queryFrontend.config.trace_by_id.query_shards: 80
+    asserts:
+      - matchRegex:
+          path: data["tempo.yaml"]
+          pattern: "\\n\\s+trace_by_id:\\n\\s+blocks_per_shard: 0\\n\\s+query_shards: 80\\n"
