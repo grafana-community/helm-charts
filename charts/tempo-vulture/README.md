@@ -42,6 +42,13 @@ See the [changelog](https://grafana-community.github.io/helm-charts/changelog/?c
 
 ## Upgrading
 
+### To 0.17.0
+
+The new `prometheusRule` values can create a PrometheusRule with two alerts on the vulture's
+own metrics: `TempoVultureHighErrorRate`, the same expression as in the upstream tempo-mixin,
+and `TempoVultureNotReporting`, which fires when no vulture metrics are scraped. It is off by
+default, so nothing changes on upgrade.
+
 ### To 0.16.0
 
 `affinity` and `priorityClassName` are now listed in `values.yaml` (the Deployment already

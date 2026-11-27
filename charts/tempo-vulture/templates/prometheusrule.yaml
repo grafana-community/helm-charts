@@ -1,0 +1,61 @@
+{{- with .Values.prometheusRule }}
+{{- if .enabled }}
+{{- $selector := .selector | default (printf "namespace=%q, pod=~%q" $.Release.Namespace (printf "%s-.*" (include "tempo-vulture.fullname" $))) }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "tempo-vulture.fullname" $ }}
+  {{- with .namespace }}
+  namespace: {{ . }}
+  {{- end }}
+  {{- with .annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "tempo-vulture.labels" $ | nindent 4 }}
+    {{- with .labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: tempo-vulture
+      rules:
+        {{- with .highErrorRate }}
+        {{- if .enabled }}
+        - alert: TempoVultureHighErrorRate
+          expr: |
+            sum by (namespace, error) (rate(tempo_vulture_trace_error_total{ {{- $selector -}} }[{{ .rateWindow }}]))
+              / ignoring (error) group_left
+            sum by (namespace) (rate(tempo_vulture_trace_total{ {{- $selector -}} }[{{ .rateWindow }}]))
+              > {{ .threshold }}
+          for: {{ .for }}
+          labels:
+            severity: {{ .severity }}
+            {{- with $.Values.prometheusRule.additionalRuleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: Tempo vulture cannot read back the traces it writes.
+            description: {{ printf "Tempo vulture error rate is {{ printf \"%%.2f\" $value }} for error type {{ $labels.error }} in namespace {{ $labels.namespace }}." | quote }}
+            runbook_url: https://github.com/grafana/tempo/tree/main/operations/tempo-mixin/runbook.md#TempoVultureHighErrorRate
+        {{- end }}
+        {{- end }}
+        {{- with .notReporting }}
+        {{- if .enabled }}
+        - alert: TempoVultureNotReporting
+          expr: |
+            absent(tempo_vulture_trace_total{ {{- $selector -}} })
+          for: {{ .for }}
+          labels:
+            severity: {{ .severity }}
+            {{- with $.Values.prometheusRule.additionalRuleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: Tempo vulture metrics are missing.
+            description: {{ printf "No tempo_vulture_trace_total series matches {%s}: the vulture is not running or is not scraped, so TempoVultureHighErrorRate cannot fire." $selector | quote }}
+        {{- end }}
+        {{- end }}
+{{- end }}
+{{- end }}

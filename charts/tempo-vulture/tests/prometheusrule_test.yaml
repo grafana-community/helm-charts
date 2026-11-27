@@ -1,0 +1,97 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: tempo-vulture PrometheusRule
+templates:
+  - prometheusrule.yaml
+release:
+  name: tv
+  namespace: obs
+set:
+  tempoAddress.push: http://distributor
+  tempoAddress.query: http://query-frontend:3200
+tests:
+  - it: renders no PrometheusRule by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders both alerts scoped to this release's pods
+    set:
+      prometheusRule.enabled: true
+    asserts:
+      - equal:
+          path: metadata.name
+          value: tv-tempo-vulture
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: TempoVultureHighErrorRate
+      - matchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: 'rate\(tempo_vulture_trace_error_total\{namespace="obs", pod=~"tv-tempo-vulture-\.\*"\}\[5m\]\)'
+      - matchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: '> 0\.1\s*$'
+      - equal:
+          path: spec.groups[0].rules[0].for
+          value: 5m
+      - equal:
+          path: spec.groups[0].rules[0].labels
+          value:
+            severity: critical
+      - equal:
+          path: spec.groups[0].rules[1].alert
+          value: TempoVultureNotReporting
+      - equal:
+          path: spec.groups[0].rules[1].expr
+          value: |
+            absent(tempo_vulture_trace_total{namespace="obs", pod=~"tv-tempo-vulture-.*"})
+      - equal:
+          path: spec.groups[0].rules[1].for
+          value: 10m
+
+  - it: uses a custom selector, thresholds and extra labels
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.namespace: monitoring
+      prometheusRule.labels:
+        release: kps
+      prometheusRule.selector: job="tempo-vulture"
+      prometheusRule.additionalRuleLabels:
+        team: tracing
+      prometheusRule.highErrorRate.threshold: 0.25
+      prometheusRule.highErrorRate.rateWindow: 2m
+      prometheusRule.highErrorRate.severity: warning
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: monitoring
+      - equal:
+          path: metadata.labels.release
+          value: kps
+      - matchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: 'rate\(tempo_vulture_trace_total\{job="tempo-vulture"\}\[2m\]\)'
+      - matchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: '> 0\.25\s*$'
+      - equal:
+          path: spec.groups[0].rules[0].labels
+          value:
+            severity: warning
+            team: tracing
+      - equal:
+          path: spec.groups[0].rules[1].labels
+          value:
+            severity: warning
+            team: tracing
+
+  - it: drops an alert that is disabled
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.notReporting.enabled: false
+    asserts:
+      - lengthEqual:
+          path: spec.groups[0].rules
+          count: 1
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: TempoVultureHighErrorRate
