@@ -1,5 +1,9 @@
 {{- if .Values.metricsGenerator.enabled }}
-{{- if and (gt (int .Values.metricsGenerator.replicas) 1) .Values.metricsGenerator.podDisruptionBudget.enabled }}
+{{- $replicas := .Values.metricsGenerator.replicas }}
+{{- if .Values.metricsGenerator.autoscaling.enabled }}
+{{- $replicas = .Values.metricsGenerator.autoscaling.minReplicas }}
+{{- end }}
+{{- if and (gt (int $replicas) 1) .Values.metricsGenerator.podDisruptionBudget.enabled }}
 {{ $dict := dict "ctx" . "component" "metrics-generator" "memberlist" true }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget

@@ -1,0 +1,40 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: metrics-generator autoscaling validation
+templates:
+  - validate.yaml
+  - lib/keda.tpl
+set:
+  ingest.kafka.address: kafka:9092
+  metricsGenerator.enabled: true
+tests:
+  - it: fails when both HPA and KEDA are enabled
+    template: validate.yaml
+    set:
+      metricsGenerator.autoscaling.enabled: true
+      metricsGenerator.autoscaling.hpa.enabled: true
+      metricsGenerator.autoscaling.keda.enabled: true
+      metricsGenerator.autoscaling.keda.triggers:
+        - type: cpu
+          metricType: AverageValue
+          metadata:
+            value: 500m
+    asserts:
+      - failedTemplate:
+          errorMessage: Cannot enable both HPA and Keda based autoscaling for metricsGenerator at the same time.
+
+  - it: fails when autoscaling is enabled without HPA or KEDA
+    template: validate.yaml
+    set:
+      metricsGenerator.autoscaling.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: metricsGenerator.autoscaling.enabled removes the static replica count, so it needs metricsGenerator.autoscaling.hpa.enabled or metricsGenerator.autoscaling.keda.enabled; otherwise nothing sets the number of metrics-generators.
+
+  - it: fails when KEDA is enabled without triggers
+    template: validate.yaml
+    set:
+      metricsGenerator.autoscaling.enabled: true
+      metricsGenerator.autoscaling.keda.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: metricsGenerator.autoscaling.keda.enabled needs at least one entry in metricsGenerator.autoscaling.keda.triggers; KEDA does not create a ScaledObject without triggers.

@@ -229,8 +229,57 @@ metricsGenerator:
   kind: Deployment
   # -- Annotations for the metrics-generator StatefulSet
   annotations: {}
-  # -- Number of replicas for the metrics-generator
+  # -- Number of replicas for the metrics-generator. Ignored when `autoscaling.enabled` is true.
   replicas: 1
+  # Autoscaling for the metrics-generator, through an HPA or a KEDA ScaledObject (pick one).
+  # With Kafka ingestion (Tempo 3), every metrics-generator consumes whole Kafka partitions, so
+  # replicas above the partition count stay idle: keep `maxReplicas` at or below it, or use a KEDA
+  # Prometheus trigger that caps the result at the partition count.
+  autoscaling:
+    # -- Enable autoscaling for the metrics-generator. Requires `hpa.enabled` or `keda.enabled`.
+    enabled: false
+    # -- Minimum autoscaling replicas for the metrics-generator
+    minReplicas: 1
+    # -- Maximum autoscaling replicas for the metrics-generator
+    maxReplicas: 3
+    # -- Autoscaling via HPA object
+    hpa:
+      enabled: false
+      # -- Autoscaling behavior configuration for the metrics-generator
+      behavior: {}
+      # -- Target CPU utilisation percentage for the metrics-generator
+      targetCPUUtilizationPercentage: 100
+      # -- Target memory utilisation percentage for the metrics-generator
+      targetMemoryUtilizationPercentage:
+    # -- Autoscaling via keda/ScaledObject
+    keda:
+      # requires https://keda.sh/
+      enabled: false
+      annotations: {}
+      #   scaledobject.keda.sh/transfer-hpa-ownership: "true" # Use to transfer an existing HPA ownership to this ScaledObject
+      #   autoscaling.keda.sh/paused: "true"                  # Use to pause autoscaling of objects explicitly
+      pollingInterval: null        # Optional. Default: 30 seconds
+      cooldownPeriod: null         # Optional. Default: 300 seconds
+      initialCooldownPeriod: null  # Optional. Default: 0 seconds
+      # Optional. Section to specify advanced options, see backendWorker.autoscaling.keda.advanced
+      advanced: {}
+      fallback: {}
+      #   failureThreshold: null # Mandatory if fallback section is included
+      #   replicas: null         # Mandatory if fallback section is included
+      # -- List of autoscaling triggers for the metrics-generator. At least one is required.
+      triggers: []
+      # CPU, as in Tempo's jsonnet (`metrics_generator.keda.target_cpu`):
+      # - type: cpu
+      #   metricType: AverageValue
+      #   metadata:
+      #     value: 500m
+      # Prometheus, with a query that returns the desired replica count itself:
+      # - type: prometheus
+      #   metricType: Value
+      #   metadata:
+      #     serverAddress: "http://<prometheus-host>:9090"
+      #     threshold: "1"
+      #     query: <desired replica count, capped at the Kafka partition count>
   # -- hostAliases to add
   hostAliases: []
   #  - ip: 1.2.3.4
