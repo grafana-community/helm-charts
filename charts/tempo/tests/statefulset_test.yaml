@@ -17,3 +17,27 @@ tests:
       - matchRegex:
           path: spec.template.spec.containers[0].image
           pattern: "^docker.io/grafana/tempo:3\\."
+
+  - it: should leave revisionHistoryLimit unset by default
+    template: statefulset.yaml
+    asserts:
+      - notExists:
+          path: spec.revisionHistoryLimit
+
+  - it: should render revisionHistoryLimit when set to 0
+    template: statefulset.yaml
+    set:
+      revisionHistoryLimit: 0
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 0
+
+  - it: should render a non-zero revisionHistoryLimit
+    template: statefulset.yaml
+    set:
+      revisionHistoryLimit: 3
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 3
