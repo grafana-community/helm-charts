@@ -66,3 +66,9 @@
 {{- end }}
 {{- end }}
 {{- end }}
+{{- range $key := list "distributor" "querier" "queryFrontend" "gateway" }}
+{{- $autoscaling := (index $.Values $key).autoscaling }}
+{{- if and $autoscaling.enabled $autoscaling.keda.enabled (empty $autoscaling.keda.triggers) }}
+{{- fail (printf "%s.autoscaling.keda.enabled needs at least one entry in %s.autoscaling.keda.triggers; KEDA does not create a ScaledObject without triggers, and the HPA is not rendered while KEDA is enabled." $key $key) }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,3 @@
+{{- if and .Values.gateway.enabled .Values.gateway.autoscaling.enabled .Values.gateway.autoscaling.keda.enabled }}
+{{- include "tempo.lib.keda" (dict "ctx" $ "component" .Values.gateway "target" "gateway" "kind" "Deployment") }}
+{{- end }}

@@ -1,0 +1,3 @@
+{{- if and .Values.queryFrontend.autoscaling.enabled .Values.queryFrontend.autoscaling.keda.enabled }}
+{{- include "tempo.lib.keda" (dict "ctx" $ "component" .Values.queryFrontend "target" "query-frontend" "kind" "Deployment") }}
+{{- end }}

@@ -428,6 +428,27 @@ distributor:
     targetCPUUtilizationPercentage: 60
     # -- Target memory utilisation percentage for the distributor
     targetMemoryUtilizationPercentage:
+    # -- Autoscaling via a KEDA ScaledObject instead of the HPA. When enabled, the chart renders a
+    # ScaledObject with `minReplicas`, `maxReplicas` and the triggers below, and no HPA; `behavior` and the
+    # target utilisation values above then do not apply (use `advanced.horizontalPodAutoscalerConfig.behavior`
+    # and `triggers` instead). Requires https://keda.sh/ and `autoscaling.enabled: true`.
+    keda:
+      enabled: false
+      annotations: {}
+      pollingInterval: null        # Optional. Default: 30 seconds
+      cooldownPeriod: null         # Optional. Default: 300 seconds
+      initialCooldownPeriod: null  # Optional. Default: 0 seconds
+      # Optional. Section to specify advanced options, see backendWorker.autoscaling.keda.advanced
+      advanced: {}
+      fallback: {}
+      #   failureThreshold: null # Mandatory if fallback section is included
+      #   replicas: null         # Mandatory if fallback section is included
+      # -- List of autoscaling triggers for the distributor. At least one is required.
+      triggers: []
+      # - type: cpu
+      #   metricType: Utilization
+      #   metadata:
+      #     value: "60"
   image:
     # -- The Docker registry for the distributor image. Overrides `tempo.image.registry`
     registry: null
@@ -1451,6 +1472,27 @@ querier:
     targetCPUUtilizationPercentage: 60
     # -- Target memory utilisation percentage for the querier
     targetMemoryUtilizationPercentage:
+    # -- Autoscaling via a KEDA ScaledObject instead of the HPA. When enabled, the chart renders a
+    # ScaledObject with `minReplicas`, `maxReplicas` and the triggers below, and no HPA; `behavior` and the
+    # target utilisation values above then do not apply (use `advanced.horizontalPodAutoscalerConfig.behavior`
+    # and `triggers` instead). Requires https://keda.sh/ and `autoscaling.enabled: true`.
+    keda:
+      enabled: false
+      annotations: {}
+      pollingInterval: null        # Optional. Default: 30 seconds
+      cooldownPeriod: null         # Optional. Default: 300 seconds
+      initialCooldownPeriod: null  # Optional. Default: 0 seconds
+      # Optional. Section to specify advanced options, see backendWorker.autoscaling.keda.advanced
+      advanced: {}
+      fallback: {}
+      #   failureThreshold: null # Mandatory if fallback section is included
+      #   replicas: null         # Mandatory if fallback section is included
+      # -- List of autoscaling triggers for the querier. At least one is required.
+      triggers: []
+      # - type: cpu
+      #   metricType: Utilization
+      #   metadata:
+      #     value: "60"
   image:
     # -- The Docker registry for the querier image. Overrides `tempo.image.registry`
     registry: null
@@ -1652,6 +1694,27 @@ queryFrontend:
     targetCPUUtilizationPercentage: 60
     # -- Target memory utilisation percentage for the query-frontend
     targetMemoryUtilizationPercentage:
+    # -- Autoscaling via a KEDA ScaledObject instead of the HPA. When enabled, the chart renders a
+    # ScaledObject with `minReplicas`, `maxReplicas` and the triggers below, and no HPA; `behavior` and the
+    # target utilisation values above then do not apply (use `advanced.horizontalPodAutoscalerConfig.behavior`
+    # and `triggers` instead). Requires https://keda.sh/ and `autoscaling.enabled: true`.
+    keda:
+      enabled: false
+      annotations: {}
+      pollingInterval: null        # Optional. Default: 30 seconds
+      cooldownPeriod: null         # Optional. Default: 300 seconds
+      initialCooldownPeriod: null  # Optional. Default: 0 seconds
+      # Optional. Section to specify advanced options, see backendWorker.autoscaling.keda.advanced
+      advanced: {}
+      fallback: {}
+      #   failureThreshold: null # Mandatory if fallback section is included
+      #   replicas: null         # Mandatory if fallback section is included
+      # -- List of autoscaling triggers for the query-frontend. At least one is required.
+      triggers: []
+      # - type: cpu
+      #   metricType: Utilization
+      #   metadata:
+      #     value: "60"
   image:
     # -- The Docker registry for the query-frontend image. Overrides `tempo.image.registry`
     registry: null
@@ -3344,6 +3407,27 @@ gateway:
     targetCPUUtilizationPercentage: 60
     # -- Target memory utilisation percentage for the gateway
     targetMemoryUtilizationPercentage:
+    # -- Autoscaling via a KEDA ScaledObject instead of the HPA. When enabled, the chart renders a
+    # ScaledObject with `minReplicas`, `maxReplicas` and the triggers below, and no HPA; `behavior` and the
+    # target utilisation values above then do not apply (use `advanced.horizontalPodAutoscalerConfig.behavior`
+    # and `triggers` instead). Requires https://keda.sh/ and `autoscaling.enabled: true`.
+    keda:
+      enabled: false
+      annotations: {}
+      pollingInterval: null        # Optional. Default: 30 seconds
+      cooldownPeriod: null         # Optional. Default: 300 seconds
+      initialCooldownPeriod: null  # Optional. Default: 0 seconds
+      # Optional. Section to specify advanced options, see backendWorker.autoscaling.keda.advanced
+      advanced: {}
+      fallback: {}
+      #   failureThreshold: null # Mandatory if fallback section is included
+      #   replicas: null         # Mandatory if fallback section is included
+      # -- List of autoscaling triggers for the gateway. At least one is required.
+      triggers: []
+      # - type: cpu
+      #   metricType: Utilization
+      #   metadata:
+      #     value: "60"
   # -- Enable logging of 2xx and 3xx HTTP requests
   verboseLogging: true
   image:

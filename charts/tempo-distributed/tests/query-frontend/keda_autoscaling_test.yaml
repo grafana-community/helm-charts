@@ -1,0 +1,80 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: query-frontend KEDA autoscaling
+templates:
+  - lib/keda.tpl
+  - query-frontend/hpa.yaml
+  - query-frontend/keda-scaledObject.yaml
+set:
+  ingest.kafka.address: kafka:9092
+tests:
+  - it: renders the HPA and no ScaledObject when only autoscaling is enabled
+    set:
+      queryFrontend.autoscaling.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: query-frontend/hpa.yaml
+      - hasDocuments:
+          count: 0
+        template: query-frontend/keda-scaledObject.yaml
+
+  - it: renders a ScaledObject instead of the HPA when KEDA is enabled
+    set:
+      queryFrontend.autoscaling.enabled: true
+      queryFrontend.autoscaling.minReplicas: 2
+      queryFrontend.autoscaling.maxReplicas: 8
+      queryFrontend.autoscaling.keda.enabled: true
+      queryFrontend.autoscaling.keda.cooldownPeriod: 120
+      queryFrontend.autoscaling.keda.triggers:
+        - type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            threshold: "10"
+            query: sum(rate(tempo_request_duration_seconds_count[1m]))
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: query-frontend/hpa.yaml
+      - equal:
+          path: kind
+          value: ScaledObject
+        template: query-frontend/keda-scaledObject.yaml
+      - equal:
+          path: spec.scaleTargetRef
+          value:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: RELEASE-NAME-tempo-query-frontend
+        template: query-frontend/keda-scaledObject.yaml
+      - equal:
+          path: spec.minReplicaCount
+          value: 2
+        template: query-frontend/keda-scaledObject.yaml
+      - equal:
+          path: spec.maxReplicaCount
+          value: 8
+        template: query-frontend/keda-scaledObject.yaml
+      - equal:
+          path: spec.cooldownPeriod
+          value: 120
+        template: query-frontend/keda-scaledObject.yaml
+      - equal:
+          path: spec.triggers[0].metadata.query
+          value: sum(rate(tempo_request_duration_seconds_count[1m]))
+        template: query-frontend/keda-scaledObject.yaml
+
+  - it: renders neither when autoscaling is disabled, even with KEDA enabled
+    set:
+      queryFrontend.autoscaling.keda.enabled: true
+      queryFrontend.autoscaling.keda.triggers:
+        - type: cpu
+          metricType: Utilization
+          metadata:
+            value: "60"
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: query-frontend/hpa.yaml
+      - hasDocuments:
+          count: 0
+        template: query-frontend/keda-scaledObject.yaml
