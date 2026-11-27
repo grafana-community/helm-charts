@@ -96,7 +96,9 @@ tempo:
   podAnnotations: {}
   # -- The number of old ReplicaSets to retain to allow rollback
   revisionHistoryLimit: 10
-  # -- SecurityContext holds container-level security attributes and common container settings
+  # -- SecurityContext holds container-level security attributes and common container settings.
+  # Applies to every Tempo container, the gateway, memcached and the memcached exporter.
+  # A component-level `containerSecurityContext` replaces it as a whole.
   securityContext:
     runAsNonRoot: true
     runAsUser: 1000
@@ -106,9 +108,16 @@ tempo:
       drop:
         - ALL
     readOnlyRootFilesystem: true
-  # -- podSecurityContext holds pod-level security attributes and common container settings
+    seccompProfile:
+      type: RuntimeDefault
+  # -- podSecurityContext holds pod-level security attributes and common container settings.
+  # Applies to every Tempo pod, the gateway and memcached.
+  # A component-level `podSecurityContext` replaces it as a whole.
   podSecurityContext:
     fsGroup: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
   # -- Structured tempo configuration
   structuredConfig: {}
   # -- Memberlist service configuration.

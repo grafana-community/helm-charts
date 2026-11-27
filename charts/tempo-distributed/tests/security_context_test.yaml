@@ -1,0 +1,191 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: restricted pod and container security contexts
+templates:
+  - distributor/deployment-distributor.yaml
+  - querier/deployment-querier.yaml
+  - query-frontend/deployment-query-frontend.yaml
+  - live-store/statefulset-live-store.yaml
+  - metrics-generator/statefulset-metrics-generator.yaml
+  - gateway/deployment-gateway.yaml
+  - gateway/configmap-gateway.yaml
+  - memcached/statefulset-memcached.yaml
+  - memcached/statefulset-memcached-bloom.yaml
+  - configmap-tempo.yaml
+
+tests:
+  - it: distributor pod and container run with RuntimeDefault seccomp as non-root
+    template: distributor/deployment-distributor.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            fsGroup: 1000
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+
+  - it: live-store StatefulSet gets the restricted pod and container contexts
+    template: live-store/statefulset-live-store.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.seccompProfile.type
+          value: RuntimeDefault
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.seccompProfile.type
+          value: RuntimeDefault
+
+  - it: metrics-generator StatefulSet gets the restricted pod and container contexts
+    template: metrics-generator/statefulset-metrics-generator.yaml
+    set:
+      metricsGenerator.enabled: true
+      metricsGenerator.kind: StatefulSet
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.seccompProfile.type
+          value: RuntimeDefault
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.seccompProfile.type
+          value: RuntimeDefault
+
+  - it: query-frontend tempo-query sidecar gets the RuntimeDefault seccomp profile
+    template: query-frontend/deployment-query-frontend.yaml
+    set:
+      queryFrontend.query.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.seccompProfile.type
+          value: RuntimeDefault
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "tempo-query")].securityContext.seccompProfile.type
+          value: RuntimeDefault
+
+  - it: gateway nginx pod and container get the restricted contexts
+    template: gateway/deployment-gateway.yaml
+    set:
+      gateway.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.seccompProfile.type
+          value: RuntimeDefault
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.seccompProfile.type
+          value: RuntimeDefault
+
+  - it: memcached and exporter containers get the restricted contexts
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcachedExporter.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.seccompProfile.type
+          value: RuntimeDefault
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "memcached")].securityContext.seccompProfile.type
+          value: RuntimeDefault
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "exporter")].securityContext.seccompProfile.type
+          value: RuntimeDefault
+
+  - it: per-role memcached gets the restricted pod context
+    template: memcached/statefulset-memcached-bloom.yaml
+    set:
+      memcachedBloom.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.seccompProfile.type
+          value: RuntimeDefault
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.seccompProfile.type
+          value: RuntimeDefault
+
+  - it: overriding one field of tempo.podSecurityContext keeps the seccomp profile
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.podSecurityContext:
+        fsGroup: 2000
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            fsGroup: 2000
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+
+  - it: a custom seccomp profile in tempo.securityContext reaches the containers
+    template: gateway/deployment-gateway.yaml
+    set:
+      gateway.enabled: true
+      tempo.securityContext.seccompProfile:
+        type: Localhost
+        localhostProfile: profiles/tempo.json
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.seccompProfile
+          value:
+            type: Localhost
+            localhostProfile: profiles/tempo.json
+
+  - it: the seccomp profile can be removed by setting it to null
+    template: distributor/deployment-distributor.yaml
+    set:
+      tempo.podSecurityContext.seccompProfile: null
+      tempo.securityContext.seccompProfile: null
+    asserts:
+      - notExists:
+          path: spec.template.spec.securityContext.seccompProfile
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext.seccompProfile
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+
+  - it: setting the new fields to null restores the previous security contexts
+    template: memcached/statefulset-memcached.yaml
+    set:
+      tempo.podSecurityContext.runAsNonRoot: null
+      tempo.podSecurityContext.seccompProfile: null
+      tempo.securityContext.seccompProfile: null
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            fsGroup: 1000
+      - notExists:
+          path: spec.template.spec.containers[0].securityContext.seccompProfile
+
+  - it: a component podSecurityContext replaces tempo.podSecurityContext as a whole
+    template: querier/deployment-querier.yaml
+    set:
+      querier.podSecurityContext:
+        fsGroup: 2000
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            fsGroup: 2000
