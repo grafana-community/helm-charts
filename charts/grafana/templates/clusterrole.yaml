@@ -9,13 +9,14 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   name: {{ include "grafana.fullname" . }}-clusterrole
-{{- if or .Values.sidecar.dashboards.enabled .Values.rbac.extraClusterRoleRules .Values.sidecar.datasources.enabled .Values.sidecar.plugins.enabled .Values.sidecar.alerts.enabled .Values.sidecar.repositories.enabled }}
+{{- $sidecarResources := include "grafana.sidecarResources" . }}
+{{- if or $sidecarResources .Values.rbac.extraClusterRoleRules }}
 rules:
-  {{- if or .Values.sidecar.dashboards.enabled .Values.sidecar.datasources.enabled .Values.sidecar.plugins.enabled .Values.sidecar.alerts.enabled .Values.sidecar.repositories.enabled }}
+  {{- with $sidecarResources }}
   - apiGroups: [""] # "" indicates the core API group
-    resources: ["configmaps", "secrets"]
+    resources: {{ splitList "," . | toJson }}
     verbs: ["get", "watch", "list"]
-  {{- end}}
+  {{- end }}
   {{- with .Values.rbac.extraClusterRoleRules }}
   {{- toYaml . | nindent 2 }}
   {{- end}}

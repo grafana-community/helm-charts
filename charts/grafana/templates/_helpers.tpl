@@ -370,3 +370,24 @@ grafana.ini, where Grafana can expand it at runtime, which Helm cannot resolve.
 {{- end -}}
 {{- $port -}}
 {{- end }}
+
+{{/*
+Core API resources ("configmaps", "secrets") read by the enabled sidecars, derived from each
+sidecar's `resource` setting (configmap, secret or both). Returned as a comma-separated list,
+empty when no sidecar is enabled.
+*/}}
+{{- define "grafana.sidecarResources" -}}
+{{- $resources := list -}}
+{{- range $name := list "dashboards" "datasources" "plugins" "alerts" "notifiers" "repositories" -}}
+{{- $sidecar := index $.Values.sidecar $name | default dict -}}
+{{- if $sidecar.enabled -}}
+{{- if has $sidecar.resource (list "configmap" "both") -}}
+{{- $resources = append $resources "configmaps" -}}
+{{- end -}}
+{{- if has $sidecar.resource (list "secret" "both") -}}
+{{- $resources = append $resources "secrets" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- $resources | uniq | sortAlpha | join "," -}}
+{{- end -}}
