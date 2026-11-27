@@ -1,5 +1,33 @@
 # Upgrade guide
 
+## v3.30 → v3.31
+
+### The default liveness probe calls `/status/version` instead of `/ready`
+
+`defaults.livenessProbe.httpGet.path` is now `/status/version`, which answers as soon as the
+HTTP server is up. `/ready` also fails while a component is healthy but not ready for traffic,
+such as a live-store replaying its WAL and catching up with Kafka, or a query-frontend with no
+querier connected, so the liveness probe restarted those pods. The readiness probe is unchanged and
+still calls `/ready`. If you added a `startupProbe` or raised the liveness `initialDelaySeconds` or
+`failureThreshold` to work around these restarts, you can remove it.
+
+To keep the previous behavior, set the path back at the `tempo` or component level:
+
+```yaml
+tempo:
+  livenessProbe:
+    httpGet:
+      path: /ready
+```
+
+### The memcached exporter sidecar has liveness and readiness probes
+
+When `memcachedExporter.enabled` is `true`, the `exporter` container of every memcached
+StatefulSet now has liveness and readiness probes on `/metrics`, configured with
+`memcachedExporter.livenessProbe` and `memcachedExporter.readinessProbe`. They are merged and
+disabled like the Tempo probes, for example `memcachedExporter.livenessProbe.enabled: false`.
+The memcached pods roll once on upgrade.
+
 ## v3.25 → v3.26
 
 ### memcached no longer receives `global.extraArgs`

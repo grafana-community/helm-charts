@@ -179,9 +179,12 @@ defaults:
   # `tempo.livenessProbe` and `<component>.livenessProbe` are deep-merged over it, in that order.
   # A handler (`httpGet`, `tcpSocket`, `exec`, `grpc`) set at a higher level replaces an inherited handler of a different type.
   # Set `enabled: false` at any level to disable the probe; a higher level can set `enabled: true` to restore it.
+  # It calls `/status/version`, which answers as soon as the HTTP server is up, rather than `/ready`, because `/ready`
+  # also fails while a component is healthy but not ready for traffic: a live-store replaying its WAL and catching up
+  # with Kafka, or a query-frontend with no querier connected. A liveness probe on `/ready` restarts those pods instead.
   livenessProbe:
     httpGet:
-      path: /ready
+      path: /status/version
       port: http-metrics
     initialDelaySeconds: 60
     timeoutSeconds: 5
@@ -2791,6 +2794,24 @@ memcachedExporter:
   resources: {}
   # -- Additional CLI args for the memcached exporter
   extraArgs: []
+  # -- Liveness probe for the memcached exporter container. Set `enabled: false` to disable it.
+  livenessProbe:
+    httpGet:
+      path: /metrics
+      port: http-metrics
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # -- Readiness probe for the memcached exporter container. Set `enabled: false` to disable it.
+  readinessProbe:
+    httpGet:
+      path: /metrics
+      port: http-metrics
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
 
 # -- Configuration for a dedicated memcached cluster for the bloom cache role.
 # When enabled, bloom cache is served by its own memcached StatefulSet.

@@ -1,0 +1,159 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: default probes
+templates:
+  - backend-scheduler/statefulset-backend-scheduler.yaml
+  - backend-worker/statefulset-backend-worker.yaml
+  - block-builder/statefulset-block-builder.yaml
+  - distributor/deployment-distributor.yaml
+  - live-store/statefulset-live-store.yaml
+  - metrics-generator/deployment-metrics-generator.yaml
+  - querier/deployment-querier.yaml
+  - query-frontend/deployment-query-frontend.yaml
+  - memcached/statefulset-memcached.yaml
+  - memcached/statefulset-memcached-bloom.yaml
+  - configmap-tempo.yaml
+
+tests:
+  # /ready also fails while a pod is healthy but not ready for traffic, such as a
+  # live-store catching up with Kafka or a query-frontend with no querier connected.
+  # Liveness must not use it, or the kubelet restarts those pods.
+  - it: checks liveness with /status/version and readiness with /ready on every Tempo component
+    set:
+      metricsGenerator.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            httpGet:
+              path: /status/version
+              port: http-metrics
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+        template: live-store/statefulset-live-store.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet
+          value:
+            path: /ready
+            port: http-metrics
+        template: live-store/statefulset-live-store.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /status/version
+        template: query-frontend/deployment-query-frontend.yaml
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /ready
+        template: query-frontend/deployment-query-frontend.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /status/version
+        template: querier/deployment-querier.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /status/version
+        template: distributor/deployment-distributor.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /status/version
+        template: metrics-generator/deployment-metrics-generator.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /status/version
+        template: block-builder/statefulset-block-builder.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /status/version
+        template: backend-scheduler/statefulset-backend-scheduler.yaml
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /status/version
+        template: backend-worker/statefulset-backend-worker.yaml
+
+  - it: keeps a liveness path a user sets on a component, inheriting the port
+    set:
+      liveStore.livenessProbe:
+        httpGet:
+          path: /ready
+        initialDelaySeconds: 600
+    template: live-store/statefulset-live-store.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            initialDelaySeconds: 600
+            timeoutSeconds: 5
+
+  - it: probes the memcached exporter sidecar on /metrics
+    set:
+      memcachedExporter.enabled: true
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: exporter
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe
+          value:
+            httpGet:
+              path: /metrics
+              port: http-metrics
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe
+          value:
+            httpGet:
+              path: /metrics
+              port: http-metrics
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+  - it: probes the exporter sidecar on the per-role memcached clusters too
+    set:
+      memcachedExporter.enabled: true
+      memcachedBloom.enabled: true
+    template: memcached/statefulset-memcached-bloom.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe.httpGet.path
+          value: /metrics
+      - equal:
+          path: spec.template.spec.containers[1].readinessProbe.httpGet.path
+          value: /metrics
+
+  - it: disables the memcached exporter probes with enabled false
+    set:
+      memcachedExporter.enabled: true
+      memcachedExporter.livenessProbe.enabled: false
+      memcachedExporter.readinessProbe.enabled: false
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[1].livenessProbe
+      - notExists:
+          path: spec.template.spec.containers[1].readinessProbe
+
+  - it: merges memcached exporter probe overrides over the defaults
+    set:
+      memcachedExporter.enabled: true
+      memcachedExporter.livenessProbe:
+        initialDelaySeconds: 120
+        failureThreshold: null
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].livenessProbe
+          value:
+            httpGet:
+              path: /metrics
+              port: http-metrics
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            timeoutSeconds: 5
