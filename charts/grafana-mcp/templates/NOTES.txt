@@ -21,3 +21,10 @@ WARNING: The MCP HTTP endpoint is not protected by a bearer token, because the A
 WARNING: The MCP HTTP endpoint is not protected by authentication (serverAuth.token is null).
 {{- end }}
 {{- end }}
+{{- if .Values.networkPolicy.enabled }}
+
+A NetworkPolicy now restricts traffic to the MCP server. It is only enforced by network plugins that support NetworkPolicy.
+{{- if not .Values.networkPolicy.ingress.allowExternal }}
+Only pods labelled "{{ include "grafana-mcp.clientLabel" . }}: true" and the sources in networkPolicy.ingress can connect.
+{{- end }}
+{{- end }}

@@ -1,0 +1,53 @@
+# A Grafana for the MCP server to call (grafana.url defaults to http://grafana:3000).
+# Anonymous Viewer access only: CI needs no credentials.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: grafana-mcp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: grafana-mcp
+  labels:
+    ci-managed: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-ci
+  template:
+    metadata:
+      labels:
+        app: grafana-ci
+        ci-managed: "true"
+    spec:
+      containers:
+        - name: grafana
+          image: docker.io/grafana/grafana:13.3.1
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: Viewer
+          ports:
+            - name: http
+              containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: grafana-mcp
+spec:
+  selector:
+    app: grafana-ci
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http

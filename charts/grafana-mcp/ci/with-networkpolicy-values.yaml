@@ -1,0 +1,8 @@
+networkPolicy:
+  enabled: true
+  ingress:
+    allowExternal: false
+
+tests:
+  integration:
+    enabled: true

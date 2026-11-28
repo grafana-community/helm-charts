@@ -351,6 +351,68 @@
                 "null"
             ]
         },
+        "networkPolicy": {
+            "description": "NetworkPolicy for the MCP server. Only enforced by network plugins that support NetworkPolicy (on EKS, enable network policy in the Amazon VPC CNI).",
+            "type": "object",
+            "properties": {
+                "egress": {
+                    "type": "object",
+                    "properties": {
+                        "allowDNS": {
+                            "description": "Allow DNS (port 53) to any destination. `to` does not apply to this rule",
+                            "type": "boolean"
+                        },
+                        "enabled": {
+                            "description": "Restrict egress to DNS (port 53) and the Grafana ports. Destinations are not restricted unless `to` is set",
+                            "type": "boolean"
+                        },
+                        "ports": {
+                            "description": "Allowed ports. Defaults to the `grafana.url` port and 3000, Grafana's pod port.",
+                            "type": "array"
+                        },
+                        "to": {
+                            "description": "Allowed destinations (NetworkPolicyPeers) for the Grafana ports, e.g. Grafana's namespace. Defaults to any destination.",
+                            "type": "array"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "enabled": {
+                    "description": "Create a NetworkPolicy",
+                    "type": "boolean"
+                },
+                "ingress": {
+                    "type": "object",
+                    "properties": {
+                        "allowExternal": {
+                            "description": "Accept connections from any source. When false, only pods labelled `\u003cfullname\u003e-client: \"true\"` (the install notes show the exact label) and the sources below can connect. Must be false when `namespaceSelector`, `ipBlocks` or `from` are set; the chart fails otherwise.",
+                            "type": "boolean"
+                        },
+                        "extraPorts": {
+                            "description": "Additional ports to accept connections on, e.g. 15008 for Istio ambient mode",
+                            "type": "array"
+                        },
+                        "from": {
+                            "description": "Additional NetworkPolicyPeers that can connect, e.g. a proxy's pods, or Prometheus when `serviceMonitor.enabled` is true",
+                            "type": "array"
+                        },
+                        "ipBlocks": {
+                            "description": "CIDR blocks that can connect, e.g. the VPC CIDR for a load balancer in IP mode",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "namespaceSelector": {
+                            "description": "Namespaces that can connect (LabelSelector)",
+                            "type": "object"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
         "nodeSelector": {
             "description": "Node selector",
             "type": "object"
@@ -703,6 +765,42 @@
                 "string",
                 "null"
             ]
+        },
+        "tests": {
+            "description": "`helm test` integration tests",
+            "type": "object",
+            "properties": {
+                "integration": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "description": "Create test pods that call an MCP tool against Grafana and, when `networkPolicy.ingress.allowExternal` is false, check that pods without the client label cannot connect. Needs a Grafana at `grafana.url`",
+                            "type": "boolean"
+                        },
+                        "image": {
+                            "description": "Test image",
+                            "type": "object",
+                            "properties": {
+                                "registry": {
+                                    "description": "The Docker registry",
+                                    "type": "string"
+                                },
+                                "repository": {
+                                    "description": "The Docker repository",
+                                    "type": "string"
+                                },
+                                "tag": {
+                                    "description": "Image tag",
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
         },
         "tolerations": {
             "description": "Tolerations",
