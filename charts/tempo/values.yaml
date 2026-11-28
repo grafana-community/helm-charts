@@ -79,6 +79,12 @@ tempo:
   liveStore: {}
   #  max_block_duration: 30s
   #  complete_block_timeout: 20m
+  # -- Configuration options for the memory section, for example to let Tempo set
+  # GOMEMLIMIT automatically from the container memory limit.
+  # Refers to: https://grafana.com/docs/tempo/latest/configuration/#memory
+  memory: {}
+  #  automemlimit_enabled: true
+  #  automemlimit_ratio: 0.8
   # -- Configuration options for the backend scheduler, which creates the compaction and
   # retention jobs. Replaces the compactor of Tempo 2.x. Compaction settings are inherited
   # by the backend worker and override `tempo.retention`, unless overridden in
@@ -237,6 +243,10 @@ config: |
         {{- toYaml .Values.tempo.receivers | nindent 8 }}
     {{- with .Values.tempo.liveStore }}
     live_store:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.tempo.memory }}
+    memory:
       {{- toYaml . | nindent 6 }}
     {{- end }}
     server:
