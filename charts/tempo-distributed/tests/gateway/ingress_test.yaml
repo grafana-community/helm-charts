@@ -1,0 +1,26 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: gateway Ingress
+templates:
+  - gateway/ingress-gateway.yaml
+set:
+  gateway.enabled: true
+  gateway.ingress.enabled: true
+
+tests:
+  - it: defaults pathType to Prefix
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: Prefix
+
+  - it: keeps a configured pathType
+    set:
+      gateway.ingress.hosts:
+        - host: gateway.tempo.example.com
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: ImplementationSpecific

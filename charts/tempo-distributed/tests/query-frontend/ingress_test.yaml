@@ -1,0 +1,21 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: query-frontend Ingress
+templates:
+  - query-frontend/ingress-query-frontend.yaml
+set:
+  queryFrontend.query.enabled: true
+  queryFrontend.ingress.enabled: true
+
+tests:
+  - it: renders the default hosts and tls
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: Prefix
+      - equal:
+          path: spec.tls[0].secretName
+          value: tempo-query-tls
+      - equal:
+          path: spec.tls[0].hosts
+          value:
+            - query.tempo.example.com
