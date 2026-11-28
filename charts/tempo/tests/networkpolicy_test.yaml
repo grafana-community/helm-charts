@@ -1,0 +1,58 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: network policy
+templates:
+  - networkpolicy.yaml
+tests:
+  - it: should not render when disabled
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should allow the service ports when service.targetPort is not set
+    set:
+      networkPolicy.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: NetworkPolicy
+      - contains:
+          path: spec.ingress[0].ports
+          content:
+            port: 3200
+            protocol: TCP
+      - contains:
+          path: spec.ingress[0].ports
+          content:
+            port: 4317
+            protocol: TCP
+      - contains:
+          path: spec.ingress[0].ports
+          content:
+            port: 6831
+            protocol: UDP
+
+  - it: should only allow service.targetPort when it is set
+    set:
+      networkPolicy.enabled: true
+      service.targetPort: 3200
+    asserts:
+      - equal:
+          path: spec.ingress[0].ports
+          value:
+            - port: 3200
+
+  - it: should allow pods with the client label when allowExternal is false
+    release:
+      name: my-release
+    set:
+      networkPolicy.enabled: true
+      networkPolicy.allowExternal: false
+    asserts:
+      - lengthEqual:
+          path: spec.ingress[0].from
+          count: 2
+      - equal:
+          path: spec.ingress[0].from[0].podSelector.matchLabels
+          value:
+            my-release-tempo-client: "true"
