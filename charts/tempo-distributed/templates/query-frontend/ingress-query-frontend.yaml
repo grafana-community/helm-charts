@@ -21,9 +21,9 @@ spec:
     - hosts:
         {{- range .hosts }}
         - {{ tpl . $ | quote }}
-          {{- end }}
-        {{- with .secretName }}
-        secretName: {{ tpl . $ }}
+        {{- end }}
+      {{- with .secretName }}
+      secretName: {{ tpl . $ }}
       {{- end }}
     {{- end }}
   {{- end }}
@@ -34,7 +34,7 @@ spec:
         paths:
           {{- range .paths }}
           - path: {{ tpl .path $ }}
-            pathType: {{ .pathType }}
+            pathType: {{ .pathType | default "Prefix" }}
             backend:
               service:
                 name: {{ include "tempo.resourceName" $dict }}
