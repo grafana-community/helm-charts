@@ -1,5 +1,20 @@
 # Upgrade guide
 
+## v3.30 → v3.31
+
+### memcached liveness probe connects to the client port
+
+The memcached liveness probe ran `pgrep memcached`, which fails on images without `pgrep`, such
+as the Docker Hardened Images (DHI) memcached image. A handler set in `livenessProbe` was added
+next to it instead of replacing it. Each memcached section (`memcached`, `memcachedBloom`,
+`memcachedParquetFooter`, `memcachedFrontendSearch`, `memcachedParquetPage`) now defaults to
+`tcpSocket` on the `client` port, like its readiness probe. The memcached pods restart once on
+upgrade.
+
+If you replaced the command with `livenessProbe.exec`, also set `livenessProbe.tcpSocket: null`,
+or the probe has two handlers. From an umbrella chart, pass it with `-f` or `--set`, because Helm
+drops a `null` set in the parent chart's own `values.yaml`.
+
 ## v3.25 → v3.26
 
 ### memcached no longer receives `global.extraArgs`
