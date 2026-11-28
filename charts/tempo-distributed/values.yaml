@@ -2762,6 +2762,8 @@ memcached:
 
   # -- configuration for liveness probe for memcached statefulset
   livenessProbe:
+    tcpSocket:
+      port: client
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
@@ -2885,6 +2887,8 @@ memcachedBloom:
     successThreshold: 1
   # -- configuration for liveness probe for memcached-bloom statefulset
   livenessProbe:
+    tcpSocket:
+      port: client
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
@@ -2984,6 +2988,8 @@ memcachedParquetFooter:
     successThreshold: 1
   # -- configuration for liveness probe for memcached-parquet-footer statefulset
   livenessProbe:
+    tcpSocket:
+      port: client
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
@@ -3083,6 +3089,8 @@ memcachedFrontendSearch:
     successThreshold: 1
   # -- configuration for liveness probe for memcached-frontend-search statefulset
   livenessProbe:
+    tcpSocket:
+      port: client
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
@@ -3186,6 +3194,8 @@ memcachedParquetPage:
     successThreshold: 1
   # -- configuration for liveness probe for memcached-parquet-page statefulset
   livenessProbe:
+    tcpSocket:
+      port: client
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5

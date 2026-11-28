@@ -1,0 +1,84 @@
+# $schema: https://raw.githubusercontent.com/helm-unittest/helm-unittest/refs/heads/main/schema/helm-testsuite.json
+suite: memcached probes
+templates:
+  - memcached/statefulset-memcached.yaml
+  - memcached/statefulset-memcached-bloom.yaml
+  - memcached/statefulset-memcached-parquet-footer.yaml
+  - memcached/statefulset-memcached-frontend-search.yaml
+  - memcached/statefulset-memcached-parquet-page.yaml
+
+tests:
+  # The liveness probe used to run `pgrep memcached`, which minimal images such as the
+  # Docker Hardened Images memcached image don't ship.
+  - it: checks memcached liveness with a TCP connection to the client port
+    template: memcached/statefulset-memcached.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "memcached")].livenessProbe
+          value:
+            tcpSocket:
+              port: client
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+
+  - it: checks liveness with a TCP connection on every per-role memcached cluster
+    set:
+      memcachedBloom.enabled: true
+      memcachedParquetFooter.enabled: true
+      memcachedFrontendSearch.enabled: true
+      memcachedParquetPage.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "memcached")].livenessProbe.tcpSocket
+          value:
+            port: client
+        template: memcached/statefulset-memcached-bloom.yaml
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "memcached")].livenessProbe.tcpSocket
+          value:
+            port: client
+        template: memcached/statefulset-memcached-parquet-footer.yaml
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "memcached")].livenessProbe.tcpSocket
+          value:
+            port: client
+        template: memcached/statefulset-memcached-frontend-search.yaml
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "memcached")].livenessProbe.tcpSocket
+          value:
+            port: client
+        template: memcached/statefulset-memcached-parquet-page.yaml
+
+  - it: renders a single handler when livenessProbe.tcpSocket is set
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcached.livenessProbe.tcpSocket.port: 11211
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "memcached")].livenessProbe
+          value:
+            tcpSocket:
+              port: 11211
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+
+  - it: replaces the liveness handler when tcpSocket is set to null
+    template: memcached/statefulset-memcached.yaml
+    set:
+      memcached.livenessProbe:
+        tcpSocket: null
+        exec:
+          command: [/bin/true]
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "memcached")].livenessProbe.exec
+          value:
+            command: [/bin/true]
+      - notExists:
+          path: spec.template.spec.containers[?(@.name == "memcached")].livenessProbe.tcpSocket

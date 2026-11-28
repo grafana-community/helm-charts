@@ -140,10 +140,6 @@ spec:
           {{- end }}
           {{- with $.memcachedConfig.livenessProbe }}
           livenessProbe:
-            exec:
-              command:
-                - pgrep
-                - memcached
             {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
